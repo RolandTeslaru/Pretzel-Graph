@@ -9,7 +9,6 @@ import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-r
 const META_COLUMNS = [
     'id',
     'workflow_id',
-    'igniter',
     'status',
     'duration',
     'error',
@@ -18,9 +17,11 @@ const META_COLUMNS = [
     'updated_at',
 ] as const;
 
+// The variant alone, so a webhook run's inbound request never leaves the row.
 const metaSelection = [
     ...META_COLUMNS,
     sql<boolean>`recording is not null`.as('has_recording'),
+    sql<Execution.Igniter.Variant>`igniter->>'variant'`.as('igniter_variant'),
 ] as const;
 
 type RowPatch = {

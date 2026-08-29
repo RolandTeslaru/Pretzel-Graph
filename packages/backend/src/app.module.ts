@@ -21,6 +21,7 @@ import { VaultModule } from './services/Vault/vault.module';
 import { ConsultationModule } from './services/Consultation/consultation.module';
 import { HealthModule } from './services/Health/health.module';
 import { ListingModule } from './services/Listing/listing.module';
+import { ActivityModule } from './services/Activity/activity.module';
 
 @Module({
     imports: [
@@ -57,6 +58,7 @@ import { ListingModule } from './services/Listing/listing.module';
         ConsultationModule,
         HealthModule,
         ListingModule,
+        ActivityModule,
     ],
     controllers: [],
     providers: [

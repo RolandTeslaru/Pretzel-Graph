@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Button, AlertDialog, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
+import { Button, AlertDialog, ScrollArea, Frame } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
@@ -61,8 +61,10 @@ function CredentialsRoute() {
 
     return (
         <ScrollArea.Root className='h-[calc(100vh-60px)] pr-10'>
-            <div className='flex flex-col gap-4 pb-10'>
-                {groups.map(group => <TemplateGroup key={group.templateId} group={group} />)}
+            <div className='flex flex-col gap-2 pb-10'>
+                {groups.map(group => (
+                    <TemplateGroup key={group.templateId} group={group} />
+                ))}
             </div>
         </ScrollArea.Root>
     )
@@ -87,28 +89,34 @@ function TemplateGroup({ group }: { group: Group }) {
     }
 
     return (
-        <div className='rounded-xl  overflow-hidden'>
-            <div className='flex items-center gap-2 px-3 py-2 border-b border-border/60'>
-                {template?.icon
-                    ? <LazyIcon name={template.icon} className='size-4' />
-                    : <SystemIcons.KeyRound size={16} className='opacity-60' />
-                }
-                <span className='text-sm font-medium'>{template?.displayName ?? templateId}</span>
-                <span className='text-xs text-muted-foreground'>{instances.length}</span>
+        <Frame.Root>
+            <Frame.Header>
+                <div className='flex items-center gap-2'>
+                    {template?.icon
+                        ? <LazyIcon name={template.icon} className='size-4' />
+                        : <SystemIcons.KeyRound size={16} className='opacity-60' />
+                    }
+                    <span className='text-sm font-medium'>{template?.displayName ?? templateId}</span>
+                    <span className='text-xs text-muted-foreground'>{instances.length}</span>
 
-                {template && (
-                    <Button variant='ghost' size='sm' className='ml-auto' onClick={openAddDialog}>
-                        <SystemIcons.Plus /> Add
-                    </Button>
-                )}
-            </div>
+                    {template && (
+                        <Button variant={"input"} size='sm' className='ml-auto' onClick={openAddDialog}>
+                            <SystemIcons.Plus /> Add
+                        </Button>
+                    )}
+                </div>
+            </Frame.Header>
+            <Frame.Panel>
+                <div className='rounded-xl  overflow-hidden'>
 
-            <div className='flex flex-col'>
-                {instances.map(instance => (
-                    <CredentialRow key={instance.id} instance={instance} template={template} />
-                ))}
-            </div>
-        </div>
+                    <div className='flex flex-col'>
+                        {instances.map(instance => (
+                            <CredentialRow key={instance.id} instance={instance} template={template} />
+                        ))}
+                    </div>
+                </div>
+            </Frame.Panel>
+        </Frame.Root>
     )
 }
 
