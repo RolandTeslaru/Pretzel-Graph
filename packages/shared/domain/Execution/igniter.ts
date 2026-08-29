@@ -80,5 +80,26 @@ export namespace Igniter {
         Scheduled,
         Sdk,
     ])
+
+    /** What triggered a run, without what it was triggered with. */
+    export const Variant = z.enum([
+        "workbench_manual",
+        "workbench_step",
+        "workbench_igniter",
+        "sub_workflow",
+        "chat_message",
+        "webhook",
+        "scheduled",
+        "sdk",
+    ])
+    export type Variant = z.infer<typeof Variant>
+
+    // Fails to compile if a variant is added to the union and not to the enum.
+    type AssertVariantsMatch =
+        z.infer<typeof Schema>["variant"] extends Variant
+            ? Variant extends z.infer<typeof Schema>["variant"] ? true : never
+            : never
+    const _assertVariantsMatch: AssertVariantsMatch = true
+    void _assertVariantsMatch
 }
 export type Igniter = z.infer<typeof Igniter.Schema>

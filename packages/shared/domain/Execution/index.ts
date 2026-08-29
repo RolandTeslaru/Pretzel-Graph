@@ -104,8 +104,11 @@ export namespace Execution {
         updated_at:  supabaseTimestamp,
     })
 
-    export const Meta = Schema.omit({ session: true, recording: true }).extend({
-        has_recording: z.boolean(),
+    // `igniter` is dropped, not narrowed: a webhook run carries the whole inbound
+    // request in it, and nothing reading a Meta wants more than what triggered it.
+    export const Meta = Schema.omit({ session: true, recording: true, igniter: true }).extend({
+        has_recording:   z.boolean(),
+        igniter_variant: Igniter.Variant,
     })
     export type Meta = z.infer<typeof Meta>
 

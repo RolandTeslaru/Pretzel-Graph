@@ -55,7 +55,7 @@ function HomeLayout() {
     
 
     return (
-        <div className="flex max-h-screen w-full min-h-screen relative overflow-hidden">
+        <div className="flex max-h-screen w-full min-h-screen  relative overflow-hidden">
             <div className="pointer-events-none w-full fixed inset-0 z-0">
                 <Dither
                     ctx={ditherCtx}
@@ -70,17 +70,19 @@ function HomeLayout() {
                     waveSpeed={0.05}
                 />
             </div>
-            <div className="relative z-10 flex flex-row bg-background/80 backdrop-blur-lg max-h-screen rounded-tr-2xl min-h-screen mr-auto">
+            <div className="relative z-10 flex  max-w-7xl w-full  flex-row bg-background/80 backdrop-blur-lg max-h-screen rounded-tr-2xl min-h-screen mr-auto">
                 <Sidebar />
-                <div className="flex flex-col">
-                    <nav className="min-h-[60px] px-4 flex items-center ">
+                <div className='relative w-full'>
+                    <nav className="absolute z-20 top-0 min-h-[60px] px-4 flex items-center">
                         <h1 className="text-xl font-semibold">
                             {currentNav && currentNav.label}
                         </h1>
                     </nav>
-                    <main className=" pl-3 w-6xl">
-                        <Outlet />
-                    </main>
+                    <div className="flex flex-col relative w-full max-h-screen overflow-hidden">
+                        <main className="flex-1 pt-[60px] min-h-0 w-full overflow-y-auto pl-3 pr-10 pt-6 pb-10 [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]">
+                            <Outlet />
+                        </main>
+                    </div>
                 </div>
             </div>
         </div>

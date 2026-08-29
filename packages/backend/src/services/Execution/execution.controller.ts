@@ -153,23 +153,6 @@ export class ExecutionController {
         return this.executionService.get(principal, executionId);
     }
 
-    // REMOVED — there is no sdk/run route and no runFromSdk. Rebuild, don't restore.
-    //
-    // The old implementation loaded a published workflow by id with no ownership
-    // check, then ran it under a service-role handle with the *caller* as owner —
-    // so credential resolution was RLS-free and returned the publisher's secrets to
-    // whoever held an API key. Unreachable in practice only because no keys exist.
-    //
-    // It was deleted rather than converted, because every run now acts as the
-    // workflow owner and the SDK case is the one where caller and owner differ.
-    // Nothing here can be made correct without first deciding what the endpoint is:
-    //   - "run my own workflows"          -> assertWorkflow(workflowId, callerId),
-    //                                        mirroring runFromUser
-    //   - "let others invoke my workflow" -> a consent model, and whose credentials
-    //                                        the run uses is the open question
-    //
-    // Execution.API.SdkRun still exists in shared as the wire contract.
-    // See SPECS/delegated-execution-principal.md, "Open Questions".
 
     @Post(':executionId/recording/get-live')
     @UseGuards(MemberAuthGuard)

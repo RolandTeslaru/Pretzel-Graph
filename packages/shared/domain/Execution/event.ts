@@ -44,6 +44,8 @@ export namespace Event {
         export type Failed     = z.infer<typeof Failed>
         export type Suspended  = z.infer<typeof Suspended>
         export type Terminated = z.infer<typeof Terminated>
+
+        export const Schema = z.discriminatedUnion("type", [Started, Paused, Resumed, Completed, Failed, Suspended, Terminated])
     }
 
     // ─── Session ─────────────────────────────────────────────────────────
@@ -87,6 +89,8 @@ export namespace Event {
         export type Completed = z.infer<typeof Completed>
         export type Error     = z.infer<typeof Error>
         export type Waiting   = z.infer<typeof Waiting>
+
+        export const Schema = z.discriminatedUnion("type", [Started, Completed, Error, Waiting])
     }
 
     // ─── Recording events ────────────────────────────────────────────────
@@ -99,7 +103,6 @@ export namespace Event {
                 type: z.literal("unit:started"),
                 unit: RecordingModule.UnitOfWork.Schema,
             })
-            export type Started = z.infer<typeof Started>
 
             export const Completed = Base.extend({
                 type:           z.literal("unit:completed"),
@@ -108,7 +111,6 @@ export namespace Event {
                 outputSnapshot: z.record(Port.Output.Id, RecordingModule.DataBank.PortSnapshot.Id),
                 metrics:        z.record(z.string(), RecordingModule.Metric.Schema).optional(),
             })
-            export type Completed = z.infer<typeof Completed>
 
             export const Failed = Base.extend({
                 type:     z.literal("unit:failed"),
@@ -116,7 +118,12 @@ export namespace Event {
                 duration: z.number(),
                 metrics:  z.record(z.string(), RecordingModule.Metric.Schema).optional(),
             })
+
+            export type Started = z.infer<typeof Started>
+            export type Completed = z.infer<typeof Completed>
             export type Failed = z.infer<typeof Failed>
+
+            export const Schema = z.discriminatedUnion("type", [Started, Completed, Failed])
         }
 
         export namespace Relation {
@@ -124,35 +131,38 @@ export namespace Event {
                 type:     z.literal("relation:created"),
                 relation: RecordingModule.Relation.Schema,
             })
-            export type Created = z.infer<typeof Created>
 
             export const CreateBatch = Base.extend({
                 type:      z.literal("relation:createBatch"),
                 relations: z.array(RecordingModule.Relation.Schema),
             })
+
+            export type Created = z.infer<typeof Created>
             export type CreateBatch = z.infer<typeof CreateBatch>
+
+            export const Schema = z.discriminatedUnion("type", [Created, CreateBatch])
         }
 
         export const Completed = Base.extend({
             type: z.literal("recording:completed"),
         })
-        export type Completed = z.infer<typeof Completed>
 
         export const FullyUploaded = Base.extend({
             type: z.literal("recording:fullyUploaded"),
         })
+
+        export type Completed = z.infer<typeof Completed>
         export type FullyUploaded = z.infer<typeof FullyUploaded>
+
+        export const Schema = z.discriminatedUnion("type", [Unit.Schema, Relation.Schema, Completed, FullyUploaded])
     }
 
 
     export const Schema = z.discriminatedUnion("type", [
-        Lifecycle.Started, Lifecycle.Paused, Lifecycle.Resumed, Lifecycle.Suspended,
-        Lifecycle.Terminated, Lifecycle.Completed, Lifecycle.Failed,
+        Lifecycle.Schema,
         Session.Patch,
-        Node.Started, Node.Completed, Node.Error, Node.Waiting,
-        Recording.Unit.Started, Recording.Unit.Completed, Recording.Unit.Failed,
-        Recording.Relation.Created, Recording.Relation.CreateBatch,
-        Recording.Completed, Recording.FullyUploaded,
+        Node.Schema,
+        Recording.Schema,
     ])
 
     // Returns a member without its addressing; the publisher derives that from the execution.

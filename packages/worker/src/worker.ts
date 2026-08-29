@@ -291,6 +291,8 @@ export class AggexWorkerImpl {
     private worker = new Worker(Execution.Queue.ID, this.processQueueItem, {
         connection: this.redisWorker,
         autorun: false,
+        // Executions run concurrently on one event loop; they mostly await.
+        concurrency: Number(process.env.EXECUTION_CONCURRENCY ?? 5),
         // Synchronous expression evaluation can hold the event loop for minutes,
         // starving lock renewal. The lease must outlast the longest legal stretch,
         // or a running job is declared stalled and handed out again mid-run.

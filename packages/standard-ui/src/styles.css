@@ -266,7 +266,7 @@ code {
 
   --secondary: theme(--color-neutral-700);
   --secondary-foreground: theme(--color-white);
-  --muted: theme(--color-neutral-700);
+  --muted: theme(--color-neutral-800);
   --muted-foreground: theme(--color-neutral-400);
   --accent: theme(--color-neutral-700);
   --accent-foreground: theme(--color-white);
