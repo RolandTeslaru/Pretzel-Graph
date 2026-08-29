@@ -66,7 +66,8 @@ function Root({
         <div
             className={cn(
                 frameVariants({ variant, spacing, stacked, dense }),
-                className
+                className,
+                " shadow-md shadow-black/10"
             )}
             data-slot="frame"
             data-spacing={spacing}
