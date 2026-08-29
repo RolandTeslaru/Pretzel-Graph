@@ -6,7 +6,7 @@ import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { CLOUD_URL } from '@/config'
 
 // The origin is configured; the path is not.
-export const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/workspaces`
+export const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/`
 
 /** Renders nothing without a cloud origin, so no call site needs a condition. */
 export function AdminPanelItem() {
