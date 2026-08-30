@@ -60,13 +60,11 @@ function CredentialsRoute() {
         return <EmptyState />
 
     return (
-        <ScrollArea.Root className='h-[calc(100vh-60px)] pr-10'>
-            <div className='flex flex-col gap-2 pb-10'>
-                {groups.map(group => (
-                    <TemplateGroup key={group.templateId} group={group} />
-                ))}
-            </div>
-        </ScrollArea.Root>
+        <div className='flex flex-col gap-2 pb-10 pt-[60px] pr-10 pl-2'>
+            {groups.map(group => (
+                <TemplateGroup key={group.templateId} group={group} />
+            ))}
+        </div>
     )
 }
 

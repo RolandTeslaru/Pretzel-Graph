@@ -6,13 +6,15 @@ import { Button, DropdownMenu, SearchInput, Tabs } from '@pretzel-graph/standard
 import { openCreateFolderDialog, openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import type { Library } from '@pretzel-graph/shared/domain'
 import Breadcrumbs from './Breadcrumbs'
-import FolderView from '@/SDKs/LibrarySDK/ui/FolderView'
+import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 
 interface Props {
     folderId: Library.Folder.Id
+    topBarClassName?: string
+    folderViewClassName?: string
 }
 
-export function FolderBrowser({ folderId }: Props) {
+export function FolderBrowser({ folderId, topBarClassName, folderViewClassName }: Props) {
     const navigate = useNavigate()
 
     const [breadCrumbs, childFolders, workflows] = LibrarySDK.useStore(s => [
@@ -36,7 +38,7 @@ export function FolderBrowser({ folderId }: Props) {
     return (
         <>
             {/* Top Bar */}
-            <div className="absolute top-0 pr-10 w-full flex items-center justify-between mb-4 z-10">
+            <div className={"absolute top-0 pr-10 w-full flex items-center justify-between mb-4 z-10 " + topBarClassName}>
                 <Breadcrumbs cwd={breadCrumbs} />
                 <div className="flex items-center gap-2 pt-0.5">
                     <SearchInput
@@ -70,7 +72,7 @@ export function FolderBrowser({ folderId }: Props) {
             <FolderView
                 childFolders={filteredFolders}
                 workflows={filteredWorkflows}
-                className='pt-12 pb-20 pr-10'
+                className={'pt-12 pb-20 pr-10 ' + folderViewClassName}
                 onFolderClick={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
                 onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}
             />

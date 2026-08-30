@@ -39,6 +39,13 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
 
             cwd.reverse();
             return cwd;
+        },
+        
+        getLibraryView: (s: LibrarySDK.State, cwd: Library.Folder.Id) => {
+            return {
+                folders:   Object.values(s.folders).filter((f) => f.parent_folder_id === cwd),
+                worfklows: Object.values(s.workflowMetas).filter((w) => w.folder_id === cwd)
+            }
         }
     }
 }

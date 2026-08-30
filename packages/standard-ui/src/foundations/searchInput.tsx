@@ -37,11 +37,11 @@ function SearchInput({
   }
 
   return (
-    <div className={cn("relative", wrapperClassName)} data-slot="search-input">
+    <div className={cn("relative ", wrapperClassName)} data-slot="search-input">
       <Input
         type="search"
         placeholder={placeholder}
-        className={cn("pr-7", className)}
+        className={cn("pr-7 backdrop-blur-md ", className)}
         value={value}
         onChange={handleChange}
         {...props}
