@@ -25,6 +25,35 @@ export namespace Execution {
     ])
     export type Status = z.infer<typeof Status>
 
+    /** Not finished. Queued, executing, or held part-way through. */
+    export const ACTIVE_STATUSES = ["pending", "running", "paused", "suspended"] as const
+
+    /** Finished, however it ended. Nothing more will be written to the row. */
+    export const SETTLED_STATUSES = ["completed", "failed", "terminated"] as const
+
+    // Every status belongs to exactly one of the two, so adding one to the enum
+    // fails to compile until it is placed.
+    type ActiveStatus  = (typeof ACTIVE_STATUSES)[number]
+    type SettledStatus = (typeof SETTLED_STATUSES)[number]
+
+    type AssertStatusesPartition =
+        Status extends ActiveStatus | SettledStatus
+            ? ActiveStatus | SettledStatus extends Status
+                ? ActiveStatus & SettledStatus extends never ? true : never
+                : never
+            : never
+    const _assertStatusesPartition: AssertStatusesPartition = true
+    void _assertStatusesPartition
+
+    /** Anything carrying a status — a `Meta`, a full row, or a bare `{ status }`. */
+    type WithStatus = { status: Status }
+
+    export const isActive = ({ status }: WithStatus): boolean =>
+        (ACTIVE_STATUSES as readonly Status[]).includes(status)
+
+    export const isSettled = ({ status }: WithStatus): boolean =>
+        (SETTLED_STATUSES as readonly Status[]).includes(status)
+
     export import Session = SessionMod.Session
     export import Igniter = IgniterMod.Igniter
 

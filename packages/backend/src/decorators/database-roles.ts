@@ -70,7 +70,7 @@ const SQLSTATE: Record<string, SystemError.Code> = {
     '22P02': SystemError.Code.BAD_REQUEST, // malformed input (bad uuid, etc.)
 };
 
-function catchDatabaseErrors(fn: (...args: unknown[]) => unknown, operation: string) {
+export function catchDatabaseErrors(fn: (...args: unknown[]) => unknown, operation: string) {
     return async function (this: unknown, ...args: unknown[]) {
         try {
             return await fn.apply(this, args);

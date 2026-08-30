@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Auth, Listing, Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Listing, Library, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
 const WORKFLOW_META_COLUMNS = [
     'id',
@@ -21,22 +22,21 @@ const WORKFLOW_META_COLUMNS = [
 
 const toWorkflowMeta = (row: unknown) => Library.WorkflowMeta.Schema.parse(row);
 
-@DatabaseClass
-class BootstrapMethods {
+class BootstrapMethods extends Repository {
 
     @ZodReturn(z.object({
         folders: Library.Folder.Schema.array(),
         workflow_metas: Library.WorkflowMeta.Schema.array(),
     }))
-    @AllowedDatabaseRoles("user")
-    async get(trx: DB.UserTransaction): Promise<Library.API.Bootstrap.Get.Response> {
+    @Transactional('user')
+    public async get(principal: Principal.User): Promise<Library.API.Bootstrap.Get.Response> {
         const [folders, workflowMetas] = await Promise.all([
-            trx
+            this.trx
                 .selectFrom('folders')
                 .selectAll()
                 .orderBy('created_at', 'desc')
                 .execute(),
-            trx
+            this.trx
                 .selectFrom('workflows')
                 .select(WORKFLOW_META_COLUMNS)
                 .orderBy('created_at', 'desc')
@@ -50,21 +50,19 @@ class BootstrapMethods {
     }
 }
 
-@DatabaseClass
-class FolderMethods {
+class FolderMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Library.Folder.Schema)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async create(
+        principal: Principal.User,
         payload: Library.API.Folder.Create.Request,
     ): Promise<Library.Folder> {
-        const row = await trx
+        const row = await this.trx
             .insertInto('folders')
             .values({
                 ...payload,
-                created_by: createdBy,
+                created_by: principal.userId,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
@@ -72,13 +70,13 @@ class FolderMethods {
         return DB.Folder.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Library.Folder.Schema)
-    async update(
-        trx: DB.UserTransaction,
+    public async update(
+        principal: Principal.User,
         payload: Library.API.Folder.Update.Request,
     ): Promise<Library.Folder> {
-        const row = await trx
+        const row = await this.trx
             .updateTable('folders')
             .set({
                 display_name: payload.display_name,
@@ -91,9 +89,9 @@ class FolderMethods {
         return DB.Folder.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
-    async delete(trx: DB.UserTransaction, id: Library.Folder.Id): Promise<void> {
-        await trx
+    @Transactional('user')
+    public async delete(principal: Principal.User, id: Library.Folder.Id): Promise<void> {
+        await this.trx
             .deleteFrom('folders')
             .where('id', '=', id)
             .execute();
@@ -104,23 +102,23 @@ class FolderMethods {
         child_folders: Library.Folder.Schema.array(),
         workflows: Library.WorkflowMeta.Schema.array(),
     }))
-    @AllowedDatabaseRoles("user")
-    async getContents(
-        trx: DB.UserTransaction,
+    @Transactional('user')
+    public async getContents(
+        principal: Principal.User,
         id: Library.Folder.Id,
     ): Promise<Library.API.Folder.GetContents.Response> {
         const [folder, children, workflows] = await Promise.all([
-            trx
+            this.trx
                 .selectFrom('folders')
                 .selectAll()
                 .where('id', '=', id)
                 .executeTakeFirstOrThrow(),
-            trx
+            this.trx
                 .selectFrom('folders')
                 .selectAll()
                 .where('parent_folder_id', '=', id)
                 .execute(),
-            trx
+            this.trx
                 .selectFrom('workflows')
                 .select(WORKFLOW_META_COLUMNS)
                 .where('folder_id', '=', id)
@@ -135,21 +133,19 @@ class FolderMethods {
     }
 }
 
-@DatabaseClass
-class WorkflowMethods {
+class WorkflowMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Schema)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async create(
+        principal: Principal.User,
         payload: Library.API.Workflow.Create.Request,
     ): Promise<Workflow> {
-        const row = await trx
+        const row = await this.trx
             .insertInto('workflows')
             .values({
                 ...payload,
-                created_by: createdBy,
+                created_by: principal.userId,
                 locked: false,
                 data: Workflow.INITIAL.data,
             })
@@ -159,13 +155,13 @@ class WorkflowMethods {
         return DB.Workflow.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Library.WorkflowMeta.Schema)
-    async update(
-        trx: DB.UserTransaction,
+    public async update(
+        principal: Principal.User,
         payload: Library.API.Workflow.Update.Request,
     ): Promise<Library.WorkflowMeta> {
-        const row = await trx
+        const row = await this.trx
             .updateTable('workflows')
             .set({
                 ...(payload.display_name !== undefined && {
@@ -188,13 +184,13 @@ class WorkflowMethods {
         return toWorkflowMeta(row);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Schema)
-    async get(
-        trx: DB.UserTransaction,
+    public async get(
+        principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<Workflow> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('workflows')
             .selectAll()
             .where('id', '=', workflowId)
@@ -203,37 +199,36 @@ class WorkflowMethods {
         return DB.Workflow.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
-    async setListingId(trx: DB.UserTransaction, workflowId: Workflow.Id, listingId: Listing.Id | null): Promise<void> {
-        await trx
+    @Transactional('user')
+    public async setListingId(principal: Principal.User, workflowId: Workflow.Id, listingId: Listing.Id | null): Promise<void> {
+        await this.trx
             .updateTable('workflows')
             .set({ listing_id: listingId })
             .where('id', '=', workflowId)
             .execute();
     }
 
-    @AllowedDatabaseRoles("user")
-    async delete(trx: DB.UserTransaction, id: Workflow.Id): Promise<void> {
-        await trx
+    @Transactional('user')
+    public async delete(principal: Principal.User, id: Workflow.Id): Promise<void> {
+        await this.trx
             .deleteFrom('workflows')
             .where('id', '=', id)
             .execute();
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Schema)
-    async duplicate(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async duplicate(
+        principal: Principal.User,
         id: Workflow.Id,
     ): Promise<Workflow> {
-        const source = await trx
+        const source = await this.trx
             .selectFrom('workflows')
             .selectAll()
             .where('id', '=', id)
             .executeTakeFirstOrThrow();
 
-        const row = await trx
+        const row = await this.trx
             .insertInto('workflows')
             .values({
                 folder_id: source.folder_id,
@@ -243,7 +238,7 @@ class WorkflowMethods {
                 accent: source.accent,
                 icon_color: source.icon_color,
                 data: source.data,
-                created_by: createdBy,
+                created_by: principal.userId,
                 locked: false,
                 mcp_enabled: source.mcp_enabled,
             })
@@ -255,8 +250,7 @@ class WorkflowMethods {
 }
 
 @Injectable()
-@DatabaseClass
-export class LibraryDatabase {
+export class LibraryRepository {
     public readonly bootstrap = new BootstrapMethods();
     public readonly folder = new FolderMethods();
     public readonly workflow = new WorkflowMethods();

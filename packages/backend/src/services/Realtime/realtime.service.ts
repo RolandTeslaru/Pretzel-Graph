@@ -10,16 +10,24 @@ export class RealtimeService implements OnModuleDestroy {
 
     private readonly waiters = new Map<Realtime.Channel, Set<(event: Realtime.Event) => void>>();
 
+    /** Standing subscriptions, unlike `waiters` which are one-shot and time out. */
+    private readonly listeners = new Map<Realtime.Channel, Set<(event: Realtime.Event) => void>>();
+
     constructor() {
         this.redisSub.on('message', (channel: Realtime.Channel, msg: string) => {
-            const channelWaiters = this.waiters.get(channel);
-            if (!channelWaiters) 
+            const channelWaiters   = this.waiters.get(channel);
+            const channelListeners = this.listeners.get(channel);
+
+            if (!channelWaiters && !channelListeners)
                 return;
-            
+
             const event = JSON.parse(msg) as Realtime.Event;
-            
-            for (const waiter of channelWaiters) 
+
+            for (const waiter of channelWaiters ?? [])
                 waiter(event);
+
+            for (const listener of channelListeners ?? [])
+                listener(event);
         });
     }
 
@@ -81,8 +89,42 @@ export class RealtimeService implements OnModuleDestroy {
         });
     }
 
+    /** A standing subscription for the life of the process; returns its own removal. */
+    public subscribe<T extends Realtime.Event>(
+        channel: Realtime.Channel,
+        handler: (event: T) => void,
+    ): () => void {
+        if (!this.listeners.has(channel)) {
+            this.listeners.set(channel, new Set());
+            this.redisSub.subscribe(channel);
+        }
+
+        const listener = handler as (event: Realtime.Event) => void;
+
+        this.listeners.get(channel)!.add(listener);
+
+        return () => {
+            const channelListeners = this.listeners.get(channel);
+
+            if (!channelListeners)
+                return;
+
+            channelListeners.delete(listener);
+
+            if (channelListeners.size === 0 && !this.waiters.has(channel)) {
+                this.listeners.delete(channel);
+                this.redisSub.unsubscribe(channel);
+            }
+        };
+    }
+
     public emitSignal<T extends Realtime.Signal>(signal: T){
         this.redisPub.publish(signal.channel, JSON.stringify(signal));
+    }
+
+    /** Outbound, to whoever is subscribed to the event's own channel. */
+    public emitEvent<T extends Realtime.Event>(event: T){
+        this.redisPub.publish(event.channel, JSON.stringify(event));
     }
 
     // Send a signal then await the worker's confirmation event. Registers the waiter BEFORE

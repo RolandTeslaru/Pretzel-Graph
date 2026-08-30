@@ -35,31 +35,22 @@ export namespace Activity {
         })
         export type Base = z.infer<typeof Base>
 
-        // Mirrors Execution.Event.Lifecycle, carrying the whole row so a card
-        // renders without a follow-up read.
-        export namespace ExecutionLifecycle {
-            export const Started    = Base.extend({ type: z.literal('activity:execution:started'),    execution: ExecutionD.Meta })
-            export const Paused     = Base.extend({ type: z.literal('activity:execution:paused'),     execution: ExecutionD.Meta })
-            export const Resumed    = Base.extend({ type: z.literal('activity:execution:resumed'),    execution: ExecutionD.Meta })
-            export const Completed  = Base.extend({ type: z.literal('activity:execution:completed'),  execution: ExecutionD.Meta })
-            export const Failed     = Base.extend({ type: z.literal('activity:execution:failed'),     execution: ExecutionD.Meta })
-            export const Suspended  = Base.extend({ type: z.literal('activity:execution:suspended'),  execution: ExecutionD.Meta })
-            export const Terminated = Base.extend({ type: z.literal('activity:execution:terminated'), execution: ExecutionD.Meta })
+        // One event for every state a run reaches, carrying the whole row so a
+        // card renders without a follow-up read. The status it landed on is in
+        // the payload, which is all a board branches on.
+        export namespace Execution {
+            export const Upserted = Base.extend({
+                type:      z.literal('activity:execution:upserted'),
+                execution: ExecutionD.Meta,
+            })
+            export type Upserted = z.infer<typeof Upserted>
 
-            export type Started    = z.infer<typeof Started>
-            export type Paused     = z.infer<typeof Paused>
-            export type Resumed    = z.infer<typeof Resumed>
-            export type Completed  = z.infer<typeof Completed>
-            export type Failed     = z.infer<typeof Failed>
-            export type Suspended  = z.infer<typeof Suspended>
-            export type Terminated = z.infer<typeof Terminated>
-
-            export const Schema = z.discriminatedUnion("type", [Started, Paused, Resumed, Completed, Failed, Suspended, Terminated])
+            export const Schema = z.discriminatedUnion("type", [Upserted])
         }
-        export type ExecutionLifecycle = z.infer<typeof ExecutionLifecycle.Schema>
+        export type Execution = z.infer<typeof Execution.Schema>
 
 
-        export const Schema = z.discriminatedUnion("type", [ExecutionLifecycle.Schema])
+        export const Schema = z.discriminatedUnion("type", [Execution.Schema])
     }
     export type Event = z.infer<typeof Event.Schema>
 

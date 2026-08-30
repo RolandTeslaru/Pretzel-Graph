@@ -1,22 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Auth, SystemError, Workflow, Workbench } from '@pretzel-graph/shared/domain';
+import { SystemError, Workflow, Workbench } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
-@DatabaseClass
-class WorkflowMethods {
+class WorkflowMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Id)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async create(
+        principal: Principal.User,
         payload: Workbench.API.Workflow.Create.Request,
     ): Promise<Workflow.Id> {
         const { workflow } = payload;
-        const row = await trx
+        const row = await this.trx
             .insertInto('workflows')
             .values({
                 folder_id: workflow.folder_id,
@@ -28,7 +27,7 @@ class WorkflowMethods {
                 locked: workflow.locked,
                 mcp_enabled: false,
                 data: workflow.data,
-                created_by: createdBy,
+                created_by: principal.userId,
             })
             .returning('id')
             .executeTakeFirstOrThrow();
@@ -36,10 +35,10 @@ class WorkflowMethods {
         return row.id;
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Schema)
-    async get(trx: DB.UserTransaction, workflowId: Workflow.Id): Promise<Workflow> {
-        const row = await trx
+    public async get(principal: Principal.User, workflowId: Workflow.Id): Promise<Workflow> {
+        const row = await this.trx
             .selectFrom('workflows')
             .selectAll()
             .where('id', '=', workflowId)
@@ -49,12 +48,12 @@ class WorkflowMethods {
     }
 
 
-    @AllowedDatabaseRoles("user")
-    async commit(
-        trx: DB.UserTransaction,
+    @Transactional('user')
+    public async commit(
+        principal: Principal.User,
         payload: Workbench.API.Workflow.Commit.Request,
     ): Promise<void> {
-        await trx
+        await this.trx
             .updateTable('workflows')
             .set({ data: payload.data })
             .where('id', '=', payload.workflowId)
@@ -62,22 +61,21 @@ class WorkflowMethods {
     }
 }
 
-@DatabaseClass
-class PublishedDependencyMethods {
+class PublishedDependencyMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Dependency.Publication.Schema)
-    async load(
-        trx: DB.UserTransaction,
+    public async load(
+        principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<Workflow.Dependency.Publication> {
-        const workflow = await trx
+        const workflow = await this.trx
             .selectFrom('workflows')
             .select(['id', 'display_name', 'icon', 'accent'])
             .where('id', '=', workflowId)
             .executeTakeFirstOrThrow();
 
-        const row = await trx
+        const row = await this.trx
             .selectFrom('version_control')
             .selectAll()
             .where('workflow_id', '=', workflowId)
@@ -102,10 +100,10 @@ class PublishedDependencyMethods {
     }
 
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Dependency.Publication.UpdateMap)
-    async checkUpdates(
-        trx: DB.UserTransaction,
+    public async checkUpdates(
+        principal: Principal.User,
         dependencies: Workbench.API.Dependency.Published.CheckUpdates.Request['dependencies'],
     ): Promise<Workflow.Dependency.Publication.UpdateMap> {
         if (!dependencies.length)
@@ -119,7 +117,7 @@ class PublishedDependencyMethods {
         );
         const workflowIds = dependencies.map((dependency) => dependency.workflowId);
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('version_control')
             .select(['id', 'workflow_id', 'version', 'name', 'description'])
             .where('workflow_id', 'in', workflowIds)
@@ -145,16 +143,15 @@ class PublishedDependencyMethods {
     }
 }
 
-@DatabaseClass
-class DraftDependencyMethods {
+class DraftDependencyMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Dependency.Draft.Schema)
-    async load(
-        trx: DB.UserTransaction,
+    public async load(
+        principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<Workflow.Dependency.Draft> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('workflows')
             .select(['id', 'display_name', 'icon', 'accent', 'data', 'updated_at'])
             .where('id', '=', workflowId)
@@ -176,10 +173,10 @@ class DraftDependencyMethods {
         };
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(z.record(Workflow.Id, Workflow.Dependency.Draft.UpdateInfo))
-    async checkUpdates(
-        trx: DB.UserTransaction,
+    public async checkUpdates(
+        principal: Principal.User,
         dependencies: Workbench.API.Dependency.Draft.CheckUpdates.Request['dependencies'],
     ): Promise<Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>> {
         if (!dependencies.length)
@@ -193,7 +190,7 @@ class DraftDependencyMethods {
         );
         const workflowIds = dependencies.map((dependency) => dependency.workflowId);
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('workflows')
             .select(['id', 'updated_at'])
             .where('id', 'in', workflowIds)
@@ -217,15 +214,13 @@ class DraftDependencyMethods {
     }
 }
 
-@DatabaseClass
 class DependencyMethods {
     public readonly published = new PublishedDependencyMethods();
     public readonly draft = new DraftDependencyMethods();
 }
 
 @Injectable()
-@DatabaseClass
-export class WorkbenchDatabase {
+export class WorkbenchRepository {
     public readonly workflow = new WorkflowMethods();
     public readonly dependency = new DependencyMethods();
 }

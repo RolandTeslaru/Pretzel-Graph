@@ -1,10 +1,11 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Execution } from '@pretzel-graph/shared/domain';
+import { Execution, Worker } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { ExecutionDatabase } from './execution.database';
 import { ExecutionService } from './execution.service';
+import { RealtimeService } from '../Realtime/realtime.service';
 
 /** Rows younger than this are left alone — they may not have been picked up yet. */
 const GRACE_MS = 2 * 60_000;
@@ -28,6 +29,7 @@ export class ExecutionReconciler implements OnModuleInit {
         private readonly queue: Queue,
         private readonly database: ExecutionDatabase,
         private readonly executions: ExecutionService,
+        private readonly realtime:   RealtimeService,
     ) {}
 
     onModuleInit(): void {
@@ -35,6 +37,28 @@ export class ExecutionReconciler implements OnModuleInit {
 
         const timer = setInterval(() => void this.sweep(), SWEEP_MS);
         (timer as { unref?: () => void }).unref?.();
+
+        // A worker going down names what it is abandoning, which is the same
+        // outcome the sweep reaches on its own minutes later.
+        this.realtime.subscribe<Worker.Event>(Worker.Event.getChannel(), (event) => {
+            if (event.type !== 'worker:shutting-down')
+                return;
+
+            void this.abandon(event.executionIds);
+        });
+    }
+
+    private async abandon(executionIds: Execution.Id[]): Promise<void> {
+        for (const executionId of executionIds) {
+            try {
+                await this.executions.fail(executionId, 'Its worker shut down mid-run');
+
+                this.logger.warn(`Failed execution ${executionId}: its worker shut down`);
+            }
+            catch (error) {
+                this.logger.error(`Could not fail abandoned execution ${executionId}: ${error instanceof Error ? error.message : error}`);
+            }
+        }
     }
 
     private async sweep(): Promise<void> {
@@ -53,7 +77,7 @@ export class ExecutionReconciler implements OnModuleInit {
 
                 // A completed job over a non-terminal row means the final update
                 // never landed; the results are gone either way.
-                await this.executions.update({ executionId: id, status: 'failed' });
+                await this.executions.fail(id, `Its worker never reported an outcome (job ${state})`);
 
                 this.logger.warn(`Reconciled orphaned execution ${id} (job ${state})`);
             }

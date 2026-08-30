@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { VaultController } from './vault.controller';
 import { VaultService } from './vault.service';
-import { VaultDatabase } from './vault.database';
+import { VaultRepository } from './vault.repository';
 
 @Module({
     controllers: [VaultController],
-    providers:   [VaultService, VaultDatabase],
-    exports:     [VaultService, VaultDatabase],
+    providers:   [VaultService, VaultRepository],
+    exports:     [VaultService, VaultRepository],
 })
 export class VaultModule {}

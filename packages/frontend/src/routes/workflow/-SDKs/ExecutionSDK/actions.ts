@@ -123,6 +123,22 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             confirmEvent()
             return success;
         },
+        // Any execution, not the one this editor is watching — the activity board
+        // acts on runs it has no session for.
+        terminateById: async (executionId: Execution.Id) => {
+            const { success } = await Execution.API.terminate(api, executionId);
+
+            if (success)
+                toast.info('Workflow execution terminated')
+            else
+                toast.error("Failed to terminate workflow")
+
+            // Kept in step when it happens to be the run on screen.
+            if (success && sdk.state.currentExecution?.id === executionId)
+                sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
+
+            return success;
+        },
         resume: async () => {
             const executionId = sdk.state.currentExecution?.id;
             if (!executionId)
@@ -259,6 +275,7 @@ export type ExecutionSDKActions = {
     // Act on the current execution, read at call time — there is never another one to target.
     pause: () => Promise<boolean>,
     terminate: () => Promise<boolean>,
+    terminateById: (executionId: Execution.Id) => Promise<boolean>,
     resume: () => Promise<boolean>,
     suspend: () => Promise<boolean>,
 
