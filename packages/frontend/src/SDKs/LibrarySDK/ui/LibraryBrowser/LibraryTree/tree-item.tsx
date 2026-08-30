@@ -1,137 +1,19 @@
-import { useMemo, useState } from 'react'
-import { Tree } from '@/components/Tree/Tree'
 import type { Tree as TreeDomain } from '@/components/Tree/domain'
-import { ContextMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { LibrarySDK } from '../sdk'
-import type { FileSystemNodeData } from '../actions'
+import { LibrarySDK } from '../../../sdk'
+import type { FileSystemNodeData } from '../../../actions'
 import { Library } from '@pretzel-graph/shared/domain'
 import type { Workflow } from '@pretzel-graph/shared/domain'
-import { openEditFolderDialog, openEditWorkflowDialog } from './create-dialogs'
-import { openDeleteFolderDialog } from './FolderView/folder-card'
-import { openDeleteWorkflowDialog } from './FolderView/workflow-card'
+import { openEditFolderDialog, openEditWorkflowDialog } from '../../create-dialogs'
+import { openDeleteFolderDialog } from '../FolderView/items/folder'
+import { openDeleteWorkflowDialog } from '../FolderView/items/workflow'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import classNames from 'classnames';
+import classNames from 'classnames'
+import { sizeStyles, type FileSystemTreeSize } from './sizes'
 
-type FileSystemTreeSize = 'default' | 'sm'
-
-type FileSystemTreeProps = {
-    className?: string
-    size?: FileSystemTreeSize
-    cwd?: Library.Folder.Id
-    selectedWorkflowId?: Workflow.Id
-    onFolderClick?: (folderId: Library.Folder.Id) => void
-    onWorkflowClick?: (workflowId: Workflow.Id) => void
-}
-
-const sizeStyles = {
-    default: {
-        row: 'h-7.5 text-sm',
-        indent: 'w-5',
-        line: 'left-[7px]',
-        radius: 'rounded-bl-lg',
-        corner: 'top-[calc(50%-8px)] h-2',
-        icon: 'h-4 w-4',
-        search: 'sm',
-    },
-    sm: {
-        row: 'h-6 text-xs',
-        indent: 'w-4',
-        line: 'left-[6px]',
-        radius: 'rounded-bl-md',
-        corner: 'top-[calc(50%-6px)] h-1.5',
-        icon: 'h-3.5 w-3.5',
-        search: 'xs',
-    },
-} as const
-
-type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
-
-// Keep a branch if its name matches (with its whole subtree) or any descendant matches
-// (as an expanded ancestor). Returns null when nothing in the subtree matches.
-function filterBranch(branch: FileNode, query: string): FileNode | null {
-    if ((branch.data?.name ?? '').toLowerCase().includes(query)) {
-        return { ...branch, isExpandedByDefault: true }
-    }
-    if (!branch.childBranches) return null
-
-    const kept: Record<string, FileNode> = {}
-    for (const [key, child] of Object.entries(branch.childBranches)) {
-        const f = filterBranch(child, query)
-        if (f) kept[key] = f
-    }
-    if (Object.keys(kept).length === 0) return null
-
-    return {
-        ...branch,
-        isExpandedByDefault: true,
-        childBranches: kept as FileNode['childBranches'],
-    }
-}
-
-function filterTree(root: FileNode, query: string): FileNode {
-    if (!root.childBranches) return root
-    const kept: Record<string, FileNode> = {}
-    for (const [key, child] of Object.entries(root.childBranches)) {
-        const f = filterBranch(child, query)
-        if (f) kept[key] = f
-    }
-    return { childBranches: kept as FileNode['childBranches'] }
-}
-
-export function FileSystemTree({ className, size = 'default', cwd, selectedWorkflowId, onFolderClick, onWorkflowClick }: FileSystemTreeProps) {
-    const styles = sizeStyles[size]
-
-    const treeData = LibrarySDK.useStore((s) => s.treeData)
-
-    const [query, setQuery] = useState('')
-
-    const displayTree = useMemo(
-        () => (query ? filterTree(treeData, query) : treeData),
-        [treeData, query],
-    )
-
-    const selectedFolderKey = cwd ? `folder:${cwd}` : undefined
-    const selectedWorkflowKey = selectedWorkflowId ? `workflow:${selectedWorkflowId}` : undefined
-
-    const hasContents = treeData.childBranches && Object.keys(treeData.childBranches).length > 0
-    const hasResults = displayTree.childBranches && Object.keys(displayTree.childBranches).length > 0
-
-    return (
-        <div className='relative'>
-            <div className='sticky z-10 top-1 flex flex-row gap-1 mb-3'>
-                <SearchInput className='rounded-full! backdrop-blur-md'
-                    wrapperClassName='flex-1 mx-1'
-                    size={styles.search}
-                    onSearch={(value) => setQuery(value.trim().toLowerCase())}
-                />
-            </div>
-            {!hasContents ? (
-                <div className='text-sm opacity-60 px-2 py-1'>Nothing here yet.</div>
-            ) : !hasResults ? (
-                <div className='text-sm opacity-60 px-2 py-1'>No matches.</div>
-            ) : (
-                <Tree<FileSystemNodeData>
-                    key={query || 'all'}
-                    root={displayTree}
-                    className={className}
-                    renderBranch={(props) => (
-                        <FileSystemTreeItem
-                            {...props}
-                            isSelected={props.branch.key === selectedFolderKey || props.branch.key === selectedWorkflowKey}
-                            styles={styles}
-                            onFolderClick={onFolderClick}
-                            onWorkflowClick={onWorkflowClick}
-                        />
-                    )}
-                />
-            )}
-        </div>
-    )
-}
-
-function FileSystemTreeItem({
+export function TreeItem({
     branch,
     level,
     isExpanded,

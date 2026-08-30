@@ -9,6 +9,12 @@ import { shallow } from "zustand/shallow";
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
 import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from './ui/listing-dialogs';
+import { openCreateWorkflowDialog, openEditWorkflowDialog } from './ui/workflow-dialogs';
+import { openCreateFolderDialog, openEditFolderDialog } from './ui/folder-dialogs';
+import { openDeleteWorkflowDialog } from './ui/LibraryBrowser/FolderView/items/workflow';
+import { openDeleteFolderDialog } from './ui/LibraryBrowser/FolderView/items/folder';
+import { openDependencySelectorDialog } from './ui/DependencySelectorDialog';
+import { openWorkflowSelector } from './ui/WorkflowSelector';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
@@ -32,9 +38,17 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
     public readonly selectors: LibrarySDK.Selectors = _createLibrarySelectors_(this)
     public readonly actions: LibrarySDK.Actions = _createLibraryActions_(this)
 
-    public readonly openListPublicWorkflowDialog = openListPublicWorkflowDialog
+    public readonly openCreateWorkflowDialog       = openCreateWorkflowDialog
+    public readonly openEditWorkflowDialog         = openEditWorkflowDialog
+    public readonly openDeleteWorkflowDialog       = openDeleteWorkflowDialog
+    public readonly openCreateFolderDialog         = openCreateFolderDialog
+    public readonly openEditFolderDialog           = openEditFolderDialog
+    public readonly openDeleteFolderDialog         = openDeleteFolderDialog
+    public readonly openListPublicWorkflowDialog   = openListPublicWorkflowDialog
     public readonly openUnlistPublicWorkflowDialog = openUnlistPublicWorkflowDialog
-    public readonly openListingManagerDialog = openListingManagerDialog
+    public readonly openListingManagerDialog       = openListingManagerDialog
+    public readonly openDependencySelectorDialog   = openDependencySelectorDialog
+    public readonly openWorkflowSelector           = openWorkflowSelector
 }
 
 

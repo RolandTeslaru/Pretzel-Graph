@@ -63,11 +63,12 @@ const ActivityKanban = () => {
             getItemValue={(task) => task.id}
             onValueCommit={(next, meta) => console.log(meta.kind, next)}
         >
-            <Kanban.Board className='flex overflow-x-auto [&>*]:w-[220px] [&>*]:shrink-0'>
+            <Kanban.Board className='flex [&>*]:w-[220px] [&>*]:shrink-0'>
                 {columnIds.map((columnId) => {
                     const workflow = activity.workflows[columnId as Workflow.Id]
                     return <WorkflowColumn key={columnId} workflow={workflow} />
                 })}
+                <div className='w-[40px]'></div>
             </Kanban.Board>
 
             <Kanban.Overlay>

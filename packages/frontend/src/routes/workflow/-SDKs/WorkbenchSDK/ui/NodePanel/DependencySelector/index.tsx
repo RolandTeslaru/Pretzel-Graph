@@ -4,12 +4,23 @@ import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
-import { openDependencySelectorDialog } from './Dialog'
+import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 interface Props {
     nodeId: Workflow.Node.Id
     className?: string
+}
+
+const openSelector = (nodeId: Workflow.Node.Id) => {
+    LibrarySDK.openDependencySelectorDialog({
+        onLocalWorkflowSelected: (workflowId, variant) =>
+            WorkbenchSDK.actions.dependency.attachToNode(nodeId, workflowId, variant),
+        onListingSelected: (listingId) =>
+            WorkbenchSDK.actions.dependency.attachToNode(nodeId, listingId, 'publication'),
+        onListingPreview: (listingId) =>
+            WorkbenchSDK.openWorkflowWindow(listingId),
+    })
 }
 
 export const DependencySelector = memo<Props>(({ nodeId, className }) => {
@@ -32,7 +43,7 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                 variant="outline"
                 size="sm"
                 className="h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left"
-                onClick={() => openDependencySelectorDialog(nodeId)}
+                onClick={() => openSelector(nodeId)}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span

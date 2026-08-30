@@ -11,29 +11,14 @@ import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrat
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
-import type { FolderViewSize } from './size'
 import classNames from 'classnames'
+import { sizeStyles, type ItemSize } from './sizes'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
-    size?: FolderViewSize
+    size?: ItemSize
     onClick?: () => void
 }
-
-const sizeStyles = {
-    default: {
-        card: 'p-4',
-        name: 'text-sm',
-        icon: 40,
-        glyph: 52,
-    },
-    sm: {
-        card: 'p-2',
-        name: 'text-xs',
-        icon: 24,
-        glyph: 32,
-    },
-} as const
 
 function iconColor(workflow: Library.WorkflowMeta) {
     const token = workflow.icon_color ?? workflow.accent
@@ -41,7 +26,7 @@ function iconColor(workflow: Library.WorkflowMeta) {
     return token ? `var(--${token})` : "var(--primary)"
 }
 
-export function WorkflowCard({ workflow, size = 'default', onClick }: WorkflowCardProps) {
+export function WorkflowItem({ workflow, size = 'default', onClick }: WorkflowCardProps) {
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => Boolean(s.activeWorkflows[workflow.id]))
 
@@ -51,34 +36,33 @@ export function WorkflowCard({ workflow, size = 'default', onClick }: WorkflowCa
         <WorkflowCardContextMenu workflow={workflow}>
             <div
                 onClick={onClick}
-                className={classNames('flex flex-col gap-1 hover:bg-accent/30 rounded-md relative m-auto cursor-pointer select-none', styles.card)}
+                className={classNames('group flex gap-1 relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card)}
             >
-                {workflow.icon ? (
-                    <LazyIcon
-                        name={workflow.icon}
-                        size={styles.icon}
-                        className="shrink-0 w-fit h-fit m-auto"
-                        style={{ color: iconColor(workflow) }}
-                    />
-                ) : (
-                    <WorkflowIllustration
-                        width={styles.glyph}
-                        height={styles.glyph}
-                        className="shrink-0 m-auto"
-                        style={{ color: "var(--primary)" }}
-                    />
-                )}
-                <div className="min-w-0 flex flex-col gap-1">
+                <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
+                    {workflow.icon ? (
+                        <LazyIcon
+                            name={workflow.icon}
+                            className={classNames('shrink-0 m-auto', styles.workflowIcon)}
+                            style={{ color: iconColor(workflow) }}
+                        />
+                    ) : (
+                        <WorkflowIllustration
+                            className={classNames('shrink-0 m-auto', styles.workflowIcon)}
+                            style={{ color: "var(--primary)" }}
+                        />
+                    )}
+                    <div className="min-w-0 flex flex-col gap-1">
 
-                    <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
-                    {hasActiveWorkflow ? (
-                        <Badge variant="success" className='mx-auto'>
-                            Active
-                        </Badge>
-                    ) : null}
-                    {/* {workflow.description && (
-                        <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
-                    )} */}
+                        <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
+                        {hasActiveWorkflow ? (
+                            <Badge variant="success" className='mx-auto' size={styles.badge}>
+                                Active
+                            </Badge>
+                        ) : null}
+                        {/* {workflow.description && (
+                            <p className="text-xs opacity-60 truncate max-w-30 mt-0.5">{workflow.description}</p>
+                        )} */}
+                    </div>
                 </div>
             </div>
         </WorkflowCardContextMenu>

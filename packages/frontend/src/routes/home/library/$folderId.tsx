@@ -1,9 +1,12 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { FolderBrowser } from './-components/FolderBrowser'
+import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
+import { useState } from 'react'
+import { Button, DropdownMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import Breadcrumbs from './-components/Breadcrumbs'
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
@@ -47,14 +50,57 @@ function FolderNotFound() {
 
 
 function FolderRoute() {
-    const { folderId } = Route.useParams()
-    const id = folderId as Library.Folder.Id
+    const navigate = useNavigate()
+    const { folderId: _folderId } = Route.useParams()
+    const folderId = _folderId as Library.Folder.Id
 
-    const folder = LibrarySDK.useStore(s => s.folders[id])
+    const [folder, breadCrumbs] = LibrarySDK.useStore(s => [s.folders[folderId], s.selectors.getBreadcrumbs(s, folderId)])
 
     if (!folder) {
         return <div className="p-6 opacity-60">Folder not found.</div>
     }
 
-    return <FolderBrowser folderId={id} />
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const setCwd = (folderId: Library.Folder.Id) => navigate({ to: '/home/library/$folderId', params: { folderId } })
+
+    return (
+        <div className='relative'>
+            <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
+                <Breadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
+                <div className="flex gap-2 ">
+                    <SearchInput
+                        size='sm'
+                        className='rounded-full!'
+                        onSearch={setSearchQuery}
+                    />
+
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                            <Button>
+                                Create
+                            </Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content align="end">
+                            <DropdownMenu.Item
+                                onClick={() => LibrarySDK.openCreateFolderDialog({ parent_folder_id: folderId })}
+                            ><SystemIcons.Folder />Create Folder</DropdownMenu.Item>
+
+                            <DropdownMenu.Item
+                                onClick={() => LibrarySDK.openCreateWorkflowDialog({ folder_id: folderId })}
+                            ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+                </div>
+            </div>
+            <FolderView
+                cwd={folderId}
+                scrollContainerClassName='h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]'
+                className='pt-[100px]'
+                setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
+                onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}
+                searchQuery={searchQuery}
+            />
+        </div>
+    )
 }
