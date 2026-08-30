@@ -7,7 +7,6 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { ScrollArea } from "@pretzel-graph/standard-ui/foundations";
 import { FolderItem } from "./items/folder";
 import { WorkflowItem } from "./items/workflow";
-import Breadcrumbs from "@/routes/home/library/-components/Breadcrumbs";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 
 interface Props extends LibraryBrowserBaseProps {

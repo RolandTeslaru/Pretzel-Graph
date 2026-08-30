@@ -1,7 +1,7 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { AdminPanelItem, PretzelGraphDropdown } from '@/components/PretzelGraphDropdown'
-import Breadcrumbs from '@/routes/home/library/-components/Breadcrumbs'
+import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -18,7 +18,7 @@ export const TopLeftPanel = () => {
             <PretzelGraphDropdown compact>
                 <AdminPanelItem />
             </PretzelGraphDropdown>
-            <Breadcrumbs 
+            <LibraryCwdBreadcrumbs 
                 className='my-auto' 
                 cwd={folder_id} 
                 finalFileName={display_name}

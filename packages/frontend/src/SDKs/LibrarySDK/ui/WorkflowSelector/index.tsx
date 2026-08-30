@@ -7,7 +7,7 @@ import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import Breadcrumbs from '@/routes/home/library/-components/Breadcrumbs'
+import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
 export const WORKFLOW_SELECTOR_DIALOG_ID = "workflow-selector"
 
@@ -69,7 +69,7 @@ const WorkflowSelector = ({ dialogProps, onWorkflowSelected }: Props) => {
         >
             <div className='flex h-full w-[480px] shrink-0 flex-col gap-2 relative'>
                 <div className='absolute z-20 px-2 w-full top-2 flex flex-row justify-between'>
-                    <Breadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
+                    <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
                     <SearchInput className='rounded-full!' size="xs" onSearch={value => setViewSearchQuery(value)}/>
                 </div>
                 <div className='flex-1 min-h-0'>
