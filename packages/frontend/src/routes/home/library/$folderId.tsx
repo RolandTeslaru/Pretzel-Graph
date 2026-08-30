@@ -6,7 +6,7 @@ import type { Library } from '@pretzel-graph/shared/domain'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { useState } from 'react'
 import { Button, DropdownMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
-import Breadcrumbs from './-components/Breadcrumbs'
+import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
@@ -67,7 +67,7 @@ function FolderRoute() {
     return (
         <div className='relative'>
             <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
-                <Breadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
+                <LibraryCwdBreadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
                 <div className="flex gap-2 ">
                     <SearchInput
                         size='sm'

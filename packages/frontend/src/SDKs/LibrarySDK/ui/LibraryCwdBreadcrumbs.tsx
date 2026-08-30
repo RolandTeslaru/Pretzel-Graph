@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { Breadcrumb } from '@pretzel-graph/standard-ui/foundations'
 import { Fragment } from 'react'
 import { Library } from '@pretzel-graph/shared/domain'
@@ -12,7 +11,7 @@ interface Props {
   setCwd?: (folderId: Library.Folder.Id) => void
 }
 
-const Breadcrumbs = ({ cwd, finalFileName, className, linkClassName, setCwd }: Props) => {
+export const LibraryCwdBreadcrumbs = ({ cwd, finalFileName, className, linkClassName, setCwd }: Props) => {
   const breadCrumbs = LibrarySDK.useStore(s => s.selectors.getBreadcrumbs(s, cwd))
   return (
     <Breadcrumb.Root className={className}>
@@ -41,5 +40,3 @@ const Breadcrumbs = ({ cwd, finalFileName, className, linkClassName, setCwd }: P
     </Breadcrumb.Root>
   )
 }
-
-export default Breadcrumbs

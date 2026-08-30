@@ -61,7 +61,7 @@ function LibraryLayout() {
                 <LibraryTree
                     scrollContainerClassName="h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]"
                     cwd={cwd}
-                    className={"pt-[100px]"}
+                    className={"pt-[100px] pr-2"}
                     searchQuery={treeSearchQuery}
                     setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
                     onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}

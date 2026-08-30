@@ -7,7 +7,7 @@ import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import Breadcrumbs from '@/routes/home/library/-components/Breadcrumbs'
+import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks } from './constants'
 import { ListingSelector } from './listing-selector'
 import { openDependencyTypeDialog } from './dependency-type-dialog'
@@ -91,7 +91,7 @@ const WorkflowSelector = memo<Props>(({ callbacks }) => {
                     </div>
                     <div className='relative flex-1 '>
                         <div className='absolute z-10 flex flex-row pr-4 justify-between top-2 w-full'>
-                            <Breadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
+                            <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
                             <SearchInput className='rounded-full!' size="xs" onSearch={value => setViewSearchQuery(value)}/>
                         </div>
                         <FolderView
