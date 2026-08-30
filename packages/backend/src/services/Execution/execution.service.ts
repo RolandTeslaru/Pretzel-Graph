@@ -5,7 +5,7 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
-import { Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Activity, Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
@@ -13,7 +13,7 @@ import { RealtimeService } from '../Realtime/realtime.service';
 import { PermissionService } from '../Permission/permission.service';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
-import { VaultDatabase } from '../Vault/vault.database';
+import { VaultRepository } from '../Vault/vault.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from './worker-lifecycle.service';
@@ -34,18 +34,36 @@ export class ExecutionService {
         private readonly ownership:      PermissionService,
         private readonly database:       ExecutionDatabase,
         private readonly chatDatabase:   ChatDatabase,
-        private readonly vaultDatabase:  VaultDatabase,
+        private readonly vaultRepository: VaultRepository,
         private readonly workerLifecycle: WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            await DB.asService('mark failed BullMQ execution', (db) => this.database.finalise(db, { executionId: jobId as Execution.Id, status, error: failedReason }));
+            this.announce(await DB.asService('mark failed BullMQ execution', (db) => this.database.finalise(db, { executionId: jobId as Execution.Id, status, error: failedReason })));
         });
 
         // The idle window runs from the last job to end, whichever way it ended.
         this.queueEvents.on('failed',    () => this.workerLifecycle.noteJobEnded());
         this.queueEvents.on('completed', () => this.workerLifecycle.noteJobEnded());
+    }
+
+
+
+
+    /**
+     * Tells the workspace a run reached a new state. Called after the write
+     * commits — a publish inside a scope that later rolls back would put a card
+     * on every open board for a row that does not exist.
+     */
+    private announce(execution: Execution.Meta): void {
+        const channel = Activity.Event.getChannel();
+
+        this.realtime.emitEvent({
+            type: 'activity:execution:upserted',
+            channel,
+            execution,
+        } satisfies Activity.Event.Execution.Upserted);
     }
 
 
@@ -149,7 +167,10 @@ export class ExecutionService {
             await withDatabase((db) => this.chatDatabase.chat.ensure(db, userId, chatId, workflowId));
 
         const session = Execution.Session.createInitial();
-        const executionId = await withDatabase((db) => this.database.create(db, { workflowId, createdBy: userId, igniter, session, executionId: payload.executionId, chatId }));
+        const created = await withDatabase((db) => this.database.create(db, { workflowId, createdBy: userId, igniter, session, executionId: payload.executionId, chatId }));
+        const executionId = created.id;
+
+        this.announce(created);
 
         const execution = {
             id: executionId,
@@ -166,7 +187,7 @@ export class ExecutionService {
 
         try {
             const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
-            const instances = await withDatabase((db) => this.vaultDatabase.credentialInstance.listByIds(db, [...credentialInstanceIds]));
+            const instances = await this.vaultRepository.credentialInstance.listByIds(Principal.SELF, [...credentialInstanceIds]);
             const credentialInstances = Object.fromEntries(instances.map(i => [i.id, i])) as Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
 
             const queueItem: Execution.Queue.Item = {
@@ -185,7 +206,7 @@ export class ExecutionService {
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            await DB.asService('mark execution failed at enqueue', (db) => this.database.finalise(db, { executionId, status: 'failed', error: message }));
+            this.announce(await DB.asService('mark execution failed at enqueue', (db) => this.database.finalise(db, { executionId, status: 'failed', error: message })));
             throw error;
         }
 
@@ -196,7 +217,7 @@ export class ExecutionService {
         );
 
         if (!started) {
-            await DB.asService('mark execution failed — no worker', (db) => this.database.finalise(db, { executionId, status: 'failed', error: 'No worker picked up the job' }));
+            this.announce(await DB.asService('mark execution failed — no worker', (db) => this.database.finalise(db, { executionId, status: 'failed', error: 'No worker picked up the job' })));
             this.executionQueue.remove(executionId).catch(err =>
                 console.error('Failed to remove execution from queue after start timeout', err)
             );
@@ -235,7 +256,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' }));
+            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' })));
        
         return { success };
     }
@@ -255,7 +276,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' }));
+            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' })));
         
         return { success };
     }
@@ -292,7 +313,9 @@ export class ExecutionService {
             'lifecycle:suspended',
         );
 
-        if (success) await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'suspended' }));
+        if (success)
+            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'suspended' })));
+
         return { success };
     }
 
@@ -311,7 +334,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' }));
+            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' })));
         
         return { success };
     }
@@ -320,8 +343,17 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        await DB.asService('finalise execution', (db) => this.database.finalise(db, { executionId, status }));
+        this.announce(await DB.asService('finalise execution', (db) => this.database.finalise(db, { executionId, status })));
         return {};
+    }
+
+    /**
+     * Closes a run nobody is left to report on, with why. `update` cannot: the
+     * error column is off its patch, so only the service role writes one.
+     */
+    public async fail(executionId: Execution.Id, error: string): Promise<void> {
+        this.announce(await DB.asService('fail unreported execution', (db) =>
+            this.database.finalise(db, { executionId, status: 'failed', error })));
     }
 
 
@@ -348,7 +380,9 @@ export class ExecutionService {
 
         const terminateActive = (trx: DB.Transaction<'user' | 'service'>) => this.database.terminateMany(trx, activeExecutionIds, 'Terminated by admin');
 
-        await DB.asService('terminate active executions', terminateActive);
+        const terminated = await DB.asService('terminate active executions', terminateActive);
+
+        terminated.forEach((meta) => this.announce(meta));
 
         return { terminatedCount: activeExecutionIds.length };
     }
@@ -380,7 +414,11 @@ export class ExecutionService {
         // scopes it. Terminal results arrive on /finalise, which stays on the service role.
         const delegate = await this.ownership.resolveDelegate(executionId);
 
-        await DB.asDelegate(delegate, (trx) => this.database.updateProgress(trx, { executionId, status, duration, session, recording }));
+        const meta = await DB.asDelegate(delegate, (trx) => this.database.updateProgress(trx, { executionId, status, duration, session, recording }));
+
+        // Only a status move is activity; a session or recording write is not.
+        if (status !== undefined)
+            this.announce(meta);
         return {};
     }
 

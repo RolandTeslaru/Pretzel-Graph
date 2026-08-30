@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import { Execution, Workflow } from '@pretzel-graph/shared/domain';
-import { DB } from '@/db';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
 /** How many workflows the board shows, and how many runs each holds, at minimum. */
 export const FLOOR = 5;
-
-const RUNNING_STATUSES = ['pending', 'running', 'paused', 'suspended'] as const;
 
 const WORKFLOW_META_COLUMNS = [
     'id',
@@ -24,15 +22,14 @@ const WORKFLOW_META_COLUMNS = [
 ] as const;
 
 @Injectable()
-@DatabaseClass
-export class ActivityDatabase {
-    
-    @AllowedDatabaseRoles("user")
+export class ActivityRepository extends Repository {
+
+    @Transactional('user')
     @ZodReturn(Execution.Meta.array())
-    async listRecentExecutions(trx: DB.UserTransaction): Promise<Execution.Meta[]> {
+    public async listRecentExecutions(principal: Principal.User): Promise<Execution.Meta[]> {
         const startOfDay = sql<string>`date_trunc('day', now())`;
 
-        const rows = await trx
+        const rows = await this.trx
             .with('ranked', (db) => db
                 .selectFrom('executions')
                 .select([
@@ -59,7 +56,7 @@ export class ActivityDatabase {
                 .where((eb) => eb.or([
                     eb('run_rank', '<=', FLOOR),
                     eb('created_at', '>=', startOfDay),
-                    eb('status', 'in', [...RUNNING_STATUSES]),
+                    eb('status', 'in', [...Execution.ACTIVE_STATUSES]),
                 ]))
             )
             .selectFrom('picked')
@@ -76,13 +73,13 @@ export class ActivityDatabase {
     }
 
     /** The columns those runs belong to, in the order the board renders them. */
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Workflow.Meta.Schema.array())
-    async listWorkflowsByIds(trx: DB.UserTransaction, workflowIds: Workflow.Id[]): Promise<Workflow.Meta[]> {
+    public async listWorkflowsByIds(principal: Principal.User, workflowIds: Workflow.Id[]): Promise<Workflow.Meta[]> {
         if (workflowIds.length === 0)
             return [];
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('workflows')
             .select(WORKFLOW_META_COLUMNS)
             .where('id', 'in', workflowIds)

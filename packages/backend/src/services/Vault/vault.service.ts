@@ -5,7 +5,7 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { Vault } from '@pretzel-graph/shared/domain';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
-import { VaultDatabase } from './vault.database';
+import { VaultRepository } from './vault.repository';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 
 function loadCredentialTemplates(): Record<Vault.Credential.Template.Id, Vault.Credential.Template> {
@@ -22,7 +22,7 @@ function loadCredentialTemplates(): Record<Vault.Credential.Template.Id, Vault.C
 
 @Injectable()
 export class VaultService {
-    constructor(private readonly database: VaultDatabase) {}
+    constructor(private readonly vaultRepository: VaultRepository) {}
 
     public readonly credentialTemplate = {
         get: (id: Vault.Credential.Template.Id): Vault.API.CredentialTemplate.Get.Response => {
@@ -48,7 +48,7 @@ export class VaultService {
         list: async (
             principal: Principal.User,
         ): Promise<Vault.API.CredentialInstance.List.Response> => {
-            const rows = await DB.asUser(principal, (trx) => this.database.credentialInstance.list(trx));
+            const rows = await this.vaultRepository.credentialInstance.list(principal);
             const instances = Object.fromEntries(rows.map(i => [i.id, i])) as Vault.API.CredentialInstance.List.Response['instances'];
             return { instances };
         },
@@ -58,11 +58,11 @@ export class VaultService {
             req: Vault.API.CredentialInstance.Create.Request,
         ): Promise<Vault.API.CredentialInstance.Create.Response> => {
             const blob     = Encryption.encryptValues(req.fieldValues);
-            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.create(trx, principal.userId, {
+            const instance = await this.vaultRepository.credentialInstance.create(principal, {
                 name:       req.name,
                 templateId: req.templateId,
                 blob,
-            }));
+            });
             return { instance };
         },
 
@@ -70,7 +70,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Remove.Request,
         ): Promise<Vault.API.CredentialInstance.Remove.Response> => {
-            await DB.asUser(principal, (trx) => this.database.credentialInstance.remove(trx, req.id));
+            await this.vaultRepository.credentialInstance.remove(principal, req.id);
             return { ok: true };
         },
 
@@ -78,7 +78,7 @@ export class VaultService {
             principal: Principal.User,
             id: Vault.Credential.Instance.Id,
         ): Promise<Vault.API.CredentialInstance.Reveal.Response> => {
-            const blob = await DB.asUser(principal, (trx) => this.database.credentialInstance.fetchBlob(trx, id));
+            const blob = await this.vaultRepository.credentialInstance.fetchBlob(principal, id);
             const fieldValues = Encryption.decryptBlob(blob);
             return { fieldValues };
         },
@@ -87,7 +87,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.UpdateName.Request,
         ): Promise<Vault.API.CredentialInstance.UpdateName.Response> => {
-            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.updateName(trx, req));
+            const instance = await this.vaultRepository.credentialInstance.updateName(principal, req);
             return { instance };
         },
 
@@ -96,7 +96,7 @@ export class VaultService {
             req: Vault.API.CredentialInstance.Update.Request,
         ): Promise<Vault.API.CredentialInstance.Update.Response> => {
             const blob     = Encryption.encryptValues(req.fieldValues);
-            const instance = await DB.asUser(principal, (trx) => this.database.credentialInstance.update(trx, req.id, req.name, blob));
+            const instance = await this.vaultRepository.credentialInstance.update(principal, req.id, req.name, blob);
             return { instance };
         },
     };

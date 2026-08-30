@@ -1,7 +1,7 @@
 import { Job as BullJob, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from "@pretzel-graph/shared/constants"
-import { Execution } from '@pretzel-graph/shared/domain';
+import { Execution, Worker as WorkerD } from '@pretzel-graph/shared/domain';
 import { ConnectionManager } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
@@ -18,10 +18,11 @@ const LOCK_EXTEND_DURATION_MS = 30_000;
 const MAX_PAUSE_DURATION_MS = 5 * 60_000;
 
 // Together at most 10s, inside the grace period a stop signal allows.
-const CLOSE_TIMEOUT_MS = 4_000;
-const FORCE_TIMEOUT_MS = 2_000;
-const PURGE_TIMEOUT_MS = 3_000;
-const QUIT_TIMEOUT_MS  = 1_000;
+const CLOSE_TIMEOUT_MS   = 4_000;
+const FORCE_TIMEOUT_MS   = 2_000;
+const ABANDON_TIMEOUT_MS =   500;
+const PURGE_TIMEOUT_MS   = 3_000;
+const QUIT_TIMEOUT_MS    = 1_000;
 
 /** Settles either way once the budget is spent. */
 const bounded = <T>(work: Promise<T>, ms: number): Promise<T | 'timeout'> => {
@@ -133,6 +134,8 @@ export class AggexWorkerImpl {
         };
 
         scope.emit(Execution.Event.create("lifecycle:started"));
+
+        await Execution.API.update(AxiosService.api, { executionId, status: 'running' }).catch(() => {});
 
         let recorder: FlightRecorderService | null = null;
         // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
@@ -269,6 +272,23 @@ export class AggexWorkerImpl {
 
         if (closed === 'timeout')
             await bounded(this.worker.close(true).catch(() => {}), FORCE_TIMEOUT_MS);
+
+        // Whatever survived the close is being abandoned mid-run: it has no
+        // outcome to report and nothing else will report one. Published before
+        // the connection goes, and bounded like everything else here.
+        const abandoned = [...this.runningExecutionContextsMap.keys()];
+
+        if (abandoned.length > 0) {
+            const channel = WorkerD.Event.getChannel();
+
+            const event: WorkerD.Event.ShuttingDown = {
+                type:         'worker:shutting-down',
+                channel,
+                executionIds: abandoned,
+            };
+
+            await bounded(this.redisPub.publish(channel, JSON.stringify(event)), ABANDON_TIMEOUT_MS);
+        }
 
         // Customer-database pools flush and disconnect, so the servers on the
         // other end see a close instead of a vanished peer.

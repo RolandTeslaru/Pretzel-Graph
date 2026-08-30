@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { Auth, Vault } from '@pretzel-graph/shared/domain';
+import { Vault } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
-@DatabaseClass
-class CredentialInstanceMethods {
+class CredentialInstanceMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Vault.Credential.Instance.Schema.array())
-    async list(trx: DB.UserTransaction): Promise<Vault.Credential.Instance[]> {
-        const rows = await trx
+    public async list(principal: Principal.User): Promise<Vault.Credential.Instance[]> {
+        const rows = await this.trx
             .selectFrom('credential_instance')
             .selectAll()
             .orderBy('created_at', 'desc')
@@ -19,17 +19,16 @@ class CredentialInstanceMethods {
         return rows.map(DB.CredentialInstance.toDomain);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async create(
+        principal: Principal.User,
         insert: Vault.Database.Insert.CredentialInstance,
     ): Promise<Vault.Credential.Instance> {
-        const row = await trx
+        const row = await this.trx
             .insertInto('credential_instance')
             .values({
-                created_by: createdBy,
+                created_by: principal.userId,
                 name: insert.name,
                 template_id: insert.templateId,
                 blob: insert.blob,
@@ -40,23 +39,23 @@ class CredentialInstanceMethods {
         return DB.CredentialInstance.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
-    async remove(
-        trx: DB.UserTransaction,
+    @Transactional('user')
+    public async remove(
+        principal: Principal.User,
         id: Vault.Credential.Instance.Id,
     ): Promise<void> {
-        await trx
+        await this.trx
             .deleteFrom('credential_instance')
             .where('id', '=', id)
             .execute();
     }
 
-    @AllowedDatabaseRoles("user")
-    async fetchBlob(
-        trx: DB.UserTransaction,
+    @Transactional('user')
+    public async fetchBlob(
+        principal: Principal.User,
         id: Vault.Credential.Instance.Id,
     ): Promise<Vault.Credential.Instance.EncryptedBlob> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('credential_instance')
             .select('blob')
             .where('id', '=', id)
@@ -65,16 +64,16 @@ class CredentialInstanceMethods {
         return row.blob;
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user', 'service')
     @ZodReturn(Vault.Credential.Instance.Schema.array())
-    async listByIds(
-        trx: DB.UserTransaction,
+    public async listByIds(
+        principal: Principal.User | Principal.Service,
         ids: Vault.Credential.Instance.Id[],
     ): Promise<Vault.Credential.Instance[]> {
         if (!ids.length)
             return [];
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('credential_instance')
             .selectAll()
             .where('id', 'in', ids)
@@ -83,13 +82,13 @@ class CredentialInstanceMethods {
         return rows.map(DB.CredentialInstance.toDomain);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async updateName(
-        trx: DB.UserTransaction,
+    public async updateName(
+        principal: Principal.User,
         req: Vault.API.CredentialInstance.UpdateName.Request,
     ): Promise<Vault.Credential.Instance> {
-        const row = await trx
+        const row = await this.trx
             .updateTable('credential_instance')
             .set({ name: req.name })
             .where('id', '=', req.id)
@@ -99,15 +98,15 @@ class CredentialInstanceMethods {
         return DB.CredentialInstance.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Vault.Credential.Instance.Schema)
-    async update(
-        trx: DB.UserTransaction,
+    public async update(
+        principal: Principal.User,
         id: Vault.Credential.Instance.Id,
         name: string,
         blob: Vault.Credential.Instance.EncryptedBlob,
     ): Promise<Vault.Credential.Instance> {
-        const row = await trx
+        const row = await this.trx
             .updateTable('credential_instance')
             .set({ name, blob })
             .where('id', '=', id)
@@ -119,7 +118,6 @@ class CredentialInstanceMethods {
 }
 
 @Injectable()
-@DatabaseClass
-export class VaultDatabase {
+export class VaultRepository {
     public readonly credentialInstance = new CredentialInstanceMethods();
 }

@@ -37,8 +37,8 @@ type RowPatch = {
 // same, only who may write them differs. Distinct from Session.Patch, which is a
 // key-granularity delta: `session` here replaces the whole blob. Module-level so
 // @DatabaseClass doesn't treat it as a method.
-async function applyRowPatch(trx: DB.Transaction<DB.Role>, props: RowPatch): Promise<void> {
-    await trx
+async function applyRowPatch(trx: DB.Transaction<DB.Role>, props: RowPatch): Promise<Execution.Meta> {
+    const row = await trx
         .updateTable('executions')
         .set({
             ...(props.status !== undefined && { status: props.status }),
@@ -53,7 +53,10 @@ async function applyRowPatch(trx: DB.Transaction<DB.Role>, props: RowPatch): Pro
             ...(props.recording !== undefined && { recording: props.recording }),
         })
         .where('id', '=', props.executionId)
-        .execute();
+        .returning(metaSelection)
+        .executeTakeFirstOrThrow();
+
+    return Execution.Meta.parse(row);
 }
 
 @DatabaseClass
@@ -135,10 +138,10 @@ export class ExecutionDatabase {
             executionId?: Execution.Id;
             chatId?: Chat.Id;
         },
-    ): Promise<Execution.Id> {
+    ): Promise<Execution.Meta> {
         const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
 
-        await trx
+        const row = await trx
             .insertInto('executions')
             .values({
                 id: executionId,
@@ -151,9 +154,10 @@ export class ExecutionDatabase {
                 chat_id: props.chatId ?? null,
                 recording: null,
             })
-            .execute();
+            .returning(metaSelection)
+            .executeTakeFirstOrThrow();
 
-        return executionId;
+        return Execution.Meta.parse(row);
     }
 
     /**
@@ -164,8 +168,8 @@ export class ExecutionDatabase {
     async updateProgress(
         trx: DB.Transaction<'user' | 'delegate'>,
         props: Omit<RowPatch, 'error'>,
-    ): Promise<void> {
-        await applyRowPatch(trx, props);
+    ): Promise<Execution.Meta> {
+        return applyRowPatch(trx, props);
     }
 
     /**
@@ -177,8 +181,8 @@ export class ExecutionDatabase {
     async finalise(
         trx: DB.Transaction<'service'>,
         props: RowPatch,
-    ): Promise<void> {
-        await applyRowPatch(trx, props);
+    ): Promise<Execution.Meta> {
+        return applyRowPatch(trx, props);
     }
 
     @AllowedDatabaseRoles("user")
@@ -228,11 +232,11 @@ export class ExecutionDatabase {
         trx: DB.Transaction<'user' | 'service'>,
         executionIds: Execution.Id[],
         error: string,
-    ): Promise<void> {
+    ): Promise<Execution.Meta[]> {
         if (!executionIds.length)
-            return;
+            return [];
 
-        await trx
+        const rows = await trx
             .updateTable('executions')
             .set({
                 status: 'terminated',
@@ -242,6 +246,9 @@ export class ExecutionDatabase {
                 ).toJSON(),
             })
             .where('id', 'in', executionIds)
+            .returning(metaSelection)
             .execute();
+
+        return rows.map((row) => Execution.Meta.parse(row));
     }
 }

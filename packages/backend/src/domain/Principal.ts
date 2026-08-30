@@ -19,6 +19,9 @@ export namespace Principal {
     }
     export type Service = z.infer<typeof Service.Schema>
 
+    /** The backend acting on its own. */
+    export const SELF: Service = { type: 'service', service: 'backend' }
+
     /** A live execution. Built from the execution row, never sent by the worker. */
     export namespace Delegate {
         export const Schema = z.object({

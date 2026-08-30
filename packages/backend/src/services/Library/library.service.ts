@@ -1,14 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
-import { LibraryDatabase } from './library.database';
+import { LibraryRepository } from './library.repository';
 import { ListingService } from '../Listing/listing.service';
 
 @Injectable()
 export class LibraryService {
     constructor(
-        private readonly database:   LibraryDatabase,
+        private readonly libraryRepository: LibraryRepository,
         private readonly listings: ListingService,
     ) {}
 
@@ -16,7 +15,7 @@ export class LibraryService {
         get: async (
             principal: Principal.User,
         ): Promise<Library.API.Bootstrap.Get.Response> => {
-            return DB.asUser(principal, (trx) => this.database.bootstrap.get(trx));
+            return this.libraryRepository.bootstrap.get(principal);
         },
     };
 
@@ -25,14 +24,14 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Folder.Create.Request,
         ): Promise<Library.API.Folder.Create.Response> => {
-            return DB.asUser(principal, (trx) => this.database.folder.create(trx, principal.userId, payload));
+            return this.libraryRepository.folder.create(principal, payload);
         },
 
         update: async (
             principal: Principal.User,
             payload: Library.API.Folder.Update.Request,
         ): Promise<Library.API.Folder.Update.Response> => {
-            return DB.asUser(principal, (trx) => this.database.folder.update(trx, payload));
+            return this.libraryRepository.folder.update(principal, payload);
         },
 
         delete: async (
@@ -42,7 +41,7 @@ export class LibraryService {
             if (id === Library.Folder.ROOT_ID)
                 throw new BadRequestException('The root folder cannot be deleted');
 
-            await DB.asUser(principal, (trx) => this.database.folder.delete(trx, id));
+            await this.libraryRepository.folder.delete(principal, id);
 
             return { ok: true };
         },
@@ -51,7 +50,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Library.Folder.Id,
         ): Promise<Library.API.Folder.GetContents.Response> => {
-            return DB.asUser(principal, (trx) => this.database.folder.getContents(trx, id));
+            return this.libraryRepository.folder.getContents(principal, id);
         }
     };
 
@@ -60,21 +59,21 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Workflow.Create.Request,
         ): Promise<Library.API.Workflow.Create.Response> => {
-            return DB.asUser(principal, (trx) => this.database.workflow.create(trx, principal.userId, payload));
+            return this.libraryRepository.workflow.create(principal, payload);
         },
 
         get: async (
             principal: Principal.User,
             workflowId: Workflow.Id,
         ): Promise<Library.API.Workflow.Get.Response> => {
-            return DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
+            return this.libraryRepository.workflow.get(principal, workflowId);
         },
 
         update: async (
             principal: Principal.User,
             payload: Library.API.Workflow.Update.Request,
         ): Promise<Library.API.Workflow.Update.Response> => {
-            return DB.asUser(principal, (trx) => this.database.workflow.update(trx, payload));
+            return this.libraryRepository.workflow.update(principal, payload);
         },
 
         delete: async (
@@ -82,7 +81,7 @@ export class LibraryService {
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
             await this.listings.unshareWorkflow(principal, id);
-            await DB.asUser(principal, (trx) => this.database.workflow.delete(trx, id));
+            await this.libraryRepository.workflow.delete(principal, id);
 
             // After the commit — the cached owner is still correct until the TTL, and would
             // keep authorizing routes against a row that no longer exists.
@@ -94,7 +93,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Duplicate.Response> => {
-            return DB.asUser(principal, (trx) => this.database.workflow.duplicate(trx, principal.userId, id));
+            return this.libraryRepository.workflow.duplicate(principal, id);
         },
     };
 }

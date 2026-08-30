@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
-import { WorkbenchDatabase } from './workbench.database';
-import { VaultDatabase } from '../Vault/vault.database';
+import { WorkbenchRepository } from './workbench.repository';
+import { VaultRepository } from '../Vault/vault.repository';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 import { CatalogueService, Loader } from '@pretzel-graph/node-sdk';
 import { ShelfService } from '../Shelf/shelf.service';
@@ -13,8 +12,8 @@ import { Listing, SystemError } from '@pretzel-graph/shared/domain';
 @Injectable()
 export class WorkbenchService {
     constructor(
-        private readonly database: WorkbenchDatabase,
-        private readonly vaultDatabase: VaultDatabase,
+        private readonly workbenchRepository: WorkbenchRepository,
+        private readonly vaultRepository: VaultRepository,
         private readonly shelfService: ShelfService,
         private readonly listings: ListingService,
     ) {}
@@ -24,7 +23,7 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Create.Request,
         ): Promise<Workbench.API.Workflow.Create.Response> => {
-            const workflow_id = await DB.asUser(principal, (trx) => this.database.workflow.create(trx, principal.userId, payload));
+            const workflow_id = await this.workbenchRepository.workflow.create(principal, payload);
             return { workflow_id };
         },
 
@@ -43,7 +42,7 @@ export class WorkbenchService {
                 workflow = shared;
             }
             else {
-                workflow = await DB.asUser(principal, (trx) => this.database.workflow.get(trx, workflowId));
+                workflow = await this.workbenchRepository.workflow.get(principal, workflowId);
             }
 
             const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
@@ -55,7 +54,7 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Commit.Request,
         ): Promise<Workbench.API.Workflow.Commit.Response> => {
-            await DB.asUser(principal, (trx) => this.database.workflow.commit(trx, payload));
+            await this.workbenchRepository.workflow.commit(principal, payload);
             return {};
         },
     };
@@ -75,7 +74,7 @@ export class WorkbenchService {
                     return { dependency: shared };
                 }
 
-                const dependency = await DB.asUser(principal, (trx) => this.database.dependency.published.load(trx, payload.dependencyId));
+                const dependency = await this.workbenchRepository.dependency.published.load(principal, payload.dependencyId);
 
                 return { dependency };
             },
@@ -87,7 +86,7 @@ export class WorkbenchService {
                 const local  = payload.dependencies.filter((dependency) => !Listing.isListingId(dependency.workflowId));
                 const listed = payload.dependencies.filter((dependency) => Listing.isListingId(dependency.workflowId));
 
-                const own    = await DB.asUser(principal, (trx) => this.database.dependency.published.checkUpdates(trx, local));
+                const own    = await this.workbenchRepository.dependency.published.checkUpdates(principal, local);
                 const shared = await this.listings.checkUpdates(listed);
 
                 return { updates: { ...own, ...shared } };
@@ -99,7 +98,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.Load.Request,
             ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-                const dependency = await DB.asUser(principal, (trx) => this.database.dependency.draft.load(trx, payload.dependencyId));
+                const dependency = await this.workbenchRepository.dependency.draft.load(principal, payload.dependencyId);
                 return { dependency };
             },
 
@@ -107,7 +106,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
             ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
-                const updates = await DB.asUser(principal, (trx) => this.database.dependency.draft.checkUpdates(trx, payload.dependencies));
+                const updates = await this.workbenchRepository.dependency.draft.checkUpdates(principal, payload.dependencies);
                 return { updates };
             },
         },
@@ -134,7 +133,7 @@ export class WorkbenchService {
                 // instance id simply yields no row (same guarantee as VaultService.reveal).
                 const ids = Object.values(payload.credentialInstanceIds);
                 const instances = ids.length
-                    ? await DB.asUser(principal, (trx) => this.vaultDatabase.credentialInstance.listByIds(trx, ids))
+                    ? await this.vaultRepository.credentialInstance.listByIds(principal, ids)
                     : [];
                 const byId = new Map(instances.map(i => [i.id, i]));
 

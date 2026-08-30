@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { LibraryDatabase } from '../Library/library.database';
-import { VersionControlDatabase } from '../VersionControl/version-control.database';
+import { LibraryRepository } from '../Library/library.repository';
+import { VersionControlRepository } from '../VersionControl/version-control.repository';
 import { ListingRegistry } from './registry.client';
 
 const ROOT_FOLDER_ID = '00000000-0000-4000-8000-000000000001' as Workflow['folder_id'];
@@ -11,8 +10,8 @@ const ROOT_FOLDER_ID = '00000000-0000-4000-8000-000000000001' as Workflow['folde
 @Injectable()
 export class ListingService {
     constructor(
-        private readonly libraryDb: LibraryDatabase,
-        private readonly versionControlDb: VersionControlDatabase,
+        private readonly libraryRepository: LibraryRepository,
+        private readonly versionControlRepository: VersionControlRepository,
         private readonly registry: ListingRegistry,
     ) {}
 
@@ -86,10 +85,8 @@ export class ListingService {
         if (!this.registry.canShare)
             throw new SystemError(SystemError.Code.FORBIDDEN, 'This deployment cannot share workflows');
 
-        const { workflow, publication } = await DB.asUser(principal, async (trx) => ({
-            workflow:    await this.libraryDb.workflow.get(trx, workflowId),
-            publication: await this.versionControlDb.getActivePublicationForWorkflow(trx, workflowId),
-        }));
+        const workflow    = await this.libraryRepository.workflow.get(principal, workflowId);
+        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
 
         if (!publication)
             throw new SystemError(SystemError.Code.CONFLICT, 'A workflow needs an active publication before it can be public');
@@ -105,17 +102,15 @@ export class ListingService {
 
         const listingId = await this.push(workflow, publication);
 
-        await DB.asUser(principal, (trx) => this.libraryDb.workflow.setListingId(trx, workflowId, listingId));
+        await this.libraryRepository.workflow.setListingId(principal, workflowId, listingId);
 
         return listingId;
     }
 
     // The registry mirrors whichever publication is active now.
     public async syncActive(principal: Principal.User, workflowId: Workflow.Id): Promise<void> {
-        const { workflow, publication } = await DB.asUser(principal, async (trx) => ({
-            workflow:    await this.libraryDb.workflow.get(trx, workflowId),
-            publication: await this.versionControlDb.getActivePublicationForWorkflow(trx, workflowId),
-        }));
+        const workflow    = await this.libraryRepository.workflow.get(principal, workflowId);
+        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
 
         if (!workflow.listing_id)
             return;
@@ -129,13 +124,13 @@ export class ListingService {
     }
 
     public async unshareWorkflow(principal: Principal.User, workflowId: Workflow.Id): Promise<void> {
-        const workflow = await DB.asUser(principal, (trx) => this.libraryDb.workflow.get(trx, workflowId));
+        const workflow = await this.libraryRepository.workflow.get(principal, workflowId);
 
         if (!workflow.listing_id)
             return;
 
         await this.registry.delete(workflow.listing_id);
-        await DB.asUser(principal, (trx) => this.libraryDb.workflow.setListingId(trx, workflowId, null));
+        await this.libraryRepository.workflow.setListingId(principal, workflowId, null);
     }
 
     private async push(workflow: Workflow, publication: VersionControl.Publication): Promise<Listing.Id> {

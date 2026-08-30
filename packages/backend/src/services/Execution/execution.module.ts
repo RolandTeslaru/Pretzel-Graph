@@ -6,7 +6,7 @@ import { WorkerLifecycleService } from './worker-lifecycle.service';
 import { ExecutionReconciler } from './execution.reconciler';
 import { ExecutionDatabase } from './execution.database';
 import { ChatDatabase } from '../Chat/chat.database';
-import { VaultDatabase } from '../Vault/vault.database';
+import { VaultRepository } from '../Vault/vault.repository';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
 import { CloudModule } from '../Cloud/cloud.module';
@@ -18,7 +18,7 @@ import { CloudModule } from '../Cloud/cloud.module';
         CloudModule,
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, WorkerLifecycleService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultDatabase],
+    providers: [ExecutionService, WorkerLifecycleService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultRepository],
     exports: [ExecutionService],
 })
 export class ExecutionModule {}

@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Activity, Execution, Workflow } from '@pretzel-graph/shared/domain';
-import { ActivityDatabase } from './activity.database';
+import { ActivityRepository } from './activity.repository';
 
 @Injectable()
 export class ActivityService {
 
     constructor(
-        private readonly database: ActivityDatabase,
+        private readonly activityRepository: ActivityRepository,
     ) {}
 
     /**
@@ -19,13 +18,11 @@ export class ActivityService {
         principal: Principal.User,
     ): Promise<Activity.API.Bootstrap.Response> {
 
-        const { executions, workflows } = await DB.asUser(principal, async (trx) => {
-            const executions = await this.database.listRecentExecutions(trx);
+        const executions = await this.activityRepository.listRecentExecutions(principal);
 
-            const workflowIds = [...new Set(executions.map((execution) => execution.workflow_id))];
+        const workflowIds = [...new Set(executions.map((execution) => execution.workflow_id))];
 
-            return { executions, workflows: await this.database.listWorkflowsByIds(trx, workflowIds) };
-        });
+        const workflows = await this.activityRepository.listWorkflowsByIds(principal, workflowIds);
 
         return { workflows: this.toColumns(executions, workflows) };
     }
