@@ -185,6 +185,47 @@ export class ExecutionDatabase {
         return applyRowPatch(trx, props);
     }
 
+    /**
+     * Closes a run only while it is still open. A late write — a worker naming
+     * what it abandoned, a sweep — must never overwrite an outcome that landed
+     * in the meantime.
+     */
+    @AllowedDatabaseRoles("service")
+    async failIfActive(
+        trx: DB.Transaction<'service'>,
+        executionId: Execution.Id,
+        error: string,
+    ): Promise<Execution.Meta | undefined> {
+        const row = await trx
+            .updateTable('executions')
+            .set({
+                status: 'failed',
+                error: new SystemError(SystemError.Code.INFRA_UNKNOWN, error).toJSON(),
+            })
+            .where('id', '=', executionId)
+            .where('status', 'in', [...Execution.ACTIVE_STATUSES])
+            .returning(metaSelection)
+            .executeTakeFirst();
+
+        return row === undefined ? undefined : Execution.Meta.parse(row);
+    }
+
+    /** For the failure event a cleanup path has to send on the execution's behalf. */
+    @AllowedDatabaseRoles("service")
+    @ZodReturn(Execution.Session.Schema)
+    async getSession(
+        trx: DB.Transaction<'service'>,
+        executionId: Execution.Id,
+    ): Promise<Execution.Session> {
+        const row = await trx
+            .selectFrom('executions')
+            .select('session')
+            .where('id', '=', executionId)
+            .executeTakeFirstOrThrow();
+
+        return Execution.Session.Schema.parse(row.session);
+    }
+
     @AllowedDatabaseRoles("user")
     @ZodReturn(Execution.Status)
     async getStatus(

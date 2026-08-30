@@ -1,23 +1,18 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, forwardRef } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { Execution } from '@pretzel-graph/shared/domain';
+import { Execution, Worker } from '@pretzel-graph/shared/domain';
 import { CloudService } from '../Cloud/cloud.service';
+import { ExecutionService } from '../Execution/execution.service';
+import { RealtimeService } from '../Realtime/realtime.service';
 
-/** Long enough that a burst of runs wakes once, short enough to retry a failure. */
+// Dedupe window for wake calls.
 const REMEMBER_MS = 60_000;
 
-/** Quiet for this long and the worker is stopped. */
+// Idle window before the worker is stopped.
 const IDLE_MS = 20 * 60_000;
 
-/**
- * Drives the machine that drains the queue, when there is a separate one.
- *
- * A stopped worker is not connected to Redis, so nothing reaches it by being
- * enqueued — something has to say "work is coming" first. It is stopped again
- * once the queue has been quiet. Left unconfigured this does nothing: a
- * deployment whose worker shares the machine has nothing to drive.
- */
+// Wakes the worker before work is enqueued and stops it after the queue goes quiet.
 @Injectable()
 export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
@@ -33,18 +28,54 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         @InjectQueue(Execution.Queue.ID)
         private readonly queue: Queue,
         private readonly cloud: CloudService,
+        private readonly realtime: RealtimeService,
+        // Circular by design: this drives the worker, and the worker going down
+        // decides what becomes of the runs that were on it.
+        @Inject(forwardRef(() => ExecutionService))
+        private readonly executions: ExecutionService,
     ) {}
 
-    /** A restart must not leave a worker running with nothing to do. */
-    onModuleInit(): void {
+    public onModuleInit(): void {
         this.arm();
+
+        this.realtime.subscribe<Worker.Event>(Worker.Event.getChannel(), (event) => {
+            if (event.type !== 'worker:shutting-down')
+                return;
+
+            void this.onWorkerShuttingDown(event);
+        });
     }
 
-    onModuleDestroy(): void {
+    /**
+     * The worker names what it is abandoning on the way out. Those runs have no
+     * outcome to report and nothing else will report one, so they are closed here
+     * rather than waiting for the reconciler to reach the same answer minutes later.
+     */
+    private async onWorkerShuttingDown(event: Worker.Event.ShuttingDown): Promise<void> {
+        // The idle timer is measuring a process that is gone, and a stale `wokeAt`
+        // would let the next enqueue skip the wake it needs.
+        this.disarm();
+        this.wokeAt = 0;
+
+        const executionIds = event.executionIds
+
+        for (const executionId of executionIds) {
+            try {
+                await this.executions.fail(executionId, 'Worker shut down mid-run');
+
+                this.logger.warn(`Failed execution ${executionId}: its worker shut down`);
+            }
+            catch (error) {
+                this.logger.error(`Could not fail abandoned execution ${executionId}: ${error instanceof Error ? error.message : error}`);
+            }
+        }
+    }
+
+    public onModuleDestroy(): void {
         this.disarm();
     }
 
-    /** Where the worker's start and stop routes live, or null when self-hosted. */
+    // Null when there is no worker to drive.
     private getLifecycleBase(): string | null {
         if (!this.cloud.hasWorkspaceIdentity)
             return null;
@@ -52,8 +83,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         return `/api/workspaces/${this.cloud.workspaceId}/worker`;
     }
 
-    /** Called before enqueueing, the only moment anything knows work is coming. */
-    async ensureAwake(): Promise<void> {
+    // Call before enqueueing.
+    public async ensureAwake(): Promise<void> {
         this.arm();
 
         const base = this.getLifecycleBase();
@@ -64,14 +95,14 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         if (Date.now() - this.wokeAt < REMEMBER_MS)
             return;
 
-        // Single-flight: a burst of executions is one wake, not one each.
+        // Single-flight across a burst.
         this.inFlight ??= this.wake(base).finally(() => { this.inFlight = null; });
 
         await this.inFlight;
     }
 
-    /** Called when a job ends, so the idle window runs from the last one. */
-    noteJobEnded(): void {
+    // Restarts the idle window.
+    public noteJobEnded(): void {
         this.arm();
     }
 
@@ -83,8 +114,6 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
         this.idleTimer = setTimeout(() => void this.sleepIfQuiet(), IDLE_MS);
 
-        // Don't keep the event loop alive just for the timer.
-        this.idleTimer.unref();
     }
 
     private disarm(): void {
@@ -107,7 +136,6 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
                 this.queue.getDelayedCount(),
             ]);
 
-            // Work arrived while the window was closing.
             if (active + waiting + delayed > 0) {
                 this.arm();
 
@@ -116,7 +144,6 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             await this.post(`${base}/sleep`);
 
-            // The next enqueue has to wake it rather than trust the last wake.
             this.wokeAt = 0;
 
             this.logger.log('Worker stopped after an idle period');
@@ -135,8 +162,6 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             this.wokeAt = Date.now();
         }
         catch (error) {
-            // Not fatal: the job is already durable in the queue, and the run
-            // path times out with its own error if nothing picks it up.
             this.logger.warn(`Could not wake the worker: ${error instanceof Error ? error.message : error}`);
         }
     }
