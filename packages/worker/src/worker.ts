@@ -17,14 +17,13 @@ const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
 const MAX_PAUSE_DURATION_MS = 5 * 60_000;
 
-// Together at most 10s, inside the grace period a stop signal allows.
+// Total budget ~10s, within the stop grace period.
 const CLOSE_TIMEOUT_MS   = 4_000;
 const FORCE_TIMEOUT_MS   = 2_000;
 const ABANDON_TIMEOUT_MS =   500;
 const PURGE_TIMEOUT_MS   = 3_000;
 const QUIT_TIMEOUT_MS    = 1_000;
 
-/** Settles either way once the budget is spent. */
 const bounded = <T>(work: Promise<T>, ms: number): Promise<T | 'timeout'> => {
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), ms));
 
@@ -41,7 +40,7 @@ export class AggexWorkerImpl {
     private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
     private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()
 
-    // Recording cache only — publishing goes through the realtime scope.
+    // Recording cache only; publishing goes through the realtime scope.
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null })
     private redisWorker = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null })
 
@@ -85,8 +84,7 @@ export class AggexWorkerImpl {
         const executionId = execution.id;
         const { igniter } = execution;
 
-        // We hold no signing key, so this cannot prove the token is genuine — it only stops a
-        // forged queue item from pointing the run at one execution and the nodes at another.
+        // Unverified: only guards against a token/execution mismatch.
         const claims = Execution.Token.decodeUnverified(executionToken);
 
         if (claims?.executionId !== executionId)
@@ -97,8 +95,7 @@ export class AggexWorkerImpl {
 
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
 
-        // Subscribed for the whole job, so nothing can reply into a gap. Everything this
-        // execution emits or awaits goes through here.
+        // Scope lives for the whole job; all emits/awaits go through it.
         const scope = this.realtime.scope(executionId, workflowId);
         const unsubscribeFromLifecycleSignals = scope.onSignal(Execution.Signal.Schema, signal => this.handleSignal(signal));
 
@@ -138,8 +135,7 @@ export class AggexWorkerImpl {
         await Execution.API.update(AxiosService.api, { executionId, status: 'running' }).catch(() => {});
 
         let recorder: FlightRecorderService | null = null;
-        // One Isolate per execution = the tenant/security boundary. Owned here (outermost),
-        // passed by ref into the compiler, and disposed in `finally`.
+        // One isolate per execution; disposed in `finally`.
         const airlock = new AirlockService();
         const origin = performance.now();
 
@@ -170,7 +166,6 @@ export class AggexWorkerImpl {
                 },
             };
 
-            // Create and register engine
             engine = new AggexEngine(aggexHooks);
             this.runningEnginesMap.set(executionId, engine);
 
@@ -178,12 +173,9 @@ export class AggexWorkerImpl {
             if(igniter.record)
                 engine.attachFlightRecorder(recorder);
 
-            // Backend internal routes, authenticated as THIS execution. Deliberately built
-            // here rather than from httpClientFactory: that binds the node's proxy credential,
-            // which would send the token through a user-configured proxy.
+            // Not from httpClientFactory: that would route the token through a node proxy.
             const internalAPI = createInternalClient(executionToken);
 
-            // Compile and register execution context
             executionCtx = await this.compiler.compile(workflowId, workflowData, execution, scope, engine, airlock, credentialInstances, internalAPI);
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
@@ -244,22 +236,17 @@ export class AggexWorkerImpl {
             stopLockExtension();
             console.log("Deleting job", execution.id, "from running engines and contexts")
 
-            airlock.dispose();   // free the isolate + all its contexts/scripts
+            airlock.dispose();
             this.runningEnginesMap.delete(execution.id);
             this.runningExecutionContextsMap.delete(execution.id);
 
-            // unsubscribeFromLifecycleSignals();
-            scope.close();   // unsubscribes and rejects anything still parked (including lifecycle signals)
+            scope.close();
         }
     }
 
     private shuttingDown = false;
 
-    /**
-     * The TERM window is the platform's grace period, so every step is bounded.
-     * An active job that cannot finish in time goes back locked and surfaces as
-     * failed when the lease expires — never silently re-run.
-     */
+    // Every step is bounded so shutdown fits the TERM grace period.
     public async shutdown(): Promise<void> {
         if (this.shuttingDown)
             return;
@@ -268,41 +255,34 @@ export class AggexWorkerImpl {
 
         console.log('[Worker] Shutting down: closing queue, pools, redis');
 
-        const closed = await bounded(this.worker.close().then(() => 'closed' as const), CLOSE_TIMEOUT_MS);
+        // Announce running executions before anything that can block.
+        const running = [...this.runningExecutionContextsMap.keys()];
 
-        if (closed === 'timeout')
-            await bounded(this.worker.close(true).catch(() => {}), FORCE_TIMEOUT_MS);
-
-        // Whatever survived the close is being abandoned mid-run: it has no
-        // outcome to report and nothing else will report one. Published before
-        // the connection goes, and bounded like everything else here.
-        const abandoned = [...this.runningExecutionContextsMap.keys()];
-
-        if (abandoned.length > 0) {
+        if (running.length > 0) {
             const channel = WorkerD.Event.getChannel();
 
             const event: WorkerD.Event.ShuttingDown = {
                 type:         'worker:shutting-down',
                 channel,
-                executionIds: abandoned,
+                executionIds: running,
             };
 
             await bounded(this.redisPub.publish(channel, JSON.stringify(event)), ABANDON_TIMEOUT_MS);
         }
 
-        // Customer-database pools flush and disconnect, so the servers on the
-        // other end see a close instead of a vanished peer.
+        const closed = await bounded(this.worker.close().then(() => 'closed' as const), CLOSE_TIMEOUT_MS);
+
+        if (closed === 'timeout')
+            await bounded(this.worker.close(true).catch(() => {}), FORCE_TIMEOUT_MS);
+
         await bounded(ConnectionManager.purgeAll(), PURGE_TIMEOUT_MS);
 
-        // quit waits for a reply, which never comes from a server that is gone.
         await bounded(Promise.allSettled([this.redisPub.quit(), this.redisWorker.quit()]), QUIT_TIMEOUT_MS);
 
-        // Drops the sockets whether or not the quits were answered.
         this.redisPub.disconnect();
         this.redisWorker.disconnect();
 
-        // Flushed, not console.log: stdout to a pipe is async and exit() would
-        // drop whatever is still buffered.
+        // Flush stdout before exit.
         await new Promise<void>((resolve) => process.stdout.write('[Worker] Shutdown complete\n', () => resolve()));
 
         process.exit(0);
@@ -311,15 +291,11 @@ export class AggexWorkerImpl {
     private worker = new Worker(Execution.Queue.ID, this.processQueueItem, {
         connection: this.redisWorker,
         autorun: false,
-        // Executions run concurrently on one event loop; they mostly await.
         concurrency: Number(process.env.EXECUTION_CONCURRENCY ?? 5),
-        // Synchronous expression evaluation can hold the event loop for minutes,
-        // starving lock renewal. The lease must outlast the longest legal stretch,
-        // or a running job is declared stalled and handed out again mid-run.
+        // Lease must outlast long synchronous evaluation or the job is marked stalled.
         lockDuration:    5 * 60_000,
         stalledInterval: 5 * 60_000,
-        // A stalled job may have already produced side effects. Fail it visibly
-        // rather than re-running it; a re-run is the caller's decision.
+        // Never re-run a stalled job; fail it visibly.
         maxStalledCount: 0,
     })
 }

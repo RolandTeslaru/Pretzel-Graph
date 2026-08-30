@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import { Principal } from '@/domain/Principal';
@@ -16,7 +16,7 @@ import { ChatDatabase } from '../Chat/chat.database';
 import { VaultRepository } from '../Vault/vault.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
-import { WorkerLifecycleService } from './worker-lifecycle.service';
+import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
 
 @Injectable()
 export class ExecutionService {
@@ -35,6 +35,7 @@ export class ExecutionService {
         private readonly database:       ExecutionDatabase,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultRepository: VaultRepository,
+        @Inject(forwardRef(() => WorkerLifecycleService))
         private readonly workerLifecycle: WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
@@ -352,8 +353,34 @@ export class ExecutionService {
      * error column is off its patch, so only the service role writes one.
      */
     public async fail(executionId: Execution.Id, error: string): Promise<void> {
-        this.announce(await DB.asService('fail unreported execution', (db) =>
-            this.database.finalise(db, { executionId, status: 'failed', error })));
+        const closed = await DB.asService('fail unreported execution', async (db) => {
+            const meta = await this.database.failIfActive(db, executionId, error);
+
+            // Undefined when it settled first, which is the outcome that stands.
+            if (!meta)
+                return null;
+
+            // Read for the event: `Meta` omits the session, and an editor watching
+            // this run applies the same payload a live failure would have sent.
+            return { meta, session: await this.database.getSession(db, executionId) };
+        });
+
+        if (!closed)
+            return;
+
+        this.announce(closed.meta);
+
+        // On the execution's own channel too: the board hears about it either way,
+        // but an editor open on this run learns nothing from the activity channel.
+        this.realtime.emitEvent({
+            ...Execution.Event.create('lifecycle:failed', {
+                session: closed.session,
+                error:   closed.meta.error ?? new SystemError(SystemError.Code.INFRA_UNKNOWN, error).toJSON(),
+            }),
+            channel:     Execution.Event.getChannel(executionId),
+            executionId,
+            workflowId:  closed.meta.workflow_id,
+        });
     }
 
 
