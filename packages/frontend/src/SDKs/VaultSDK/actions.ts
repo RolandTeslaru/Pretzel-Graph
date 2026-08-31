@@ -18,6 +18,11 @@ export type _VaultSDKActions = {
             values: (req: Vault.API.CredentialInstance.Update.Request) => Promise<void>
         }
     }
+    oauth: {
+        redirectUri: () => Promise<string>
+        start:       (req: Vault.API.OAuth.Start.Request) => Promise<string>
+        reconnect:   (id: Vault.Credential.Instance.Id) => Promise<string>
+    }
 }
 
 export function _createVaultActions_(sdk: VaultSDKImpl): _VaultSDKActions {
@@ -117,6 +122,35 @@ export function _createVaultActions_(sdk: VaultSDKImpl): _VaultSDKActions {
                         throw err
                     }
                 },
+            },
+        },
+
+        oauth: {
+            redirectUri: async () => {
+                const { redirectUri } = await Vault.API.OAuth.redirectUri(api)
+                return redirectUri
+            },
+
+            start: async (req) => {
+                try {
+                    const { authorizeUrl } = await Vault.API.OAuth.start(api, req)
+                    return authorizeUrl
+                } catch (err) {
+                    console.error('VaultSDK.oauth.start failed', err)
+                    toast.error('Failed to start the connection')
+                    throw err
+                }
+            },
+
+            reconnect: async (id) => {
+                try {
+                    const { authorizeUrl } = await Vault.API.OAuth.reconnect(api, id)
+                    return authorizeUrl
+                } catch (err) {
+                    console.error('VaultSDK.oauth.reconnect failed', err)
+                    toast.error('Failed to start the connection')
+                    throw err
+                }
             },
         },
     }

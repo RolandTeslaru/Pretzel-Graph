@@ -1,36 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Vault } from '@pretzel-graph/shared/domain';
-import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { VaultRepository } from './vault.repository';
+import { OAuthService } from './OAuth/oauth.service';
+import { getCredentialTemplate, loadCredentialTemplates } from './templates';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
-
-function loadCredentialTemplates(): Record<Vault.Credential.Template.Id, Vault.Credential.Template> {
-    const raw = fs.readFileSync(path.join(__dirname, '../../../assets/blueprint_index.json'), 'utf-8');
-    const { blueprints } = JSON.parse(raw) as { blueprints: Record<string, Blueprint> };
-
-    const templates: Record<Vault.Credential.Template.Id, Vault.Credential.Template> = {};
-    for (const blueprint of Object.values(blueprints))
-        for (const template of blueprint.credentials ?? [])
-            templates[template.id] = template;
-
-    return templates;
-}
 
 @Injectable()
 export class VaultService {
-    constructor(private readonly vaultRepository: VaultRepository) {}
+    constructor(
+        private readonly vaultRepository: VaultRepository,
+        private readonly oauth:           OAuthService,
+    ) {}
 
     public readonly credentialTemplate = {
         get: (id: Vault.Credential.Template.Id): Vault.API.CredentialTemplate.Get.Response => {
-            const template = loadCredentialTemplates()[id];
-            if (!template)
-                throw new Error(`Credential template not found: ${id}`);
-
-            return { template };
+            return { template: getCredentialTemplate(id) };
         },
 
         getBatch: (req: Vault.API.CredentialTemplate.GetBatch.Request): Vault.API.CredentialTemplate.GetBatch.Response => {
@@ -70,6 +55,7 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Remove.Request,
         ): Promise<Vault.API.CredentialInstance.Remove.Response> => {
+            await this.oauth.revoke(principal, req.id);
             await this.vaultRepository.credentialInstance.remove(principal, req.id);
             return { ok: true };
         },
@@ -78,8 +64,10 @@ export class VaultService {
             principal: Principal.User,
             id: Vault.Credential.Instance.Id,
         ): Promise<Vault.API.CredentialInstance.Reveal.Response> => {
-            const blob = await this.vaultRepository.credentialInstance.fetchBlob(principal, id);
-            const fieldValues = Encryption.decryptBlob(blob);
+            const instance    = await this.vaultRepository.credentialInstance.getById(principal, id);
+            const template    = getCredentialTemplate(instance.template_id);
+            const fieldValues = this.oauth.revealable(template, Encryption.decryptBlob(instance.blob));
+
             return { fieldValues };
         },
 

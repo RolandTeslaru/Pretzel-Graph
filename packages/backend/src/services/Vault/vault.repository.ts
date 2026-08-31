@@ -64,10 +64,25 @@ class CredentialInstanceMethods extends Repository {
         return row.blob;
     }
 
-    @Transactional('user', 'service', 'delegate')
+    @Transactional('user', 'delegate')
+    @ZodReturn(Vault.Credential.Instance.Schema)
+    public async getById(
+        principal: Principal.User | Principal.Delegate,
+        id: Vault.Credential.Instance.Id,
+    ): Promise<Vault.Credential.Instance> {
+        const row = await this.trx
+            .selectFrom('credential_instance')
+            .selectAll()
+            .where('id', '=', id)
+            .executeTakeFirstOrThrow();
+
+        return DB.CredentialInstance.toDomain(row);
+    }
+
+    @Transactional('user', 'service')
     @ZodReturn(Vault.Credential.Instance.Schema.array())
     public async listByIds(
-        principal: Principal.User | Principal.Service | Principal.Delegate,
+        principal: Principal.User | Principal.Service,
         ids: Vault.Credential.Instance.Id[],
     ): Promise<Vault.Credential.Instance[]> {
         if (!ids.length)
