@@ -248,8 +248,8 @@ code {
 
 
   --foreground: theme(--color-white);
-  --card: rgb(35, 35, 35);
-  --card-float: rgb(22, 22, 22);
+  --card: rgb(37, 37, 37);
+  --card-float: rgb(30, 30, 30);
 
 
   --port-Data-foreground: theme(--color-slate-500);
