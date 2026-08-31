@@ -11,6 +11,14 @@ export type CredentialTemplate<
     readonly fields: TFields
     readonly icon?: string
     readonly optional?: boolean
+    readonly auth?: Vault.OAuth.Auth
+}
+
+export type OAuth2CredentialTemplate<
+    TId extends string = string,
+    TFields extends readonly Field[] = readonly Field[]
+> = CredentialTemplate<TId, TFields> & {
+    readonly auth: Vault.OAuth.Auth
 }
 
 export function defineCredential<
@@ -29,5 +37,28 @@ export function defineCredential<
         fields: config.fields,
         icon: config.icon,
         optional: config.optional,
+    }
+}
+
+// `fields` are what the form collects before the redirect; the tokens arrive through the callback.
+export function defineOAuth2Credential<
+    const TId extends string,
+    const TFields extends readonly Field[]
+>(config: {
+    id: TId
+    displayName: string
+    fields: TFields
+    icon?: string
+    provider: Vault.OAuth.Provider
+}): OAuth2CredentialTemplate<TId, TFields> {
+    return {
+        id: config.id as TId & Vault.Credential.Template.Id,
+        displayName: config.displayName,
+        fields: config.fields,
+        icon: config.icon,
+        auth: {
+            kind: "oauth2",
+            provider: config.provider,
+        },
     }
 }

@@ -64,10 +64,10 @@ class CredentialInstanceMethods extends Repository {
         return row.blob;
     }
 
-    @Transactional('user', 'service')
+    @Transactional('user', 'service', 'delegate')
     @ZodReturn(Vault.Credential.Instance.Schema.array())
     public async listByIds(
-        principal: Principal.User | Principal.Service,
+        principal: Principal.User | Principal.Service | Principal.Delegate,
         ids: Vault.Credential.Instance.Id[],
     ): Promise<Vault.Credential.Instance[]> {
         if (!ids.length)
@@ -96,6 +96,20 @@ class CredentialInstanceMethods extends Repository {
             .executeTakeFirstOrThrow();
 
         return DB.CredentialInstance.toDomain(row);
+    }
+
+    // A running execution writes refreshed tokens back; the name stays as it is.
+    @Transactional('user', 'delegate')
+    public async updateBlob(
+        principal: Principal.User | Principal.Delegate,
+        id: Vault.Credential.Instance.Id,
+        blob: Vault.Credential.Instance.EncryptedBlob,
+    ): Promise<void> {
+        await this.trx
+            .updateTable('credential_instance')
+            .set({ blob })
+            .where('id', '=', id)
+            .execute();
     }
 
     @Transactional('user')

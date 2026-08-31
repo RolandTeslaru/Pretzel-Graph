@@ -2,12 +2,15 @@ import { Kanban } from '@pretzel-graph/standard-ui/components/kanban'
 import type { ComponentType } from 'react'
 import { DropdownMenu, Frame, Spinner, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Execution } from '@pretzel-graph/shared/domain'
+import { Execution, SystemError } from '@pretzel-graph/shared/domain'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { formatDuration } from '@/routes/workflow/-SDKs/ExecutionSDK/ui/UoWInspector/utils'
 import { executionStatusVariants, executionVariants } from './styles'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
+
+// Numeric enums reverse-map, so the wire code renders as its name.
+const codeLabel = (code: SystemError.Code) => `${SystemError.Code[code] ?? 'UNKNOWN'} (${code})`
 
 // Keyed by the enum, so a new igniter fails to compile until it has an icon.
 const IgniterIconMap = {
@@ -73,9 +76,25 @@ const ExecutionItem = ({ execution }: { execution: Execution.Meta }) => {
 
                 {status === "running" && <Spinner className='absolute bottom-1 right-1' elementClassName='fill-sky-400!'/>}
 
-                <div className={cn('absolute top-1 left-1', executionStatusVariants({ status: execution.status }))}>
-                    {status}
-                </div>
+                {execution.error
+                    ? (
+                        <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                                <div className={cn('absolute top-1 left-1 cursor-help', executionStatusVariants({ status: execution.status }))}>
+                                    {status}
+                                </div>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content className='max-w-[300px]'>
+                                <p className='break-words'>{execution.error.message}</p>
+                                <p className='text-muted-foreground'>{codeLabel(execution.error.code)}</p>
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    )
+                    : (
+                        <div className={cn('absolute top-1 left-1', executionStatusVariants({ status: execution.status }))}>
+                            {status}
+                        </div>
+                    )}
 
 
 

@@ -8,6 +8,7 @@ export { LC } from "./langchain";
 export { ToolBudget } from "./tools/budget";
 export { HTTP } from "./domain/http";
 export { NetworkProxy } from "./domain/networkProxy";
+export { googleOAuth2Provider } from "./credentials/oauth2/google";
 export { Synthesizer } from "./synthesizer";
 export { mapFieldValues } from "./utils/mapFieldValues";
 export { ConnectionManager } from "./db/connection-manager";

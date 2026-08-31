@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
-import { Auth, Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
+import { Chat, Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { DB } from '@/db';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
 
 const META_COLUMNS = [
     'id',
@@ -33,42 +34,15 @@ type RowPatch = {
     recording?: Execution.Recording | null;
 };
 
-// Column-granularity write shared by updateProgress and finalise — the columns are the
-// same, only who may write them differs. Distinct from Session.Patch, which is a
-// key-granularity delta: `session` here replaces the whole blob. Module-level so
-// @DatabaseClass doesn't treat it as a method.
-async function applyRowPatch(trx: DB.Transaction<DB.Role>, props: RowPatch): Promise<Execution.Meta> {
-    const row = await trx
-        .updateTable('executions')
-        .set({
-            ...(props.status !== undefined && { status: props.status }),
-            ...(props.duration !== undefined && { duration: props.duration }),
-            ...(props.error !== undefined && {
-                error: new SystemError(
-                    SystemError.Code.INFRA_UNKNOWN,
-                    props.error,
-                ).toJSON(),
-            }),
-            ...(props.session !== undefined && { session: props.session }),
-            ...(props.recording !== undefined && { recording: props.recording }),
-        })
-        .where('id', '=', props.executionId)
-        .returning(metaSelection)
-        .executeTakeFirstOrThrow();
+class MetaMethods extends Repository {
 
-    return Execution.Meta.parse(row);
-}
-
-@DatabaseClass
-class MetaMethods {
-
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Execution.Meta)
-    async get(
-        trx: DB.UserTransaction,
+    public async get(
+        principal: Principal.User,
         executionId: Execution.Id,
     ): Promise<Execution.Meta> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('executions')
             .select(metaSelection)
             .where('id', '=', executionId)
@@ -77,13 +51,13 @@ class MetaMethods {
         return Execution.Meta.parse(row);
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Execution.Meta.array())
-    async list(
-        trx: DB.UserTransaction,
+    public async list(
+        principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<Execution.Meta[]> {
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('executions')
             .select(metaSelection)
             .where('workflow_id', '=', workflowId)
@@ -94,11 +68,11 @@ class MetaMethods {
     }
 
     /** Non-terminal rows old enough that a live run would have a live job. */
-    @AllowedDatabaseRoles("service")
-    async listStaleNonTerminal(trx: DB.Transaction<'service'>, olderThanMs: number): Promise<{ id: Execution.Id }[]> {
+    @Transactional('service')
+    public async listStaleNonTerminal(principal: Principal.Service, olderThanMs: number): Promise<{ id: Execution.Id }[]> {
         const cutoff = new Date(Date.now() - olderThanMs).toISOString();
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('executions')
             .select('id')
             .where('status', 'in', ['pending', 'running'])
@@ -108,10 +82,10 @@ class MetaMethods {
         return rows as { id: Execution.Id }[];
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Execution.Meta.array())
-    async listActive(trx: DB.UserTransaction): Promise<Execution.Meta[]> {
-        const rows = await trx
+    public async listActive(principal: Principal.User): Promise<Execution.Meta[]> {
+        const rows = await this.trx
             .selectFrom('executions')
             .select(metaSelection)
             .where('status', 'in', ['pending', 'running'])
@@ -123,16 +97,15 @@ class MetaMethods {
 }
 
 @Injectable()
-@DatabaseClass
-export class ExecutionDatabase {
+export class ExecutionRepository extends Repository {
     public readonly meta = new MetaMethods();
 
-    @AllowedDatabaseRoles("user")
-    async create(
-        trx: DB.UserTransaction,
+    /** `created_by` is attribution only — null when a machine triggered the run. */
+    @Transactional('user', 'service')
+    public async create(
+        principal: Principal.User | Principal.Service,
         props: {
             workflowId: Workflow.Id;
-            createdBy: Auth.User.Id | null;
             igniter: Execution.Igniter;
             session: Execution.Session;
             executionId?: Execution.Id;
@@ -141,12 +114,12 @@ export class ExecutionDatabase {
     ): Promise<Execution.Meta> {
         const executionId = props.executionId ?? crypto.randomUUID() as Execution.Id;
 
-        const row = await trx
+        const row = await this.trx
             .insertInto('executions')
             .values({
                 id: executionId,
                 workflow_id: props.workflowId,
-                created_by: props.createdBy,
+                created_by: principal.type === 'user' ? principal.userId : null,
                 igniter: props.igniter,
                 status: 'pending',
                 duration: 0,
@@ -164,12 +137,12 @@ export class ExecutionDatabase {
      * Progress writes from a request or a running execution. RLS scopes the row to
      * the acting user, so a delegated write can only touch its own owner's execution.
      */
-    @AllowedDatabaseRoles("user", "delegate")
-    async updateProgress(
-        trx: DB.Transaction<'user' | 'delegate'>,
+    @Transactional('user', 'delegate')
+    public async updateProgress(
+        principal: Principal.User | Principal.Delegate,
         props: Omit<RowPatch, 'error'>,
     ): Promise<Execution.Meta> {
-        return applyRowPatch(trx, props);
+        return this._applyRowPatch(props);
     }
 
     /**
@@ -177,26 +150,26 @@ export class ExecutionDatabase {
      * a BullMQ failure, an enqueue that never reached a worker. Deliberately on the
      * service role: a wrong policy must never leave an execution unreapable.
      */
-    @AllowedDatabaseRoles("service")
-    async finalise(
-        trx: DB.Transaction<'service'>,
+    @Transactional('service')
+    public async finalise(
+        principal: Principal.Service,
         props: RowPatch,
     ): Promise<Execution.Meta> {
-        return applyRowPatch(trx, props);
+        return this._applyRowPatch(props);
     }
 
     /**
-     * Closes a run only while it is still open. A late write — a worker naming
-     * what it abandoned, a sweep — must never overwrite an outcome that landed
-     * in the meantime.
+     * Closes a run only while it is still open, returning the session alongside for
+     * the failure event. A late write — a worker naming what it abandoned, a sweep —
+     * must never overwrite an outcome that landed in the meantime.
      */
-    @AllowedDatabaseRoles("service")
-    async failIfActive(
-        trx: DB.Transaction<'service'>,
+    @Transactional('service')
+    public async failIfActive(
+        principal: Principal.Service,
         executionId: Execution.Id,
         error: string,
-    ): Promise<Execution.Meta | undefined> {
-        const row = await trx
+    ): Promise<{ meta: Execution.Meta; session: Execution.Session } | undefined> {
+        const row = await this.trx
             .updateTable('executions')
             .set({
                 status: 'failed',
@@ -204,35 +177,25 @@ export class ExecutionDatabase {
             })
             .where('id', '=', executionId)
             .where('status', 'in', [...Execution.ACTIVE_STATUSES])
-            .returning(metaSelection)
+            .returning([...metaSelection, 'session'])
             .executeTakeFirst();
 
-        return row === undefined ? undefined : Execution.Meta.parse(row);
+        if (row === undefined)
+            return undefined;
+
+        return {
+            meta:    Execution.Meta.parse(row),
+            session: Execution.Session.Schema.parse(row.session),
+        };
     }
 
-    /** For the failure event a cleanup path has to send on the execution's behalf. */
-    @AllowedDatabaseRoles("service")
-    @ZodReturn(Execution.Session.Schema)
-    async getSession(
-        trx: DB.Transaction<'service'>,
-        executionId: Execution.Id,
-    ): Promise<Execution.Session> {
-        const row = await trx
-            .selectFrom('executions')
-            .select('session')
-            .where('id', '=', executionId)
-            .executeTakeFirstOrThrow();
-
-        return Execution.Session.Schema.parse(row.session);
-    }
-
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Execution.Status)
-    async getStatus(
-        trx: DB.UserTransaction,
+    public async getStatus(
+        principal: Principal.User,
         executionId: Execution.Id,
     ): Promise<Execution.Status> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('executions')
             .select('status')
             .where('id', '=', executionId)
@@ -241,13 +204,13 @@ export class ExecutionDatabase {
         return row.status;
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Execution.Schema)
-    async get(
-        trx: DB.UserTransaction,
+    public async get(
+        principal: Principal.User,
         executionId: Execution.Id,
     ): Promise<Execution> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('executions')
             .selectAll()
             .where('id', '=', executionId)
@@ -256,10 +219,10 @@ export class ExecutionDatabase {
         return DB.Execution.toDomain(row);
     }
 
-    @AllowedDatabaseRoles("user", "service")
+    @Transactional('user', 'service')
     @ZodReturn(Execution.Id.array())
-    async listActiveIds(trx: DB.Transaction<'user' | 'service'>): Promise<Execution.Id[]> {
-        const rows = await trx
+    public async listActiveIds(principal: Principal.User | Principal.Service): Promise<Execution.Id[]> {
+        const rows = await this.trx
             .selectFrom('executions')
             .select('id')
             .where('status', 'in', ['pending', 'running'])
@@ -268,16 +231,16 @@ export class ExecutionDatabase {
         return rows.map((row) => row.id);
     }
 
-    @AllowedDatabaseRoles("user", "service")
-    async terminateMany(
-        trx: DB.Transaction<'user' | 'service'>,
+    @Transactional('user', 'service')
+    public async terminateMany(
+        principal: Principal.User | Principal.Service,
         executionIds: Execution.Id[],
         error: string,
     ): Promise<Execution.Meta[]> {
         if (!executionIds.length)
             return [];
 
-        const rows = await trx
+        const rows = await this.trx
             .updateTable('executions')
             .set({
                 status: 'terminated',
@@ -291,5 +254,30 @@ export class ExecutionDatabase {
             .execute();
 
         return rows.map((row) => Execution.Meta.parse(row));
+    }
+
+    // Column-granularity write shared by updateProgress and finalise — the columns are
+    // the same, only who may write them differs. Distinct from Session.Patch, which is
+    // a key-granularity delta: `session` here replaces the whole blob.
+    private async _applyRowPatch(props: RowPatch): Promise<Execution.Meta> {
+        const row = await this.trx
+            .updateTable('executions')
+            .set({
+                ...(props.status !== undefined && { status: props.status }),
+                ...(props.duration !== undefined && { duration: props.duration }),
+                ...(props.error !== undefined && {
+                    error: new SystemError(
+                        SystemError.Code.INFRA_UNKNOWN,
+                        props.error,
+                    ).toJSON(),
+                }),
+                ...(props.session !== undefined && { session: props.session }),
+                ...(props.recording !== undefined && { recording: props.recording }),
+            })
+            .where('id', '=', props.executionId)
+            .returning(metaSelection)
+            .executeTakeFirstOrThrow();
+
+        return Execution.Meta.parse(row);
     }
 }

@@ -55,7 +55,6 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                         ),
                         {
                             loading : `Reconciling node ${nodeId}`,
-                            success : `Node derivative resolved`,
                             error   : (e: any) => e instanceof Error ? e.message : String(e),
                         }
                     );

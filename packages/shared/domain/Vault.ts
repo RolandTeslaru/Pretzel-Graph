@@ -1,9 +1,62 @@
 import { z } from "zod"
 import type { AxiosInstance } from "axios"
-import { Auth } from "./Auth";
+import { Auth as AuthDomain } from "./Auth";
+import { Workspace } from "./Workspace";
 import { Field } from "./Foundations/Field";
 
 export namespace Vault {
+
+    // A credential obtained through a browser consent step rather than typed in.
+    export namespace OAuth {
+
+        export const Provider = z.object({
+            authUrl:         z.url(),
+            tokenUrl:        z.url(),
+            revokeUrl:       z.url().optional(),
+            // Identity probe after the exchange; seeds the instance name.
+            userInfoUrl:     z.url().optional(),
+            scopes:          z.array(z.string()).readonly(),
+            // Appended to the authorize URL as-is.
+            extraAuthParams: z.record(z.string(), z.string()).optional(),
+            scopeSeparator:  z.string().default(" "),
+        })
+        export type Provider = z.infer<typeof Provider>
+
+        // What a credential template carries under `auth`.
+        export const Auth = z.object({
+            kind:     z.literal("oauth2"),
+            provider: Provider,
+        })
+        export type Auth = z.infer<typeof Auth>
+
+        // The form fields: the app registration at the provider.
+        export const Client = z.object({
+            clientId:     z.string(),
+            clientSecret: z.string(),
+        })
+        export type Client = z.infer<typeof Client>
+
+        // What a token endpoint yields, normalised.
+        export const TokenSet = z.object({
+            accessToken:  z.string(),
+            refreshToken: z.string().optional(),
+            // Epoch ms.
+            expiresAt:    z.number(),
+            scope:        z.string().optional(),
+        })
+        export type TokenSet = z.infer<typeof TokenSet>
+
+        // The encrypted blob of a connected instance: the client plus what the callback added.
+        export const Values = Client.extend({
+            accessToken:  z.string(),
+            refreshToken: z.string(),
+            expiresAt:    z.number(),
+            // What the provider actually granted.
+            scope:        z.string(),
+            accountLabel: z.string().optional(),
+        })
+        export type Values = z.infer<typeof Values>
+    }
 
     export namespace Database {
         export namespace Insert {
@@ -31,6 +84,8 @@ export namespace Vault {
                 icon:        z.string().optional(),
                 // Nothing attached is a valid state — validation won't flag it as missing.
                 optional:    z.boolean().optional(),
+                // Present when the fields are only the first step and a consent flow completes the credential.
+                auth:        OAuth.Auth.optional(),
             })
         }
         export type Template = z.infer<typeof Template.Schema>
@@ -64,6 +119,37 @@ export namespace Vault {
             export type DecryptedValues = z.infer<typeof DecryptedValues>
         }
         export type Instance = z.infer<typeof Instance.Schema>
+    }
+
+    // Declared after Credential because the payload names its ids.
+    export namespace OAuth {
+
+        // Travels through the provider and back: signed so it cannot be forged, single-use.
+        export namespace State {
+            export const Schema = z.object({
+                templateId: Credential.Template.Id,
+                name:       z.string(),
+                // The form fields, already encrypted, so no row exists until consent lands.
+                blob:       Credential.Instance.EncryptedBlob,
+                userId:     AuthDomain.User.Id,
+                role:       Workspace.Role,
+                // Set when reconnecting an existing instance.
+                instanceId: Credential.Instance.Id.optional(),
+                nonce:      z.string(),
+                exp:        z.number(),
+            })
+
+            export type Input = Omit<z.infer<typeof Schema>, "nonce" | "exp">
+        }
+        export type State = z.infer<typeof State.Schema>
+
+        // The message the callback page posts to the window that opened it.
+        export const PopupMessage = z.object({
+            type:       z.literal("pretzel:oauth"),
+            instanceId: Credential.Instance.Id.optional(),
+            error:      z.string().optional(),
+        })
+        export type PopupMessage = z.infer<typeof PopupMessage>
     }
 
 
@@ -203,6 +289,58 @@ export namespace Vault {
             export async function reveal(api: AxiosInstance, id: Credential.Instance.Id): Promise<Reveal.Response> {
                 const { data } = await api.post<Reveal.Response>(`/api/vault/credential-instances/${id}/reveal`)
                 return data
+            }
+        }
+
+        export namespace OAuth {
+
+            export namespace RedirectUri {
+                export const Response = z.object({
+                    redirectUri: z.url(),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function redirectUri(api: AxiosInstance): Promise<RedirectUri.Response> {
+                const { data } = await api.get<RedirectUri.Response>('/api/vault/oauth/redirect-uri')
+                return data
+            }
+
+            export namespace Start {
+                export const Request = z.object({
+                    templateId:  Credential.Template.Id,
+                    name:        z.string(),
+                    fieldValues: Credential.Instance.DecryptedValues,
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    authorizeUrl: z.url(),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function start(api: AxiosInstance, req: Start.Request): Promise<Start.Response> {
+                const { data } = await api.post<Start.Response>('/api/vault/oauth/start', req)
+                return data
+            }
+
+            export namespace Reconnect {
+                export const Response = Start.Response
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function reconnect(api: AxiosInstance, id: Credential.Instance.Id): Promise<Reconnect.Response> {
+                const { data } = await api.post<Reconnect.Response>(`/api/vault/oauth/${id}/reconnect`)
+                return data
+            }
+
+            export namespace AccessToken {
+                export const Response = z.object({
+                    accessToken: z.string(),
+                    expiresAt:   z.number(),
+                })
+                export type Response = z.infer<typeof Response>
             }
         }
     }
