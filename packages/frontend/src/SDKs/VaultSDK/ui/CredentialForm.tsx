@@ -8,7 +8,9 @@ import { VaultSDK } from '../sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import type { Vault } from '@pretzel-graph/shared/domain'
 import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
+import { awaitOAuthConnection, openOAuthPopup } from '../oauthPopup'
 
 interface UpdateProps {
     instanceId: Vault.Credential.Instance.Id
@@ -26,8 +28,9 @@ interface Props {
 export const CredentialFormDialog = ({ credentialTemplate, onCreated, updateProps, ...templateProps }: Props & DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
         {...templateProps}
-        className='w-[600px] h-[500px]'
+        className='w-[800px] h-[500px]'
         contentClassName='p-0!'
+        sidebarClassName='w-[270px]'
         sidebarRenderer={() => (
             <div className='flex flex-col gap-2'>
                 <div className='flex flex-row items-center gap-2'>
@@ -110,25 +113,34 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
 
     const [isLoadingValues, setIsLoadingValues] = useState(Boolean(updateProps))
     const [isRemoving, setIsRemoving] = useState(false)
+    const [isConnecting, setIsConnecting] = useState(false)
+    const [redirectUri, setRedirectUri] = useState<string | null>(null)
+    const [accountLabel, setAccountLabel] = useState<string | null>(null)
+
+    const isOAuth = credentialTemplate.auth?.kind === 'oauth2'
+
+    // Once connected, the form fields are replaced by a Reconnect button.
+    const formFields = isOAuth && updateProps ? [] : credentialTemplate.fields
 
     const schema = useMemo(() => z.object({
-        name: z.string().trim().min(1, 'Name is required'),
+        // An OAuth credential can take its name from the connected account.
+        name: isOAuth ? z.string().trim() : z.string().trim().min(1, 'Name is required'),
         fields: z.object(
             Object.fromEntries(
-                credentialTemplate.fields.map(field => [
+                formFields.map(field => [
                     field.id,
                     createFieldSchema(field),
                 ]),
             ),
         ),
-    }), [credentialTemplate])
+    }), [isOAuth, formFields])
 
     type Values = z.infer<typeof schema>
 
     const getDefaultValues = (): Values => ({
         name: '',
         fields: Object.fromEntries(
-            credentialTemplate.fields.map(field => [
+            formFields.map(field => [
                 field.id,
                 getFieldDefaultValue(field),
             ]),
@@ -149,13 +161,89 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
         VaultSDK.actions.instance.reveal(updateProps.instanceId)
             .then(fieldValues => {
                 const name = VaultSDK.state.credentialInstances[updateProps.instanceId]?.name ?? ''
+
+                if (isOAuth) {
+                    setAccountLabel(typeof fieldValues.accountLabel === 'string' ? fieldValues.accountLabel : null)
+                    form.reset({ name, fields: {} as Values['fields'] })
+                    return
+                }
+
                 form.reset({ name, fields: fieldValues as Values['fields'] })
             })
             .catch(() => {})
             .finally(() => setIsLoadingValues(false))
     }, [updateProps?.instanceId])
 
+    useEffect(() => {
+        if (!isOAuth || updateProps)
+            return
+
+        VaultSDK.actions.oauth.redirectUri()
+            .then(setRedirectUri)
+            .catch(() => {})
+    }, [isOAuth, updateProps])
+
+    // The popup opens before the backend call so the browser counts it as user-initiated.
+    const connect = async (mintAuthorizeUrl: () => Promise<string>): Promise<Vault.Credential.Instance.Id | null> => {
+        const popup = openOAuthPopup()
+
+        setIsConnecting(true)
+        try {
+            const authorizeUrl = await mintAuthorizeUrl()
+            const instanceId   = await awaitOAuthConnection(popup, authorizeUrl)
+
+            await VaultSDK.actions.instance.refreshAll()
+
+            return instanceId
+        } catch (err) {
+            popup?.close()
+            toast.error((err as Error).message)
+            return null
+        } finally {
+            setIsConnecting(false)
+        }
+    }
+
+    const onReconnect = async () => {
+        if (!updateProps)
+            return
+
+        const instanceId = await connect(() => VaultSDK.actions.oauth.reconnect(updateProps.instanceId))
+
+        if (!instanceId)
+            return
+
+        toast.success(`${credentialTemplate.displayName} reconnected`)
+        updateProps.onUpdateComplete?.(instanceId)
+    }
+
     const onSubmit = async (values: Values) => {
+        if (isOAuth && !updateProps) {
+            const instanceId = await connect(() => VaultSDK.actions.oauth.start({
+                templateId:  credentialTemplate.id,
+                name:        values.name,
+                fieldValues: values.fields,
+            }))
+
+            if (!instanceId)
+                return
+
+            toast.success(`${credentialTemplate.displayName} connected`)
+            onCreated?.(instanceId)
+            return
+        }
+
+        if (isOAuth && updateProps) {
+            try {
+                await VaultSDK.actions.instance.update.name(updateProps.instanceId, values.name)
+                toast.success(`${credentialTemplate.displayName} credential updated`)
+                updateProps.onUpdateComplete?.(updateProps.instanceId)
+            } catch {
+                // SDK already toasted
+            }
+            return
+        }
+
         try {
             if (updateProps) {
                 await VaultSDK.actions.instance.update.values({
@@ -249,7 +337,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                             </Form.Item>
                         )} />
 
-                        {credentialTemplate.fields.map(f => (
+                        {formFields.map(f => (
                             <Form.Field key={f.id} control={form.control} name={`fields.${f.id}`} render={({ field }) => (
                                 <Form.Item>
                                     <Form.Label>
@@ -307,6 +395,46 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                             )} />
                         ))}
 
+                        {isOAuth && !updateProps && (
+                            <div className='flex flex-col gap-1.5'>
+                                <span className='text-sm font-medium'>Redirect URI</span>
+                                <div className='flex items-center gap-1.5'>
+                                    <Input readOnly value={redirectUri ?? ''} className='font-mono text-xs' />
+                                    <Button
+                                        type='button'
+                                        variant='outline'
+                                        size='icon-xs'
+                                        disabled={!redirectUri}
+                                        onClick={() => {
+                                            if (!redirectUri)
+                                                return
+
+                                            navigator.clipboard.writeText(redirectUri)
+                                            toast.success('Redirect URI copied')
+                                        }}
+                                    >
+                                        <SystemIcons.Copy />
+                                    </Button>
+                                </div>
+                                <p className='text-xs text-muted-foreground'>
+                                    Add this as an authorized redirect URI on the OAuth client in {credentialTemplate.displayName}'s developer console.
+                                </p>
+                            </div>
+                        )}
+
+                        {isOAuth && updateProps && !isLoadingValues && (
+                            <div className='flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2'>
+                                <div className='flex flex-col min-w-0'>
+                                    <span className='text-xs text-muted-foreground'>Connected account</span>
+                                    <span className='text-sm truncate'>{accountLabel ?? 'Unknown'}</span>
+                                </div>
+                                <Button type='button' variant='outline' size='sm' onClick={onReconnect} disabled={isConnecting}>
+                                    {isConnecting && <Spinner className='mr-2 h-4 w-4' />}
+                                    Reconnect
+                                </Button>
+                            </div>
+                        )}
+
                     </form>
                 </Form.Root>
             </ScrollArea.Root>
@@ -320,9 +448,9 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                             Remove
                         </Button>
                     ) : <div />}
-                    <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving}>
-                        {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
-                        Save
+                    <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving || isConnecting}>
+                        {(form.formState.isSubmitting || isConnecting) && <Spinner className='mr-2 h-4 w-4' />}
+                        {isOAuth && !updateProps ? `Connect with ${credentialTemplate.displayName}` : 'Save'}
                     </Button>
                 </div>
             </div>
