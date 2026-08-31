@@ -92,6 +92,9 @@ services:
       EXECUTION_TOKEN_SIGNING_KEY: ${EXECUTION_TOKEN_SIGNING_KEY:?set EXECUTION_TOKEN_SIGNING_KEY in .env}
       WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-dev-worker-service-internal-token}
       CORS_ORIGIN: ${APP_URL:-http://localhost:8080}
+      # Builds the OAuth redirect URI a provider console must list.
+      PUBLIC_BASE_URL: ${APP_URL:-http://localhost:8080}
+      OAUTH_REDIRECT_URL: ${OAUTH_REDIRECT_URL:-}
       PORT: 3001
       # Handed to the page at runtime; the browser reaches the issuer here.
       PUBLIC_AUTH_URL: ${GOTRUE_EXTERNAL_URL:-http://localhost:9999}

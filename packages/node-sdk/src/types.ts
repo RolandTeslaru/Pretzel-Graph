@@ -410,6 +410,7 @@ export type InferOutputs<D, TValues = never> = 0 extends (1 & D) ? any
  * Decrypted field values for one credential template, keyed by field literal id.
  */
 export type InferCredentialValues<C> = 0 extends (1 & C) ? any
+    : C extends { auth: { kind: "oauth2" } } ? Vault.OAuth.Values
     : C extends { fields: infer F }
     ? F extends readonly { id: string }[]
     ? { [K in F[number] as K extends { __literalId?: infer Id extends string }

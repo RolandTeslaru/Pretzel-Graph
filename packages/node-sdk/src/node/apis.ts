@@ -82,6 +82,8 @@ export interface CatalogueAPI {
 export interface CredentialsAPI {
     getInstance:       (instanceId: Vault.Credential.Instance.Id) => Vault.Credential.Instance | undefined,
     getDecryptedValue: <T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>) => InferCredentialValues<T>,
+    // OAuth2 instances only. Resolves to a token valid for at least the next minute.
+    getAccessToken:    (instanceId: Vault.Credential.Instance.Id) => Promise<string>,
 }
 
 // Signal + trigger for cooperative cancellation of the whole execution (aborts async work in flight).

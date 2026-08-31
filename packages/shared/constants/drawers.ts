@@ -153,7 +153,15 @@ export const BUNDLE_DRAWERS = {
     displayName: "Google",
     id: "google",
     icon: "Google",
-    blueprintIds: ["Integrations.Google.Gemini", "Integrations.Google.Search"]
+    blueprintIds: [
+      "Integrations.Google.Gemini",
+      "Integrations.Google.Search",
+      "Integrations.Google.Gmail.Mailbox",
+      "Integrations.Google.Gmail.Compose",
+      "Integrations.Google.Sheets",
+      "Integrations.Google.Drive",
+      "Integrations.Google.Calendar",
+    ]
   },
   hyperliquid: {
     displayName: "HyperLiquid",

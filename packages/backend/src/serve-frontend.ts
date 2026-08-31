@@ -4,7 +4,7 @@ import { readFileSync, statSync } from 'fs';
 import path from 'path';
 
 // Paths the API answers; everything else belongs to the app's own router.
-const API_PREFIXES = ['/api', '/webhook', '/webhook-test', '/health', '/socket'];
+const API_PREFIXES = ['/api', '/webhook', '/webhook-test', '/oauth', '/health', '/socket'];
 
 // Served by their own handler, so a miss is a 404 rather than the shell.
 const ASSET_PREFIX = '/assets';

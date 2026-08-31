@@ -5,13 +5,13 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
-import { Activity, Auth, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Activity, Chat, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { PermissionService } from '../Permission/permission.service';
-import { ExecutionDatabase } from './execution.database';
+import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultRepository } from '../Vault/vault.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
@@ -32,7 +32,7 @@ export class ExecutionService {
         private readonly executionQueue: Queue,
         private readonly realtime:       RealtimeService,
         private readonly ownership:      PermissionService,
-        private readonly database:       ExecutionDatabase,
+        private readonly executionRepository: ExecutionRepository,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultRepository: VaultRepository,
         @Inject(forwardRef(() => WorkerLifecycleService))
@@ -41,7 +41,7 @@ export class ExecutionService {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            this.announce(await DB.asService('mark failed BullMQ execution', (db) => this.database.finalise(db, { executionId: jobId as Execution.Id, status, error: failedReason })));
+            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
 
         // The idle window runs from the last job to end, whichever way it ended.
@@ -76,7 +76,7 @@ export class ExecutionService {
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        return this.runCore(principal.userId, workflowId, payload, payload.igniter);
+        return this.runCore(principal, workflowId, payload, payload.igniter);
     }
 
 
@@ -88,10 +88,8 @@ export class ExecutionService {
         payload: Execution.API.Run.InternalRequest,
         service: string,
     ): Promise<Execution.API.Run.Response> {
-        void service;
-
         // No human behind this run; `igniter` records what triggered it.
-        return this.runCore(null, payload.workflowId, payload, payload.igniter);
+        return this.runCore({ type: 'service', service }, payload.workflowId, payload, payload.igniter);
     }
 
 
@@ -136,15 +134,19 @@ export class ExecutionService {
         return blueprints;
     }
 
-    /** `userId` is attribution only — null when a machine triggered the run. */
+    // Attribution follows the principal; a machine-triggered run has no owner.
+    private async ensureChat(principal: Principal.User | Principal.Service, chatId: Chat.Id, workflowId: Workflow.Id): Promise<void> {
+        const createdBy = principal.type === 'user' ? principal.userId : null;
+
+        await DB.asUser({ userId: createdBy }, (trx) => this.chatDatabase.chat.ensure(trx, createdBy, chatId, workflowId));
+    }
+
     private async runCore(
-        userId:     Auth.User.Id | null,
+        principal:  Principal.User | Principal.Service,
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
         igniter:    Execution.Igniter,
     ): Promise<Execution.API.Run.Response> {
-        const withDatabase = <T>(fn: (trx: DB.UserTransaction) => Promise<T>) => DB.asUser({ userId }, fn);
-
         const chatId = igniter.chat_id;
         const workflowData = payload.workflowData;
 
@@ -165,10 +167,10 @@ export class ExecutionService {
             );
 
         if (chatId)
-            await withDatabase((db) => this.chatDatabase.chat.ensure(db, userId, chatId, workflowId));
+            await this.ensureChat(principal, chatId, workflowId);
 
         const session = Execution.Session.createInitial();
-        const created = await withDatabase((db) => this.database.create(db, { workflowId, createdBy: userId, igniter, session, executionId: payload.executionId, chatId }));
+        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: payload.executionId, chatId });
         const executionId = created.id;
 
         this.announce(created);
@@ -207,7 +209,7 @@ export class ExecutionService {
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            this.announce(await DB.asService('mark execution failed at enqueue', (db) => this.database.finalise(db, { executionId, status: 'failed', error: message })));
+            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: message }));
             throw error;
         }
 
@@ -218,7 +220,7 @@ export class ExecutionService {
         );
 
         if (!started) {
-            this.announce(await DB.asService('mark execution failed — no worker', (db) => this.database.finalise(db, { executionId, status: 'failed', error: 'No worker picked up the job' })));
+            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: 'No worker picked up the job' }));
             this.executionQueue.remove(executionId).catch(err =>
                 console.error('Failed to remove execution from queue after start timeout', err)
             );
@@ -257,7 +259,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'paused' })));
+            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'paused' }));
        
         return { success };
     }
@@ -277,7 +279,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'running' })));
+            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'running' }));
         
         return { success };
     }
@@ -315,7 +317,7 @@ export class ExecutionService {
         );
 
         if (success)
-            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'suspended' })));
+            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'suspended' }));
 
         return { success };
     }
@@ -335,7 +337,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await DB.asUser(principal, (db) => this.database.updateProgress(db, { executionId, status: 'terminated' })));
+            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'terminated' }));
         
         return { success };
     }
@@ -344,7 +346,7 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        this.announce(await DB.asService('finalise execution', (db) => this.database.finalise(db, { executionId, status })));
+        this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status }));
         return {};
     }
 
@@ -353,17 +355,10 @@ export class ExecutionService {
      * error column is off its patch, so only the service role writes one.
      */
     public async fail(executionId: Execution.Id, error: string): Promise<void> {
-        const closed = await DB.asService('fail unreported execution', async (db) => {
-            const meta = await this.database.failIfActive(db, executionId, error);
-
-            // Undefined when it settled first, which is the outcome that stands.
-            if (!meta)
-                return null;
-
-            // Read for the event: `Meta` omits the session, and an editor watching
-            // this run applies the same payload a live failure would have sent.
-            return { meta, session: await this.database.getSession(db, executionId) };
-        });
+        // Undefined when it settled first, which is the outcome that stands. The
+        // session rides along for the event: `Meta` omits it, and an editor watching
+        // this run applies the same payload a live failure would have sent.
+        const closed = await this.executionRepository.failIfActive(Principal.SELF, executionId, error);
 
         if (!closed)
             return;
@@ -390,7 +385,7 @@ export class ExecutionService {
     public async terminateAll(
         principal: Principal.User,
     ): Promise<Execution.API.TerminateAll.Response> {
-        const activeExecutionIds = await DB.asService('list active executions for termination', (db) => this.database.listActiveIds(db));
+        const activeExecutionIds = await this.executionRepository.listActiveIds(Principal.SELF);
         if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
 
         for (const executionId of activeExecutionIds) {
@@ -405,9 +400,7 @@ export class ExecutionService {
         for (const job of waiting) 
             await job.remove();
 
-        const terminateActive = (trx: DB.Transaction<'user' | 'service'>) => this.database.terminateMany(trx, activeExecutionIds, 'Terminated by admin');
-
-        const terminated = await DB.asService('terminate active executions', terminateActive);
+        const terminated = await this.executionRepository.terminateMany(Principal.SELF, activeExecutionIds, 'Terminated by admin');
 
         terminated.forEach((meta) => this.announce(meta));
 
@@ -425,7 +418,7 @@ export class ExecutionService {
         executionId: Execution.Id,
     ): Promise<Execution.API.Get.Response> {
 
-        const execution = await DB.asUser(principal, (db) => this.database.get(db, executionId));
+        const execution = await this.executionRepository.get(principal, executionId);
 
         return { execution };
     }
@@ -441,7 +434,7 @@ export class ExecutionService {
         // scopes it. Terminal results arrive on /finalise, which stays on the service role.
         const delegate = await this.ownership.resolveDelegate(executionId);
 
-        const meta = await DB.asDelegate(delegate, (trx) => this.database.updateProgress(trx, { executionId, status, duration, session, recording }));
+        const meta = await this.executionRepository.updateProgress(delegate, { executionId, status, duration, session, recording });
 
         // Only a status move is activity; a session or recording write is not.
         if (status !== undefined)
@@ -476,7 +469,7 @@ export class ExecutionService {
             executionId: Execution.Id,
         ): Promise<Execution.API.Meta.Get.Response> => {
 
-            const meta = await DB.asUser(principal, (db) => this.database.meta.get(db, executionId));
+            const meta = await this.executionRepository.meta.get(principal, executionId);
 
             return { execution: meta };
         },
@@ -487,7 +480,7 @@ export class ExecutionService {
             workflowId: Workflow.Id,
         ): Promise<Execution.API.Meta.List.Response> => {
 
-            const metaList = await DB.asUser(principal, (db) => this.database.meta.list(db, workflowId));
+            const metaList = await this.executionRepository.meta.list(principal, workflowId);
 
             return { executions: metaList };
         },
@@ -497,7 +490,7 @@ export class ExecutionService {
         listActive: async (
             principal: Principal.User,
         ): Promise<Execution.API.Meta.ListActive.Response> => {
-            const executions = await DB.asUser(principal, (db) => this.database.meta.listActive(db));
+            const executions = await this.executionRepository.meta.listActive(principal);
 
             return { executions: executions };
         }

@@ -14,6 +14,7 @@ export namespace Loader {
         credentialsAPI: {
             getInstance(instanceId: Vault.Credential.Instance.Id): Vault.Credential.Instance | undefined;
             getDecryptedValue<T = unknown>(blob: Vault.Credential.Instance.EncryptedBlob<T>): InferCredentialValues<T>;
+            getAccessToken(instanceId: Vault.Credential.Instance.Id): Promise<string>;
         };
         searchQuery?: string;
         paginationCursor?: string;

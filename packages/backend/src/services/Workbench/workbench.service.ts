@@ -3,6 +3,7 @@ import { Principal } from '@/domain/Principal';
 import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
 import { WorkbenchRepository } from './workbench.repository';
 import { VaultRepository } from '../Vault/vault.repository';
+import { OAuthService } from '../Vault/OAuth/oauth.service';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 import { CatalogueService, Loader } from '@pretzel-graph/node-sdk';
 import { ShelfService } from '../Shelf/shelf.service';
@@ -14,6 +15,7 @@ export class WorkbenchService {
     constructor(
         private readonly workbenchRepository: WorkbenchRepository,
         private readonly vaultRepository: VaultRepository,
+        private readonly oauth: OAuthService,
         private readonly shelfService: ShelfService,
         private readonly listings: ListingService,
     ) {}
@@ -148,6 +150,7 @@ export class WorkbenchService {
                 const credentialsAPI: Loader.Context['credentialsAPI'] = {
                     getInstance: (id) => byId.get(id),
                     getDecryptedValue: (blob) => Encryption.decryptBlob(blob) as any,
+                    getAccessToken: (id) => this.oauth.getAccessToken(principal, id).then(t => t.accessToken),
                 };
 
                 // The backend operates without compile-time blueprint knowledge, so the

@@ -193,9 +193,27 @@ export function createExecutionAPIs(
 
 
 
+    // Per execution: every node sharing a credential shares one token fetch.
+    const accessTokens = new Map<Vault.Credential.Instance.Id, Vault.API.OAuth.AccessToken.Response>();
+
     const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
         getInstance:       (instanceId) => credentialInstances[instanceId],
         getDecryptedValue: (blob)       => Encryption.decryptBlob(blob) as any,
+
+        getAccessToken: async (instanceId) => {
+            const cached = accessTokens.get(instanceId);
+
+            if (cached && cached.expiresAt - 60_000 > Date.now())
+                return cached.accessToken;
+
+            const fresh = await internalAPI.post<Vault.API.OAuth.AccessToken.Response>(
+                `/api/internal/vault/oauth/${instanceId}/access-token`,
+            );
+
+            accessTokens.set(instanceId, fresh);
+
+            return fresh.accessToken;
+        },
     };
 
 

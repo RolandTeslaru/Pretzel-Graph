@@ -2,8 +2,8 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { Execution } from '@pretzel-graph/shared/domain';
-import { DB } from '@/db';
-import { ExecutionDatabase } from './execution.database';
+import { Principal } from '@/domain/Principal';
+import { ExecutionRepository } from './execution.repository';
 import { ExecutionService } from './execution.service';
 
 /** Rows younger than this are left alone — they may not have been picked up yet. */
@@ -26,7 +26,7 @@ export class ExecutionReconciler implements OnModuleInit {
     constructor(
         @InjectQueue(Execution.Queue.ID)
         private readonly queue: Queue,
-        private readonly database: ExecutionDatabase,
+        private readonly executionRepository: ExecutionRepository,
         private readonly executions: ExecutionService,
     ) {}
 
@@ -39,8 +39,7 @@ export class ExecutionReconciler implements OnModuleInit {
 
     private async sweep(): Promise<void> {
         try {
-            const stale = await DB.asService('reconcile orphaned executions', (trx) =>
-                this.database.meta.listStaleNonTerminal(trx, GRACE_MS));
+            const stale = await this.executionRepository.meta.listStaleNonTerminal(Principal.SELF, GRACE_MS);
 
             for (const { id } of stale) {
                 const job   = await this.queue.getJob(id);

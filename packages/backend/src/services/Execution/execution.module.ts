@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ExecutionController } from './execution.controller';
 import { ExecutionService } from './execution.service';
 import { ExecutionReconciler } from './execution.reconciler';
-import { ExecutionDatabase } from './execution.database';
+import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultRepository } from '../Vault/vault.repository';
 import { Execution } from '@pretzel-graph/shared/domain';
@@ -19,7 +19,7 @@ import { WorkerModule } from '../Worker/worker.module';
         forwardRef(() => WorkerModule),
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, ExecutionReconciler, ExecutionDatabase, ChatDatabase, VaultRepository],
+    providers: [ExecutionService, ExecutionReconciler, ExecutionRepository, ChatDatabase, VaultRepository],
     exports: [ExecutionService],
 })
 export class ExecutionModule {}
