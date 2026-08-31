@@ -5,6 +5,8 @@ interface Props extends LibraryBrowserBaseProps {
     searchInputClassName?: string
 }
 
+export type FileSystemTreeSize = keyof typeof sizeStyles
+
 export const sizeStyles = {
     default: {
         row: 'h-7.5 text-sm',

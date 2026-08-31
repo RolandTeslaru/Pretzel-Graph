@@ -1,31 +1,34 @@
 {
-  "name": "pretzel-graph",
-  "version": "0.0.1",
-  "private": true,
-  "license": "Elastic-2.0",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "patch-package",
-    "dev": "concurrently \"npm run dev --workspace=packages/worker\" \"npm run watch:indexes --workspace=packages/nodes\" --names \"WORKER,INDEX\" --prefix-colors \"green,blue\""
-  },
-  "workspaces": [
-    "packages/*"
-  ],
-  "devDependencies": {
-    "@types/node": "^25.2.0",
-    "concurrently": "^9.2.1",
-    "eslint": "^9.39.2",
-    "patch-package": "^8.0.1",
-    "prettier": "^3.8.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@langchain/anthropic": "1.3.22",
-    "@langchain/core": "^1.1.31",
-    "@langchain/google-genai": "2.1.24",
-    "@langchain/openai": "1.2.12",
-    "@langchain/openrouter": "^0.1.10",
-    "langchain": "^1.2.30"
-  }
+    "name": "pretzel-graph",
+    "version": "0.0.1",
+    "private": true,
+    "license": "Elastic-2.0",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "postinstall": "patch-package",
+        "dev": "concurrently \"npm run dev --workspace=packages/worker\" \"npm run watch:indexes --workspace=packages/nodes\" --names \"WORKER,INDEX\" --prefix-colors \"green,blue\"",
+        "build:images": "bash scripts/build-images.sh",
+        "build:image": "bash scripts/build-images.sh",
+        "build": "npm run build --workspaces --if-present"
+    },
+    "workspaces": [
+        "packages/*"
+    ],
+    "devDependencies": {
+        "@types/node": "^25.2.0",
+        "concurrently": "^9.2.1",
+        "eslint": "^9.39.2",
+        "patch-package": "^8.0.1",
+        "prettier": "^3.8.1",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "@langchain/anthropic": "1.3.22",
+        "@langchain/core": "^1.1.31",
+        "@langchain/google-genai": "2.1.24",
+        "@langchain/openai": "1.2.12",
+        "@langchain/openrouter": "^0.1.10",
+        "langchain": "^1.2.30"
+    }
 }

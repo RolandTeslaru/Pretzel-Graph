@@ -163,7 +163,9 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                 const name = VaultSDK.state.credentialInstances[updateProps.instanceId]?.name ?? ''
 
                 if (isOAuth) {
-                    setAccountLabel(typeof fieldValues.accountLabel === 'string' ? fieldValues.accountLabel : null)
+                    const revealedAccountLabel = fieldValues['accountLabel' as keyof Vault.Credential.Instance.DecryptedValues]
+
+                    setAccountLabel(typeof revealedAccountLabel === 'string' ? revealedAccountLabel : null)
                     form.reset({ name, fields: {} as Values['fields'] })
                     return
                 }
