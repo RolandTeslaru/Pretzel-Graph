@@ -15,9 +15,9 @@ export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
   const projections = useMemo(() => {
     const result: Execution.Session["node_output_projections"] = {}
 
-    const inputHandlesMap = cache.inputHandlesMap[nodeId] ?? {}
+    const inputEdgesByPort = cache.inputEdgesByPort[nodeId] ?? {}
 
-    Object.entries(inputHandlesMap).forEach(([targetPortId, edgeId]) => {
+    Object.entries(inputEdgesByPort).forEach(([targetPortId, edgeId]) => {
       const edge = cache.edges[edgeId as Workflow.Edge.Id]
       if (!edge)
         return

@@ -63,7 +63,7 @@ export class NodeIOService {
 
         const resolved: Record<Port.Input.Id, any> = {};
 
-        const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[nodeId]
+        const incomingEdgeByPort = ctx.workflowCache.inputEdgesByPort[nodeId]
 
         const inputs = ctx.workflowQueryAPI.getInputs(nodeId);
 

@@ -217,11 +217,11 @@ export const nodeLifecycleReducers = {
 
         // --- Diff inputs: remove edges for removed/variant-changed inputs ---
         const newInputsById = new Map(blueprint.inputs.map(i => [i.id, i]));
-        const inputHandles = s.cache.inputHandlesMap[nodeId] ?? {};
+        const inputEdges = s.cache.inputEdgesByPort[nodeId] ?? {};
 
         for (const oldInput of oldBlueprint.inputs) {
             const newInput = newInputsById.get(oldInput.id);
-            const edgeId = inputHandles[oldInput.id];
+            const edgeId = inputEdges[oldInput.id];
 
             if (edgeId && (!newInput || newInput.variant !== oldInput.variant)) {
                 s.reducers.edge.remove(s, edgeId);
@@ -230,11 +230,11 @@ export const nodeLifecycleReducers = {
 
         // --- Diff outputs: remove edges for removed/variant-changed outputs ---
         const newOutputsById = new Map(blueprint.outputs.map(o => [o.id, o]));
-        const outputHandles = s.cache.outputHandlesMap[nodeId] ?? {};
+        const outputEdges = s.cache.outputEdgesByPort[nodeId] ?? {};
 
         for (const oldOutput of oldBlueprint.outputs) {
             const newOutput = newOutputsById.get(oldOutput.id);
-            const edgeId = outputHandles[oldOutput.id];
+            const edgeId = outputEdges[oldOutput.id];
 
             if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant))
                 s.reducers.edge.remove(s, edgeId);

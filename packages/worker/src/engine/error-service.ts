@@ -102,7 +102,7 @@ export class ErrorService {
         ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
     ): AggexEngine.Execution.ErrorEnvelope | undefined {
-        const incoming = ctx.workflowCache.inputHandlesMap[vertexId as unknown as Workflow.Node.Id];
+        const incoming = ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
         if (!incoming) return undefined;
 
         for (const edgeId of Object.values(incoming)) {
@@ -216,7 +216,7 @@ export class ErrorService {
         ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
     ): void {
-        const incoming = ctx.workflowCache.inputHandlesMap[vertexId as unknown as Workflow.Node.Id];
+        const incoming = ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
         if (!incoming) return;
 
         for (const edgeId of Object.values(incoming))

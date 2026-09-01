@@ -68,7 +68,7 @@ export const fieldVariadicReducers = {
         if (outputs.length > 0) {
             const lastOutput = outputs[outputs.length - 1];
             // Disconnect any edge wired to the output before removing the port
-            const edgeId = s.cache.outputHandlesMap[nodeId]?.[lastOutput.id];
+            const edgeId = s.cache.outputEdgesByPort[nodeId]?.[lastOutput.id];
             if (edgeId)
                 s.reducers.edge.remove(s, edgeId);
             const idx = node.addedOutputs?.findIndex(o => o.id === lastOutput.id);

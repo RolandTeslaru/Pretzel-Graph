@@ -3,7 +3,7 @@ import { Drawers } from './Drawers'
 import SectionTabs from './SectionTabs'
 import Search from './Search'
 import { ShelfSDK } from '../sdk'
-import { nodeColorsName } from '@/utils/styleUtils'
+import { portColorVar } from '@/utils/styleUtils'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 
 const ShelfSidebar = () => {
@@ -18,7 +18,7 @@ const ShelfSidebar = () => {
                 <Separator/>
             </div>
 
-            <FilterDataTypesIndicator />
+            <FilterVariantsIndicator />
 
             <ScrollArea.Root className='flex-1 min-h-0'>
                 <Drawers />
@@ -35,33 +35,33 @@ const ShelfSidebar = () => {
 
 export default ShelfSidebar
 
-const FilterDataTypesIndicator = () => {
-    const dataTypes = ShelfSDK.useStore(s => s.searchFilter.dataTypes);
-    if (!dataTypes) return null;
+const FilterVariantsIndicator = () => {
+    const variants = ShelfSDK.useStore(s => s.searchFilter.variants);
+    if (!variants) return null;
     return (
         <div className='absolute left-1/2 -translate-x-1/2 top-[51px] flex flex-row gap-2'>
-            {Array.from(dataTypes).map(type => <TypeIndicator handleVariant={type} key={type} />)}
+            {Array.from(variants).map(type => <TypeIndicator portVariant={type} key={type} />)}
         </div>
     )
 }
 
-const TypeIndicator = ({ handleVariant }: { handleVariant: Foundations.Port.Variant }) => {
+const TypeIndicator = ({ portVariant }: { portVariant: Foundations.Port.Variant }) => {
     const left = true
-    const colorName = nodeColorsName[handleVariant] ?? "unknown";
+    const colorVar = portColorVar(portVariant);
 
     const style = {
         backgroundColor: left
-            ? `var(--datatype-${colorName})`
-            : `var(--datatype-${colorName}-foreground)`,
+            ? `var(${colorVar})`
+            : `var(${colorVar}-foreground)`,
         color: left
-            ? `var(--datatype-${colorName}-foreground)`
-            : `var(--datatype-${colorName})`,
+            ? `var(${colorVar}-foreground)`
+            : `var(${colorVar})`,
     };
 
     return (
         <div className='content-[" "] h-1 w-4 rounded-full animate-pulse' style={style}
             onClick={() => {
-                ShelfSDK.actions.searchFilter.toggleDataType(handleVariant)
+                ShelfSDK.actions.searchFilter.toggleVariant(portVariant)
             }}
         />
     )

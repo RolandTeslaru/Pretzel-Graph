@@ -46,7 +46,7 @@ export function getIncomingShape(nodeId: Workflow.Node.Id): Record<string, unkno
     const { cache, data } = WorkbenchSDK.state
     const result: Record<string, unknown> = {}
 
-    Object.entries(cache.inputHandlesMap[nodeId] ?? {}).forEach(([targetPortId, edgeId]) => {
+    Object.entries(cache.inputEdgesByPort[nodeId] ?? {}).forEach(([targetPortId, edgeId]) => {
         const edge = cache.edges[edgeId as Workflow.Edge.Id]
         if (!edge) return
         const value = execution.session.node_output_projections[edge.source.nodeId]?.[

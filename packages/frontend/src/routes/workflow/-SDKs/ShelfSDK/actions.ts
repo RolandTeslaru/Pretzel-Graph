@@ -103,10 +103,10 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
         searchFilter: {
             setQuery: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["setQuery"]> extends [any, ...infer Rest] ? Rest : never) =>
                 setState(s => { sdk.reducers.searchFilter.setQuery(s, ...props) }),
-            setDataTypes: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]> extends [any, ...infer Rest] ? Rest : never) =>
-                setState(s => { sdk.reducers.searchFilter.setDataTypes(s, ...props) }),
-            toggleDataType: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]> extends [any, ...infer Rest] ? Rest : never) =>
-                setState(s => { sdk.reducers.searchFilter.toggleDataType(s, ...props) }),
+            setVariants: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["setVariants"]> extends [any, ...infer Rest] ? Rest : never) =>
+                setState(s => { sdk.reducers.searchFilter.setVariants(s, ...props) }),
+            toggleVariant: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["toggleVariant"]> extends [any, ...infer Rest] ? Rest : never) =>
+                setState(s => { sdk.reducers.searchFilter.toggleVariant(s, ...props) }),
         },
 
         getDerivedBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
@@ -144,8 +144,8 @@ export type _ShelfActions = {
     setSection: (section: Shelf.Section) => void;
     searchFilter: {
         setQuery:       DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setQuery"]>;
-        setDataTypes:   DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setDataTypes"]>;
-        toggleDataType: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["toggleDataType"]>;
+        setVariants:   DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setVariants"]>;
+        toggleVariant: DropFirstArg<ShelfSDK.Reducers["searchFilter"]["toggleVariant"]>;
     };
 
     getDerivedBlueprint: (

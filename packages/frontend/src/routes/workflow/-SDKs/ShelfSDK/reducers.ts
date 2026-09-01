@@ -20,19 +20,19 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
         }
     } satisfies DrawerReducers
 
-    const checkIfDefintionHasHandles = (s: State, blueprint: Foundations.Blueprint, dataTypes: Set<Foundations.Port.Variant>) => {
+    const blueprintHasVariant = (s: State, blueprint: Foundations.Blueprint, variants: Set<Foundations.Port.Variant>) => {
         // return blueprint.outputs.some(output => {
-        //     return Array.from(dataTypes).some(
+        //     return Array.from(variants).some(
         //         (type) => output.handleVariants.includes(type)
         //     )
         // })
     }
 
     const filterReducer = (s: State) => {
-        const dataTypes = s.searchFilter.dataTypes;
+        const variants = s.searchFilter.variants;
         const searchQuery = s.searchFilter.query
 
-        if ((!searchQuery || searchQuery === "") && (!dataTypes || dataTypes.size === 0)) {
+        if ((!searchQuery || searchQuery === "") && (!variants || variants.size === 0)) {
             s.searchFilter.query = null;
             s.filteredDrawers = s.drawers
             s.openedDrawers.clear();
@@ -49,8 +49,8 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
 
                 const hasDisplayNameCheck = searchQuery ? blueprint.ui.displayName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
-                const hasHandleVariant = dataTypes && dataTypes.size > 0 ? checkIfDefintionHasHandles(s, blueprint, dataTypes) : true
-                return hasDisplayNameCheck && hasHandleVariant
+                const hasMatchingVariant = variants && variants.size > 0 ? blueprintHasVariant(s, blueprint, variants) : true
+                return hasDisplayNameCheck && hasMatchingVariant
             })
 
             if (blueprintIds && blueprintIds.length > 0) {
@@ -78,17 +78,17 @@ export function _createShelfReducers_(sdk: ShelfSDKImpl) {
                 s.searchFilter.query = query
                 filterReducer(s);
             },
-            setDataTypes: (s, dataTypes) => {
-                s.searchFilter.dataTypes = dataTypes;
+            setVariants: (s, variants) => {
+                s.searchFilter.variants = variants;
                 filterReducer(s);
             },
-            toggleDataType: (s, dateType) => {
-                if (!s.searchFilter.dataTypes)
-                    s.searchFilter.dataTypes = new Set();
-                if (s.searchFilter.dataTypes.has(dateType)) {
-                    s.searchFilter.dataTypes.delete(dateType)
+            toggleVariant: (s, variant) => {
+                if (!s.searchFilter.variants)
+                    s.searchFilter.variants = new Set();
+                if (s.searchFilter.variants.has(variant)) {
+                    s.searchFilter.variants.delete(variant)
                 } else {
-                    s.searchFilter.dataTypes.add(dateType)
+                    s.searchFilter.variants.add(variant)
                 }
                 filterReducer(s);
             }
@@ -107,7 +107,7 @@ export type _ShelfReducers = {
     setSection: (state: State, section: Shelf.Section) => void,
     searchFilter: {
         setQuery: (state: State, query: string) => void;
-        setDataTypes: (state: State, dataTypes: Set<Foundations.Port.Variant> | null) => void
-        toggleDataType: (state: State, dataType: Foundations.Port.Variant) => void
+        setVariants: (state: State, variants: Set<Foundations.Port.Variant> | null) => void
+        toggleVariant: (state: State, variant: Foundations.Port.Variant) => void
     }
 }

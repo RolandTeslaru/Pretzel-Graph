@@ -1,3 +1,4 @@
+import type { Foundations } from "@pretzel-graph/shared/domain";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -5,57 +6,9 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-export const nodeColorsName: { [char: string]: string } = {
-  // custom_components: "#ab11ab",
-  inputs: "emerald",
-  outputs: "red",
-  data: "sky",
-  prompts: "blue",
-  models: "fuchsia",
-  model_specs: "violet",
-  chains: "orange",
-  list: "lime",
-  agents: "purple",
-  tools: "cyan",
-  memories: "amber",
-  saved_components: "lime",
-  advanced: "slate",
-  chat: "sky",
-  thought: "zinc",
-  embeddings: "teal",
-  documentloaders: "lime",
-  vectorstores: "yellow",
-  VectorStore: "yellow",
-  vectorsearch: "yellow",
-  textsplitters: "fuchsia",
-  toolkits: "red",
-  wrappers: "rose",
-  notion: "slate",
-  Notion: "slate",
-  AssemblyAI: "blue",
-  assemblyai: "blue",
-  helpers: "cyan",
-  prototypes: "rose",
-  astra_assistants: "indigo",
-  langchain_utilities: "sky",
-  output_parsers: "yellow",
-  retrievers: "yellow",
-  str: "indigo",
-  number: "purple",
-  Text: "indigo",
-  unknown: "gray",
-  Document: "lime",
-  Data: "red",
-  Message: "indigo",
-  Prompt: "violet",
-  Embeddings: "emerald",
-  BaseLanguageModel: "fuchsia",
-  LanguageModel: "fuchsia",
-  Agent: "purple",
-  AgentExecutor: "purple",
-  Tool: "cyan",
-  BaseChatMemory: "cyan",
-  BaseChatMessageHistory: "orange",
-  Memory: "orange",
-  DataFrame: "pink",
-};
+// CSS custom-property base for a port variant's colour triple
+// (`--port-X`, `--port-X-foreground`, `--port-X-accent`), declared in standard-ui/styles.css.
+export function portColorVar(variant: Foundations.Port.Variant): string {
+  // UnresolvedScalar has no palette entry of its own; it borrows Unresolved's.
+  return `--port-${variant === "UnresolvedScalar" ? "Unresolved" : variant}`;
+}

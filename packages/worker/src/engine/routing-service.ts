@@ -60,7 +60,7 @@ export class RoutingService {
             // the node stays waiting and the engine settles once nothing can run.
             const dependencies       = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
             const incomingInputs     = this.engine.services.nodeIO.getIncomingData(ctx, wfNode.id, dependencies, true);
-            const incomingEdgeByPort = ctx.workflowCache.inputHandlesMap[wfNode.id];
+            const incomingEdgeByPort = ctx.workflowCache.inputEdgesByPort[wfNode.id];
 
             for (const portId in incomingInputs) {
                 const edgeId  = incomingEdgeByPort?.[portId as Port.Input.Id];

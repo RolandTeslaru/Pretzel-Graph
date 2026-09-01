@@ -11,7 +11,7 @@ export const inputReducers = {
         const node = s.data.nodes[nodeId];
         const staticValues = s.data.staticValues[nodeId];
 
-        const edgeId = s.cache.inputHandlesMap[nodeId][inputId];
+        const edgeId = s.cache.inputEdgesByPort[nodeId][inputId];
         if (edgeId)
             s.reducers.edge.remove(s, edgeId);
 
@@ -24,7 +24,7 @@ export const inputReducers = {
     },
     disconnectIfConnected: (s, nodeId, inputId) => {
         s.isDirty = true;
-        const edgeId = s.cache.inputHandlesMap[nodeId][inputId]
+        const edgeId = s.cache.inputEdgesByPort[nodeId][inputId]
 
         if (edgeId) {
             s.reducers.edge.remove(s, edgeId)

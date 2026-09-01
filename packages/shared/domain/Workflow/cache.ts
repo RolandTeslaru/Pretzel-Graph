@@ -31,14 +31,14 @@ export interface Cache {
             EdgeId
         >
     >,
-    inputHandlesMap: Record<
+    inputEdgesByPort: Record<
         NodeId,
         Record<
             Port.Input.Id,
             EdgeId
         >
     >,
-    outputHandlesMap: Record<
+    outputEdgesByPort: Record<
         NodeId,
         Record<
             Port.Output.Id,
@@ -60,8 +60,8 @@ export namespace Cache {
         resolvedShape: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
-        inputHandlesMap: {},
-        outputHandlesMap: {},
+        inputEdgesByPort: {},
+        outputEdgesByPort: {},
     }
 }
 
@@ -110,16 +110,16 @@ export function createCache(data: Data, blueprints: Record<Blueprint.Id, Bluepri
         resolvedShape: {},
         incomingEdgesMap: {},
         outgoingEdgesMap: {},
-        inputHandlesMap: {},
-        outputHandlesMap: {},
+        inputEdgesByPort: {},
+        outputEdgesByPort: {},
     } as Cache;
 
     Object.values(data.nodes).forEach(node => {
         
         cache.outgoingEdgesMap[node.id] = {};
         cache.incomingEdgesMap[node.id] = {};
-        cache.inputHandlesMap[node.id] = {};
-        cache.outputHandlesMap[node.id] = {};
+        cache.inputEdgesByPort[node.id] = {};
+        cache.outputEdgesByPort[node.id] = {};
 
         if (blueprints) {
             const blueprint = blueprints[node.reconciledBlueprintId ?? node.blueprintId];
@@ -154,9 +154,9 @@ export function createCache(data: Data, blueprints: Record<Blueprint.Id, Bluepri
         // Ingoers Edges Map
         cache.incomingEdgesMap[targetNodeId][sourceNodeId] = edgeId
 
-        cache.inputHandlesMap[targetNodeId][targetHandleId] = edgeId
+        cache.inputEdgesByPort[targetNodeId][targetHandleId] = edgeId
 
-        cache.outputHandlesMap[sourceNodeId][sourceHandleId] = edgeId
+        cache.outputEdgesByPort[sourceNodeId][sourceHandleId] = edgeId
 
     })
 

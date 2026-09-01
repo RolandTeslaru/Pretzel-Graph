@@ -102,7 +102,7 @@ export const nodeSelectors = {
     },
     getConnectedPorts: (s, nodeId) => {
         if(nodeId)
-            return s.cache.inputHandlesMap[nodeId] ?? EMPTY_CONNECTED_PORTS
+            return s.cache.inputEdgesByPort[nodeId] ?? EMPTY_CONNECTED_PORTS
         return EMPTY_CONNECTED_PORTS
     },
     getIncomingEdges: (s, nodeId) =>

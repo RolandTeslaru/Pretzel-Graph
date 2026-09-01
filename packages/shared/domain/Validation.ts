@@ -76,7 +76,7 @@ export namespace Validation {
                 if (!input.required)
                     return null;
 
-                const hasEdge = !!cache.inputHandlesMap[nodeId]?.[input.id];
+                const hasEdge = !!cache.inputEdgesByPort[nodeId]?.[input.id];
                 if (hasEdge)
                     return null;
 
@@ -323,7 +323,7 @@ export namespace Validation {
         targetHandleId: Port.Input.Id,
         cache: Workflow.Cache
     ) {
-        const edgeId = cache.inputHandlesMap[targetNodeId][targetHandleId]
+        const edgeId = cache.inputEdgesByPort[targetNodeId][targetHandleId]
         if (edgeId)
             return true
         return false

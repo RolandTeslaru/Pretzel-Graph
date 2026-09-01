@@ -18,7 +18,7 @@ export const portReducers = {
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        const edgeId = s.cache.inputHandlesMap[nodeId]?.[portId];
+        const edgeId = s.cache.inputEdgesByPort[nodeId]?.[portId];
         if (edgeId)
             s.reducers.edge.remove(s, edgeId);
 
@@ -31,7 +31,7 @@ export const portReducers = {
         if (!node) 
             return;
 
-        const edgeId = s.cache.outputHandlesMap[nodeId]?.[portId];
+        const edgeId = s.cache.outputEdgesByPort[nodeId]?.[portId];
         if (edgeId)
             s.reducers.edge.remove(s, edgeId);
 

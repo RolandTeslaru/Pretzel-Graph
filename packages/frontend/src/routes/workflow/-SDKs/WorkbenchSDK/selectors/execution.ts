@@ -17,9 +17,9 @@ export const executionSelectors = {
         const inputs = nodeSelectors.getInputs(s, nodeId);
 
         for (const input of inputs) {
-            const projection = s.cache.inputHandlesMap[nodeId]?.[input.id]
+            const projection = s.cache.inputEdgesByPort[nodeId]?.[input.id]
                 ? (() => {
-                    const edgeId = s.cache.inputHandlesMap[nodeId]?.[input.id];
+                    const edgeId = s.cache.inputEdgesByPort[nodeId]?.[input.id];
                     if (!edgeId)
                         return undefined;
 
