@@ -2,10 +2,9 @@ import React, { useMemo } from 'react'
 import { type Connection, Handle, Position, type Edge } from "@xyflow/react";
 import { cn } from '@/utils/styleUtils';
 import { Tooltip } from '@pretzel-graph/standard-ui/foundations/Tooltip';
-import HandleTooltipContent from './tooltip';
+import PortTooltip from './tooltip';
 import { Foundations, Validation, Workflow } from '@pretzel-graph/shared/domain';
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
-import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 
 interface Props {
     type: "target" | "source";
@@ -40,18 +39,18 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
     const flippedPosition = type === "target" ? Position.Right : Position.Left;
     const position = isFlipped ? flippedPosition : defaultPosition;
 
-    const draggedHandle = WorkbenchSDK.useStore(s => s.draggedHandle)
+    const draggedPort = WorkbenchSDK.useStore(s => s.draggedPort)
 
-    const isDraggedHandleCompatible = useMemo(() => {
-        if (!draggedHandle)
+    const isDraggedPortCompatible = useMemo(() => {
+        if (!draggedPort)
             return false;
 
         let conn: Connection;
 
-        if (draggedHandle.handleType === "source")
+        if (draggedPort.direction === "source")
             conn = {
-                source: draggedHandle.nodeId,
-                sourceHandle: draggedHandle.field.id,
+                source: draggedPort.nodeId,
+                sourceHandle: draggedPort.port.id,
                 target: nodeId,
                 targetHandle: port.id
             }
@@ -59,8 +58,8 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
             conn = {
                 source: nodeId,
                 sourceHandle: port.id,
-                target: draggedHandle.nodeId,
-                targetHandle: draggedHandle.field.id
+                target: draggedPort.nodeId,
+                targetHandle: draggedPort.port.id
             }
 
         const state = WorkbenchSDK.state
@@ -70,13 +69,13 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
             state.data,
             state.cache,
         )
-    }, [draggedHandle])
+    }, [draggedPort])
 
 
-    const isNullHandle = !isDraggedHandleCompatible && !!draggedHandle
+    const isIncompatiblePort = !isDraggedPortCompatible && !!draggedPort
 
-    const centerColor = isNullHandle ? "transparent" : `var(--port-${port.variant}-accent)`;
-    const borderColor = isNullHandle ? "var(--border)" : `var(--port-${port.variant})`;
+    const centerColor = isIncompatiblePort ? "transparent" : `var(--port-${port.variant}-accent)`;
+    const borderColor = isIncompatiblePort ? "var(--border)" : `var(--port-${port.variant})`;
     const glowColor = `var(--port-${port.variant}-glow)`;
 
     return (
@@ -94,7 +93,7 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
                     isValidConnection={isValidConnectionCallback}
                     className="group transition-all outline-none"
                     onClick={() => {
-                        // ShelfSDK.actions.searchFilter.setDataTypes(new Set(port.variant))
+                        // ShelfSDK.actions.searchFilter.setVariants(new Set(port.variant))
                     }}
                 >
                     {/* Visual Representation of the Handle */}
@@ -102,9 +101,9 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
                         className={cn(
                             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 pointer-events-none",
                             // Incompatible handle is smaller and transparent. Compatible/normal is fixed size with thick border.
-                            isNullHandle ? "w-3 h-3 border-3" : "w-3 h-3 border-3",
+                            isIncompatiblePort ? "w-3 h-3 border-3" : "w-3 h-3 border-3",
                             // Glow only if hovered OR if actively dragging a compatible connection
-                            !isNullHandle && (isDraggedHandleCompatible
+                            !isIncompatiblePort && (isDraggedPortCompatible
                                 ? `w-4 h-4 border-white!
                                     shadow-[0_0_4px_1px_var(--tw-ring-color),0_0_10px_3px_var(--tw-ring-color),0_0_20px_5px_var(--tw-ring-color)]
                                     dark:shadow-[0_0_8px_2px_var(--tw-ring-color),0_0_20px_4px_var(--tw-ring-color),0_0_40px_8px_var(--tw-ring-color),0_0_60px_10px_var(--tw-ring-color)]
@@ -124,12 +123,12 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
                 </Handle>
             </Tooltip.Trigger>
             <Tooltip.Content side={position === Position.Left ? "left" : "right"} sideOffset={3}>
-                <HandleTooltipContent
-                    draggedHandle={draggedHandle}
-                    handleType={type}
+                <PortTooltip
+                    draggedPort={draggedPort}
+                    direction={type}
                     port={port}
                     nodeId={nodeId}
-                    isDraggedHandleCompatible={isDraggedHandleCompatible}
+                    isDraggedPortCompatible={isDraggedPortCompatible}
                 />
             </Tooltip.Content>
         </Tooltip.Root>

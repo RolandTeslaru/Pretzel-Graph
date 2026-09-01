@@ -46,8 +46,8 @@ export const cacheReducers = {
         const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId);
         delete outNodes[target.nodeId]
 
-        delete s.cache.inputHandlesMap[target.nodeId][target.portId];
-        delete s.cache.outputHandlesMap[source.nodeId][source.portId]
+        delete s.cache.inputEdgesByPort[target.nodeId][target.portId];
+        delete s.cache.outputEdgesByPort[source.nodeId][source.portId]
     },
     addEdge: (s, newEdge) => {
         const { source, target, id: edgeId } = newEdge;
@@ -56,8 +56,8 @@ export const cacheReducers = {
         cacheReducers.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
         cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
 
-        s.cache.inputHandlesMap[target.nodeId][target.portId] = edgeId
-        s.cache.outputHandlesMap[source.nodeId][source.portId] = edgeId
+        s.cache.inputEdgesByPort[target.nodeId][target.portId] = edgeId
+        s.cache.outputEdgesByPort[source.nodeId][source.portId] = edgeId
 
         // Don't delete s.workflow.fieldValues[target.nodeId][target.portId] here
     },
@@ -65,8 +65,8 @@ export const cacheReducers = {
         delete s.cache.incomingEdgesMap[deletedNodeId];
         delete s.cache.outgoingEdgesMap[deletedNodeId];
 
-        delete s.cache.inputHandlesMap[deletedNodeId];
-        delete s.cache.outputHandlesMap[deletedNodeId];
+        delete s.cache.inputEdgesByPort[deletedNodeId];
+        delete s.cache.outputEdgesByPort[deletedNodeId];
         delete s.cache.resolvedShape[deletedNodeId];
     },
     createNode: (s, newNode) => {
@@ -75,8 +75,8 @@ export const cacheReducers = {
         s.cache.incomingEdgesMap[newNode.id] = ingoerEdges
         s.cache.outgoingEdgesMap[newNode.id] = outgoerEdges
 
-        s.cache.inputHandlesMap[newNode.id] = {}
-        s.cache.outputHandlesMap[newNode.id] = {}
+        s.cache.inputEdgesByPort[newNode.id] = {}
+        s.cache.outputEdgesByPort[newNode.id] = {}
         cacheReducers.resolvedShape.recreate(s, newNode.id);
     }
 } satisfies INTERNAL_CacheReducers

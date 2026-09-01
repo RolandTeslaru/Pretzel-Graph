@@ -63,18 +63,18 @@ export const portSelectors = {
         },
         groupHasEdges: (s, nodeId, polymorphicGroupId) => {
             const node = s.data.nodes[nodeId];
-            const inputHandles = s.cache.inputHandlesMap[nodeId];
-            const outputHandles = s.cache.outputHandlesMap[nodeId];
+            const inputEdges = s.cache.inputEdgesByPort[nodeId];
+            const outputEdges = s.cache.outputEdgesByPort[nodeId];
 
             const inputs = nodeSelectors.getInputs(s, nodeId);
             const outputs = nodeSelectors.getOutputs(s, nodeId);
 
             for (const input of inputs) {
-                if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId && inputHandles[input.id])
+                if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId && inputEdges[input.id])
                     return true;
             }
             for (const output of outputs) {
-                if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId && outputHandles[output.id])
+                if (Port.isPolymorphic(output) && output.polymorphicGroupId === polymorphicGroupId && outputEdges[output.id])
                     return true;
             }
             return false;

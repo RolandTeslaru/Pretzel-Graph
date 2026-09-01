@@ -22,7 +22,7 @@ test("synthesizes static Message inputs and preserves static Data inputs", () =>
             },
         },
         workflowCache: {
-            inputHandlesMap: { [nodeId]: {} },
+            inputEdgesByPort: { [nodeId]: {} },
             edges: {},
         },
         workflowQueryAPI: {

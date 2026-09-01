@@ -101,8 +101,8 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 s.isDirty = value;
         }),
         takeSnapshot:         () => { },
-        setCurrentDraggedHandle: (handle) => setState({
-            draggedHandle: handle
+        setDraggedPort: (portRef) => setState({
+            draggedPort: portRef
         }),
         clipboard: clipboardActions,
         selection: {
@@ -172,7 +172,7 @@ export interface _WorkbenchSDKActions {
     setClickedNodeId             : DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;
     setSelectionContextMenu      : DropFirstArg<WorkbenchSDK.Reducers['setSelectionContextMenu']>;
     setPaneContextMenu           : DropFirstArg<WorkbenchSDK.Reducers['setPaneContextMenu']>;
-    setCurrentDraggedHandle : (handle: WorkbenchSDK.Handle | null) => void;
+    setDraggedPort          : (portRef: WorkbenchSDK.PortRef | null) => void;
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;
     clipboard               : {

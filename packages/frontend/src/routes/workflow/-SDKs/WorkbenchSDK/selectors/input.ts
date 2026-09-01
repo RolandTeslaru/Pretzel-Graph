@@ -19,10 +19,10 @@ export const inputSelectors = {
 
         return inputs.find(i => i.id === inputId) ?? null;
     },
-    hasEdge: (s, nodeId, inputId) => !!s.cache.inputHandlesMap[nodeId][inputId],
+    hasEdge: (s, nodeId, inputId) => !!s.cache.inputEdgesByPort[nodeId][inputId],
     getIssue: (s, nodeId, inputId) => s.issues.nodes[nodeId]?.inputs[inputId] ?? null,
     getProjection: (s, nodeId, inputPortId, session) => {
-        const edgeId = s.cache.inputHandlesMap[nodeId]?.[inputPortId];
+        const edgeId = s.cache.inputEdgesByPort[nodeId]?.[inputPortId];
         if (!edgeId) return undefined;
 
         const edge = s.cache.edges[edgeId];

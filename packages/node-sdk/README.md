@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
     id: "Integrations.Acme.Hello",
     displayName: "Hello",
     description: "Greets the incoming name.",
-    icon: "Acme",                // SystemIcons or BRAND_ICONS name
+    icon: "Acme",                // SystemIcons or integrations name
     accent: "utility",
     fields: [
         FieldBuilder.String({ id: "greeting", displayName: "Greeting", initialValue: "Hello" }),
@@ -61,7 +61,7 @@ Then the **three wiring steps** (see the checklist at the bottom):
 | `id` | string | Dotted blueprint id; **must** match the folder path. Branded `Blueprint.Id`. |
 | `displayName` | string | Shown on the node header. |
 | `description` | string | Shown in the shelf / tooltip. |
-| `icon` | string | A `SystemIcons` (Lucide-style) or `BRAND_ICONS` name. Unknown names render nothing. |
+| `icon` | string | A `SystemIcons` (Lucide-style) or `integrations` name. Unknown names render nothing. |
 | `accent` | string? | Header accent, e.g. `"utility"` or a `"port-<Type>"` color. |
 | `fields` | `FieldBuilder[]` | Static config inputs (the form). |
 | `inputs` | `InputBuilder[]` | Typed input ports (left side). |

@@ -84,13 +84,13 @@ export class FlightRecorderService {
         this.uowInputs.set(unitId, inputs)
         unit.fieldSnapshot = fields
 
-        const inputHandles = ctx.workflowCache.inputHandlesMap[nodeId] ?? {}
+        const inputEdges = ctx.workflowCache.inputEdgesByPort[nodeId] ?? {}
 
         ctx.realtimeAPI.emit(Execution.Event.create("unit:started", { unit }))
 
         const incomingRelations: Execution.Recording.Relation[] = []
 
-        for (const [portIdStr, edgeId] of Object.entries(inputHandles)) {
+        for (const [portIdStr, edgeId] of Object.entries(inputEdges)) {
             const portId = portIdStr as Port.Input.Id
             const edge   = ctx.workflowCache.edges[edgeId]
             if (!edge) continue

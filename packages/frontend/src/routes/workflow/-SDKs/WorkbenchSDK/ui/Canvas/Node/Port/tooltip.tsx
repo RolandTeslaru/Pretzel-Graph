@@ -1,99 +1,63 @@
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain';
-import React, { useMemo } from 'react'
+import React from 'react'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk';
 import { PortBadge } from './port-badge';
 
 interface Props {
-  handleType: 'target' | 'source'
+  direction: 'target' | 'source'
   port: Foundations.Port.Input | Foundations.Port.Output
   nodeId: Workflow.Node.Id
-  isDraggedHandleCompatible: boolean
-  draggedHandle: WorkbenchSDK.Handle | null
+  isDraggedPortCompatible: boolean
+  draggedPort: WorkbenchSDK.PortRef | null
 }
 
-const HandleTooltipContent: React.FC<Props> = ({
-  handleType,
+const PortTooltip: React.FC<Props> = ({
+  direction,
   port,
   nodeId,
-  isDraggedHandleCompatible,
-  draggedHandle
+  isDraggedPortCompatible,
+  draggedPort
 }) => {
-  const hasMultipleTypes = handleType.length > 1
-  const isDifferentNode = draggedHandle?.nodeId !== nodeId
+  const isInput = direction === 'target'
+  const isConnecting = !!draggedPort && draggedPort.nodeId !== nodeId
 
-  const isConnecting = !!draggedHandle && isDifferentNode;
-  const isInput = handleType === 'target';
-
-  if (draggedHandle?.field === port) {
-    return <div className="font-medium">Can't connect to the same node</div>;
-  }
+  if (draggedPort?.port === port)
+    return <div className="font-medium">A port cannot connect to itself</div>
 
   return (
     <div className="font-medium">
       <div className="flex items-center gap-1.5">
-        <StatusMessage
-          isInput={isInput}
-          isConnecting={isConnecting}
-          isDraggedHandleCompatible={isDraggedHandleCompatible}
-          hasMultipleTypes={hasMultipleTypes}
-        />
-          <PortBadge portVariant={port.variant}/>
-        
-        {isConnecting && <span>{isInput ? "input" : "output"}</span>}
+        <Lead isInput={isInput} isConnecting={isConnecting} isCompatible={isDraggedPortCompatible} />
+        <PortBadge portVariant={port.variant} />
+        {isConnecting && <span>{isInput ? 'input' : 'output'}</span>}
       </div>
-      {!isConnecting && <HelperText isInput={isInput} />}
+      {!isConnecting && <Hints isInput={isInput} />}
     </div>
   )
 }
 
-export default HandleTooltipContent
+export default PortTooltip
 
-
-
-
-
-// --- Sub-components ---
-function StatusMessage({
-  isInput,
-  isConnecting,
-  isDraggedHandleCompatible,
-  hasMultipleTypes
-}: {
-  isInput: boolean;
-  isConnecting: boolean;
-  isDraggedHandleCompatible: boolean;
-  hasMultipleTypes: boolean
+// The phrase introducing the port's type badge, which changes while a drag is in flight.
+function Lead({ isInput, isConnecting, isCompatible }: {
+  isInput: boolean
+  isConnecting: boolean
+  isCompatible: boolean
 }) {
-  const plural = hasMultipleTypes ? "s" : "";
-  if (!isConnecting) {
-    return (
-      <span className="text-xs">
-        {isInput ? `Input${plural} type${plural}` : `Output${plural} type${plural}`}:
-      </span>
-    );
-  }
-  return isDraggedHandleCompatible ? (
-    <span>
-      <span className="font-semibold">Connect</span> to
-    </span>
-  ) : (
-    <span>Incompatible with</span>
-  );
+  if (!isConnecting)
+    return <span className="text-xs">{isInput ? 'Accepts' : 'Emits'}</span>
+
+  return isCompatible
+    ? <span><span className="font-semibold">Connects</span> to</span>
+    : <span>Will not accept</span>
 }
 
-
-
-function HelperText({ isInput }: { isInput: boolean }) {
-  const targetLabel = !isInput ? "inputs" : "outputs";
-
+// Shown only at rest, to explain what this port responds to.
+function Hints({ isInput }: { isInput: boolean }) {
   return (
     <div className="mt-2 flex flex-col gap-0.5 text-xs leading-6">
-      <div>
-        <b>Drag</b> to connect compatible {targetLabel}
-      </div>
-      <div>
-        <b>Click</b> to filter compatible {targetLabel} and components
-      </div>
+      <div><b>Drag</b> to wire this port to a compatible {isInput ? 'output' : 'input'}</div>
+      <div><b>Click</b> the type badge to filter the shelf by that type</div>
     </div>
-  );
+  )
 }

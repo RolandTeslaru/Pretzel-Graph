@@ -17,5 +17,5 @@ export const outputSelectors = {
 
         return outputs.find(o => o.id === outputId) ?? null;
     },
-    hasEdge: (s, nodeId, outputId) => !!s.cache.outputHandlesMap[nodeId][outputId],
+    hasEdge: (s, nodeId, outputId) => !!s.cache.outputEdgesByPort[nodeId][outputId],
 } satisfies OutputSelectors

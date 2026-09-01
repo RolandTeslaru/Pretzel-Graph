@@ -4,7 +4,7 @@ import { WorkbenchSDK } from "../../sdk"
 import CanvasEdge from './Edge'
 import CanvasNode from './Node'
 import { ProblematicCycleSelectionNode } from './extraNodes'
-import { nodeColorsName } from '@/utils/styleUtils'
+import { portColorVar } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { Workflow, Foundations, Validation } from "@pretzel-graph/shared/domain"
 import { withCyclesRecompute } from '../../utils/actions'
@@ -65,7 +65,7 @@ export const convertMousePositionToCanvas = (mousePosX: number, mousePosY: numbe
 
 export const createCanvasCallbacks = (
     setNodeDrivers: React.Dispatch<React.SetStateAction<NodeDriver[]>>,
-    setEdgeDrivers: React.Dispatch<React.SetStateAction<WorkbenchSDK.EdgeDriver[]>>
+    setEdgeDrivers: React.Dispatch<React.SetStateAction<EdgeDriver[]>>
 ) => {
     return {
 
@@ -224,32 +224,32 @@ export const createCanvasCallbacks = (
             if (nodeId === null || handleId === null || handleType === null)
                 return
 
-            let field: Foundations.Port.Input | Foundations.Port.Output | null;
+            let port: Foundations.Port.Input | Foundations.Port.Output | null;
 
             if (handleType === "source")
-                field = WorkbenchSDK.selectors.output.get(
+                port = WorkbenchSDK.selectors.output.get(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Output.Id
                 )
             else
-                field = WorkbenchSDK.selectors.input.get(
+                port = WorkbenchSDK.selectors.input.get(
                     WorkbenchSDK.state,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Input.Id
                 )
 
-            if (field === null)
+            if (port === null)
                 return
 
-            WorkbenchSDK.actions.setCurrentDraggedHandle({
+            WorkbenchSDK.actions.setDraggedPort({
                 nodeId: nodeId as Workflow.Node.Id,
-                field,
-                handleType
+                port,
+                direction: handleType
             })
         },
         onConnectEnd: (event, params) => {
-            WorkbenchSDK.actions.setCurrentDraggedHandle(null)
+            WorkbenchSDK.actions.setDraggedPort(null)
         },
 
         onDragOver: (e) => {
@@ -267,7 +267,7 @@ export const createCanvasCallbacks = (
                 .setClickedNodeId(null)
 
             ShelfSDK.actions
-                .searchFilter.setDataTypes(null);
+                .searchFilter.setVariants(null);
 
             ExecutionSDK.actions
                 .timeline.selectUoW(null)
@@ -285,8 +285,7 @@ export const createCanvasCallbacks = (
             const output = sourceOutputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
 
             if (!output) return;
-            const selectedAccentColor = nodeColorsName[output.variant[0]] ?? "cyan";
-            WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(--datatype-${selectedAccentColor})`);
+            WorkbenchSDK.canvasWrapper.current?.style.setProperty("--selected", `var(${portColorVar(output.variant)})`);
         }, 
         onNodeClick: (event, node) => {
             event.stopPropagation();

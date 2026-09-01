@@ -47,7 +47,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 clickedNodeId: null,
                 selectionContextMenu: null,
                 paneContextMenu: null,
-                draggedHandle: null,
+                draggedPort: null,
                 cache: cloneDeep(Workflow.Cache.INITIAL),
                 issues: {
                     nodes: {},
@@ -328,7 +328,7 @@ export namespace WorkbenchSDK {
         clickedNodeId: Workflow.Node.Id | null;
         selectionContextMenu: { x: number, y: number } | null;
         paneContextMenu: { x: number, y: number } | null;
-        draggedHandle: Handle | null
+        draggedPort: PortRef | null
         reconcilingFields: Record<Workflow.Node.Id, Set<Foundations.Field.Id>>
         cache: Workflow.Cache
         cyclesDirty: boolean
@@ -343,10 +343,10 @@ export namespace WorkbenchSDK {
         reducers: typeof workbenchReducers
     }
 
-    export interface Handle {
+    export interface PortRef {
         nodeId: Workflow.Node.Id,
-        field: Foundations.Port.Input | Foundations.Port.Output,
-        handleType: "source" | "target"
+        port: Foundations.Port.Input | Foundations.Port.Output,
+        direction: "source" | "target"
     }
 
     export type Selectors = WorkbenchSDKSelectors

@@ -17,7 +17,7 @@ export const PortBadge: React.FC<Props> = ({ portVariant }) => {
         borderColor: `var(--port-${portVariant})`
       }}
       onClick={() => {
-        ShelfSDK.actions.searchFilter.toggleDataType(portVariant)
+        ShelfSDK.actions.searchFilter.toggleVariant(portVariant)
       }}
     >
       {portVariant}
