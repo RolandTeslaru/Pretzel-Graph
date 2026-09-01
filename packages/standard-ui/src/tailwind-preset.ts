@@ -1,41 +1,10 @@
-// The design half of the Tailwind config: theme, plugins, port colours.
+// The design half of the Tailwind config: theme, animations and plugins.
 // Apps add their own `content` globs and list this in `presets`.
 import tailwindcssForms from "@tailwindcss/forms";
 import tailwindcssTypography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
 import defaultTheme from "tailwindcss/defaultTheme";
 import tailwindcssAnimate from "tailwindcss-animate";
-
-const PORT_TYPES = [
-    "Message",
-    "LanguageModel",
-    "str",
-    "Text",
-    "number",
-    "Integer",
-    "Prompt",
-    "Document",
-    "Data",
-    "Agent",
-    "Tool",
-    "unknown",
-    "VectorStore",
-    "Retriever",
-    "Embeddings",
-    "DataFrame",
-    "Memory",
-    "File",
-    "Json"
-];
-
-const portColors = PORT_TYPES.reduce((acc, portType) => {
-    acc[portType] = {
-        DEFAULT: `var(--port-${portType})`,
-        foreground: `var(--port-${portType}-foreground)`,
-        accent: `var(--port-${portType}-accent)`,
-    };
-    return acc;
-}, {} as Record<string, any>);
 
 const preset: Config = {
 
@@ -144,7 +113,6 @@ const preset: Config = {
                 "sonar-sweep": "spin-slow calc(var(--sonar-duration, 4) * 1s) linear infinite",
             },
             colors: {
-                port: portColors,
                 error: {
                     DEFAULT: "var(--error)",
                     background: "var(--error-background)",

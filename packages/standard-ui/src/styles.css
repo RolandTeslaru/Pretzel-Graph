@@ -79,21 +79,15 @@ code {
   --muted-foreground: theme(--color-neutral-500);
   --input: theme(--color-white);
 
-
   --radius: 0.875rem;
-
-
 
   --canvas: #F2EEEB;
   --canvas-dot: #8f867f;
-
 
   /* Execution status colors */
   --status-active: theme(--color-cyan-400);
   --status-success: theme(--color-emerald-400);
   --status-waiting: theme(--color-amber-400);
-
-
 
   /* Success states */
   --success-background: var(--color-green-100);
@@ -113,7 +107,6 @@ code {
   --error-background: var(--color-red-100);
   --error-foreground: var(--color-red-700);
 
-
   /* Accent for orphaned / unhydrated nodes (missing node or blueprint) — reads as destructive.
      Needs a red -foreground since accent consumers resolve icon color via var(--{accent}-foreground). */
   --node-unknown: theme(--color-red-500);
@@ -123,7 +116,6 @@ code {
   --port-Message-foreground: theme(--color-blue-400);
   --port-Message-accent: theme(--color-blue-200);
   --port-Message-glow: theme(--color-blue-600);
-
 
   --port-MessageList: theme(--color-indigo-400);
   --port-MessageList-foreground: theme(--color-indigo-400);
@@ -165,21 +157,6 @@ code {
   --port-Text-accent: theme(--color-slate-200);
   --port-Text-glow: theme(--color-slate-600);
 
-  --port-Memory: theme(--color-orange-500);
-  --port-Memory-foreground: theme(--color-orange-100);
-  --port-Memory-accent: theme(--color-orange-200);
-  --port-Memory-glow: theme(--color-orange-600);
-
-  --port-File: theme(--color-lime-500);
-  --port-File-foreground: theme(--color-lime-100);
-  --port-File-accent: theme(--color-lime-400);
-  --port-File-glow: theme(--color-lime-600);
-
-  --port-Json: theme(--color-amber-500);
-  --port-Json-foreground: theme(--color-amber-500);
-  --port-Json-accent: theme(--color-amber-400);
-  --port-Json-glow: theme(--color-amber-600);
-
   --port-Document: theme(--color-lime-400);
   --port-Document-foreground: theme(--color-lime-500);
   --port-Document-accent: theme(--color-lime-200);
@@ -200,11 +177,6 @@ code {
   --port-Retriever-accent: theme(--color-yellow-200);
   --port-Retriever-glow: theme(--color-yellow-600);
 
-  --port-Integer: theme(--color-purple-500);
-  --port-Integer-foreground: theme(--color-purple-100);
-  --port-Integer-accent: theme(--color-purple-400);
-  --port-Integer-glow: theme(--color-purple-600);
-
   --port-null: var(--secondary);
   --port-null-foreground: theme(--color-neutral-100);
   --port-null-glow: var(--secondary);
@@ -223,7 +195,6 @@ code {
   --utility-foreground: theme(--color-neutral-700);
 
   --group-routing: theme(--color-neutral-400);
-
 
   --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -246,11 +217,9 @@ code {
   --node-accent-base: var(--color-black);
   --background: theme(--color-neutral-950);
 
-
   --foreground: theme(--color-white);
   --card: rgb(37, 37, 37);
   --card-float: rgb(30, 30, 30);
-
 
   --port-Data-foreground: theme(--color-slate-500);
   --port-Text: theme(--color-slate-400);
@@ -281,7 +250,6 @@ code {
   --input: rgb(45, 45, 45);
   --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
 
-
   /* Success states */
   --success-background: theme(--color-emerald-950);
   --success-foreground: theme(--color-emerald-400);
@@ -303,8 +271,6 @@ code {
   --canvas: oklch(0.18 0.01 264);
   --canvas-dot: oklch(0.35 0.015 264);
 
-
-
   --node-bg-mix: 20%;
   --node-border-mix: 50%;
 
@@ -325,14 +291,10 @@ code {
   --port-Embeddings-glow: theme(--color-emerald-300);
   --port-DataFrame-glow: theme(--color-red-300);
   --port-Text-glow: theme(--color-slate-300);
-  --port-Memory-glow: theme(--color-orange-300);
-  --port-File-glow: theme(--color-lime-300);
-  --port-Json-glow: theme(--color-amber-300);
   --port-Document-glow: theme(--color-lime-300);
   --port-Data-glow: theme(--color-slate-300);
   --port-VectorStore-glow: theme(--color-amber-300);
   --port-Retriever-glow: theme(--color-yellow-300);
-  --port-Integer-glow: theme(--color-purple-300);
   --port-null-glow: var(--secondary);
   --port-Unresolved-glow: theme(--color-gray-300);
   --port-UnresolvedList-glow: theme(--color-zinc-300);
@@ -342,7 +304,6 @@ code {
   --tooltip: oklch(0.2 0.02 264);
   --tooltip-foreground: oklch(0.95 0.005 264);
   --secondary-hover: oklch(0.3 0.02 264);
-
 
   --blending: hard-light;
 }

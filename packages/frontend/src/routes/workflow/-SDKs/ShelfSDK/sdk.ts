@@ -29,7 +29,6 @@ export class ShelfSDKImpl extends BaseSDK<ShelfSDK.State> {
             searchFilter: {
                 query: null,
                 selectionFilters: new Set<Shelf.Section>(["core_extended"]),
-                variants: null
             },
             derivedBlueprintsCache: {}
         }))
@@ -58,7 +57,6 @@ export namespace ShelfSDK {
         searchFilter: {
             query: string | null,
             selectionFilters: Set<Shelf.Section>
-            variants: Set<Foundations.Port.Variant> | null
         },
         derivedBlueprintsCache: Record<Foundations.Blueprint.ReconciledId, Foundations.Blueprint>
     }
