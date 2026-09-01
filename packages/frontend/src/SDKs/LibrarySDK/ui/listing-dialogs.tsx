@@ -70,7 +70,8 @@ export function openListingManagerDialog(workflowId: Workflow.Id) {
     DialogSDK.actions.push(dialogId, (props) => (
         <DialogSDK.SplitTemplate {...props}
             className='h-[300px]'
-            sidebarClassName='w-[400px]'
+            sidebarClassName='w-[350px]'
+            contentClassName='w-[400px]'
             sidebarRenderer={() => (
                 <>
                     <div className='flex flex-row gap-2'>

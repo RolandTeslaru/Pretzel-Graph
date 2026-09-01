@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { Tree } from "./Tree"
+import { Tree } from "."
 import { projectionsToDummyTree } from "./toTree"
 import type { Tree as TreeD } from "./domain"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"

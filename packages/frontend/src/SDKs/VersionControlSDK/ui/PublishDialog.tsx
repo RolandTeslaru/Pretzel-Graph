@@ -12,6 +12,8 @@ export function openPublishDialog() {
     DialogSDK.actions.push(DIALOG_ID, (props) => (
         <DialogSDK.SplitTemplate
             {...props}
+            sidebarClassName="w-[300px]"
+            contentClassName="w-[450px]"
             sidebarRenderer={() => (
                 <div className="flex flex-col gap-2 ">
                     <div className="flex flex-row items-center gap-2">

@@ -62,8 +62,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
             lastFlush: 0,
             listeners: new Set<ExecutionSDK.Listener>(),
         },
-        // Plain ref objects (no useRef) so the timeline's DOM refs live on the
-        // SDK and don't have to be drilled / contexted through the component tree.
         timeline: {
             scrollRef: { current: null as HTMLDivElement | null },
             rulerRef:  { current: null as HTMLDivElement | null },
@@ -110,18 +108,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         discardQueuedEvents(this);
     }
 
-    /**
-     * Listen to the execution channel. The listener receives one batch per flush — every
-     * event in it, so switch on `type` and ignore the rest — after this SDK has committed
-     * its own state and before its deferred effects run. Returns an unsubscribe.
-     *
-     * Wrapping the switch in your own `setState` is free when nothing matches: a producer
-     * that doesn't touch the draft returns the same reference and notifies no subscribers.
-     *
-     * Batches are `Execution.Event.Base`; narrow to your own union at the top of the
-     * listener. Registration outlives any single execution, so register once and use
-     * `observeCurrent({ onDetach })` if you need a per-execution reset.
-     */
     public subscribeToEvents(listener: ExecutionSDK.Listener): () => void {
         const { listeners } = this.runtime.events;
 
@@ -130,10 +116,6 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         return () => { listeners.delete(listener) };
     }
 
-    /**
-     * Watch the execution currently in view. Returns an unsubscribe.
-     * See ./observe.ts for the transition → callback mapping.
-     */
     public observeCurrent(observer: ExecutionSDK.Observer, opts?: ExecutionSDK.ObserveOptions) {
         return observeCurrentExecution(this, observer, opts);
     }

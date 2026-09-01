@@ -41,4 +41,4 @@ export namespace Tree {
 
 }
 
-export type Tree = Record<Tree.Branch.Key, Tree.Branch>
+export type Tree = Record<Tree.Branch.PathString, Tree.Branch>
