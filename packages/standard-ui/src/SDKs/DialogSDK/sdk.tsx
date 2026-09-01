@@ -251,14 +251,14 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
                     }}
                     darkenBackground={index === 0}
-                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 !overflow-hidden flex flex-row " + className}
+                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 backdrop-blur-md min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {sidebarRenderer()}
                     </div>
-                    <div className={"bg-card/80 backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
                 </Dialog.Content>

@@ -111,6 +111,8 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
         DialogSDK.actions.push(dialogId, props => (
             <DialogSDK.SplitTemplate {...props}
                 className='h-[400px]'
+                sidebarClassName='w-[270px]'
+                contentClassName='w-[400px]'
                 sidebarRenderer={() => (
                     <>
                         <div className='flex flex-row gap-2'>
