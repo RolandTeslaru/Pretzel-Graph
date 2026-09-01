@@ -244,7 +244,7 @@ code {
   --active-foreground: theme(--color-sky-300);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(58, 58, 58);
+  --border: rgb(54, 54, 54);
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);
