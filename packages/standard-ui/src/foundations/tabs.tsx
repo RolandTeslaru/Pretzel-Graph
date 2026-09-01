@@ -64,7 +64,7 @@ const indicatorVars = cva(
     variants: {
       variant: {
         primary: "bg-primary border-primary-accent shadow-black/20",
-        accent: "bg-input dark:border-neutral-600 border-white"
+        accent: "bg-input dark:border-neutral-500/60 dark:bg-neutral-600 border-white"
       },
       size: {
         xxs: "rounded-sm",
