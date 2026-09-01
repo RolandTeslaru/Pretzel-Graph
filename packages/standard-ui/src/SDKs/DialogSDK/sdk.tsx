@@ -268,7 +268,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
 
 
 
-    public readonly TabsTemplate: DialogSDK.TabsTemplate = ({ children, items, defaultValue, empty, sidebarClassName, contentClassName, header, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
+    public readonly TabsTemplate: DialogSDK.TabsTemplate = ({ children, items, defaultValue, empty, sidebarClassName, contentClassName, header, sidebarBottomRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -324,6 +324,12 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                                     </Tabs.Trigger>
                                 ))}
                             </Tabs.List>
+
+                            {sidebarBottomRenderer && (
+                                <div className="mt-auto w-full">
+                                    {sidebarBottomRenderer()}
+                                </div>
+                            )}
 
                         </div>
                         <ScrollArea.Root
@@ -440,6 +446,8 @@ export namespace DialogSDK {
         defaultValue?: string
         items: TabsTemplate.Item[]
         empty?: TabsTemplate.Empty
+        /** Pinned to the bottom of the sidebar, below the tab list. */
+        sidebarBottomRenderer?: () => React.ReactNode
         header?:       { icon: TabsTemplate.IconComponent; title: string }
     }>
 }
