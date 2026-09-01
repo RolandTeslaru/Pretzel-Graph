@@ -7,7 +7,7 @@ import { AlertDialog, Button, Dialog, Form, Input, ScrollArea, Select, Spinner, 
 import { VaultSDK } from '../sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import type { Vault } from '@pretzel-graph/shared/domain'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 import { awaitOAuthConnection, openOAuthPopup } from '../oauthPopup'
@@ -314,7 +314,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
         <div className='flex flex-col h-full relative' onWheelCapture={onWheel}>
             {/* Header */}
             <div className='pointer-events-none absolute top-0 left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
-                <LazyIcon name={credentialTemplate.icon ?? ""} className='size-5' />
+                <IconRenderer name={credentialTemplate.icon ?? ""} className='size-5' />
                 <p className='text-sm font-semibold text-foreground'>
                     {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
                 </p>

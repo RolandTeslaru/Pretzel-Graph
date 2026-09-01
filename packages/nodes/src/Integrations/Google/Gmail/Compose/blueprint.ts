@@ -13,7 +13,7 @@ export const Blueprint = defineBlueprint({
     credentials:     [GoogleGmailOAuth],
     displayName:     "Gmail Compose",
     description:     "Sends mail, or saves it as a draft, from the connected Gmail account.",
-    icon:            "Google",
+    icon:            "Gmail",
     accent:          "port-Data",
     proxyCompatible: true,
     toolCompatible:  true,

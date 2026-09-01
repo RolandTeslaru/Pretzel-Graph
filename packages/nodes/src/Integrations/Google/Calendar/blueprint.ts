@@ -19,7 +19,7 @@ export const Blueprint = defineBlueprint({
     credentials:     [GoogleCalendarOAuth],
     displayName:     "Google Calendar",
     description:     "Lists, creates and updates events on the connected Google Calendar.",
-    icon:            "Google",
+    icon:            "GoogleCalendar",
     accent:          "port-Data",
     proxyCompatible: true,
     toolCompatible:  true,

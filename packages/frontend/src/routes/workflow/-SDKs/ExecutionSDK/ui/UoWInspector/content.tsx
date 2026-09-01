@@ -3,7 +3,7 @@ import { ExecutionSDK } from '../../sdk'
 import { Execution } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { UoWInspectorFooter } from './footer'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { Badge, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
 import { Accordion } from '@pretzel-graph/standard-ui/foundations/accordion'
 import { formatDuration, formatStartedAt, formatMetric } from './utils'
@@ -59,7 +59,7 @@ export const Content = memo(({ uowId }: Props) => {
     if (!uow || !node) {
         return (
             <div className="flex items-center justify-center h-full text-sm text-muted-foreground gap-2 animate-pulse">
-                <LazyIcon name="Film" className="text-muted-foreground size-5" />
+                <IconRenderer name="Film" className="text-muted-foreground size-5" />
                 Unit of Work not found
             </div>
         )
@@ -74,7 +74,7 @@ export const Content = memo(({ uowId }: Props) => {
                         backgroundColor: ui.accent ? `color-mix(in srgb, var(--${ui.accent}) 25%, transparent)` : 'var(--muted)',
                     }}
                 >
-                    <LazyIcon
+                    <IconRenderer
                         className='my-auto h-4 w-4 shrink-0'
                         name={ui.icon}
                         style={{ color: ui.accent ? `var(--${ui.accent}-foreground)` : undefined }}

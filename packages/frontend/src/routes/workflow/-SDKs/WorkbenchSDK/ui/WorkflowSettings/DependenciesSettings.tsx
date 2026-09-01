@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkbenchSDK } from '../../sdk'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
@@ -88,7 +88,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
                 className='flex size-7 shrink-0 items-center justify-center rounded-full'
                 style={{ backgroundColor }}
             >
-                <LazyIcon name='Graph' className='size-3.5' style={{ color: iconColor }} />
+                <IconRenderer name='Graph' className='size-3.5' style={{ color: iconColor }} />
             </span>
 
             <div className='flex-1 min-w-0'>
@@ -133,7 +133,7 @@ function DraftDependencyRow({ dep, updateInfo }: {
                 className='flex size-7 shrink-0 items-center justify-center rounded-full'
                 style={{ backgroundColor }}
             >
-                <LazyIcon name='Graph' className='size-3.5' style={{ color: iconColor }} />
+                <IconRenderer name='Graph' className='size-3.5' style={{ color: iconColor }} />
             </span>
 
             <div className='flex-1 min-w-0'>

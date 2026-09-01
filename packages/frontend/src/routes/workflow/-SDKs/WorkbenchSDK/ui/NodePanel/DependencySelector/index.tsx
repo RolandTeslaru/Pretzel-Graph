@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
@@ -50,7 +50,7 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
                         className="flex size-5 shrink-0 items-center justify-center rounded-full"
                         style={{ backgroundColor }}
                     >
-                        <LazyIcon
+                        <IconRenderer
                             name={"Graph"}
                             className="size-3"
                             style={{ color: iconColor }}

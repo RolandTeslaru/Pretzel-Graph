@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '../../sdk'
 import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 
 export const CredentialsSettings = () => {
     const nodes = WorkbenchSDK.useStore(s =>
@@ -23,7 +23,7 @@ export const CredentialsSettings = () => {
                 return (
                     <div key={node.id} className='rounded-md border border-border/50 bg-card/50 p-2.5 flex flex-col gap-2'>
                         <div className='flex items-center gap-2'>
-                            <LazyIcon name={ui.icon} className='size-3.5 text-muted-foreground' />
+                            <IconRenderer name={ui.icon} className='size-3.5 text-muted-foreground' />
                             <span className='text-xs font-medium'>{ui.displayName}</span>
                         </div>
                         {credentials.map(cred => (

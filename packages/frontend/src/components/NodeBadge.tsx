@@ -1,4 +1,4 @@
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
 interface NodeBadgeProps {
@@ -16,7 +16,7 @@ export const NodeBadge = ({ icon, label, accent, className = '' }: NodeBadgeProp
       color: `var(--${accent}-foreground)`,
     } : undefined}
   >
-    <LazyIcon className='w-3.5 h-3.5 shrink-0' name={icon} />
+    <IconRenderer className='w-3.5 h-3.5 shrink-0' name={icon} />
     {label}
   </span>
 )

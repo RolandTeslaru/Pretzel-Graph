@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { WorkbenchSDK } from "../sdk"
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons"
-import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
+import { IconRenderer } from "@pretzel-graph/standard-ui/icons/IconRenderer"
 import type { Workflow } from "@pretzel-graph/shared/domain"
 
 interface SearchResult {
@@ -159,7 +159,7 @@ const SpotlightSearch: React.FC = memo(() => {
                                             : "text-foreground/80 hover:bg-muted/50"
                                     }`}
                                 >
-                                    <LazyIcon
+                                    <IconRenderer
                                         name={result.icon}
                                         className="w-4 h-4 shrink-0"
                                         style={{ color: result.accent ? `var(--${result.accent}-foreground)` : undefined }}

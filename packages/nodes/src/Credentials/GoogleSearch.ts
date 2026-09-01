@@ -3,7 +3,7 @@ import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk"
 export const GoogleSearch = defineCredential({
     id: "googleSearchApi",
     displayName: "Google Search",
-    icon: "Google",
+    icon: "GoogleSearch",
     fields: [
         FieldBuilder.Password("apiKey", "API Key", {
             required: true,

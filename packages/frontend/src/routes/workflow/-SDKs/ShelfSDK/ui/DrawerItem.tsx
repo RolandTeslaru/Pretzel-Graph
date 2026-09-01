@@ -3,7 +3,7 @@ import { ShelfSDK } from '../sdk';
 import { Tooltip } from '@pretzel-graph/standard-ui/foundations';
 import type { Foundations } from '@pretzel-graph/shared/domain';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
 
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
@@ -32,7 +32,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           }}
           {...props}
         >
-          <LazyIcon
+          <IconRenderer
             name={blueprint.ui.icon}
             className='w-4 size-4 h-4 my-auto '
             style={{ color: blueprint.ui.iconColor ? `var(--${blueprint.ui.iconColor})` : undefined }}
@@ -46,7 +46,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
       <Tooltip.Content side="left" className='max-w-[250px] gap-2' >
         <div className='flex flex-row justify-between'>
           <h4 className='font-semibold text-sm'>{blueprint.ui.displayName}</h4>
-          <LazyIcon
+          <IconRenderer
             name={blueprint.ui.icon}
             className='w-[18px] h-[18px] size-4 text-muted-foreground'
             style={{ color: blueprint.ui.iconColor ? `var(--${blueprint.ui.iconColor})` : undefined }}

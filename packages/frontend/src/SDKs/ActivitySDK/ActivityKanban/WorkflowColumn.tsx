@@ -1,7 +1,7 @@
 import { Kanban } from '@pretzel-graph/standard-ui/components/kanban'
 import { Frame } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import type { Activity } from '@pretzel-graph/shared/domain'
 import ExecutionItem from './ExecutionItem'
 import { iconColor } from './styles'
@@ -13,7 +13,7 @@ const WorkflowColumn = ({ workflow }: { workflow: Activity.Workflow }) => {
         <Kanban.Column key={workflow.id} value={workflow.id} asChild>
             <Frame.Root spacing='sm' className='p-2 gap-2' >
                 <Frame.Header className='flex flex-row px-2 pt-0! items-center gap-2'>
-                    <LazyIcon
+                    <IconRenderer
                         name={workflow.icon ?? "Graph"}
                         className="size-4"
                         style={{ color: iconColor(workflow) }}

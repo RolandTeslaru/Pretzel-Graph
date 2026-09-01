@@ -6,7 +6,7 @@ import { AlertDialog, Badge, ContextMenu, Tooltip } from '@pretzel-graph/standar
 import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
@@ -40,7 +40,7 @@ export function WorkflowItem({ workflow, size = 'default', onClick }: WorkflowCa
             >
                 <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
                     {workflow.icon ? (
-                        <LazyIcon
+                        <IconRenderer
                             name={workflow.icon}
                             className={classNames('shrink-0 m-auto', styles.workflowIcon)}
                             style={{ color: iconColor(workflow) }}
