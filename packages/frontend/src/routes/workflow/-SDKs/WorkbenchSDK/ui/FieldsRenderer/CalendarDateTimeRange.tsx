@@ -45,11 +45,11 @@ const fromInputValue = (value: CalendarDateTimeRangeValue): Field.CalendarDateTi
 }
 
 export const CalendarDateTimeRangeField = memo<RendererProps<'CalendarDateTimeRange'>>(({ field, nodeId, className }) => {
-    const [value, , , issue, isReconciling] = WorkbenchSDK.useField<Field.CalendarDateTimeRange.Value>(nodeId, field)
+    const [value, , , issue] = WorkbenchSDK.useField<Field.CalendarDateTimeRange.Value>(nodeId, field)
 
     return (
         <div className={className}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             <CalendarDateTimeRangeInput
                 className={`w-full ${issue ? 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50' : ''}`}
                 onValueChange={(next) => WorkbenchSDK.actions.field.setValue(nodeId, field, fromInputValue(next))}

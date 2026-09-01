@@ -6,7 +6,7 @@ import type { RendererProps } from './FieldLabel'
 import { WithExpression } from './withExpression'
 
 export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField<string>(nodeId, field)
+    const [value, onChange, flush, issue, isExpression] = WorkbenchSDK.useField<string>(nodeId, field)
 
     let innerClassName = ""
     if (issue)
@@ -28,7 +28,7 @@ export const StringField = memo<RendererProps<'String'>>(({ field, nodeId, class
 
     return (
         <WithExpression {...expressionProps}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             {!isExpression ?
                 <Textarea
                     size="sm"

@@ -14,7 +14,7 @@ export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, c
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-row justify-between gap-1"}>
-            <FieldLabel field={field} isReconciling={false} />
+            <FieldLabel field={field} />
             <ButtonGroup>
                 <Input
                     id="number-of-gpus-f6l"

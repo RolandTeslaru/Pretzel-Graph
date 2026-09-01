@@ -14,7 +14,7 @@ type RLValue = Foundations.Field.ResourceLoader.Value
 type Option = Foundations.Field.ResourceLoader.OptionItem
 
 export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ field, nodeId, className }) => {
-    const [storedValue, , , issue, isReconciling] = WorkbenchSDK.useField<RLValue>(nodeId, field)
+    const [storedValue, , , issue] = WorkbenchSDK.useField<RLValue>(nodeId, field)
     const value = storedValue ?? { mode: 'list', value: '' }
 
     const [open, setOpen] = useState(false)
@@ -50,7 +50,7 @@ export const ResourceLoaderField = memo<RendererProps<'ResourceLoader'>>(({ fiel
 
     return (
         <div className={cn(className, 'w-full nodrag cursor-auto flex flex-col gap-1')}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
 
             {value.mode === 'manual' ? (
                 <div className="flex items-center gap-1">

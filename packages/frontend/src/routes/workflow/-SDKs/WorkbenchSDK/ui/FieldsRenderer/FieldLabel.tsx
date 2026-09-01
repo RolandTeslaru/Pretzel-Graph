@@ -1,17 +1,14 @@
 import { Label } from '@pretzel-graph/standard-ui/foundations/label'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 
 interface LabelProps {
     field: Foundations.Field
-    isReconciling: boolean
 }
 
-export const FieldLabel = ({ field, isReconciling }: LabelProps) => {
+export const FieldLabel = ({ field }: LabelProps) => {
     return (
         <Label className="flex items-center" required={field.required}>
             {field.displayName}
-            {isReconciling && <Spinner className='h-4 pl-2'/>}
         </Label>
     )
 }

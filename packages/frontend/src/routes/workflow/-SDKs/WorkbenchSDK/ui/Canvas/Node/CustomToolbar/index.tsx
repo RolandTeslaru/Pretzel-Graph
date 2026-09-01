@@ -1,9 +1,8 @@
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
-import { Button, Dialog, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 import React, { memo } from 'react'
-import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 import { OptionsDropdown } from './OptionsDropdown'
 import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
@@ -158,10 +157,7 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
 });
 
 const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const [isTool, isReconciling] = WorkbenchSDK.useStore(s => [
-        s.selectors.node.isTool(s, nodeId),
-        s.selectors.field.isReconciling(s, nodeId, "isConvertedToTool" as Field.Id)
-    ]);
+    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, nodeId));
 
     return (
         <Tipped label={isTool ? "Revert to Node" : "Convert to Tool"}>
@@ -172,9 +168,8 @@ const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                     else 
                         WorkbenchSDK.actions.tool.convert(nodeId);
                 }}
-                disabled={isReconciling}
             >
-                {isReconciling ? <Spinner /> : <SystemIcons.Hammer />}
+                <SystemIcons.Hammer />
             </Button>
         </Tipped>
     );

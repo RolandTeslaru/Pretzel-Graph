@@ -7,7 +7,7 @@ import type { RendererProps } from './FieldLabel'
 import { WithExpression } from './withExpression'
 
 export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField(nodeId, field);
+    const [value, onChange, flush, issue, isExpression] = WorkbenchSDK.useField(nodeId, field);
     const hasSlider = field.slider;
 
     let errorClass = ""
@@ -32,12 +32,12 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
         <WithExpression {...expressionProps}>
             {isExpression ?
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <WithExpression.Input className={errorClass} />
                 </>
             : hasSlider ?
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <div className='flex flex-row gap-2'>
                         <Slider
                             className={`my-auto ${issue ? "opacity-50" : ""}`}
@@ -62,7 +62,7 @@ export const FloatField = memo<RendererProps<'Float'>>(({ field, nodeId, classNa
                 </>
                 :
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <Input
                         type="number"
                         size="sm"
