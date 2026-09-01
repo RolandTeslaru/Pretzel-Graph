@@ -60,7 +60,8 @@ const Content: DialogComponents.Content = ({
   ...rest
 }) => (
   <Portal>
-    {darkenBackground && <Overlay />}
+    {/* Always mounted: the overlay carries the scroll lock that lets this dialog's content wheel-scroll. */}
+    <Overlay className={darkenBackground ? undefined : 'bg-transparent dark:bg-transparent'} />
     <DialogPrimitive.Content
       // Nothing inside is auto-focused on open, so no control opens wearing a focus ring.
       onOpenAutoFocus={(e) => e.preventDefault()}

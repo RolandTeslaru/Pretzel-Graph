@@ -1,4 +1,4 @@
-import { type WheelEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -28,8 +28,7 @@ interface Props {
 export const CredentialFormDialog = ({ credentialTemplate, onCreated, updateProps, ...templateProps }: Props & DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
         {...templateProps}
-        className='w-[800px] h-[500px]'
-        contentClassName='p-0!'
+        contentClassName='p-0! relative'
         sidebarClassName='w-[270px]'
         sidebarRenderer={() => (
             <div className='flex flex-col gap-2'>
@@ -105,8 +104,6 @@ const getFieldDefaultValue = (field: CredentialField) => {
 }
 
 export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: Props) => {
-    // ScrollArea.Root forwards its ref to the underlying viewport.
-    const viewportRef = useRef<HTMLDivElement>(null)
 
     // The footer sits outside <form> (it's pinned over the scroll area), so Save links back by id.
     const formId = useId()
@@ -299,28 +296,18 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
         ))
     }
 
-    // Something upstream eats the wheel before it reaches the viewport, so drive it by hand.
-    // No preventDefault — React registers wheel as passive, where it only warns.
-    const onWheel = (event: WheelEvent<HTMLDivElement>) => {
-        const viewport = viewportRef.current
-        if (!viewport || event.deltaY === 0)
-            return
-
-        event.stopPropagation()
-        viewport.scrollTop += event.deltaY
-    }
 
     return (
-        <div className='flex flex-col h-full relative' onWheelCapture={onWheel}>
+        <>
             {/* Header */}
-            <div className='pointer-events-none absolute top-0 left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
+            <div className='pointer-events-none absolute top-0 w-full left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
                 <IconRenderer name={credentialTemplate.icon ?? ""} className='size-5' />
                 <p className='text-sm font-semibold text-foreground'>
                     {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
                 </p>
             </div>
             {/* Content */}
-            <ScrollArea.Root ref={viewportRef} className="h-full [mask-image:linear-gradient(to_bottom,transparent_0,transparent_40px,black_80px,black_calc(100%-80px),transparent_calc(100%-40px),transparent_100%)]">
+            <ScrollArea.Root className="h-[500px]  w-[500px] [mask-image:linear-gradient(to_bottom,transparent_0,transparent_0px,black_80px)]">
                 <Form.Root {...form}>
                     <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='relative min-h-full pt-16 pb-20 flex flex-col gap-3 px-4' autoComplete='off'>
 
@@ -456,6 +443,6 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                     </Button>
                 </div>
             </div>
-        </div>
+        </>
     )
 }
