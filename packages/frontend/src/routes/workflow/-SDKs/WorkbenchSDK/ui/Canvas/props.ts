@@ -6,6 +6,7 @@ import CanvasNode from './Node'
 import { ProblematicCycleSelectionNode } from './extraNodes'
 import { portColorVar } from '@/utils/styleUtils'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
+import { clearDragImage } from '@/routes/workflow/-SDKs/ShelfSDK/ui/DrawerItem'
 import { Workflow, Foundations, Validation } from "@pretzel-graph/shared/domain"
 import { withCyclesRecompute } from '../../utils/actions'
 import { ExecutionSDK } from '../../../ExecutionSDK/sdk'
@@ -80,9 +81,7 @@ export const createCanvasCallbacks = (
             if (!blueprintId)
                 return
 
-            const grabbedElements = document.getElementsByClassName("cursor-grabbing");
-            if (grabbedElements.length > 0)
-                document.body.removeChild(grabbedElements[0]);
+            clearDragImage();
 
             const blueprint = ShelfSDK.state.blueprints[blueprintId];
             if (!blueprint)
@@ -265,9 +264,6 @@ export const createCanvasCallbacks = (
         onPaneClick: (e) => {
             WorkbenchSDK.actions
                 .setClickedNodeId(null)
-
-            ShelfSDK.actions
-                .searchFilter.setVariants(null);
 
             ExecutionSDK.actions
                 .timeline.selectUoW(null)

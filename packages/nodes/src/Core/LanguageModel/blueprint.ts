@@ -3,18 +3,20 @@ import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "@pre
 export const Blueprint = defineBlueprint({
     id: "Core.LanguageModel",
     displayName: "Language Model",
-    description: "Runs a language model given a specified provider.",
+    description: "Sends a message history to the connected model and returns its reply.",
     icon: "BrainCircuit",
     accent: "port-LanguageModel",
     fields: [
-        FieldBuilder.Boolean("stream", "Stream", {
-            initialValue: false,
-            tooltip: "Whether to stream the response",
-            advanced: true
-        }),
+        // Streaming is not surfaced yet — the node consumes the provider stream
+        // internally and emits one complete message, so this field would do nothing.
+        // FieldBuilder.Boolean("stream", "Stream", {
+        //     initialValue: false,
+        //     tooltip: "Emit tokens as they arrive instead of one complete message.",
+        //     advanced: true
+        // }),
         FieldBuilder.String("systemMessage", "System Message", {
             initialValue: "",
-            tooltip: "A system message that helps set the behavior of the assistant"
+            tooltip: "Instructions prepended to every run to steer how the model responds."
         })
     ],
     inputs: [

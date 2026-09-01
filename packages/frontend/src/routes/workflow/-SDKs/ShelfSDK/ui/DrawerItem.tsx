@@ -24,7 +24,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           draggable={true}
           data-blueprint-id={blueprintId}
           onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
+          onDragEnd={clearDragImage}
           style={{
             borderColor: blueprint.ui.accent
               ? `color-mix(in srgb, var(--${blueprint.ui.accent}) 30%, var(--secondary))`
@@ -63,27 +63,33 @@ DrawerItem.displayName = 'DrawerItem';
 
 export default DrawerItem
 
+// The drag image must be in the document when setDragImage runs, so a clone is parked
+// off-screen. We hold the reference rather than looking it up again: onDragEnd does not
+// fire for every cancelled drag, so the drop handler clears it too.
+let dragImage: HTMLElement | null = null;
+
+export const clearDragImage = () => {
+  dragImage?.remove();
+  dragImage = null;
+};
+
 const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
-  const crt = event.currentTarget.cloneNode(true) as HTMLElement;
-  const blueprintId = event.currentTarget.dataset.blueprintId;
+  clearDragImage();
 
-  crt.style.position = "absolute";
-  crt.style.width = "215px";
-  crt.style.top = "-500px";
-  crt.style.right = "-500px";
-  crt.classList.add("cursor-grabbing");
+  const item = event.currentTarget;
+  const clone = item.cloneNode(true) as HTMLElement;
 
-  document.body.appendChild(crt);
-  event.dataTransfer.setDragImage(crt, 0, 0);
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+  clone.style.left = "-9999px";
+  clone.style.width = `${item.offsetWidth}px`;
+  clone.style.pointerEvents = "none";
 
+  document.body.appendChild(clone);
+  event.dataTransfer.setDragImage(clone, 0, 0);
+  dragImage = clone;
+
+  const blueprintId = item.dataset.blueprintId;
   if (blueprintId)
     event.dataTransfer.setData("blueprintId", blueprintId);
-}
-
-
-
-const onDragEnd: React.DragEventHandler<HTMLDivElement> = (event) => {
-  const dragImage = document.getElementsByClassName("cursor-grabbing")[0];
-  if (dragImage)
-    document.body.removeChild(dragImage);
 }

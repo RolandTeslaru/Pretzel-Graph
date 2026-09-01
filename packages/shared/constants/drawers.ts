@@ -12,10 +12,11 @@ export const CORE_DRAWERS = {
       "Core.Text.Input", 
       "Core.Text.Output", 
       "Core.Chat.History",
+      "Core.Utils.JsonInjector",
     ],
   },
     routing: {
-    displayName: "Routing & Flow",
+    displayName: "Routing",
     id: "routing",
     icon: "ChevronsLeftRightEllipsis",
     blueprintIds: [
@@ -24,8 +25,15 @@ export const CORE_DRAWERS = {
       "Core.Routing.Router",
       "Core.Routing.Merge",
       "Core.Routing.Passthrough",
-      "Core.Routing.CatchError",
       "Core.Routing.Portal",
+    ],
+  },
+  lifecycle: {
+    displayName: "Lifecycle",
+    id: "lifecycle",
+    icon: "TimerReset",
+    blueprintIds: [
+      "Core.Routing.CatchError",
       "Core.Routing.Terminate",
       "Core.Routing.Sleep",
     ],
@@ -78,7 +86,6 @@ export const CORE_DRAWERS = {
     icon: "PencilRuler",
     blueprintIds: [
       "Core.Routing.Accumulator",
-      "Core.Utils.JsonInjector",
       "Core.Utils.List.Select",
       "Core.Utils.List.Slice",
       "Core.Utils.List.Filter",

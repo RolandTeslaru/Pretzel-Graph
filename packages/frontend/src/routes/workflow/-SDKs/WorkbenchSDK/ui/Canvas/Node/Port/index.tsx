@@ -92,9 +92,6 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
                     id={port.id}
                     isValidConnection={isValidConnectionCallback}
                     className="group transition-all outline-none"
-                    onClick={() => {
-                        // ShelfSDK.actions.searchFilter.setVariants(new Set(port.variant))
-                    }}
                 >
                     {/* Visual Representation of the Handle */}
                     <div

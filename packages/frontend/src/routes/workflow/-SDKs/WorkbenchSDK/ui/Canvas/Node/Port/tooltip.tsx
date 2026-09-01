@@ -57,7 +57,6 @@ function Hints({ isInput }: { isInput: boolean }) {
   return (
     <div className="mt-2 flex flex-col gap-0.5 text-xs leading-6">
       <div><b>Drag</b> to wire this port to a compatible {isInput ? 'output' : 'input'}</div>
-      <div><b>Click</b> the type badge to filter the shelf by that type</div>
     </div>
   )
 }

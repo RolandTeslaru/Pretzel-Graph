@@ -1,4 +1,3 @@
-import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { Badge } from '@pretzel-graph/standard-ui/foundations'
 import type { Foundations } from '@pretzel-graph/shared/domain'
 import React from 'react'
@@ -10,14 +9,11 @@ interface Props {
 export const PortBadge: React.FC<Props> = ({ portVariant }) => {
   return (
     <Badge
-      className="h-5 rounded-md px-1.5 cursor-pointer border"
+      className="h-5 rounded-md px-1.5 border"
       style={{
         backgroundColor: `color-mix(in srgb, var(--port-${portVariant}) 20%, transparent)`,
         color: `var(--port-${portVariant}-foreground)`,
         borderColor: `var(--port-${portVariant})`
-      }}
-      onClick={() => {
-        ShelfSDK.actions.searchFilter.toggleVariant(portVariant)
       }}
     >
       {portVariant}
