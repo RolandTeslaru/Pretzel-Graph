@@ -189,15 +189,6 @@ export class ShelfService {
         return { blueprints };
     }
 
-    deriveBlueprint(
-        payload: Shelf.API.Blueprint.Derive.Request
-    ): Shelf.API.Blueprint.Derive.Response {
-        const { blueprintId, fieldValues } = payload;
-        const { blueprint } = this.getBlueprint({ blueprintId });
-
-        return { derivedBlueprint: Blueprint.derive(blueprint, fieldValues).blueprint };
-    }
-
     // Every blueprint a workflow's nodes reference, plus the repairs for the ones that no longer resolve.
     async collectWorkflowBlueprints(data: Workflow.Data): Promise<{ blueprints: Record<Blueprint.Id, Blueprint>; repairs: Workflow.Repair[] }> {
         const blueprintIds = new Set<Blueprint.Id>();

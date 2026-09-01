@@ -108,27 +108,6 @@ export namespace Shelf {
                 return data;
             }
 
-            export namespace Derive {
-                export const Request = z.object({
-                    blueprintId: Foundations.Blueprint.Id,
-                    fieldValues: z.record(Foundations.Field.Id, Foundations.Field.Value)
-                })
-                export type Request = z.infer<typeof Request>
-
-                export const Response = z.object({
-                    derivedBlueprint: Foundations.Blueprint.Schema
-                })
-                export type Response = z.infer<typeof Response>
-            }
-            export async function derive(
-                api: AxiosInstance,
-                req: Derive.Request
-            ): Promise<Derive.Response> {
-                const { data } = await api.post<Derive.Response>(
-                    '/api/shelf/blueprint/derive', req
-                )
-                return data;
-            }
         }
     }
 }

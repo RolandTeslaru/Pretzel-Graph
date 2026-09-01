@@ -1,8 +1,10 @@
 import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
 import type { DropFirstArg } from "@/SDKs/types";
-import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
+import { Shelf } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
+import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
+import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 
 export function _createShelfActions_(sdk: ShelfSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -32,12 +34,12 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             }
             return false;
         },
-        upsertBlueprint: (blueprint: Foundations.Blueprint) => {
+        upsertBlueprint: (blueprint: Blueprint) => {
             setState(s => {
                 s.blueprints[blueprint.id] = blueprint;
             });
         },
-        upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => {
+        upsertBlueprints: (blueprints: Record<Blueprint.Id, Blueprint>) => {
             setState(s => {
                 s.blueprints = { ...s.blueprints, ...blueprints };
             });
@@ -105,24 +107,17 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 setState(s => { sdk.reducers.searchFilter.setQuery(s, ...props) }),
         },
 
-        getDerivedBlueprint: async (blueprint, fieldValues, { onApiFetch } = {}) => {
-            const derivedId = Foundations.Blueprint.deriveId(blueprint, fieldValues);
+        getDerivedBlueprint: (blueprint, fieldValues) => {
+            const derivedId = Blueprint.deriveId(blueprint, fieldValues);
+            const { blueprint: derivedBlueprint } = Blueprint.derive(blueprint, fieldValues);
 
-            const cached = getState().derivedBlueprintsCache[derivedId];
-            if (cached) return cached;
+            // Keyed in the main blueprint map — derive-on-read (getInputs/getFields/…)
+            // resolves a node's blueprint by `reconciledBlueprintId` out of `blueprints`.
+            if (getState().blueprints[derivedId] !== derivedBlueprint)
+                setState(s => {
+                    s.blueprints[derivedId] = derivedBlueprint;
+                });
 
-            onApiFetch?.();
-
-            const { derivedBlueprint } = await Shelf.API.Blueprint.derive(api, {
-                blueprintId: blueprint.id, fieldValues
-            });
-
-            setState(s => {
-                s.derivedBlueprintsCache[derivedId] = derivedBlueprint;
-                // Also key it in the main blueprint map — derive-on-read (getInputs/getFields/…)
-                // resolves a node's blueprint by `reconciledBlueprintId` out of `blueprints`.
-                s.blueprints[derivedId] = derivedBlueprint;
-            });
             return derivedBlueprint;
         }
     } satisfies _ShelfActions
@@ -130,8 +125,8 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 
 export type _ShelfActions = {
     loadSection: (section: Shelf.Section) => Promise<boolean>;
-    hydrateBatch: (blueprintIds: Foundations.Blueprint.Id[]) => Promise<boolean>;
-    hydrateBlueprint: (blueprintId: Foundations.Blueprint.Id) => Promise<boolean>;
+    hydrateBatch: (blueprintIds: Blueprint.Id[]) => Promise<boolean>;
+    hydrateBlueprint: (blueprintId: Blueprint.Id) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
         close: (drawerId: Shelf.Drawer.Id) => void;
@@ -143,11 +138,10 @@ export type _ShelfActions = {
     };
 
     getDerivedBlueprint: (
-        blueprint: Foundations.Blueprint,
-        fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>,
-        callbacks?: { onApiFetch?: () => void }
-    ) => Promise<Foundations.Blueprint>;
+        blueprint: Blueprint,
+        fieldValues: Record<Field.Id, Field.Value>
+    ) => Blueprint;
 
-    upsertBlueprint: (blueprint: Foundations.Blueprint) => void;
-    upsertBlueprints: (blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => void;
+    upsertBlueprint: (blueprint: Blueprint) => void;
+    upsertBlueprints: (blueprints: Record<Blueprint.Id, Blueprint>) => void;
 }
