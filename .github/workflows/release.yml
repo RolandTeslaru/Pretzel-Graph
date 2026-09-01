@@ -19,6 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Registries demand lowercase; the account name is not.
+      - name: Lowercase the owner
+        id: owner
+        run: echo "name=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -30,7 +35,7 @@ jobs:
           context: .
           file: Dockerfile.${{ matrix.role }}
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/pretzelgraph-${{ matrix.role }}:${{ github.sha }}
+          tags: ghcr.io/${{ steps.owner.outputs.name }}/pretzelgraph-${{ matrix.role }}:${{ github.sha }}
 
   notify:
     needs: build
