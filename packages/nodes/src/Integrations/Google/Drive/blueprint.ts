@@ -12,7 +12,7 @@ export const Blueprint = defineBlueprint({
     credentials:     [GoogleDriveOAuth],
     displayName:     "Google Drive",
     description:     "Finds, reads, uploads and organises files in the connected Google Drive.",
-    icon:            "Google",
+    icon:            "GoogleDrive",
     accent:          "port-Data",
     proxyCompatible: true,
     toolCompatible:  true,

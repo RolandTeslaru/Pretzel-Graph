@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Button, AlertDialog, ScrollArea, Frame } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { CredentialFormDialog } from '@/SDKs/VaultSDK/ui/CredentialForm'
@@ -91,7 +91,7 @@ function TemplateGroup({ group }: { group: Group }) {
             <Frame.Header>
                 <div className='flex items-center gap-2'>
                     {template?.icon
-                        ? <LazyIcon name={template.icon} className='size-4' />
+                        ? <IconRenderer name={template.icon} className='size-4' />
                         : <SystemIcons.KeyRound size={16} className='opacity-60' />
                     }
                     <span className='text-sm font-medium'>{template?.displayName ?? templateId}</span>

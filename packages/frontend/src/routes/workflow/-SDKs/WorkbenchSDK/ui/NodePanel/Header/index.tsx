@@ -1,5 +1,5 @@
 import { Button, Input } from '@pretzel-graph/standard-ui/foundations'
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '../../../sdk'
@@ -28,7 +28,7 @@ export const NodeSidebarHeader = ({ hyNode, isEditing, onEditStart, onEditFinish
                     backgroundColor: hyNode.ui.accent ? `color-mix(in srgb, var(--${hyNode.ui.accent}) 25%, transparent)` : 'var(--muted)',
                 }}
             >
-                <LazyIcon
+                <IconRenderer
                     className='my-auto h-4 w-4 shrink-0'
                     name={hyNode.ui.icon ?? ""}
                     style={{ color: hyNode.ui.iconColor ? `var(--${hyNode.ui.iconColor})` : hyNode.ui.accent ? `var(--${hyNode.ui.accent}-foreground)` : undefined }}

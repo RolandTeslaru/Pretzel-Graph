@@ -1,7 +1,7 @@
 import React from 'react'
 import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
 import StatusIndicator from './StatusIndicator';
 import type { NodeUI } from '../../../../selectors/node';
 
@@ -24,7 +24,7 @@ export const NodeHeader: React.FC<Props> = ({ hyNode, executionStatus, hasUpdate
     return (
       <MinimizedHandles inputs={hyNode.inputs} outputs={hyNode.outputs} nodeId={nodeId} isFlipped={isFlipped}>
         <div className='px-5 py-1 h-fit my-auto'>
-          <LazyIcon
+          <IconRenderer
             className={`w-11 h-11 ${isFlipped ? "scale-x-[-1]" : ""}`}
             name={ui.icon ?? ""}
             style={{ color: iconColor }}
@@ -41,7 +41,7 @@ export const NodeHeader: React.FC<Props> = ({ hyNode, executionStatus, hasUpdate
 
   return (
     <div className="flex w-full items-center gap-3 px-5 py-1.5 rounded-t-xl " >
-      <LazyIcon
+      <IconRenderer
         className={`${isMinimized ? "w-8 h-8" : "w-5.5 h-5.5"} ${isFlipped ? "scale-x-[-1]" : ""}`}
         name={ui.icon ?? ""}
         style={{ color: iconColor }}

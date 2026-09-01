@@ -12,7 +12,7 @@ export const Blueprint = defineBlueprint({
     credentials:     [GoogleSheetsOAuth],
     displayName:     "Google Sheets",
     description:     "Reads and writes rows in a Google Sheets spreadsheet.",
-    icon:            "Google",
+    icon:            "GoogleSheets",
     accent:          "port-DataList",
     proxyCompatible: true,
     toolCompatible:  true,

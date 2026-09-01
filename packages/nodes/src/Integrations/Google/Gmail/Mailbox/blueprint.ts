@@ -14,7 +14,7 @@ export const Blueprint = defineBlueprint({
     credentials:     [GoogleGmailOAuth],
     displayName:     "Gmail Mailbox",
     description:     "Reads, searches and organises mail in the connected Gmail account.",
-    icon:            "Google",
+    icon:            "Gmail",
     accent:          "port-Data",
     proxyCompatible: true,
     toolCompatible:  true,

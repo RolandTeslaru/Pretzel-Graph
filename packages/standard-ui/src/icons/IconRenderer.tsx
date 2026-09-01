@@ -10,7 +10,7 @@ interface Props extends BaseIconProps {
 
 const lazyComponentCache = new Map<string, React.LazyExoticComponent<any>>();
 
-export const LazyIcon: React.FC<Props> = ({ name, ...props }) => {
+export const IconRenderer: React.FC<Props> = ({ name, ...props }) => {
     if (name in SystemIcons) {
         const Comp = SystemIcons[name as keyof typeof SystemIcons];
         return <Comp {...props} />

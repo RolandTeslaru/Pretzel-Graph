@@ -5,7 +5,7 @@ import { Spinner } from '@pretzel-graph/standard-ui/foundations';
 import { useShallow } from 'zustand/react/shallow';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import DrawerItem from './DrawerItem';
-import { LazyIcon } from '@pretzel-graph/standard-ui/icons/LazyIcon';
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk';
 
 
@@ -95,7 +95,7 @@ const Drawer: React.FC<Props> = memo(({ drawer }) => {
                 className='flex flex-row gap-2 h-8 px-2 cursor-pointer hover:bg-primary/40 rounded-lg'
                 onClick={() => ShelfSDK.actions.drawer.toggle(drawer.id)}
             >
-                <LazyIcon name={drawer.icon} className={`min-w-4 size-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
+                <IconRenderer name={drawer.icon} className={`min-w-4 size-4 h-4 my-auto ${isOpen ? "text-primary" : ""}`} />
                 <p className='text-sm font-medium text-card-foreground my-auto w-full text-left! select-none'>
                     {drawer.displayName}
                 </p>

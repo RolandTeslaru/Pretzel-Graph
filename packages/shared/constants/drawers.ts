@@ -124,6 +124,7 @@ export const CORE_DRAWERS = {
       "Core.Utils.Tool.Runner",
       "Core.Utils.Tool.Catalog",
       "Core.Utils.Tool.Custom",
+      "Core.Utils.Tool.MCP",
     ],
   },
   human_review: {

@@ -1,6 +1,6 @@
 import React from "react"
 import type { Workflow } from "@pretzel-graph/shared/domain"
-import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon"
+import { IconRenderer } from "@pretzel-graph/standard-ui/icons/IconRenderer"
 import type { TimelineLayout } from "../../selectors"
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk"
 
@@ -25,7 +25,7 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
                         className="flex items-center gap-2 px-1 border-b border-border/50"
                     >
                         {ui?.icon && (
-                            <LazyIcon
+                            <IconRenderer
                                 className={`w-3 h-3`}
                                 name={ui.icon}
                                 style={{ color: `var(--${ui.accent}-foreground)` }}

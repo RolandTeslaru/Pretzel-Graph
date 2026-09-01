@@ -1,25 +1,26 @@
 {
-    "name": "@pretzel-graph/node-sdk",
-    "version": "1.0.0",
-    "description": "Node authoring SDK \u2014 RuntimeNode base class, builders, and CatalogueService",
-    "main": "src/index.ts",
-    "types": "src/index.ts",
-    "scripts": {
-        "typecheck": "tsc --noEmit"
-    },
-    "dependencies": {
-        "@langchain/core": "*",
-        "@pretzel-graph/shared": "*",
-        "axios": "^1.13.6",
-        "ioredis": "^5.9.2",
-        "mongodb": "^6.21.0",
-        "mysql2": "^3.22.4",
-        "pg": "^8.13.1",
-        "reflect-metadata": "^0.2.2",
-        "tsyringe": "^4.10.0",
-        "zod": "^4.3.6"
-    },
-    "devDependencies": {
-        "@types/pg": "^8.11.10"
-    }
+  "name": "@pretzel-graph/node-sdk",
+  "version": "1.0.0",
+  "description": "Node authoring SDK \u2014 RuntimeNode base class, builders, and CatalogueService",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@langchain/core": "*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@pretzel-graph/shared": "*",
+    "axios": "^1.13.6",
+    "ioredis": "^5.9.2",
+    "mongodb": "^6.21.0",
+    "mysql2": "^3.22.4",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10"
+  }
 }

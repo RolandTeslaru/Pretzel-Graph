@@ -1,5 +1,5 @@
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
-import { LazyIcon } from "@pretzel-graph/standard-ui/icons/LazyIcon";
+import { IconRenderer } from "@pretzel-graph/standard-ui/icons/IconRenderer";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from "../../sdk";
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk";
@@ -238,7 +238,7 @@ const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
 
   return (
     <DropdownMenu.Item onSelect={() => ExecutionSDK.actions.runFromIgniteableNode(nodeId)}>
-      <LazyIcon name={ui.icon ?? ""} className="mr-2" />
+      <IconRenderer name={ui.icon ?? ""} className="mr-2" />
       Run via {ui.displayName}
     </DropdownMenu.Item>
   );

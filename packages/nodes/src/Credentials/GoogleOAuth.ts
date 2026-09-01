@@ -25,18 +25,18 @@ function googleCredential<const TId extends string>(id: TId, displayName: string
 
 export const GoogleGmailOAuth = googleCredential("googleGmailOAuth", "Gmail", [
     "https://www.googleapis.com/auth/gmail.modify",
-])
+], "Gmail")
 
 // The Drive scope is what lets the spreadsheet picker list files — names and ids, never content.
 export const GoogleSheetsOAuth = googleCredential("googleSheetsOAuth", "Google Sheets", [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.metadata.readonly",
-])
+], "GoogleSheets")
 
 export const GoogleDriveOAuth = googleCredential("googleDriveOAuth", "Google Drive", [
     "https://www.googleapis.com/auth/drive",
-])
+], "GoogleDrive")
 
 export const GoogleCalendarOAuth = googleCredential("googleCalendarOAuth", "Google Calendar", [
     "https://www.googleapis.com/auth/calendar",
-])
+], "GoogleCalendar")
