@@ -55,7 +55,6 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 },
                 cycles: [],
                 cyclesDirty: false,
-                reconcilingFields: {},
                 stronglyConnectedComponents: [],
                 dependencyUpdates: { published: {}, draft: {} },
                 selectors: workbenchSelectors,
@@ -189,10 +188,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
         const initialValue = 'initialValue' in field ? field.initialValue : undefined;
 
-        const [storeValue, issue, isReconciling, isExpression] = this.useStore(s => [
+        const [storeValue, issue, isExpression] = this.useStore(s => [
             s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
             s.selectors.field.getIssue(s, nodeId, fieldId),
-            s.selectors.field.isReconciling(s, nodeId, fieldId),
             s.selectors.field.usesExpression(s, nodeId, field),
         ] as const);
 
@@ -227,7 +225,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         // Commit any pending draft on unmount (covers the case where onBlur never fires).
         useEffect(() => () => { commitRef.current() }, []);
 
-        return [localValue, onChange, flush, issue, isReconciling, isExpression] as const;
+        return [localValue, onChange, flush, issue, isExpression] as const;
     }
 
     /**
@@ -329,7 +327,6 @@ export namespace WorkbenchSDK {
         selectionContextMenu: { x: number, y: number } | null;
         paneContextMenu: { x: number, y: number } | null;
         draggedPort: PortRef | null
-        reconcilingFields: Record<Workflow.Node.Id, Set<Foundations.Field.Id>>
         cache: Workflow.Cache
         cyclesDirty: boolean
         issues: Validation.Issue.Workflow_

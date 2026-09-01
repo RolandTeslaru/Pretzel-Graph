@@ -6,11 +6,11 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import { CodeEditorContent } from '../CodeEditor';
 
 export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Script'>) => {
-    const [localValue, onChange, flush, , isReconciling] = WorkbenchSDK.useField<string>(nodeId, field);
+    const [localValue, onChange, flush] = WorkbenchSDK.useField<string>(nodeId, field);
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             <Button variant="input" className="justify-start overflow-hidden"
                 onClick={() => {
                     const snapshot = localValue;

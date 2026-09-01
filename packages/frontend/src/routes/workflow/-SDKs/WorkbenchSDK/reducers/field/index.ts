@@ -53,15 +53,6 @@ export const fieldReducers = {
 
         return false;
     },
-    markAsReconciling: (s, nodeId, fieldId) => {
-        if (!s.reconcilingFields[nodeId])
-            s.reconcilingFields[nodeId] = new Set();
-
-        s.reconcilingFields[nodeId].add(fieldId);
-    },
-    unmarkAsReconciling: (s, nodeId, fieldId) => {
-        s.reconcilingFields[nodeId]?.delete(fieldId);
-    },
     /**
      * Flips a field between static and expression mode.
      *
@@ -144,16 +135,6 @@ export interface FieldReducers {
         nodeId: NodeId,
         field: Foundations.Field
     ) => boolean
-    markAsReconciling: (
-        s: S,
-        nodeId: NodeId,
-        fieldId: FieldId
-    ) => void
-    unmarkAsReconciling: (
-        s: S,
-        nodeId: NodeId,
-        fieldId: FieldId
-    ) => void
     setIsExpression: (
         s: S,
         nodeId: NodeId,

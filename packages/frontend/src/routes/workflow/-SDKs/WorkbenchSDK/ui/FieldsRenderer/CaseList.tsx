@@ -24,13 +24,12 @@ const useCaseListEntry = (
 
 export const CaseListField = memo<RendererProps<'CaseList'>>(({ field, nodeId, className }) => {
     const entries = useCaseListValue(nodeId, field.id)
-    const [, , , , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field)
     const portIds = useMemo(() => entries.map(entry => entry.portId), [entries])
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
             <div className='flex flex-row w-full'>
-                <FieldLabel field={field} isReconciling={isReconciling} />
+                <FieldLabel field={field} />
 
                 <Button
                     variant='outline'

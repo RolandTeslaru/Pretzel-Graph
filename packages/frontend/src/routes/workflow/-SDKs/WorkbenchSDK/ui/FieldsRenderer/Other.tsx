@@ -5,11 +5,11 @@ import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 
 export const OtherField = memo(({ field, nodeId }: { field: Foundations.Field, nodeId: Workflow.Node.Id }) => {
-    const [value, , , issue, isReconciling] = WorkbenchSDK.useField(nodeId, field);
+    const [value, , , issue] = WorkbenchSDK.useField(nodeId, field);
 
     return (
         <>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             <Input
                 value={String(value)}
                 disabled

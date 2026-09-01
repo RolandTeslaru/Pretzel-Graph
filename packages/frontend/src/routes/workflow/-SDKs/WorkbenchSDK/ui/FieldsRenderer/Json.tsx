@@ -8,7 +8,7 @@ import { WithExpression } from './withExpression'
 const formatJson = (value: unknown) => JSON.stringify(value, null, 2) ?? 'null'
 
 export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField(nodeId, field)
+    const [value, onChange, flush, issue, isExpression] = WorkbenchSDK.useField(nodeId, field)
     const formattedValue = isExpression ? (value as string ?? '') : formatJson(value ?? field.initialValue)
     const [draft, setDraft] = useState(() => formattedValue)
     const [parseError, setParseError] = useState<string | null>(null)
@@ -38,7 +38,7 @@ export const JsonField = memo<RendererProps<'Json'>>(({ field, nodeId, className
 
     return (
         <WithExpression {...expressionProps}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             <Textarea
                 size="sm"
                 value={draft}

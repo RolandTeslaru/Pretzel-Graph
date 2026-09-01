@@ -13,7 +13,6 @@ export interface FieldSelectors {
     getValue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
     getIssue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
     getValues      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
-    isReconciling  : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => boolean
     usesExpression : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
     condition      : ConditionSelectors
     caseList       : CaseListSelectors
@@ -32,7 +31,6 @@ export const fieldSelectors = {
     get: getField,
     getValue: (s, nodeId, fieldId, fallback = null) => s.data.staticValues[nodeId]?.[fieldId] ?? fallback,
     getIssue: (s, nodeId, fieldId) => s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
-    isReconciling: (s, nodeId, fieldId) => s.reconcilingFields[nodeId]?.has(fieldId) ?? false,
 
     // Whether this field's stored value is airlock source rather than a literal. Takes the field
     // itself when the caller already has it — renderers do, and looking it up would rescan the

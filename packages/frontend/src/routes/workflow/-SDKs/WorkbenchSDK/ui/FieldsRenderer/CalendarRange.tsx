@@ -43,11 +43,11 @@ const fromDateRange = (value?: DateRange): Field.CalendarRange.Value => {
 }
 
 export const CalendarRangeField = memo<RendererProps<'CalendarRange'>>(({ field, nodeId, className }) => {
-    const [value, , , issue, isReconciling] = WorkbenchSDK.useField<Field.CalendarRange.Value>(nodeId, field)
+    const [value, , , issue] = WorkbenchSDK.useField<Field.CalendarRange.Value>(nodeId, field)
 
     return (
         <div className={className}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             <CalendarRangeInput
                 className={`w-full ${issue ? 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50' : ''}`}
                 maxDate={parseDate(field.maxDate)}

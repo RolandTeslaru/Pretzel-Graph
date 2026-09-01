@@ -36,11 +36,11 @@ const useConditionChildKind = (
 ) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getChildKind(s, nodeId, fieldId, id))
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
-    const [root, , , , isReconciling] = WorkbenchSDK.useField<Value>(nodeId, field)
+    const [root] = WorkbenchSDK.useField<Value>(nodeId, field)
 
     return (
         <div className={className + " w-full nodrag cursor-auto flex flex-col gap-1"}>
-            <FieldLabel field={field} isReconciling={isReconciling} />
+            <FieldLabel field={field} />
             {root ? (
                 <RuleGroup nodeId={nodeId} fieldId={field.id} ruleGroupId={"root" as RuleGroupId} />
             ) : (

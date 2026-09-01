@@ -7,7 +7,7 @@ import type { RendererProps } from './FieldLabel'
 import { WithExpression } from './withExpression'
 
 export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nodeId, className }) => {
-    const [value, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField(nodeId, field);
+    const [value, onChange, flush, issue, isExpression] = WorkbenchSDK.useField(nodeId, field);
 
     const expressionProps = {
         value: value as string,
@@ -27,12 +27,12 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
         <WithExpression {...expressionProps} tabClassName=''>
             {isExpression ?
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <WithExpression.Input className={issue ? "border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50" : ""} />
                 </>
             : field.kind === "tab" ?
                 <div className=' flex flex-row'>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <Tabs.Root
                         value={value as string}
                         onValueChange={val => { WorkbenchSDK.actions.field.setValue(nodeId, field, val); }}
@@ -47,7 +47,7 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                 </div>
                 :
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <Select.Root
                         value={value as string}
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}

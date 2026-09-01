@@ -11,7 +11,7 @@ const normalize = (value: unknown): boolean | string =>
     typeof value === 'boolean' || typeof value === 'string' ? value : true
 
 export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, className }) => {
-    const [rawValue, onChange, flush, issue, isReconciling, isExpression] = WorkbenchSDK.useField<boolean | string>(nodeId, field)
+    const [rawValue, onChange, flush, issue, isExpression] = WorkbenchSDK.useField<boolean | string>(nodeId, field)
     const value = normalize(rawValue)
 
     const expressionProps = {
@@ -36,7 +36,7 @@ export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, cla
         <WithExpression {...expressionProps} tabClassName='-top-3.5'>
             {!isExpression ? (
                 <div className="flex items-center justify-between py-2 nodrag cursor-auto">
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <Switch
                         checked={value === true || value === 'true'}
                         size={"lg"}
@@ -47,7 +47,7 @@ export const BooleanField = memo<RendererProps<'Boolean'>>(({ field, nodeId, cla
                 </div>
             ) : (
                 <>
-                    <FieldLabel field={field} isReconciling={isReconciling} />
+                    <FieldLabel field={field} />
                     <WithExpression.Input className={innerClassName} />
                 </>
             )}
