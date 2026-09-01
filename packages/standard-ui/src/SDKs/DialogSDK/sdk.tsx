@@ -298,11 +298,11 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
                     }}
                     darkenBackground={index === 0}
-                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 !overflow-hidden flex flex-row " + className}
+                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                        <div className={"bg-card/50 backdrop-blur-md min-w-[200px] p-2 pt-3 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-2 pt-3 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                             {header && (
                                 <div className="inline-flex items-center px-1">
                                     <header.icon className="size-4 m-2" />
@@ -328,7 +328,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         </div>
                         <ScrollArea.Root
                             style={{ ...surfaceStyle, ...delayStyle }}
-                            className={"bg-card/80 backdrop-blur-md flex flex-col h-full gap-4 px-3 w-full  h-[600px]  " + contentClassName}
+                            className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-md flex flex-col h-[600px] gap-4 px-3 w-full " + contentClassName}
                         >
                             <div className="inline-flex z-100 items-center absolute w-full top-0 left-4 gap-2 h-9 mt-2 shrink-0">
                                 <p className="text-md font-semibold">{active?.label}</p>
