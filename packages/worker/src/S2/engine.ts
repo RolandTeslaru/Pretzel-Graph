@@ -6,8 +6,6 @@ import { S2Hooks } from "./types";
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
 
-// or Super Signal Engine ( sounds similar to super steps in Pregel)
-
 export class S2Engine {
 
     public static readonly MAX_VERTEX_EXECUTION_DELTA = 1;
