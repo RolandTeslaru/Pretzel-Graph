@@ -1,6 +1,6 @@
 import { ShelfSDK } from "../../../ShelfSDK/sdk";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../../sdk";
-import { createToastPromise, debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../../utils/actions";
+import { debouncedValidateField, withAsyncCommit, withCommit, withCyclesRecompute } from "../../utils/actions";
 import type { NodeActions } from "../node";
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { DropFirstArg } from "@/SDKs/types";
@@ -30,8 +30,6 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
             }
 
             if (field.reconcile) {
-                console.log(`Field ${field.id} selects a blueprint derivative`)
-
                 try {
                     // The BASE, not the node's current blueprint — derive() strips _derivatives
                     // from its output, so re-deriving off an already-derived blueprint finds no tree.
@@ -44,26 +42,11 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
                     // Merge the just-set value in — getValues is read pre-commit, so it's stale.
                     const fieldValues = { ...sel.field.getValues(sdk.state, nodeId), [field.id]: value };
 
-                    const derivedBlueprint = await createToastPromise(
-                        ShelfSDK.actions.getDerivedBlueprint(
-                            blueprint, fieldValues,
-                            {
-                                onApiFetch: () => {
-                                    setState(s => { reducers.field.markAsReconciling(s, nodeId, field.id) })
-                                }
-                            }
-                        ),
-                        {
-                            loading : `Reconciling node ${nodeId}`,
-                            error   : (e: any) => e instanceof Error ? e.message : String(e),
-                        }
-                    );
-
+                    const derivedBlueprint      = ShelfSDK.actions.getDerivedBlueprint(blueprint, fieldValues);
                     const reconciledBlueprintId = Blueprint.deriveId(blueprint, fieldValues);
 
                     setState(withCyclesRecompute(s => {
                         reducers.node.applyDerivative(s, nodeId, derivedBlueprint, reconciledBlueprintId)
-                        reducers.field.unmarkAsReconciling(s, nodeId, field.id);
                         reducers.node.validate(s, nodeId);
                     }));
                 } catch (error) {

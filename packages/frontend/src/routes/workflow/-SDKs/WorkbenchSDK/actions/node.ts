@@ -19,7 +19,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
         setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,        ...props) })),
         setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s,    ...props) })),
-    setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
+        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
         setSignalStrategy: withCommit((...props) => setState(s => { reducers.node.setSignalStrategy(s, ...props) })),
         
         validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },

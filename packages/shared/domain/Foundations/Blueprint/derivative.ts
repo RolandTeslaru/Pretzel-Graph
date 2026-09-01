@@ -203,6 +203,33 @@ const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => 
     } as unknown as Blueprint
 }
 
+// Assembled variants, memoized per base blueprint object and keyed by the sorted matched-token
+// set, so derive and deriveByPath share entries and identical derivations return the same object.
+// WeakMap keying gives a re-fetched blueprint a fresh slot and lets stale entries be collected.
+const variantCache = new WeakMap<Blueprint, Map<string, Blueprint>>()
+
+const memoizedAssemble = (
+    blueprint:   Blueprint,
+    tokens:      readonly string[],
+    accumulator: Accumulator,
+): Blueprint => {
+    const key = [...tokens].sort().join(Derivative.SEPARATOR)
+
+    let variants = variantCache.get(blueprint)
+    if (!variants) {
+        variants = new Map()
+        variantCache.set(blueprint, variants)
+    }
+
+    let variant = variants.get(key)
+    if (!variant) {
+        variant = assemble(blueprint, accumulator)
+        variants.set(key, variant)
+    }
+
+    return variant
+}
+
 
 /**
  * Folds a blueprint's derivative tree against a node's field values.
@@ -250,7 +277,7 @@ export function derive(
     walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
 
     return {
-        blueprint:    assemble(blueprint, accumulator),
+        blueprint:    memoizedAssemble(blueprint, path, accumulator),
         derivativeId: path.length ? path.join(Derivative.SEPARATOR) as Derivative.Id : null,
     }
 }
@@ -288,5 +315,5 @@ export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id |
     if (missing.length)
         throw new Derivative.PathNotFoundError(blueprint.id, missing)
 
-    return assemble(blueprint, accumulator)
+    return memoizedAssemble(blueprint, [...seen], accumulator)
 }

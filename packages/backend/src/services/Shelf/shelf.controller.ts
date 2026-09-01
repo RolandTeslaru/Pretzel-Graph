@@ -33,11 +33,4 @@ export class ShelfController {
         return this.shelfService.getAllInSection(body);
     }
 
-    @Post('blueprint/derive')
-    @HttpCode(200)
-    deriveBlueprint(
-        @ZodBody(Shelf.API.Blueprint.Derive.Request) body: Shelf.API.Blueprint.Derive.Request,
-    ) {
-        return this.shelfService.deriveBlueprint(body);
-    }
 }
