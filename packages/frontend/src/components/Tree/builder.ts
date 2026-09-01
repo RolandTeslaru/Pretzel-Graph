@@ -20,7 +20,7 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
         ancestorIsLast: boolean[],
     ): Tree.Branch => {
         const path = [...parentBranch.path, key]
-        const pathString = path.join(".") as Tree.Branch.PathString
+        const pathString = path.join("/") as Tree.Branch.PathString
 
         const branch: Tree.Branch = {
             key,
@@ -50,7 +50,7 @@ export const buildTree = (dummyTree: Tree.Dummy.Branch): Tree => {
             branch.childBranches = childBranches
         }
 
-        tree[key] = branch
+        tree[pathString] = branch
         return branch
     }
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Tree } from '@/components/Tree/Tree'
+import { Tree } from '@/components/Tree'
 import { ScrollArea, SearchInput } from '@pretzel-graph/standard-ui/foundations'
 import type { FileSystemNodeData } from '../../../actions'
 import { LibrarySDK } from '../../../sdk'

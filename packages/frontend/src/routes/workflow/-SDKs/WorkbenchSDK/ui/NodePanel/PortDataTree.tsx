@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Tree } from '@/components/Tree/Tree'
+import { Tree } from '@/components/Tree'
 import { projectionsToDummyTree } from '@/components/Tree/toTree'
 import type { Tree as TreeType } from '@/components/Tree/domain'
 import type { Execution, Foundations } from '@pretzel-graph/shared/domain'
