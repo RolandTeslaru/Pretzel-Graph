@@ -2,22 +2,22 @@ import type { Workflow } from "../../../Workflow";
 import type { Document } from "../index";
 
 export interface DependencySelectors {
-    doesNodeHaveUpdate: (state: Document, nodeId: Workflow.Node.Id) => boolean
+    doesNodeHaveUpdate: (document: Document, nodeId: Workflow.Node.Id) => boolean
     published: {
-        get:           (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication | null
-        getUpdateInfo: (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
+        get:           (document: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication | null
+        getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
     }
     draft: {
-        get:           (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft | null
-        getUpdateInfo: (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
+        get:           (document: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft | null
+        getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
     }
-    get: (state: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => Workflow.Dependency | null
-    hasUpdate: (state: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => boolean
+    get: (document: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => Workflow.Dependency | null
+    hasUpdate: (document: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => boolean
 }
 
 export const dependencySelectors: DependencySelectors = {
-    doesNodeHaveUpdate: (s, nodeId) => {
-        const node = s.data.nodes[nodeId];
+    doesNodeHaveUpdate: (d, nodeId) => {
+        const node = d.data.nodes[nodeId];
         if (!node?.dependencyRef) 
             return false;
         
@@ -25,27 +25,27 @@ export const dependencySelectors: DependencySelectors = {
         if(!workflowId) 
             return false
         if (mode === "publication") 
-            return workflowId in s.dependencyUpdates.published;
-        return workflowId in s.dependencyUpdates.draft;
+            return workflowId in d.dependencyUpdates.published;
+        return workflowId in d.dependencyUpdates.draft;
     },
-    hasUpdate: (s, workflowId, mode) => {
+    hasUpdate: (d, workflowId, mode) => {
         if(mode === "publication")
-            return workflowId in s.dependencyUpdates.published
+            return workflowId in d.dependencyUpdates.published
         else 
-            return workflowId in s.dependencyUpdates.draft;
+            return workflowId in d.dependencyUpdates.draft;
     },
     published: {
-        get:           (s, workflowId) => s.data.dependencies.published[workflowId] ?? null,
-        getUpdateInfo: (s, workflowId) => s.dependencyUpdates.published[workflowId] ?? null,
+        get:           (d, workflowId) => d.data.dependencies.published[workflowId] ?? null,
+        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.published[workflowId] ?? null,
     },
     draft: {
-        get:           (s, workflowId) => s.data.dependencies.draft[workflowId] ?? null,
-        getUpdateInfo: (s, workflowId) => s.dependencyUpdates.draft[workflowId] ?? null,
+        get:           (d, workflowId) => d.data.dependencies.draft[workflowId] ?? null,
+        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.draft[workflowId] ?? null,
     },
-    get: (s, workflowId, mode) => {
+    get: (d, workflowId, mode) => {
         if(mode === "draft")
-            return s.selectors.dependency.draft.get(s, workflowId)
+            return d.selectors.dependency.draft.get(d, workflowId)
         else
-            return s.selectors.dependency.published.get(s, workflowId)
+            return d.selectors.dependency.published.get(d, workflowId)
     }
 }

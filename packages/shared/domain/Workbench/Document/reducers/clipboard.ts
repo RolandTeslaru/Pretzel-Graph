@@ -3,7 +3,7 @@ import type { Document } from "../index";
 import type { ClipboardPayload } from "../clipboard-payload";
 
 export const clipboardReducers: ClipboardReducers = {
-    pasteFromPayload: (s, payload, mousePosToCanvas) => {
+    pasteFromPayload: (d, payload, mousePosToCanvas) => {
         const newNodeIds = new Map<Workflow.Node.Id, Workflow.Node.Id>()
 
         // 1. Calculate the bounding box top-left corner
@@ -43,7 +43,7 @@ export const clipboardReducers: ClipboardReducers = {
                 };
             }
 
-            const newNode = s.reducers.node.duplicate(s, node, targetPos, {
+            const newNode = d.reducers.node.duplicate(d, node, targetPos, {
                 staticValues:          payload.staticValues[node.id],
                 fieldExpressions:      payload.fieldExpressions?.[node.id],
                 credentialInstanceIds: payload.credentialInstanceIds[node.id],
@@ -58,7 +58,7 @@ export const clipboardReducers: ClipboardReducers = {
                 console.error(`Edge ${edge.id} not found`)
                 return
             }
-            s.reducers.edge.create(s, {
+            d.reducers.edge.create(d, {
                 source: newSourceNodeId,
                 sourceHandle: edge.source.portId,
                 target: newTargetNodeId,
@@ -69,5 +69,5 @@ export const clipboardReducers: ClipboardReducers = {
 }
 
 type ClipboardReducers = {
-    pasteFromPayload: (state: Document, payload: ClipboardPayload, position?: { x: number, y: number }) => void
+    pasteFromPayload: (document: Document, payload: ClipboardPayload, position?: { x: number, y: number }) => void
 }

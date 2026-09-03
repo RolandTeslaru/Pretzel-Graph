@@ -6,7 +6,6 @@ import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
 
-type S       = Document
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
 
@@ -18,19 +17,19 @@ const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
 ])
 
 export const fieldReducers: FieldReducers = {
-    setValue: (s, nodeId, fieldId, value) => {
-        s.isDirty = true;
-        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+    setValue: (d, nodeId, fieldId, value) => {
+        d.isDirty = true;
+        const staticValues = d.reducers.node.ensureStaticValues(d, nodeId)
         const cur  = staticValues[fieldId]
         const next = typeof value === "function" ? value(cur as any) : value
         staticValues[fieldId] = next
     },
-    clearDependentFields: (s, nodeId, changedFieldId) => {
-        const node = s.selectors.node.get(s, nodeId)
+    clearDependentFields: (d, nodeId, changedFieldId) => {
+        const node = d.selectors.node.get(d, nodeId)
         if (!node) return
 
-        const fields = s.selectors.node.getFields(s, nodeId)
-        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+        const fields = d.selectors.node.getFields(d, nodeId)
+        const staticValues = d.reducers.node.ensureStaticValues(d, nodeId)
 
         for (const sibling of fields) {
             if (
@@ -39,19 +38,19 @@ export const fieldReducers: FieldReducers = {
                 sibling.dependsOn.includes(changedFieldId)
             ) {
                 staticValues[sibling.id] = { mode: "list", value: "" }
-                s.isDirty = true
+                d.isDirty = true
             }
         }
     },
-    validate: (s, nodeId, field) => {
-        const issue = Validation.Issue.Field.check(field, nodeId, s.data)
+    validate: (d, nodeId, field) => {
+        const issue = Validation.Issue.Field.check(field, nodeId, d.data)
 
         if (issue) {
-            s.issues.nodes[nodeId].fields[field.id] = issue;
+            d.issues.nodes[nodeId].fields[field.id] = issue;
             return true;
         }
 
-        delete s.issues.nodes[nodeId]?.fields?.[field.id];
+        delete d.issues.nodes[nodeId]?.fields?.[field.id];
 
         return false;
     },
@@ -63,8 +62,8 @@ export const fieldReducers: FieldReducers = {
      * are what keep it true — without them a value could be stringified twice and accumulate an
      * escaping layer on every toggle.
      */
-    setIsExpression: (s, nodeId, fieldId, value) => {
-        const field = s.selectors.field.get(s, nodeId, fieldId)
+    setIsExpression: (d, nodeId, fieldId, value) => {
+        const field = d.selectors.field.get(d, nodeId, fieldId)
         if (!field) return;
 
         if (!EXPRESSION_CAPABLE_VARIANTS.has(field.variant)) {
@@ -77,14 +76,14 @@ export const fieldReducers: FieldReducers = {
             return;
         }
 
-        const expressionOverrides = (s.data.fieldExpressions[nodeId] ??= {})
+        const expressionOverrides = (d.data.fieldExpressions[nodeId] ??= {})
 
         // Re-encoding is only safe on an actual mode change — re-running it in the mode we're
         // already in is what corrupted values before the flag was persisted.
-        if (s.selectors.field.usesExpression(s, nodeId, field) === value)
+        if (d.selectors.field.usesExpression(d, nodeId, field) === value)
             return;
 
-        const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
+        const staticValues = d.reducers.node.ensureStaticValues(d, nodeId)
         const current = staticValues[fieldId]
 
         if (value) {
@@ -112,7 +111,7 @@ export const fieldReducers: FieldReducers = {
         }
 
         expressionOverrides[fieldId] = value
-        s.isDirty = true;
+        d.isDirty = true;
     },
     variadic:  fieldVariadicReducers,
     condition: fieldConditionReducers,
@@ -122,23 +121,23 @@ export const fieldReducers: FieldReducers = {
 
 export interface FieldReducers {
     setValue: (
-        s: S,
+        document: Document,
         nodeId: NodeId,
         fieldId: FieldId,
         next: Foundations.Field.Value | ((value: Foundations.Field.Value) => Foundations.Field.Value)
     ) => void
     clearDependentFields: (
-        s: S,
+        document: Document,
         nodeId: NodeId,
         changedFieldId: FieldId,
     ) => void
     validate: (
-        s: S,
+        document: Document,
         nodeId: NodeId,
         field: Foundations.Field
     ) => boolean
     setIsExpression: (
-        s: S,
+        document: Document,
         nodeId: NodeId,
         fieldId: FieldId,
         value: boolean

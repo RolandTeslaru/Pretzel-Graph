@@ -4,43 +4,43 @@ import type { Workflow } from "../../../Workflow";
 import type { Document } from "../index";
 
 export const credentialReducers: CredentialReducers = {
-    setInstance: (s, nodeId, templateId, instanceId) => {
-        s.isDirty = true;
-        if (!s.data.credentialInstanceIds[nodeId])
-            s.data.credentialInstanceIds[nodeId] = {};
+    setInstance: (d, nodeId, templateId, instanceId) => {
+        d.isDirty = true;
+        if (!d.data.credentialInstanceIds[nodeId])
+            d.data.credentialInstanceIds[nodeId] = {};
         if (instanceId === null) {
-            delete s.data.credentialInstanceIds[nodeId][templateId];
+            delete d.data.credentialInstanceIds[nodeId][templateId];
         } else {
-            s.data.credentialInstanceIds[nodeId][templateId] = instanceId;
+            d.data.credentialInstanceIds[nodeId][templateId] = instanceId;
         }
 
-        s.reducers.credential.validate(s, nodeId, templateId);
+        d.reducers.credential.validate(d, nodeId, templateId);
     },
-    validate: (s, nodeId, templateId) => {
-        const template = s.selectors.credential.getTemplate(s, nodeId, templateId);
+    validate: (d, nodeId, templateId) => {
+        const template = d.selectors.credential.getTemplate(d, nodeId, templateId);
         if (!template) return false;
 
-        const issue = Validation.Issue.Credential.check(template, nodeId, s.data);
+        const issue = Validation.Issue.Credential.check(template, nodeId, d.data);
         if (issue) {
-            s.issues.nodes[nodeId] ??= { fields: {}, inputs: {}, credentials: {} };
-            s.issues.nodes[nodeId].credentials[templateId] = issue;
+            d.issues.nodes[nodeId] ??= { fields: {}, inputs: {}, credentials: {} };
+            d.issues.nodes[nodeId].credentials[templateId] = issue;
             return true;
         }
 
-        delete s.issues.nodes[nodeId]?.credentials?.[templateId];
+        delete d.issues.nodes[nodeId]?.credentials?.[templateId];
         return false;
     },
 }
 
 type CredentialReducers = {
     setInstance: (
-        state: Document,
+        document: Document,
         nodeId: Workflow.Node.Id,
         templateId: Vault.Credential.Template.Id,
         instanceId: Vault.Credential.Instance.Id | null
     ) => void
     validate: (
-        state: Document,
+        document: Document,
         nodeId: Workflow.Node.Id,
         templateId: Vault.Credential.Template.Id
     ) => boolean

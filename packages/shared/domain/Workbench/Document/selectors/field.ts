@@ -10,51 +10,51 @@ import type { Workflow } from "../../../Workflow";
 import { nodeSelectors } from "./node";
 
 export interface FieldSelectors {
-    get            : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
-    getValue       : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
-    getIssue       : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
-    getValues      : (state: Document, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
-    usesExpression : (state: Document, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
+    get            : (document: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
+    getValue       : (document: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
+    getIssue       : (document: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
+    getValues      : (document: Document, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
+    usesExpression : (document: Document, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
     condition      : ConditionSelectors
     caseList       : CaseListSelectors
 }
 
 // Standalone so `usesExpression` can reuse it — referencing it through `fieldSelectors` from
 // inside the object's own initializer makes the whole literal circularly inferred.
-const getField: FieldSelectors["get"] = (s, nodeId, fieldId) => {
-    const node = s.data.nodes[nodeId]
+const getField: FieldSelectors["get"] = (d, nodeId, fieldId) => {
+    const node = d.data.nodes[nodeId]
     if (!node) return null;
 
-    return nodeSelectors.getFields(s, nodeId).find(f => f.id === fieldId) ?? null;
+    return nodeSelectors.getFields(d, nodeId).find(f => f.id === fieldId) ?? null;
 }
 
 export const fieldSelectors: FieldSelectors = {
     get: getField,
-    getValue: (s, nodeId, fieldId, fallback = null) => s.data.staticValues[nodeId]?.[fieldId] ?? fallback,
-    getIssue: (s, nodeId, fieldId) => s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
+    getValue: (d, nodeId, fieldId, fallback = null) => d.data.staticValues[nodeId]?.[fieldId] ?? fallback,
+    getIssue: (d, nodeId, fieldId) => d.issues.nodes[nodeId]?.fields[fieldId] ?? null,
 
     // Whether this field's stored value is airlock source rather than a literal. Takes the field
     // itself when the caller already has it — renderers do, and looking it up would rescan the
     // node's field array on every store change. `defaultValue` covers an unresolvable field id.
-    usesExpression: (s, nodeId, field, defaultValue = false) => {
+    usesExpression: (d, nodeId, field, defaultValue = false) => {
         const resolved = typeof field === "string"
-            ? getField(s, nodeId, field)
+            ? getField(d, nodeId, field)
             : field
 
         if (!resolved) return defaultValue;
 
-        return Field.usesExpression(resolved, s.data.fieldExpressions[nodeId]?.[resolved.id])
+        return Field.usesExpression(resolved, d.data.fieldExpressions[nodeId]?.[resolved.id])
     },
 
-    getValues: (s, nodeId) => {
-        const node = s.data.nodes[nodeId]
+    getValues: (d, nodeId) => {
+        const node = d.data.nodes[nodeId]
         if (!node) return {};
 
         // Bucket-optional: un-seeded nodes have no staticValues entry, so merge each field's
         // initialValue directly from the blueprint.
-        const staticValues = s.data.staticValues[nodeId] ?? {}
+        const staticValues = d.data.staticValues[nodeId] ?? {}
         const fieldsValues: Record<string, any> = {}
-        nodeSelectors.getFields(s, nodeId).forEach(field => {
+        nodeSelectors.getFields(d, nodeId).forEach(field => {
             fieldsValues[field.id] = staticValues[field.id] ?? field.initialValue;
         })
 

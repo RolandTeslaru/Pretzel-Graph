@@ -18,9 +18,9 @@ import type { Workflow } from "../../../Workflow";
 
 export interface DocumentSelectors {
     /** Distinct base blueprint ids of the workflow's own (top-level) nodes — excludes nested dependency snapshots. */
-    getBlueprintIds: (state: Document, workflow: Workflow) => Foundations.Blueprint.Id[]
+    getBlueprintIds: (document: Document, workflow: Workflow) => Foundations.Blueprint.Id[]
     /** Resolved blueprint per node (keyed by reconciledBlueprintId ?? blueprintId), for validation. */
-    getBlueprints  : (state: Document) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
+    getBlueprints  : (document: Document) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
     blueprint      : BlueprintSelectors
     node           : NodeSelectors
     edge           : EdgeSelectors
@@ -47,11 +47,11 @@ export const documentSelectors: DocumentSelectors = {
         }
         return [...ids]
     },
-    getBlueprints: (s) => {
+    getBlueprints: (d) => {
         const map: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
-        for (const node of Object.values(s.data.nodes)) {
+        for (const node of Object.values(d.data.nodes)) {
             const id = node.reconciledBlueprintId ?? node.blueprintId
-            const bp = s.blueprints[id]
+            const bp = d.blueprints[id]
             if (bp) map[id] = bp
         }
         return map

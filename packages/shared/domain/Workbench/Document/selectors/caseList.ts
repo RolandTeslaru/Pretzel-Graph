@@ -7,29 +7,29 @@ type NodeId = Workflow.Node.Id
 type CaseListValue = Field.CaseList.Value
 
 export interface CaseListSelectors {
-    getValue:      (state: Document, nodeId: NodeId, fieldId: Field.Id) => CaseListValue | null
-    getEntry:      (state: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => Field.CaseList.Entry | null
-    getEntryIndex: (state: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => number
-    getPortIds:    (state: Document, nodeId: NodeId, fieldId: Field.Id) => Port.Output.Id[]
+    getValue:      (document: Document, nodeId: NodeId, fieldId: Field.Id) => CaseListValue | null
+    getEntry:      (document: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => Field.CaseList.Entry | null
+    getEntryIndex: (document: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => number
+    getPortIds:    (document: Document, nodeId: NodeId, fieldId: Field.Id) => Port.Output.Id[]
 }
 
 export const caseListSelectors = {
-    getValue: (s, nodeId, fieldId) =>
-        s.data.staticValues[nodeId]?.[fieldId]
-            ?? (s.selectors.field.get(s, nodeId, fieldId) as Field.CaseList | null)?.initialValue
+    getValue: (d, nodeId, fieldId) =>
+        d.data.staticValues[nodeId]?.[fieldId]
+            ?? (d.selectors.field.get(d, nodeId, fieldId) as Field.CaseList | null)?.initialValue
             ?? null,
-    getEntry: (s, nodeId, fieldId, portId) => {
-        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+    getEntry: (d, nodeId, fieldId, portId) => {
+        const caseList = caseListSelectors.getValue(d, nodeId, fieldId)
         if (!caseList) return null
         return caseList.find((entry: Field.CaseList.Entry) => entry.portId === portId) ?? null
     },
-    getEntryIndex: (s, nodeId, fieldId, portId) => {
-        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+    getEntryIndex: (d, nodeId, fieldId, portId) => {
+        const caseList = caseListSelectors.getValue(d, nodeId, fieldId)
         if (!caseList) return -1
         return caseList.findIndex((entry: Field.CaseList.Entry) => entry.portId === portId)
     },
-    getPortIds: (s, nodeId, fieldId) => {
-        const caseList = caseListSelectors.getValue(s, nodeId, fieldId)
+    getPortIds: (d, nodeId, fieldId) => {
+        const caseList = caseListSelectors.getValue(d, nodeId, fieldId)
         return caseList?.map((entry: Field.CaseList.Entry) => entry.portId) ?? []
     },
 } as CaseListSelectors

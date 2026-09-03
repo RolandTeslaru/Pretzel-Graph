@@ -7,28 +7,28 @@ import type { Document } from "../index";
 import { nodeSelectors } from './node';
 
 export interface InputSelectors {
-    get:           (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
-    hasEdge:       (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => boolean
-    getIssue:      (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Validation.Issue.Input | null
-    getProjection: (state: Document, nodeId: Workflow.Node.Id, inputPortId: Port.Input.Id, session: Execution.Session) => Foundations.Projection | undefined
+    get:           (document: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
+    hasEdge:       (document: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => boolean
+    getIssue:      (document: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Validation.Issue.Input | null
+    getProjection: (document: Document, nodeId: Workflow.Node.Id, inputPortId: Port.Input.Id, session: Execution.Session) => Foundations.Projection | undefined
 }
 
 export const inputSelectors: InputSelectors = {
-    get: (s, nodeId, inputId) => {
-        const node = s.data.nodes[nodeId]
+    get: (d, nodeId, inputId) => {
+        const node = d.data.nodes[nodeId]
         if (!node) return null;
 
-        const inputs = nodeSelectors.getInputs(s, nodeId);
+        const inputs = nodeSelectors.getInputs(d, nodeId);
 
         return inputs.find(i => i.id === inputId) ?? null;
     },
-    hasEdge: (s, nodeId, inputId) => !!s.cache.inputEdgesByPort[nodeId][inputId],
-    getIssue: (s, nodeId, inputId) => s.issues.nodes[nodeId]?.inputs[inputId] ?? null,
-    getProjection: (s, nodeId, inputPortId, session) => {
-        const edgeId = s.cache.inputEdgesByPort[nodeId]?.[inputPortId];
+    hasEdge: (d, nodeId, inputId) => !!d.cache.inputEdgesByPort[nodeId][inputId],
+    getIssue: (d, nodeId, inputId) => d.issues.nodes[nodeId]?.inputs[inputId] ?? null,
+    getProjection: (d, nodeId, inputPortId, session) => {
+        const edgeId = d.cache.inputEdgesByPort[nodeId]?.[inputPortId];
         if (!edgeId) return undefined;
 
-        const edge = s.cache.edges[edgeId];
+        const edge = d.cache.edges[edgeId];
         if (!edge) return undefined;
 
         return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];

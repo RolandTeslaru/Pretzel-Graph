@@ -5,20 +5,20 @@ import type { Document } from "../index";
 // variant they resolve to. The shelf keeps the catalogue of what is installed; derivatives
 // are folded per workflow and live only here.
 export const blueprintReducers: BlueprintReducers = {
-    register: (s, blueprint) => {
-        s.blueprints[blueprint.id] = blueprint;
+    register: (d, blueprint) => {
+        d.blueprints[blueprint.id] = blueprint;
     },
     // A derived blueprint keeps its base's `id`, so its reconciled id has to be given.
-    registerAs: (s, blueprintId, blueprint) => {
-        s.blueprints[blueprintId] = blueprint;
+    registerAs: (d, blueprintId, blueprint) => {
+        d.blueprints[blueprintId] = blueprint;
     },
-    registerMany: (s, blueprints) => {
-        Object.assign(s.blueprints, blueprints);
+    registerMany: (d, blueprints) => {
+        Object.assign(d.blueprints, blueprints);
     },
 }
 
 export interface BlueprintReducers {
-    register     : (s: Document, blueprint: Foundations.Blueprint) => void;
-    registerAs   : (s: Document, blueprintId: Foundations.Blueprint.Id, blueprint: Foundations.Blueprint) => void;
-    registerMany : (s: Document, blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => void;
+    register     : (document: Document, blueprint: Foundations.Blueprint) => void;
+    registerAs   : (document: Document, blueprintId: Foundations.Blueprint.Id, blueprint: Foundations.Blueprint) => void;
+    registerMany : (document: Document, blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>) => void;
 }

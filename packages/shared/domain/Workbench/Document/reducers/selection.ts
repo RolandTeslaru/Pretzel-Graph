@@ -8,19 +8,19 @@ export interface Selection {
 }
 
 export const selectionReducers: SelectionReducers = {
-    duplicate: (s, selection) => {
+    duplicate: (d, selection) => {
         const selectedNodeIds = new Set(selection.nodeIds);
         const newNodeIdMap = new Map<Workflow.Node.Id, Workflow.Node.Id>();
 
         selection.nodeIds.forEach(nodeId => {
-            const node = s.data.nodes[nodeId];
+            const node = d.data.nodes[nodeId];
             if (!node) return;
-            const newNode = s.reducers.node.duplicate(s, node, undefined);
+            const newNode = d.reducers.node.duplicate(d, node, undefined);
             newNodeIdMap.set(node.id, newNode.id);
         });
 
         selection.edgeIds.forEach(edgeId => {
-            const edge = s.cache.edges[edgeId];
+            const edge = d.cache.edges[edgeId];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) || !selectedNodeIds.has(edge.target.nodeId)) return;
 
@@ -28,7 +28,7 @@ export const selectionReducers: SelectionReducers = {
             const newTargetId = newNodeIdMap.get(edge.target.nodeId);
             if (!newSourceId || !newTargetId) return;
 
-            s.reducers.edge.create(s, {
+            d.reducers.edge.create(d, {
                 source: newSourceId,
                 sourceHandle: edge.source.portId,
                 target: newTargetId,
@@ -36,31 +36,31 @@ export const selectionReducers: SelectionReducers = {
             });
         });
     },
-    delete: (s, selection) => {
+    delete: (d, selection) => {
         const selectedNodeIds = new Set(selection.nodeIds);
 
         selection.nodeIds.forEach(nodeId => {
-            s.reducers.node.remove(s, nodeId);
+            d.reducers.node.remove(d, nodeId);
         });
 
         // Remove selected edges whose endpoints weren't deleted via node removal
         selection.edgeIds.forEach(edgeId => {
-            const edge = s.cache.edges[edgeId];
+            const edge = d.cache.edges[edgeId];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) && !selectedNodeIds.has(edge.target.nodeId)) {
-                s.reducers.edge.remove(s, edgeId);
+                d.reducers.edge.remove(d, edgeId);
             }
         });
     },
-    disable: (s, selection, isDisabled) => {
+    disable: (d, selection, isDisabled) => {
         selection.nodeIds.forEach(nodeId => {
-            s.reducers.node.setDisabled(s, nodeId, isDisabled);
+            d.reducers.node.setDisabled(d, nodeId, isDisabled);
         });
     },
 }
 
 export interface SelectionReducers {
-    duplicate : (state: Document, selection: Selection) => void;
-    delete    : (state: Document, selection: Selection) => void;
-    disable   : (state: Document, selection: Selection, isDisabled: boolean) => void;
+    duplicate : (document: Document, selection: Selection) => void;
+    delete    : (document: Document, selection: Selection) => void;
+    disable   : (document: Document, selection: Selection, isDisabled: boolean) => void;
 }

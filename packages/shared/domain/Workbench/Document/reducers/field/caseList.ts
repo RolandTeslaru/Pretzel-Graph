@@ -2,7 +2,6 @@ import type { Document } from "../../index";
 import type { Workflow } from "../../../../Workflow";
 import type { Foundations } from "../../../../Foundations";
 
-type S             = Document
 type NodeId        = Workflow.Node.Id
 type FieldId       = Foundations.Field.Id
 type PortId        = Foundations.Port.Output.Id
@@ -10,13 +9,13 @@ type CaseListEntry = Foundations.Field.CaseList.Entry
 type EntryValue    = Foundations.Field.CaseList.Entry["value"]
 
 const replaceCaseListEntry = (
-    s: S,
+    d: Document,
     nodeId: NodeId,
     fieldId: FieldId,
     portId: PortId,
     entry: CaseListEntry
 ) => {
-    const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
+    const caseList = d.selectors.field.caseList.getValue(d, nodeId, fieldId)!
     const index = caseList.findIndex(item => item.portId === portId)
     if (index === -1)
         throw new Error(`CaseList entry ${portId} not found in field ${fieldId} on node ${nodeId}`)
@@ -24,28 +23,28 @@ const replaceCaseListEntry = (
 }
 
 export const fieldCaseListReducers: FieldCaseListReducers = {
-    addEntry: (s, nodeId, fieldId, entry) => {
-        const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
-        s.reducers.node.ensureStaticValues(s, nodeId)[fieldId] = [...caseList, entry]
-        s.isDirty = true
+    addEntry: (d, nodeId, fieldId, entry) => {
+        const caseList = d.selectors.field.caseList.getValue(d, nodeId, fieldId)!
+        d.reducers.node.ensureStaticValues(d, nodeId)[fieldId] = [...caseList, entry]
+        d.isDirty = true
     },
-    removeEntry: (s, nodeId, fieldId, portId) => {
-        const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
-        s.reducers.node.ensureStaticValues(s, nodeId)[fieldId] = caseList.filter(entry => entry.portId !== portId)
-        s.isDirty = true
+    removeEntry: (d, nodeId, fieldId, portId) => {
+        const caseList = d.selectors.field.caseList.getValue(d, nodeId, fieldId)!
+        d.reducers.node.ensureStaticValues(d, nodeId)[fieldId] = caseList.filter(entry => entry.portId !== portId)
+        d.isDirty = true
     },
-    setLabel: (s, nodeId, fieldId, portId, label) => {
-        const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
-        replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry, label })
-        s.isDirty = true
+    setLabel: (d, nodeId, fieldId, portId, label) => {
+        const entry = d.selectors.field.caseList.getEntry(d, nodeId, fieldId, portId)!
+        replaceCaseListEntry(d, nodeId, fieldId, portId, { ...entry, label })
+        d.isDirty = true
     },
-    setValue: (s, nodeId, fieldId, portId, value) => {
-        const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
-        replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry, value })
-        s.isDirty = true
+    setValue: (d, nodeId, fieldId, portId, value) => {
+        const entry = d.selectors.field.caseList.getEntry(d, nodeId, fieldId, portId)!
+        replaceCaseListEntry(d, nodeId, fieldId, portId, { ...entry, value })
+        d.isDirty = true
     },
-    setIsExpression: (s, nodeId, fieldId, portId, isExpression) => {
-        const entry = s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId)!
+    setIsExpression: (d, nodeId, fieldId, portId, isExpression) => {
+        const entry = d.selectors.field.caseList.getEntry(d, nodeId, fieldId, portId)!
         let value: EntryValue = entry.value
 
         if (isExpression) {
@@ -62,16 +61,16 @@ export const fieldCaseListReducers: FieldCaseListReducers = {
             }
         }
 
-        replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry, value, isExpression: isExpression || undefined })
-        s.isDirty = true
+        replaceCaseListEntry(d, nodeId, fieldId, portId, { ...entry, value, isExpression: isExpression || undefined })
+        d.isDirty = true
     },
 }
 
 
 export interface FieldCaseListReducers {
-    addEntry      : (s: S, nodeId: NodeId, fieldId: FieldId, entry: CaseListEntry) => void
-    removeEntry   : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId) => void
-    setLabel      : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, label: string) => void
-    setValue      : (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, value: EntryValue) => void
-    setIsExpression: (s: S, nodeId: NodeId, fieldId: FieldId, portId: PortId, isExpression: boolean) => void
+    addEntry      : (document: Document, nodeId: NodeId, fieldId: FieldId, entry: CaseListEntry) => void
+    removeEntry   : (document: Document, nodeId: NodeId, fieldId: FieldId, portId: PortId) => void
+    setLabel      : (document: Document, nodeId: NodeId, fieldId: FieldId, portId: PortId, label: string) => void
+    setValue      : (document: Document, nodeId: NodeId, fieldId: FieldId, portId: PortId, value: EntryValue) => void
+    setIsExpression: (document: Document, nodeId: NodeId, fieldId: FieldId, portId: PortId, isExpression: boolean) => void
 }

@@ -4,8 +4,8 @@ import { Port } from "../../../Foundations/Port";
 
 // TODO: rename handles to ports
 export const edgeReducers: EdgeReducers = {
-    create: (s, conn) => {
-        s.isDirty = true;
+    create: (d, conn) => {
+        d.isDirty = true;
         
         const { 
             source: sourceNodeId, 
@@ -17,8 +17,8 @@ export const edgeReducers: EdgeReducers = {
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
             throw new Error(`Invalid edge connection. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`);
         
-        const sourceOutputs = s.selectors.node.getOutputs(s, sourceNodeId);
-        const targetInputs = s.selectors.node.getInputs(s, targetNodeId);
+        const sourceOutputs = d.selectors.node.getOutputs(d, sourceNodeId);
+        const targetInputs = d.selectors.node.getInputs(d, targetNodeId);
 
         const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
         const targetPort = targetInputs.find(i => i.id === targetPortId);
@@ -30,11 +30,11 @@ export const edgeReducers: EdgeReducers = {
             // throw new Error(`Cannot create edge, source or target port not found. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
         }
         
-        const isFirstArcBetweenNodes = s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false; 
+        const isFirstArcBetweenNodes = d.selectors.graph.hasArcBetween(d, sourceNodeId, targetNodeId) === false; 
 
         const edgeId = edgeReducers.createId(sourceNodeId, sourcePortId, targetNodeId, targetPortId)
 
-        if (s.cache.edges[edgeId])
+        if (d.cache.edges[edgeId])
             throw new Error(`Edge ${edgeId} already exists. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`)
 
         const newEdge: Workflow.Edge = {
@@ -49,54 +49,54 @@ export const edgeReducers: EdgeReducers = {
             }
         }
 
-        s.data.edges.push(edgeId)
+        d.data.edges.push(edgeId)
 
-        s.reducers.cache.addEdge(s, newEdge)
+        d.reducers.cache.addEdge(d, newEdge)
 
-        s.reducers.input.validate(s, targetNodeId, targetPort);
+        d.reducers.input.validate(d, targetNodeId, targetPort);
 
         if(
-            s.selectors.node.isSourceNode(s, sourceNodeId) === false && 
-            s.selectors.node.isSinkNode(s, targetNodeId) === false &&
+            d.selectors.node.isSourceNode(d, sourceNodeId) === false && 
+            d.selectors.node.isSinkNode(d, targetNodeId) === false &&
             isFirstArcBetweenNodes
         )
-            if(doesCycleExistBetweenNodes(sourceNodeId, targetNodeId, s.cache))
-                s.cyclesDirty = true;
+            if(doesCycleExistBetweenNodes(sourceNodeId, targetNodeId, d.cache))
+                d.cyclesDirty = true;
 
         if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-            s.reducers.node.polymorphism.resolveGroup(s, targetNodeId, targetPort, sourcePort.variant);
+            d.reducers.node.polymorphism.resolveGroup(d, targetNodeId, targetPort, sourcePort.variant);
 
         else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-            s.reducers.node.polymorphism.resolveGroup(s, sourceNodeId, sourcePort, targetPort.variant);
+            d.reducers.node.polymorphism.resolveGroup(d, sourceNodeId, sourcePort, targetPort.variant);
 
         return newEdge
     },
-    remove: (s, edgeId) => {
-        s.isDirty = true;
+    remove: (d, edgeId) => {
+        d.isDirty = true;
 
-        const edge = s.cache.edges[edgeId];
+        const edge = d.cache.edges[edgeId];
         if (!edge)
             throw new Error(`Cannot remove edge ${edgeId}, edge not found.`)
 
-        const didCycleExist = doesCycleExistBetweenNodes(edge.source.nodeId, edge.target.nodeId, s.cache)
+        const didCycleExist = doesCycleExistBetweenNodes(edge.source.nodeId, edge.target.nodeId, d.cache)
 
 
         // Always remove the edge + cache references first. Port/node lookups can
         // fail (e.g. during node deletion/recreate/reconcile), but cache must stay consistent.
-        const idx = s.data.edges.indexOf(edgeId);
-        if (idx !== -1) s.data.edges.splice(idx, 1);
-        s.reducers.cache.deleteEdge(s, edge);
+        const idx = d.data.edges.indexOf(edgeId);
+        if (idx !== -1) d.data.edges.splice(idx, 1);
+        d.reducers.cache.deleteEdge(d, edge);
 
         const sourceNodeId = edge.source.nodeId;
         const sourcePortId = edge.source.portId;
         const targetNodeId = edge.target.nodeId;
         const targetPortId = edge.target.portId;
 
-        const sourceNode = s.data.nodes[sourceNodeId]!;
-        const targetNode = s.data.nodes[targetNodeId]!;
+        const sourceNode = d.data.nodes[sourceNodeId]!;
+        const targetNode = d.data.nodes[targetNodeId]!;
 
-        const sourceOutputs = s.selectors.node.getOutputs(s, sourceNodeId);
-        const targetInputs = s.selectors.node.getInputs(s, targetNodeId);
+        const sourceOutputs = d.selectors.node.getOutputs(d, sourceNodeId);
+        const targetInputs = d.selectors.node.getInputs(d, targetNodeId);
 
         const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
         const targetPort = targetInputs.find(i => i.id === targetPortId);
@@ -108,32 +108,32 @@ export const edgeReducers: EdgeReducers = {
         }
 
         if (targetNode && targetPort)
-            s.reducers.input.validate(s, targetNodeId, targetPort);
+            d.reducers.input.validate(d, targetNodeId, targetPort);
 
         // Connecting two leafs, recompute and validate cycles
         if(
-            s.selectors.node.isSourceNode(s, sourceNodeId) === false && 
-            s.selectors.node.isSinkNode(s, targetNodeId) === false &&
-            s.selectors.graph.hasArcBetween(s, sourceNodeId, targetNodeId) === false
+            d.selectors.node.isSourceNode(d, sourceNodeId) === false && 
+            d.selectors.node.isSinkNode(d, targetNodeId) === false &&
+            d.selectors.graph.hasArcBetween(d, sourceNodeId, targetNodeId) === false
         )
             if(didCycleExist)
-                s.cyclesDirty = true;
+                d.cyclesDirty = true;
 
         // Unresolve polymorphic groups if no edges remain
         if (Port.isPolymorphic(targetPort) && targetPort.polymorphicGroupId)
-            if (!s.selectors.port.polymorphism.groupHasEdges(s, targetNodeId, targetPort.polymorphicGroupId))
-                s.reducers.node.polymorphism.unresolveGroup(s, targetNodeId, targetPort.polymorphicGroupId);
+            if (!d.selectors.port.polymorphism.groupHasEdges(d, targetNodeId, targetPort.polymorphicGroupId))
+                d.reducers.node.polymorphism.unresolveGroup(d, targetNodeId, targetPort.polymorphicGroupId);
 
         if (Port.isPolymorphic(sourcePort) && sourcePort.polymorphicGroupId)
-            if (!s.selectors.port.polymorphism.groupHasEdges(s, sourceNodeId, sourcePort.polymorphicGroupId))
-                s.reducers.node.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
+            if (!d.selectors.port.polymorphism.groupHasEdges(d, sourceNodeId, sourcePort.polymorphicGroupId))
+                d.reducers.node.polymorphism.unresolveGroup(d, sourceNodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId
 }
 
 type EdgeReducers = {
-    create: (state: Document, conn: Document.DriverConnection) => Workflow.Edge | undefined
-    remove: (state: Document, edgeId: Workflow.Edge.Id) => void
+    create: (document: Document, conn: Document.DriverConnection) => Workflow.Edge | undefined
+    remove: (document: Document, edgeId: Workflow.Edge.Id) => void
     createId: typeof Workflow.Edge.createId
 }
 

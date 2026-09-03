@@ -3,92 +3,92 @@ import type { Document } from "../index";
 
 export const cacheReducers: INTERNAL_CacheReducers = {
     resolvedShape: {
-        recreate: (s, nodeId) => {
-            const node = s.data.nodes[nodeId];
+        recreate: (d, nodeId) => {
+            const node = d.data.nodes[nodeId];
             if (!node) {
-                delete s.cache.resolvedShape[nodeId];
+                delete d.cache.resolvedShape[nodeId];
                 return;
             }
 
-            const blueprint = s.selectors.blueprint.ofNode(s, node);
+            const blueprint = d.selectors.blueprint.ofNode(d, node);
             if (!blueprint) {
-                delete s.cache.resolvedShape[nodeId];
+                delete d.cache.resolvedShape[nodeId];
                 return;
             }
 
-            s.cache.resolvedShape[nodeId] = Workflow.resolveShape(s.data, node, blueprint);
+            d.cache.resolvedShape[nodeId] = Workflow.resolveShape(d.data, node, blueprint);
         },
-        recreateAll: (s) => {
-            s.cache.resolvedShape = {};
-            for (const nodeId of Object.keys(s.data.nodes) as Workflow.Node.Id[])
-                cacheReducers.resolvedShape.recreate(s, nodeId);
+        recreateAll: (d) => {
+            d.cache.resolvedShape = {};
+            for (const nodeId of Object.keys(d.data.nodes) as Workflow.Node.Id[])
+                cacheReducers.resolvedShape.recreate(d, nodeId);
         },
     },
-    ensureIncomingNodeEdges: (s, nodeId) => {
-        if (!s.cache.incomingEdgesMap[nodeId])
-            s.cache.incomingEdgesMap[nodeId] = {};
+    ensureIncomingNodeEdges: (d, nodeId) => {
+        if (!d.cache.incomingEdgesMap[nodeId])
+            d.cache.incomingEdgesMap[nodeId] = {};
 
-        return s.cache.incomingEdgesMap[nodeId];
+        return d.cache.incomingEdgesMap[nodeId];
     },
-    ensureOutgoingNodeEdges: (s, nodeId) => {
-        if (!s.cache.outgoingEdgesMap[nodeId])
-            s.cache.outgoingEdgesMap[nodeId] = {};
+    ensureOutgoingNodeEdges: (d, nodeId) => {
+        if (!d.cache.outgoingEdgesMap[nodeId])
+            d.cache.outgoingEdgesMap[nodeId] = {};
 
-        return s.cache.outgoingEdgesMap[nodeId];
+        return d.cache.outgoingEdgesMap[nodeId];
     },
-    deleteEdge: (s, { source, target, id: edgeId }) => {
-        delete s.cache.edges[edgeId];
+    deleteEdge: (d, { source, target, id: edgeId }) => {
+        delete d.cache.edges[edgeId];
 
-        const inNodes = cacheReducers.ensureIncomingNodeEdges(s, target.nodeId);
+        const inNodes = cacheReducers.ensureIncomingNodeEdges(d, target.nodeId);
         delete inNodes[source.nodeId]
 
-        const outNodes = cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId);
+        const outNodes = cacheReducers.ensureOutgoingNodeEdges(d, source.nodeId);
         delete outNodes[target.nodeId]
 
-        delete s.cache.inputEdgesByPort[target.nodeId][target.portId];
-        delete s.cache.outputEdgesByPort[source.nodeId][source.portId]
+        delete d.cache.inputEdgesByPort[target.nodeId][target.portId];
+        delete d.cache.outputEdgesByPort[source.nodeId][source.portId]
     },
-    addEdge: (s, newEdge) => {
+    addEdge: (d, newEdge) => {
         const { source, target, id: edgeId } = newEdge;
-        s.cache.edges[edgeId] = newEdge;
+        d.cache.edges[edgeId] = newEdge;
 
-        cacheReducers.ensureIncomingNodeEdges(s, target.nodeId)[source.nodeId] = edgeId;
-        cacheReducers.ensureOutgoingNodeEdges(s, source.nodeId)[target.nodeId] = edgeId
+        cacheReducers.ensureIncomingNodeEdges(d, target.nodeId)[source.nodeId] = edgeId;
+        cacheReducers.ensureOutgoingNodeEdges(d, source.nodeId)[target.nodeId] = edgeId
 
-        s.cache.inputEdgesByPort[target.nodeId][target.portId] = edgeId
-        s.cache.outputEdgesByPort[source.nodeId][source.portId] = edgeId
+        d.cache.inputEdgesByPort[target.nodeId][target.portId] = edgeId
+        d.cache.outputEdgesByPort[source.nodeId][source.portId] = edgeId
 
-        // Don't delete s.workflow.fieldValues[target.nodeId][target.portId] here
+        // Don't delete d.workflow.fieldValues[target.nodeId][target.portId] here
     },
-    deleteNode: (s, deletedNodeId) => {
-        delete s.cache.incomingEdgesMap[deletedNodeId];
-        delete s.cache.outgoingEdgesMap[deletedNodeId];
+    deleteNode: (d, deletedNodeId) => {
+        delete d.cache.incomingEdgesMap[deletedNodeId];
+        delete d.cache.outgoingEdgesMap[deletedNodeId];
 
-        delete s.cache.inputEdgesByPort[deletedNodeId];
-        delete s.cache.outputEdgesByPort[deletedNodeId];
-        delete s.cache.resolvedShape[deletedNodeId];
+        delete d.cache.inputEdgesByPort[deletedNodeId];
+        delete d.cache.outputEdgesByPort[deletedNodeId];
+        delete d.cache.resolvedShape[deletedNodeId];
     },
-    createNode: (s, newNode) => {
+    createNode: (d, newNode) => {
         const ingoerEdges = {}
         const outgoerEdges = {}
-        s.cache.incomingEdgesMap[newNode.id] = ingoerEdges
-        s.cache.outgoingEdgesMap[newNode.id] = outgoerEdges
+        d.cache.incomingEdgesMap[newNode.id] = ingoerEdges
+        d.cache.outgoingEdgesMap[newNode.id] = outgoerEdges
 
-        s.cache.inputEdgesByPort[newNode.id] = {}
-        s.cache.outputEdgesByPort[newNode.id] = {}
-        cacheReducers.resolvedShape.recreate(s, newNode.id);
+        d.cache.inputEdgesByPort[newNode.id] = {}
+        d.cache.outputEdgesByPort[newNode.id] = {}
+        cacheReducers.resolvedShape.recreate(d, newNode.id);
     }
 }
 
 type INTERNAL_CacheReducers = {
     resolvedShape: {
-        recreate: (state: Document, nodeId: Workflow.Node.Id) => void
-        recreateAll: (state: Document) => void
+        recreate: (document: Document, nodeId: Workflow.Node.Id) => void
+        recreateAll: (document: Document) => void
     }
-    ensureIncomingNodeEdges: (state: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
-    ensureOutgoingNodeEdges: (state: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
-    deleteEdge: (state: Document, edge: Workflow.Edge) => void
-    addEdge: (state: Document, newEdge: Workflow.Edge) => void
-    deleteNode: (state: Document, deletedNodeId: Workflow.Node.Id) => void
-    createNode: (state: Document, newNode: Workflow.Node.Raw) => void
+    ensureIncomingNodeEdges: (document: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
+    ensureOutgoingNodeEdges: (document: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
+    deleteEdge: (document: Document, edge: Workflow.Edge) => void
+    addEdge: (document: Document, newEdge: Workflow.Edge) => void
+    deleteNode: (document: Document, deletedNodeId: Workflow.Node.Id) => void
+    createNode: (document: Document, newNode: Workflow.Node.Raw) => void
 }

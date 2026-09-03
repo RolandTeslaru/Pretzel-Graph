@@ -3,24 +3,23 @@ import type { Document } from "../../index";
 import type { Workflow } from "../../../../Workflow";
 import type { Port } from "../../../../Foundations/Port";
 
-type S      = Document
 type NodeId = Workflow.Node.Id
 
 export const fieldVariadicReducers: FieldVariadicReducers = {
     // Appends a new slot to the variadic group by cloning the last port in the group
     // and incrementing its numeric suffix (e.g. input_1 → input_2).
-    add: (s, nodeId, groupId) => {
-        s.isDirty = true;
-        const node      = s.selectors.node.get(s, nodeId);
-        const blueprint = s.selectors.node.getBlueprint(s, nodeId);
+    add: (d, nodeId, groupId) => {
+        d.isDirty = true;
+        const node      = d.selectors.node.get(d, nodeId);
+        const blueprint = d.selectors.node.getBlueprint(d, nodeId);
         if (!blueprint)
             return;
 
         // Live ports only give us the slot count / last index. New slots are cloned from the
         // BASE blueprint port so they carry its pristine unresolved variant — cloning from the
         // resolved live port would bake the group's resolved variant into every new slot.
-        const inputs     = s.selectors.node.getInputs(s, nodeId).filter(i => i.groupId === groupId);
-        const outputs    = s.selectors.node.getOutputs(s, nodeId).filter(o => o.groupId === groupId);
+        const inputs     = d.selectors.node.getInputs(d, nodeId).filter(i => i.groupId === groupId);
+        const outputs    = d.selectors.node.getOutputs(d, nodeId).filter(o => o.groupId === groupId);
         const baseInput  = blueprint.inputs.find(i => i.groupId === groupId);
         const baseOutput = blueprint.outputs.find(o => o.groupId === groupId);
 
@@ -52,36 +51,36 @@ export const fieldVariadicReducers: FieldVariadicReducers = {
             node.addedOutputs.push(newOutput);
         }
 
-        s.reducers.cache.resolvedShape.recreate(s, nodeId);
+        d.reducers.cache.resolvedShape.recreate(d, nodeId);
     },
     // Removes the last slot in the variadic group. Guards against removing below
     // 1 slot so the group always retains at least one input and one output.
-    remove: (s, nodeId, groupId) => {
-        s.isDirty = true;
-        const node    = s.selectors.node.get(s, nodeId);
+    remove: (d, nodeId, groupId) => {
+        d.isDirty = true;
+        const node    = d.selectors.node.get(d, nodeId);
         const inputs  = node.addedInputs?.filter(i => i.groupId === groupId) ?? [];
         const outputs = node.addedOutputs?.filter(o => o.groupId === groupId) ?? [];
 
         if (inputs.length > 0) {
-            s.reducers.input.remove(s, nodeId, inputs[inputs.length - 1].id);
+            d.reducers.input.remove(d, nodeId, inputs[inputs.length - 1].id);
         }
         if (outputs.length > 0) {
             const lastOutput = outputs[outputs.length - 1];
             // Disconnect any edge wired to the output before removing the port
-            const edgeId = s.cache.outputEdgesByPort[nodeId]?.[lastOutput.id];
+            const edgeId = d.cache.outputEdgesByPort[nodeId]?.[lastOutput.id];
             if (edgeId)
-                s.reducers.edge.remove(s, edgeId);
+                d.reducers.edge.remove(d, edgeId);
             const idx = node.addedOutputs?.findIndex(o => o.id === lastOutput.id);
             if (idx !== undefined && idx !== -1)
                 node.addedOutputs?.splice(idx, 1);
         }
 
-        s.reducers.cache.resolvedShape.recreate(s, nodeId);
+        d.reducers.cache.resolvedShape.recreate(d, nodeId);
     },
 }
 
 
 export interface FieldVariadicReducers {
-    add    : (s: S, nodeId: NodeId, groupId: string) => void
-    remove : (s: S, nodeId: NodeId, groupId: string) => void
+    add    : (document: Document, nodeId: NodeId, groupId: string) => void
+    remove : (document: Document, nodeId: NodeId, groupId: string) => void
 }
