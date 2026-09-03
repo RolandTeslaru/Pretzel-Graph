@@ -1,8 +1,8 @@
-import type { Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
-import type { ClipboardPayload } from "../clipboard/payload";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
+import type { ClipboardPayload } from "../clipboard-payload";
 
-export const clipboardReducers = {
+export const clipboardReducers: ClipboardReducers = {
     pasteFromPayload: (s, payload, mousePosToCanvas) => {
         const newNodeIds = new Map<Workflow.Node.Id, Workflow.Node.Id>()
 
@@ -66,8 +66,8 @@ export const clipboardReducers = {
             })
         })
     },
-} satisfies ClipboardReducers
+}
 
 type ClipboardReducers = {
-    pasteFromPayload: (state: WorkbenchSDK.State, payload: ClipboardPayload, position?: { x: number, y: number }) => void
+    pasteFromPayload: (state: Document, payload: ClipboardPayload, position?: { x: number, y: number }) => void
 }

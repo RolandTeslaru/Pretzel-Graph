@@ -1,11 +1,12 @@
-import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import type { WorkbenchSDK } from "../../sdk";
+import { Foundations } from "../../../../Foundations";
+import { Workflow } from "../../../../Workflow";
+import { Port } from "../../../../Foundations/Port";
+import type { Document } from "../../index";
 
-type S      = WorkbenchSDK.State
+type S      = Document
 type NodeId = Workflow.Node.Id
 
-export const nodePolymorphismReducers = {
+export const nodePolymorphismReducers: NodePolymorphismReducers = {
     resolveGroup: (s, nodeId, triggerPort, resolvedVariant) => {
         console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
         const node = s.data.nodes[nodeId];
@@ -32,7 +33,7 @@ export const nodePolymorphismReducers = {
 
         s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
-} satisfies NodePolymorphismReducers
+}
 
 export interface NodePolymorphismReducers {
     resolveGroup   : (s: S, nodeId: NodeId, triggerPort: Foundations.Port.Input | Foundations.Port.Output, resolvedVariant: Foundations.Port.Variant) => void

@@ -1,15 +1,15 @@
-import type { WorkbenchSDK } from "../sdk";
-import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { Workflow } from '@pretzel-graph/shared/domain';
+import type { Document } from "../index";
+import type { Field } from "../../../Foundations/Field";
+import type { Workflow } from "../../../Workflow";
 
 type NodeId = Workflow.Node.Id
 type ConditionValue = Field.Condition.Value
 
 export interface ConditionSelectors {
-    getValue:     (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => ConditionValue | null
-    getRule:      (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, ruleId: Field.Condition.Rule.Id) => Field.Condition.Rule | null
-    getGroup:     (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, ruleGroupId: Field.Condition.RuleGroup.Id) => Field.Condition.RuleGroup | null
-    getChildKind: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, id: Field.Condition.Rule.Id | Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
+    getValue:     (state: Document, nodeId: NodeId, fieldId: Field.Id) => ConditionValue | null
+    getRule:      (state: Document, nodeId: NodeId, fieldId: Field.Id, ruleId: Field.Condition.Rule.Id) => Field.Condition.Rule | null
+    getGroup:     (state: Document, nodeId: NodeId, fieldId: Field.Id, ruleGroupId: Field.Condition.RuleGroup.Id) => Field.Condition.RuleGroup | null
+    getChildKind: (state: Document, nodeId: NodeId, fieldId: Field.Id, id: Field.Condition.Rule.Id | Field.Condition.RuleGroup.Id) => 'rule' | 'group' | null
 }
 
 export const conditionSelectors = {

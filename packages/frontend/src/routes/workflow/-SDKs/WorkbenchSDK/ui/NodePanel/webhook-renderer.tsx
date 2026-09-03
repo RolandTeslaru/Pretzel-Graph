@@ -5,7 +5,7 @@ import { Button, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { toast } from 'sonner'
 import { ExecutionSDK } from '../../../ExecutionSDK/sdk'
-import type { LegacyExpressionContext } from '../../selectors/node'
+import type { LegacyExpressionContext } from '@pretzel-graph/shared/domain/Workbench/Document'
 
 interface Props {
     webhook: Webhook

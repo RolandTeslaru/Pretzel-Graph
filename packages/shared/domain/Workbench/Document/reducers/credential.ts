@@ -1,7 +1,9 @@
-import { Validation, Vault, type Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import { Validation } from "../../../Validation";
+import { Vault } from "../../../Vault";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const credentialReducers = {
+export const credentialReducers: CredentialReducers = {
     setInstance: (s, nodeId, templateId, instanceId) => {
         s.isDirty = true;
         if (!s.data.credentialInstanceIds[nodeId])
@@ -28,17 +30,17 @@ export const credentialReducers = {
         delete s.issues.nodes[nodeId]?.credentials?.[templateId];
         return false;
     },
-} satisfies CredentialReducers
+}
 
 type CredentialReducers = {
     setInstance: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         templateId: Vault.Credential.Template.Id,
         instanceId: Vault.Credential.Instance.Id | null
     ) => void
     validate: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         templateId: Vault.Credential.Template.Id
     ) => boolean

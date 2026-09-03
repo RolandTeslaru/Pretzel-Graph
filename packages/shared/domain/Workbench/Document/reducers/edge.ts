@@ -1,9 +1,9 @@
-import { Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
-import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
+import { Port } from "../../../Foundations/Port";
 
 // TODO: rename handles to ports
-export const edgeReducers = {
+export const edgeReducers: EdgeReducers = {
     create: (s, conn) => {
         s.isDirty = true;
         
@@ -129,11 +129,11 @@ export const edgeReducers = {
                 s.reducers.node.polymorphism.unresolveGroup(s, sourceNodeId, sourcePort.polymorphicGroupId);
     },
     createId: Workflow.Edge.createId
-} satisfies EdgeReducers;
+}
 
 type EdgeReducers = {
-    create: (state: WorkbenchSDK.State, conn: WorkbenchSDK.DriverConnection) => Workflow.Edge | undefined
-    remove: (state: WorkbenchSDK.State, edgeId: Workflow.Edge.Id) => void
+    create: (state: Document, conn: Document.DriverConnection) => Workflow.Edge | undefined
+    remove: (state: Document, edgeId: Workflow.Edge.Id) => void
     createId: typeof Workflow.Edge.createId
 }
 

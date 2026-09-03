@@ -14,7 +14,7 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
-import type { NodeUI } from "./selectors/node";
+import { Document, type NodeUI } from "@pretzel-graph/shared/domain/Workbench/Document";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 // Stable identities so the port hooks below never return a fresh array to the store subscription.
@@ -38,25 +38,14 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = createWithEqualityFn(
         temporal(
             immer<WorkbenchSDK.State>(() => ({
-                workflowId: '' as Workflow.Id,
-                data: cloneDeep(Workflow.INITIAL.data),
-                isDirty: false,
+                ...Document.create('' as Workflow.Id, cloneDeep(Workflow.INITIAL.data), {}),
+                cyclesDirty: false,
                 isDraggingNode: false,
                 lastSelection: null,
                 clickedNodeId: null,
                 selectionContextMenu: null,
                 paneContextMenu: null,
                 draggedPort: null,
-                cache: cloneDeep(Workflow.Cache.INITIAL),
-                blueprints: {},
-                issues: {
-                    nodes: {},
-                    cycles: []
-                },
-                cycles: [],
-                cyclesDirty: false,
-                stronglyConnectedComponents: [],
-                dependencyUpdates: { published: {}, draft: {} },
                 selectors: workbenchSelectors,
                 reducers: workbenchReducers
             })), {
@@ -310,27 +299,15 @@ export const WorkbenchSDK = SDK.get<WorkbenchSDKImpl>("Workbench")
 
 
 export namespace WorkbenchSDK {
-    export interface State {
-        workflowId: Workflow.Id;
-        data: Workflow.Data;
-        isDirty: boolean;
+    // The document plus the editor's own state — pointer and gesture ephemera the document
+    // has no notion of.
+    export interface State extends Document {
         isDraggingNode: boolean;
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
         clickedNodeId: Workflow.Node.Id | null;
         selectionContextMenu: { x: number, y: number } | null;
         paneContextMenu: { x: number, y: number } | null;
         draggedPort: PortRef | null
-        cache: Workflow.Cache
-        /** Bases this workflow's nodes reference, plus every derived variant they resolve to. */
-        blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>
-        cyclesDirty: boolean
-        issues: Validation.Issue.Workflow_
-        cycles: Workflow.Node.Id[][]
-        stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
-        dependencyUpdates: {
-            published: Workflow.Dependency.Publication.UpdateMap
-            draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
-        }
         selectors: WorkbenchSDKSelectors
         reducers: typeof workbenchReducers
     }
@@ -349,12 +326,7 @@ export namespace WorkbenchSDK {
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
     export type CycleSelectionNodeDriver = RF_Node<{ width: number, height: number, nodeIds: Workflow.Node.Id[], issue: Validation.Issue.Cycle }, "cycleSelectionNode">;
 
-    export interface DriverConnection {
-        source: Workflow.Node.Id
-        sourceHandle: Foundations.Port.Output.Id
-        target: Workflow.Node.Id
-        targetHandle: Foundations.Port.Input.Id
-    }
+    export type DriverConnection = Document.DriverConnection
 
     export type NodeBundle = [
         node: Workflow.Node.Raw,

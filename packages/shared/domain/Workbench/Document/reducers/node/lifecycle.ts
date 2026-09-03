@@ -1,8 +1,11 @@
-import { Foundations, Validation, Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations } from "../../../../Foundations";
+import { Validation } from "../../../../Validation";
+import { Vault } from "../../../../Vault";
+import { Workflow } from "../../../../Workflow";
 import { cloneDeep } from 'lodash';
-import type { WorkbenchSDK } from "../../sdk";
+import type { Document } from "../../index";
 
-type S      = WorkbenchSDK.State
+type S      = Document
 type NodeId = Workflow.Node.Id
 
 /**
@@ -82,7 +85,7 @@ function applyDerivative(
     s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs);
 }
 
-export const nodeLifecycleReducers = {
+export const nodeLifecycleReducers: NodeLifecycleReducers = {
     remove: (s, deletedNodeId) => {
         s.isDirty = true;
         const nodes = s.data.nodes
@@ -330,7 +333,7 @@ export const nodeLifecycleReducers = {
     clearIssues: (s, nodeId) => {
         delete s.issues.nodes[nodeId];
     },
-} satisfies NodeLifecycleReducers
+}
 
 export interface NodeLifecycleReducers {
     remove      : (s: S, nodeId: NodeId) => void;

@@ -1,10 +1,12 @@
-import { Foundations, Validation, Workflow } from "@pretzel-graph/shared/domain";
-import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import type { WorkbenchSDK } from "../sdk";
+import { Foundations } from "../../../Foundations";
+import { Validation } from "../../../Validation";
+import { Workflow } from "../../../Workflow";
+import { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
 import { cloneDeep } from 'lodash';
-import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
+import { Algorithms } from "../../../Algorithms";
 
-export const workflowReducers = {
+export const workflowReducers: WorkflowReducers = {
     open: (s, workflow, options = {}) => {
         const data = Workflow.Data.Schema.parse(workflow.data);
 
@@ -102,14 +104,14 @@ export const workflowReducers = {
         s.issues.cycles = Validation.Issue.Cycle.checkAll(cycles, s.data);
         s.cyclesDirty = false;
     }
-} satisfies WorkflowReducers
+}
 
 type WorkflowReducers = {
-    open: (state: WorkbenchSDK.State, workflow: Workflow, options?: { repaired?: boolean }) => void
-    close: (state: WorkbenchSDK.State) => void
-    validate: (state: WorkbenchSDK.State) => void
-    setFields: (state: WorkbenchSDK.State, fields: Foundations.Field[]) => void
+    open: (state: Document, workflow: Workflow, options?: { repaired?: boolean }) => void
+    close: (state: Document) => void
+    validate: (state: Document) => void
+    setFields: (state: Document, fields: Foundations.Field[]) => void
 
-    recomputeAllCycles: (s: WorkbenchSDK.State) => void
-    reconstructPolymorphism: (s: WorkbenchSDK.State) => void
+    recomputeAllCycles: (s: Document) => void
+    reconstructPolymorphism: (s: Document) => void
 }

@@ -3,7 +3,7 @@ import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import MinimizedHandles from './MinimizedHandles';
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
 import StatusIndicator from './StatusIndicator';
-import type { NodeUI } from '../../../../selectors/node';
+import type { NodeUI } from '@pretzel-graph/shared/domain/Workbench/Document';
 
 interface Props {
   hyNode: Workflow.Node.Hydrated

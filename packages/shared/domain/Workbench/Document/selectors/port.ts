@@ -1,19 +1,19 @@
-import type { Workflow } from '@pretzel-graph/shared/domain';
-import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { WorkbenchSDK } from "../sdk";
+import type { Workflow } from "../../../Workflow";
+import { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
 import { nodeSelectors } from './node';
 
 export interface PortPolymorphismSelectors {
-    getSiblings:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Port.Id) => Set<Port.Input | Port.Output>
-    groupHasEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => boolean
-    getResolvedVariantInGroup: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => Port.Variant | null
+    getSiblings:   (state: Document, nodeId: Workflow.Node.Id, portId: Port.Id) => Set<Port.Input | Port.Output>
+    groupHasEdges: (state: Document, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => boolean
+    getResolvedVariantInGroup: (state: Document, nodeId: Workflow.Node.Id, polymorphicGroupId: string) => Port.Variant | null
 }
 
 export interface PortSelectors {
     polymorphism: PortPolymorphismSelectors
 }
 
-export const portSelectors = {
+export const portSelectors: PortSelectors = {
     polymorphism: {
         getSiblings: (s, nodeId, portId) => {
             const node = s.data.nodes[nodeId];
@@ -80,4 +80,4 @@ export const portSelectors = {
             return false;
         },
     }
-} satisfies PortSelectors
+}

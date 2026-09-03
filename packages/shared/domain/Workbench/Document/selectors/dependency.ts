@@ -1,21 +1,21 @@
-import type { Workflow } from '@pretzel-graph/shared/domain';
-import type { WorkbenchSDK } from '../sdk';
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
 export interface DependencySelectors {
-    doesNodeHaveUpdate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
+    doesNodeHaveUpdate: (state: Document, nodeId: Workflow.Node.Id) => boolean
     published: {
-        get:           (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Publication | null
-        getUpdateInfo: (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
+        get:           (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication | null
+        getUpdateInfo: (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Publication.UpdateInfo | null
     }
     draft: {
-        get:           (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Draft | null
-        getUpdateInfo: (state: WorkbenchSDK.State, workflowId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
+        get:           (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft | null
+        getUpdateInfo: (state: Document, workflowId: Workflow.Id) => Workflow.Dependency.Draft.UpdateInfo | null
     }
-    get: (state: WorkbenchSDK.State, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => Workflow.Dependency | null
-    hasUpdate: (state: WorkbenchSDK.State, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => boolean
+    get: (state: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => Workflow.Dependency | null
+    hasUpdate: (state: Document, workflowId: Workflow.Id, mode: Workflow.Node.DependencyRef["mode"]) => boolean
 }
 
-export const dependencySelectors = {
+export const dependencySelectors: DependencySelectors = {
     doesNodeHaveUpdate: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
         if (!node?.dependencyRef) 
@@ -48,4 +48,4 @@ export const dependencySelectors = {
         else
             return s.selectors.dependency.published.get(s, workflowId)
     }
-} satisfies DependencySelectors
+}

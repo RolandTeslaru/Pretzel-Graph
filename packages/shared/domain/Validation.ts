@@ -1,12 +1,12 @@
-import { Workflow } from "./Workflow"
+import { Workflow as WorkflowD } from "./Workflow"
 import { Port } from "./Foundations/Port"
 import { Foundations } from "./Foundations";
 import { Field as FoundationField } from "./Foundations/Field";
 import { Vault } from "./Vault";
 
 type Connection = {
-    source: Workflow.Node.Id;
-    target: Workflow.Node.Id;
+    source: WorkflowD.Node.Id;
+    target: WorkflowD.Node.Id;
     sourceHandle: Port.Output.Id | null;
     targetHandle: Port.Input.Id | null;
 }
@@ -21,8 +21,8 @@ export namespace Validation {
         export namespace Field {
             export function check(
                 field: Foundations.Field,
-                nodeId: Workflow.Node.Id,
-                workflowData: Workflow.Data
+                nodeId: WorkflowD.Node.Id,
+                workflowData: WorkflowD.Data
             ): Issue.Field | null {
                 if (!field.required) return null;
 
@@ -69,9 +69,9 @@ export namespace Validation {
         export namespace Input {
             export function check(
                 input: Port.Input,
-                nodeId: Workflow.Node.Id,
-                workflowData: Workflow.Data,
-                cache: Workflow.Cache,
+                nodeId: WorkflowD.Node.Id,
+                workflowData: WorkflowD.Data,
+                cache: WorkflowD.Cache,
             ) {
                 if (!input.required)
                     return null;
@@ -105,8 +105,8 @@ export namespace Validation {
         export namespace Credential {
             export function check(
                 template: Vault.Credential.Template,
-                nodeId: Workflow.Node.Id,
-                workflowData: Workflow.Data
+                nodeId: WorkflowD.Node.Id,
+                workflowData: WorkflowD.Data
             ): Issue.Credential | null {
                 if (template.optional)
                     return null;
@@ -129,9 +129,9 @@ export namespace Validation {
         }
         export namespace Node {
             export function check(
-                node: Workflow.Node.Raw, 
-                workflowData: Workflow.Data, 
-                cache: Workflow.Cache
+                node: WorkflowD.Node.Raw, 
+                workflowData: WorkflowD.Data, 
+                cache: WorkflowD.Cache
             ) {
                 const shape = cache.resolvedShape[node.id];
                 if (!shape)
@@ -175,12 +175,12 @@ export namespace Validation {
             }
         }
 
-        export interface Workflow_ {
-            nodes: Record<Workflow.Node.Id, Issue.Node>
+        export interface Workflow {
+            nodes: Record<WorkflowD.Node.Id, Issue.Node>
             cycles: Issue.Cycle[]
         }
-        export function checkWorkflow(workflowData: Workflow.Data, cycles: Workflow.Node.Id[][], cache: Workflow.Cache) {
-            const issues: Issue.Workflow_ = {
+        export function checkWorkflow(workflowData: WorkflowD.Data, cycles: WorkflowD.Node.Id[][], cache: WorkflowD.Cache) {
+            const issues: Issue.Workflow = {
                 nodes: {},
                 cycles: []
             }
@@ -201,7 +201,7 @@ export namespace Validation {
         }
 
         export interface Cycle {
-            nodes: Workflow.Node.Id[]
+            nodes: WorkflowD.Node.Id[]
             type: "cycle_without_route_branching_node" | "cycle_gridlock"
         }
         export namespace Cycle {
@@ -211,7 +211,7 @@ export namespace Validation {
                 "Core.Routing.Switch",
             ])
 
-            export function check(cycle: Workflow.Node.Id[], workflowData: Workflow.Data) {
+            export function check(cycle: WorkflowD.Node.Id[], workflowData: WorkflowD.Data) {
 
                 let hasRouteBranchingNode = false;
                 let hasCycleEscapeNode = false;
@@ -251,7 +251,7 @@ export namespace Validation {
                 return null
             }
 
-            export function checkAll(cycles: Workflow.Node.Id[][], workflowData: Workflow.Data) {
+            export function checkAll(cycles: WorkflowD.Node.Id[][], workflowData: WorkflowD.Data) {
                 const issues: Issue.Cycle[] = [];
 
                 cycles.forEach(cycle => {
@@ -319,9 +319,9 @@ export namespace Validation {
     }
 
     export function isTargetPortAlreadyConnected(
-        targetNodeId: Workflow.Node.Id,
+        targetNodeId: WorkflowD.Node.Id,
         targetHandleId: Port.Input.Id,
-        cache: Workflow.Cache
+        cache: WorkflowD.Cache
     ) {
         const edgeId = cache.inputEdgesByPort[targetNodeId][targetHandleId]
         if (edgeId)
@@ -331,7 +331,7 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflowData: Workflow.Data, cache: Workflow.Cache) {
+        export function isValid(conn: Connection, workflowData: WorkflowD.Data, cache: WorkflowD.Cache) {
 
             const sourceNode = workflowData.nodes[conn.source];
             const targetNode = workflowData.nodes[conn.target];
@@ -366,7 +366,7 @@ export namespace Validation {
         }
     }
 
-    export function workflowHasIssues(issues: Issue.Workflow_) {
+    export function workflowHasIssues(issues: Issue.Workflow) {
         if(issues.cycles.length > 0)
             return true;
 
@@ -378,12 +378,12 @@ export namespace Validation {
 
 
 function doesEdgeAlreadyExist(
-    workflowData: Workflow.Data,
-    sourceNodeId: Workflow.Node.Id,
+    workflowData: WorkflowD.Data,
+    sourceNodeId: WorkflowD.Node.Id,
     sourceHandleId: Port.Output.Id,
-    targetNodeId: Workflow.Node.Id,
+    targetNodeId: WorkflowD.Node.Id,
     targetHandleId: Port.Input.Id
 ) {
-    const edgeId = Workflow.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
+    const edgeId = WorkflowD.Edge.createId(sourceNodeId, sourceHandleId, targetNodeId, targetHandleId);
     return workflowData.edges.includes(edgeId)
 }

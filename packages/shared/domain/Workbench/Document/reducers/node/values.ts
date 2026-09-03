@@ -1,9 +1,11 @@
-import { Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../../sdk";
-import uid from "../../../../../../utils/uid";
+import { Foundations } from "../../../../Foundations";
+import { Vault } from "../../../../Vault";
+import { Workflow } from "../../../../Workflow";
+import type { Document } from "../../index";
+import uid from "../../uid";
 import { isEqual } from "lodash";
 
-type S      = WorkbenchSDK.State
+type S      = Document
 type NodeId = Workflow.Node.Id
 
 const generateUniqueString = (field: Foundations.Field): string => {
@@ -11,7 +13,7 @@ const generateUniqueString = (field: Foundations.Field): string => {
     return `${field.prefix ?? ""}${uid.randomUUID(field.length ?? 5)}`;
 }
 
-export const nodeValueReducers = {
+export const nodeValueReducers: NodeValueReducers = {
     // Lazily create (and return) a node's staticValues bucket. Writers should go through this
     // instead of manually `??= {}`-ing so we never assume the bucket was pre-seeded.
     ensureStaticValues: (s, nodeId) => (s.data.staticValues[nodeId] ??= {}),
@@ -97,7 +99,7 @@ export const nodeValueReducers = {
         else
             s.data.credentialInstanceIds[nodeId] = next;
     },
-} satisfies NodeValueReducers
+}
 
 export interface NodeValueReducers {
     ensureStaticValues          : (s: S, nodeId: NodeId) => Record<Foundations.Field.Id | Foundations.Port.Input.Id, any>;

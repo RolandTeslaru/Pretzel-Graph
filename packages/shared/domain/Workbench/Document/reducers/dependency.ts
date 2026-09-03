@@ -1,5 +1,5 @@
-import { Workflow } from "@pretzel-graph/shared/domain"
-import type { WorkbenchSDK } from "../sdk"
+import { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 import { isEqual } from "lodash"
 
 const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as const
@@ -7,7 +7,7 @@ const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as
 // Mode-aware: a workflow can be referenced as a publication and/or a draft, and each mode is a
 // separate stored snapshot. Keyed `${mode}:${workflowId}` so removeUnused can't retain the
 // opposite-mode copy of a still-referenced workflow.
-function collectUsedDependencyKeys(s: WorkbenchSDK.State): Set<string> {
+function collectUsedDependencyKeys(s: Document): Set<string> {
     const used = new Set<string>()
     Object.values(s.data.nodes).forEach(node => {
         if (node.dependencyRef && node.dependencyRef.workflowId)
@@ -20,7 +20,7 @@ function collectUsedDependencyKeys(s: WorkbenchSDK.State): Set<string> {
 // (never needed for an executed dependency), and — where the node's blueprint is hydrated —
 // prune ui overrides / staticValues that equal blueprint defaults (derived on read). Dep-node
 // blueprints aren't guaranteed loaded, so node-level pruning safely skips when absent.
-function pruneWorkflowData(s: WorkbenchSDK.State, data: Workflow.Data) {
+function pruneWorkflowData(s: Document, data: Workflow.Data) {
     if ("ui" in data) {
         // Only a fat (remnant) layout is a real change; a schema-defaulted empty ui isn't.
         const hadLayout = Object.keys(data.ui?.layout ?? {}).length > 0
@@ -64,7 +64,7 @@ function pruneWorkflowData(s: WorkbenchSDK.State, data: Workflow.Data) {
     }
 }
 
-export const dependencyReducers = {
+export const dependencyReducers: DependencyReducers = {
     register: (s, mode, dependency) => {
         s.reducers.dependency.removeUnused(s)
         // Layout/viewport are editor-only; a dependency is executed, not rendered — drop the ui so it
@@ -119,28 +119,28 @@ export const dependencyReducers = {
         for (const id of Object.keys(s.data.dependencies.draft) as Workflow.Id[])
             if (!used.has(`draft:${id}`)) delete s.data.dependencies.draft[id]
     },
-} satisfies DependencyReducers
+}
 
 
 
 
 export interface DependencyReducers {
     applyUpdate: (
-        state:      WorkbenchSDK.State,
+        state:      Document,
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void
     attachToNode: (
-        state:      WorkbenchSDK.State,
+        state:      Document,
         nodeId:     Workflow.Node.Id,
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void
     register: (
-        state:      WorkbenchSDK.State,
+        state:      Document,
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void
-    pruneDefaults: (state: WorkbenchSDK.State) => void
-    removeUnused: (state: WorkbenchSDK.State) => void
+    pruneDefaults: (state: Document) => void
+    removeUnused: (state: Document) => void
 }

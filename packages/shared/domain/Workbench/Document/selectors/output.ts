@@ -1,14 +1,14 @@
-import type { Workflow } from '@pretzel-graph/shared/domain';
-import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { WorkbenchSDK } from "../sdk";
+import type { Workflow } from "../../../Workflow";
+import type { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
 import { nodeSelectors } from './node';
 
 export interface OutputSelectors {
-    get:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => Port.Output | null
-    hasEdge: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => boolean
+    get:     (state: Document, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => Port.Output | null
+    hasEdge: (state: Document, nodeId: Workflow.Node.Id, outputId: Port.Output.Id) => boolean
 }
 
-export const outputSelectors = {
+export const outputSelectors: OutputSelectors = {
     get: (s, nodeId, outputId) => {
         const node = s.data.nodes[nodeId]
         if (!node) return null;
@@ -18,4 +18,4 @@ export const outputSelectors = {
         return outputs.find(o => o.id === outputId) ?? null;
     },
     hasEdge: (s, nodeId, outputId) => !!s.cache.outputEdgesByPort[nodeId][outputId],
-} satisfies OutputSelectors
+}

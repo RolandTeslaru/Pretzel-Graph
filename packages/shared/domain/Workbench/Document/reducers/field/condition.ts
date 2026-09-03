@@ -1,8 +1,9 @@
 import { conditionTreeReducers } from "../conditionTree";
-import type { WorkbenchSDK } from "../../sdk";
-import type { Workflow, Foundations } from "@pretzel-graph/shared/domain";
+import type { Document } from "../../index";
+import type { Workflow } from "../../../../Workflow";
+import type { Foundations } from "../../../../Foundations";
 
-type S           = WorkbenchSDK.State
+type S           = Document
 type NodeId      = Workflow.Node.Id
 type FieldId     = Foundations.Field.Id
 type RuleId      = Foundations.Field.Condition.Rule.Id
@@ -10,7 +11,7 @@ type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id
 type Operator    = Foundations.Field.Condition.Operator
 type DataType    = Foundations.Field.Condition.DataType
 
-export const fieldConditionReducers = {
+export const fieldConditionReducers: FieldConditionReducers = {
     setLeftValue: (s, nodeId, fieldId, ruleId, value) => {
         const condition = s.selectors.field.condition.getValue(s, nodeId, fieldId)!
         conditionTreeReducers.setLeftValue(condition, ruleId, value)
@@ -56,7 +57,7 @@ export const fieldConditionReducers = {
         conditionTreeReducers.changeCombinator(condition, ruleGroupId, combinator)
         s.isDirty = true
     },
-} satisfies FieldConditionReducers
+}
 
 
 export interface FieldConditionReducers {

@@ -2,18 +2,19 @@ import { conditionSelectors } from "./condition";
 import type { ConditionSelectors } from "./condition";
 import { caseListSelectors } from "./caseList";
 import type { CaseListSelectors } from "./caseList";
-import type { WorkbenchSDK } from "../sdk";
-import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { Validation, Workflow } from '@pretzel-graph/shared/domain';
+import type { Document } from "../index";
+import { Field } from "../../../Foundations/Field";
+import type { Port } from "../../../Foundations/Port";
+import type { Validation } from "../../../Validation";
+import type { Workflow } from "../../../Workflow";
 import { nodeSelectors } from "./node";
 
 export interface FieldSelectors {
-    get            : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
-    getValue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
-    getIssue       : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
-    getValues      : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
-    usesExpression : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
+    get            : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Field | null
+    getValue       : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
+    getIssue       : (state: Document, nodeId: Workflow.Node.Id, fieldId: Field.Id) => Validation.Issue.Field | null
+    getValues      : (state: Document, nodeId: Workflow.Node.Id) => Record<Field.Id, any>
+    usesExpression : (state: Document, nodeId: Workflow.Node.Id, field: Field | Field.Id, defaultValue?: boolean) => boolean
     condition      : ConditionSelectors
     caseList       : CaseListSelectors
 }
@@ -27,7 +28,7 @@ const getField: FieldSelectors["get"] = (s, nodeId, fieldId) => {
     return nodeSelectors.getFields(s, nodeId).find(f => f.id === fieldId) ?? null;
 }
 
-export const fieldSelectors = {
+export const fieldSelectors: FieldSelectors = {
     get: getField,
     getValue: (s, nodeId, fieldId, fallback = null) => s.data.staticValues[nodeId]?.[fieldId] ?? fallback,
     getIssue: (s, nodeId, fieldId) => s.issues.nodes[nodeId]?.fields[fieldId] ?? null,
@@ -61,4 +62,4 @@ export const fieldSelectors = {
     },
     condition: conditionSelectors,
     caseList: caseListSelectors,
-} satisfies FieldSelectors
+}

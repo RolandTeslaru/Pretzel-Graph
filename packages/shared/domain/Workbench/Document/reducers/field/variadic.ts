@@ -1,12 +1,12 @@
 import { cloneDeep } from "lodash";
-import type { WorkbenchSDK } from "../../sdk";
-import type { Workflow } from "@pretzel-graph/shared/domain";
-import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import type { Document } from "../../index";
+import type { Workflow } from "../../../../Workflow";
+import type { Port } from "../../../../Foundations/Port";
 
-type S      = WorkbenchSDK.State
+type S      = Document
 type NodeId = Workflow.Node.Id
 
-export const fieldVariadicReducers = {
+export const fieldVariadicReducers: FieldVariadicReducers = {
     // Appends a new slot to the variadic group by cloning the last port in the group
     // and incrementing its numeric suffix (e.g. input_1 → input_2).
     add: (s, nodeId, groupId) => {
@@ -78,7 +78,7 @@ export const fieldVariadicReducers = {
 
         s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
-} satisfies FieldVariadicReducers
+}
 
 
 export interface FieldVariadicReducers {

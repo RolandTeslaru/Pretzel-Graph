@@ -1,16 +1,16 @@
-import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { WorkbenchSDK } from "../sdk";
-import type { Workflow } from '@pretzel-graph/shared/domain';
+import { Field } from "../../../Foundations/Field";
+import type { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
+import type { Workflow } from "../../../Workflow";
 
 type NodeId = Workflow.Node.Id
 type CaseListValue = Field.CaseList.Value
 
 export interface CaseListSelectors {
-    getValue:      (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => CaseListValue | null
-    getEntry:      (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => Field.CaseList.Entry | null
-    getEntryIndex: (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => number
-    getPortIds:    (state: WorkbenchSDK.State, nodeId: NodeId, fieldId: Field.Id) => Port.Output.Id[]
+    getValue:      (state: Document, nodeId: NodeId, fieldId: Field.Id) => CaseListValue | null
+    getEntry:      (state: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => Field.CaseList.Entry | null
+    getEntryIndex: (state: Document, nodeId: NodeId, fieldId: Field.Id, portId: Port.Output.Id) => number
+    getPortIds:    (state: Document, nodeId: NodeId, fieldId: Field.Id) => Port.Output.Id[]
 }
 
 export const caseListSelectors = {

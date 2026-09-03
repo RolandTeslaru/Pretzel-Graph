@@ -12,15 +12,15 @@ import { graphSelectors, type GraphSelectors } from './graph';
 import { dependencySelectors, type DependencySelectors } from './dependency';
 import { layoutSelectors, type LayoutSelectors } from './layout';
 import { workflowSelectors, type WorkflowSelectors } from './workflow';
-import type { WorkbenchSDK } from '../sdk';
-import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
+import type { Document } from "../index";
+import type { Foundations } from "../../../Foundations";
+import type { Workflow } from "../../../Workflow";
 
-export interface WorkbenchSDKSelectors {
-    getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node.Raw | null
+export interface DocumentSelectors {
     /** Distinct base blueprint ids of the workflow's own (top-level) nodes — excludes nested dependency snapshots. */
-    getBlueprintIds: (state: WorkbenchSDK.State, workflow: Workflow) => Foundations.Blueprint.Id[]
+    getBlueprintIds: (state: Document, workflow: Workflow) => Foundations.Blueprint.Id[]
     /** Resolved blueprint per node (keyed by reconciledBlueprintId ?? blueprintId), for validation. */
-    getBlueprints  : (state: WorkbenchSDK.State) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
+    getBlueprints  : (state: Document) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
     blueprint      : BlueprintSelectors
     node           : NodeSelectors
     edge           : EdgeSelectors
@@ -37,8 +37,7 @@ export interface WorkbenchSDKSelectors {
     workflow       : WorkflowSelectors
 }
 
-export const workbenchSelectors = {
-    getClickedNode : (s) => s.clickedNodeId ? s.data.nodes[s.clickedNodeId] ?? null : null,
+export const documentSelectors: DocumentSelectors = {
     getBlueprintIds: (_s, workflow) => {
         const ids = new Set<Foundations.Blueprint.Id>()
         for (const node of Object.values(workflow.data.nodes)){
@@ -71,4 +70,4 @@ export const workbenchSelectors = {
     dependency     : dependencySelectors,
     layout         : layoutSelectors,
     workflow       : workflowSelectors,
-} satisfies WorkbenchSDKSelectors
+}

@@ -1,42 +1,45 @@
-import { Airlock, Workflow, type Execution, type Foundations } from '@pretzel-graph/shared/domain';
-import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { WorkbenchSDK } from "../sdk";
+import { Airlock } from "../../../Airlock";
+import { Workflow } from "../../../Workflow";
+import type { Execution } from "../../../Execution";
+import type { Foundations } from "../../../Foundations";
+import { Field } from "../../../Foundations/Field";
+import type { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
 import { executionSelectors } from "./execution";
-import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import type { Blueprint } from "../../../Foundations/Blueprint";
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
 
 export interface NodeSelectors {
-    get:              (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node.Raw
-    hasIssues:        (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    isTool:           (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    isSourceNode:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    isSinkNode:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    isIsolatedNode:   (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    getConnectedPorts:    (state: WorkbenchSDK.State, nodeId?: Workflow.Node.Id) => Record<Port.Input.Id, Workflow.Edge.Id>
-    getIncomingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
-    getOutgoingEdges:     (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Edge[]
-    getStaticValues:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
-    getStaticValue:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, id: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
+    get:              (state: Document, nodeId: Workflow.Node.Id) => Workflow.Node.Raw
+    hasIssues:        (state: Document, nodeId: Workflow.Node.Id) => boolean
+    isTool:           (state: Document, nodeId: Workflow.Node.Id) => boolean
+    isSourceNode:     (state: Document, nodeId: Workflow.Node.Id) => boolean
+    isSinkNode:       (state: Document, nodeId: Workflow.Node.Id) => boolean
+    isIsolatedNode:   (state: Document, nodeId: Workflow.Node.Id) => boolean
+    getConnectedPorts:    (state: Document, nodeId?: Workflow.Node.Id) => Record<Port.Input.Id, Workflow.Edge.Id>
+    getIncomingEdges:     (state: Document, nodeId: Workflow.Node.Id) => Workflow.Edge[]
+    getOutgoingEdges:     (state: Document, nodeId: Workflow.Node.Id) => Workflow.Edge[]
+    getStaticValues:      (state: Document, nodeId: Workflow.Node.Id) => Record<Field.Id | Port.Id, any> | null
+    getStaticValue:       (state: Document, nodeId: Workflow.Node.Id, id: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
     // Legacy webhook-only `@`-sigil context. Temporary until webhook resolution moves onto Airlock.
-    getLegacyExpressionContext: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
-    getDependencyRef: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Node.DependencyRef | null
-    getDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
-    hasDraftDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    hasPublishedDependency: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => boolean
-    getDependencyUpdate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => [ 
+    getLegacyExpressionContext: (state: Document, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
+    getDependencyRef: (state: Document, nodeId: Workflow.Node.Id) => Workflow.Node.DependencyRef | null
+    getDependency: (state: Document, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
+    hasDraftDependency: (state: Document, nodeId: Workflow.Node.Id) => boolean
+    hasPublishedDependency: (state: Document, nodeId: Workflow.Node.Id) => boolean
+    getDependencyUpdate: (state: Document, nodeId: Workflow.Node.Id) => [ 
         Workflow.Dependency.Publication.UpdateInfo | Workflow.Dependency.Draft.UpdateInfo,
         "draft" | "publication"
     ] | null
 
-    getInputs: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
-    getOutputs: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Port.Output[]
-    getFields: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => readonly Foundations.Field[]
-    getBlueprint: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Blueprint | null
-    getUI: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => NodeUI
+    getInputs: (state: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
+    getOutputs: (state: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Output[]
+    getFields: (state: Document, nodeId: Workflow.Node.Id) => readonly Foundations.Field[]
+    getBlueprint: (state: Document, nodeId: Workflow.Node.Id) => Blueprint | null
+    getUI: (state: Document, nodeId: Workflow.Node.Id) => NodeUI
     /** Nodes the run can elect as its entry point. Ids, not objects, so `shallow` holds. */
-    getIgniteableNodes: (state: WorkbenchSDK.State) => Workflow.Node.Id[]
+    getIgniteableNodes: (state: Document) => Workflow.Node.Id[]
 }
 
 export type NodeUI = {
@@ -66,7 +69,7 @@ export interface LegacyExpressionContext {
     workflowConfig: Record<Field.Id, unknown>
 }
 
-export const nodeSelectors = {
+export const nodeSelectors: NodeSelectors = {
     get: (s, nodeId) => s.data.nodes[nodeId] ?? null,
     hasIssues: (s, nodeId) => {
         const nodeIssues = s.issues.nodes[nodeId];
@@ -211,4 +214,4 @@ export const nodeSelectors = {
             isFlipped:   node?.ui?.isFlipped   ?? false,
         };
     },
-} satisfies NodeSelectors
+}

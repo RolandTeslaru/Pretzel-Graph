@@ -1,7 +1,8 @@
-import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import type { Foundations } from "../../../Foundations";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const portReducers = {
+export const portReducers: PortReducers = {
     addInput: (s, nodeId, port) => {
         s.isDirty = true;
         const node = s.data.nodes[nodeId];
@@ -58,12 +59,12 @@ export const portReducers = {
             port.displayName = displayName;
         s.reducers.cache.resolvedShape.recreate(s, nodeId);
     },
-} satisfies PortReducers
+}
 
 type PortReducers = {
-    addInput            : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, port: Foundations.Port.Input) => void;
-    removeInput         : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Input.Id) => void;
-    removeOutput        : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id) => void;
-    addOutput           : (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, port: Foundations.Port.Output) => void;
-    setOutputDisplayName: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id, displayName: string) => void;
+    addInput            : (state: Document, nodeId: Workflow.Node.Id, port: Foundations.Port.Input) => void;
+    removeInput         : (state: Document, nodeId: Workflow.Node.Id, portId: Foundations.Port.Input.Id) => void;
+    removeOutput        : (state: Document, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id) => void;
+    addOutput           : (state: Document, nodeId: Workflow.Node.Id, port: Foundations.Port.Output) => void;
+    setOutputDisplayName: (state: Document, nodeId: Workflow.Node.Id, portId: Foundations.Port.Output.Id, displayName: string) => void;
 }

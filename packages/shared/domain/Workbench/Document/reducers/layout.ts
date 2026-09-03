@@ -1,7 +1,7 @@
-import type { Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const layoutReducers = {
+export const layoutReducers: LayoutReducers = {
     node: {
         setPosition: (s, nodeId, newLayout) => {
             if (!newLayout)
@@ -48,18 +48,18 @@ export const layoutReducers = {
             s.data.ui.viewport = viewport;
         }
     }
-} satisfies LayoutReducers
+}
 
 
 type LayoutReducers = {
     node: {
-        setPosition: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number } | undefined) => void
-        remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-        add: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
+        setPosition: (state: Document, nodeId: Workflow.Node.Id, position: { x: number, y: number } | undefined) => void
+        remove: (state: Document, nodeId: Workflow.Node.Id) => void
+        add: (state: Document, nodeId: Workflow.Node.Id, position: { x: number, y: number }) => void
     },
     viewport: {
-        setPosition: (state: WorkbenchSDK.State, newLayout: { x: number, y: number }) => void
-        setZoom: (state: WorkbenchSDK.State, zoom: number) => void
-        set: (state: WorkbenchSDK.State, viewport: { x: number, y: number, zoom: number }) => void
+        setPosition: (state: Document, newLayout: { x: number, y: number }) => void
+        setZoom: (state: Document, zoom: number) => void
+        set: (state: Document, viewport: { x: number, y: number, zoom: number }) => void
     }
 }

@@ -1,16 +1,19 @@
-import type { Execution, Foundations, Validation, Workflow } from '@pretzel-graph/shared/domain';
-import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
-import type { WorkbenchSDK } from "../sdk";
+import type { Execution } from "../../../Execution";
+import type { Foundations } from "../../../Foundations";
+import type { Validation } from "../../../Validation";
+import type { Workflow } from "../../../Workflow";
+import { Port } from "../../../Foundations/Port";
+import type { Document } from "../index";
 import { nodeSelectors } from './node';
 
 export interface InputSelectors {
-    get:           (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
-    hasEdge:       (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => boolean
-    getIssue:      (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Validation.Issue.Input | null
-    getProjection: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputPortId: Port.Input.Id, session: Execution.Session) => Foundations.Projection | undefined
+    get:           (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Port.Input | null
+    hasEdge:       (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => boolean
+    getIssue:      (state: Document, nodeId: Workflow.Node.Id, inputId: Port.Input.Id) => Validation.Issue.Input | null
+    getProjection: (state: Document, nodeId: Workflow.Node.Id, inputPortId: Port.Input.Id, session: Execution.Session) => Foundations.Projection | undefined
 }
 
-export const inputSelectors = {
+export const inputSelectors: InputSelectors = {
     get: (s, nodeId, inputId) => {
         const node = s.data.nodes[nodeId]
         if (!node) return null;
@@ -30,4 +33,4 @@ export const inputSelectors = {
 
         return session.node_output_projections[edge.source.nodeId]?.[edge.source.portId as Port.Output.Id];
     },
-} satisfies InputSelectors
+}

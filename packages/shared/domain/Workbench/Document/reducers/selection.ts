@@ -1,5 +1,5 @@
-import type { Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
 /** What the canvas selection resolves to. Ids only — the drivers stay on the editor side. */
 export interface Selection {
@@ -7,7 +7,7 @@ export interface Selection {
     edgeIds: Workflow.Edge.Id[]
 }
 
-export const selectionReducers = {
+export const selectionReducers: SelectionReducers = {
     duplicate: (s, selection) => {
         const selectedNodeIds = new Set(selection.nodeIds);
         const newNodeIdMap = new Map<Workflow.Node.Id, Workflow.Node.Id>();
@@ -57,10 +57,10 @@ export const selectionReducers = {
             s.reducers.node.setDisabled(s, nodeId, isDisabled);
         });
     },
-} satisfies SelectionReducers
+}
 
-interface SelectionReducers {
-    duplicate : (state: WorkbenchSDK.State, selection: Selection) => void;
-    delete    : (state: WorkbenchSDK.State, selection: Selection) => void;
-    disable   : (state: WorkbenchSDK.State, selection: Selection, isDisabled: boolean) => void;
+export interface SelectionReducers {
+    duplicate : (state: Document, selection: Selection) => void;
+    delete    : (state: Document, selection: Selection) => void;
+    disable   : (state: Document, selection: Selection, isDisabled: boolean) => void;
 }

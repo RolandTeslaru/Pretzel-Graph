@@ -1,13 +1,14 @@
-import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../../sdk";
+import { Foundations } from "../../../../Foundations";
+import { Workflow } from "../../../../Workflow";
+import type { Document } from "../../index";
 import { nodeLifecycleReducers, type NodeLifecycleReducers } from "./lifecycle";
 import { nodeValueReducers, type NodeValueReducers } from "./values";
 import { nodePolymorphismReducers, type NodePolymorphismReducers } from "./polymorphism";
 
-type S      = WorkbenchSDK.State
+type S      = Document
 type NodeId = Workflow.Node.Id
 
-export const nodeReducers = {
+export const nodeReducers: NodeReducers = {
     // Lifecycle: create / remove / recreate / duplicate / apply derivative / wipe / disconnect
     // + validate / clearIssues (kept here since lifecycle is their primary consumer).
     ...nodeLifecycleReducers,
@@ -60,7 +61,7 @@ export const nodeReducers = {
             delete node.ui?.iconColor;
         }
     },
-} satisfies NodeReducers
+}
 
 export interface NodeMetaReducers {
     setSignalStrategy : (s: S, nodeId: NodeId, strategy: "AND" | "OR" | "XOR") => void;

@@ -3,7 +3,9 @@ import { debounce } from '@/decorators/debounce';
 import { toast } from 'sonner';
 import { Foundations, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '@/SDKs/ApiInterceptorSDK';
-import { workflowReducers } from '../reducers/workflow';
+import { Document } from '@pretzel-graph/shared/domain/Workbench/Document';
+
+const workflowReducers = Document.reducers.workflow;
 
 export const commit = async () => {
     const { workflowId, data, isDirty } = WorkbenchSDK.state;

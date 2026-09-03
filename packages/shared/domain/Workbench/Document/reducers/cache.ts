@@ -1,7 +1,7 @@
-import { Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const cacheReducers = {
+export const cacheReducers: INTERNAL_CacheReducers = {
     resolvedShape: {
         recreate: (s, nodeId) => {
             const node = s.data.nodes[nodeId];
@@ -78,17 +78,17 @@ export const cacheReducers = {
         s.cache.outputEdgesByPort[newNode.id] = {}
         cacheReducers.resolvedShape.recreate(s, newNode.id);
     }
-} satisfies INTERNAL_CacheReducers
+}
 
 type INTERNAL_CacheReducers = {
     resolvedShape: {
-        recreate: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => void
-        recreateAll: (state: WorkbenchSDK.State) => void
+        recreate: (state: Document, nodeId: Workflow.Node.Id) => void
+        recreateAll: (state: Document) => void
     }
-    ensureIncomingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
-    ensureOutgoingNodeEdges: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
-    deleteEdge: (state: WorkbenchSDK.State, edge: Workflow.Edge) => void
-    addEdge: (state: WorkbenchSDK.State, newEdge: Workflow.Edge) => void
-    deleteNode: (state: WorkbenchSDK.State, deletedNodeId: Workflow.Node.Id) => void
-    createNode: (state: WorkbenchSDK.State, newNode: Workflow.Node.Raw) => void
+    ensureIncomingNodeEdges: (state: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
+    ensureOutgoingNodeEdges: (state: Document, nodeId: Workflow.Node.Id) => Record<Workflow.Node.Id, Workflow.Edge.Id>
+    deleteEdge: (state: Document, edge: Workflow.Edge) => void
+    addEdge: (state: Document, newEdge: Workflow.Edge) => void
+    deleteNode: (state: Document, deletedNodeId: Workflow.Node.Id) => void
+    createNode: (state: Document, newNode: Workflow.Node.Raw) => void
 }

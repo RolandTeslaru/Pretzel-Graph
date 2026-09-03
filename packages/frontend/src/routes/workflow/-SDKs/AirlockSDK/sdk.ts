@@ -5,7 +5,9 @@ import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager"
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base"
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk"
 import { ExecutionSDK } from "@/routes/workflow/-SDKs/ExecutionSDK/sdk"
-import { executionSelectors } from "@/routes/workflow/-SDKs/WorkbenchSDK/selectors/execution"
+import { Document } from "@pretzel-graph/shared/domain/Workbench/Document"
+
+const executionSelectors = Document.selectors.execution
 
 const RUN_TIMEOUT_MS = 5000
 

@@ -1,7 +1,9 @@
-import { Validation, type Foundations, type Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import { Validation } from "../../../Validation";
+import type { Foundations } from "../../../Foundations";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const inputReducers = {
+export const inputReducers: InputReducers = {
     setValue: (s, nodeId, inputId, value) => {
         s.isDirty = true;
         s.reducers.node.ensureStaticValues(s, nodeId)[inputId] = value
@@ -54,29 +56,29 @@ export const inputReducers = {
         node.addedInputs.push(input);
         s.reducers.cache.resolvedShape.recreate(s, nodeId);
     }
-} satisfies InputReducers
+}
 
 
 type InputReducers = {
     setValue: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         inputId: Foundations.Port.Input.Id,
         value: any
     ) => void
     disconnectIfConnected: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         inputId: Foundations.Port.Input.Id
     ) => boolean
-    remove: (state: WorkbenchSDK.State, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
+    remove: (state: Document, nodeId: Workflow.Node.Id, inputId: Foundations.Port.Input.Id) => void
     validate: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         input: Foundations.Port.Input
     ) => boolean
     add: (
-        state: WorkbenchSDK.State,
+        state: Document,
         nodeId: Workflow.Node.Id,
         input: Foundations.Port.Input
      ) => void

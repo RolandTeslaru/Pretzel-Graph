@@ -1,10 +1,12 @@
-import { Validation, Foundations, type Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../../sdk";
+import { Validation } from "../../../../Validation";
+import { Foundations } from "../../../../Foundations";
+import type { Workflow } from "../../../../Workflow";
+import type { Document } from "../../index";
 import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
 
-type S       = WorkbenchSDK.State
+type S       = Document
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
 
@@ -15,7 +17,7 @@ const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
     "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List",
 ])
 
-export const fieldReducers = {
+export const fieldReducers: FieldReducers = {
     setValue: (s, nodeId, fieldId, value) => {
         s.isDirty = true;
         const staticValues = s.reducers.node.ensureStaticValues(s, nodeId)
@@ -115,7 +117,7 @@ export const fieldReducers = {
     variadic:  fieldVariadicReducers,
     condition: fieldConditionReducers,
     caseList:  fieldCaseListReducers,
-} satisfies FieldReducers
+}
 
 
 export interface FieldReducers {

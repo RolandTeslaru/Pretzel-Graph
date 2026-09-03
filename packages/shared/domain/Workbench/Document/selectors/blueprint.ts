@@ -1,7 +1,8 @@
-import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
-import type { WorkbenchSDK } from "../sdk";
+import type { Foundations } from "../../../Foundations";
+import type { Workflow } from "../../../Workflow";
+import type { Document } from "../index";
 
-export const blueprintSelectors = {
+export const blueprintSelectors: BlueprintSelectors = {
     get: (s, blueprintId) => s.blueprints[blueprintId] ?? null,
 
     // Takes the node rather than its id, so it also resolves nodes that live inside a
@@ -15,10 +16,10 @@ export const blueprintSelectors = {
 
         return s.selectors.blueprint.ofNode(s, node);
     },
-} satisfies BlueprintSelectors
+}
 
 export interface BlueprintSelectors {
-    get     : (s: WorkbenchSDK.State, blueprintId: Foundations.Blueprint.Id) => Foundations.Blueprint | null;
-    ofNode  : (s: WorkbenchSDK.State, node: Workflow.Node.Raw) => Foundations.Blueprint | null;
-    forNode : (s: WorkbenchSDK.State, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null;
+    get     : (s: Document, blueprintId: Foundations.Blueprint.Id) => Foundations.Blueprint | null;
+    ofNode  : (s: Document, node: Workflow.Node.Raw) => Foundations.Blueprint | null;
+    forNode : (s: Document, nodeId: Workflow.Node.Id) => Foundations.Blueprint | null;
 }

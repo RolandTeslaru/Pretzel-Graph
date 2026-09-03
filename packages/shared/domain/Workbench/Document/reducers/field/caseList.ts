@@ -1,7 +1,8 @@
-import type { WorkbenchSDK } from "../../sdk";
-import type { Workflow, Foundations } from "@pretzel-graph/shared/domain";
+import type { Document } from "../../index";
+import type { Workflow } from "../../../../Workflow";
+import type { Foundations } from "../../../../Foundations";
 
-type S             = WorkbenchSDK.State
+type S             = Document
 type NodeId        = Workflow.Node.Id
 type FieldId       = Foundations.Field.Id
 type PortId        = Foundations.Port.Output.Id
@@ -22,7 +23,7 @@ const replaceCaseListEntry = (
     caseList[index] = entry
 }
 
-export const fieldCaseListReducers = {
+export const fieldCaseListReducers: FieldCaseListReducers = {
     addEntry: (s, nodeId, fieldId, entry) => {
         const caseList = s.selectors.field.caseList.getValue(s, nodeId, fieldId)!
         s.reducers.node.ensureStaticValues(s, nodeId)[fieldId] = [...caseList, entry]
@@ -64,7 +65,7 @@ export const fieldCaseListReducers = {
         replaceCaseListEntry(s, nodeId, fieldId, portId, { ...entry, value, isExpression: isExpression || undefined })
         s.isDirty = true
     },
-} satisfies FieldCaseListReducers
+}
 
 
 export interface FieldCaseListReducers {
