@@ -15,8 +15,8 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 const ConversationArea: React.FC = () => {
 
-  const hasChatOutputNode = WorkbenchSDK.useStore(s => {
-        return Object.values(s.data.nodes).some(node => node.blueprintId === "Core.Chat.Output");
+  const hasChatOutputNode = WorkbenchSDK.useDocument(d => {
+        return Object.values(d.data.nodes).some(node => node.blueprintId === "Core.Chat.Output");
     })
     
 

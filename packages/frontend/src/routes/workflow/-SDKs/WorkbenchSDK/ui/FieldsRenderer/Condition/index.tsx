@@ -15,25 +15,25 @@ type Value = Foundations.Field.Condition.Value
 const useConditionValue = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id
-) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getValue(s, nodeId, fieldId))
+) => WorkbenchSDK.useDocument(d => d.selectors.field.condition.getValue(d, nodeId, fieldId))
 
 const useConditionGroup = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     ruleGroupId: RuleGroupId
-) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getGroup(s, nodeId, fieldId, ruleGroupId))
+) => WorkbenchSDK.useDocument(d => d.selectors.field.condition.getGroup(d, nodeId, fieldId, ruleGroupId))
 
 const useConditionRule = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     ruleId: RuleId
-) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getRule(s, nodeId, fieldId, ruleId))
+) => WorkbenchSDK.useDocument(d => d.selectors.field.condition.getRule(d, nodeId, fieldId, ruleId))
 
 const useConditionChildKind = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     id: RuleId | RuleGroupId
-) => WorkbenchSDK.useStore(s => s.selectors.field.condition.getChildKind(s, nodeId, fieldId, id))
+) => WorkbenchSDK.useDocument(d => d.selectors.field.condition.getChildKind(d, nodeId, fieldId, id))
 
 export const ConditionField = memo<RendererProps<'Condition'>>(({ field, nodeId, className }) => {
     const [root] = WorkbenchSDK.useField<Value>(nodeId, field)

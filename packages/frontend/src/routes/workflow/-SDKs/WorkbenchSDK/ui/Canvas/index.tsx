@@ -38,7 +38,7 @@ export default WorkflowCanvas
 
 const CanvasRenderer = memo(() => {
 
-    const [workflowId, data] = WorkbenchSDK.useStore(s => [s.workflowId, s.data])
+    const [workflowId, data] = WorkbenchSDK.useDocument(d => [d.workflowId, d.data])
 
     // Seed once; thereafter the canvas owns its drivers and we reconcile store changes
     // into them incrementally (below) so unchanged nodes/edges keep their identity.
@@ -47,7 +47,7 @@ const CanvasRenderer = memo(() => {
     const [nodeDrivers, setNodeDrivers] = useNodesState<NodeDriver>(seed.nodeDrivers)
     const [edgeDrivers, setEdgeDrivers] = useEdgesState<EdgeDriver>(seed.edgeDrivers)
 
-    const cycleIssues = WorkbenchSDK.useStore(s => s.issues.cycles);
+    const cycleIssues = WorkbenchSDK.useDocument(d => d.issues.cycles);
     const cycleSelectionDrivers = useMemo(
         () => createCycleSelectionDrivers(cycleIssues, data),
         [cycleIssues, data.ui.layout]
@@ -95,7 +95,7 @@ const CanvasRenderer = memo(() => {
 // are measured (error #008). Force a re-measure on the next frame so freshly added
 // nodes register their handle bounds and the edges route correctly.
 const NewNodeHandleMeasurer = memo(() => {
-    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const nodes = WorkbenchSDK.useDocument(d => d.data.nodes)
     const updateNodeInternals = useUpdateNodeInternals()
     const knownNodeIds = useRef<Set<string>>(new Set(Object.keys(nodes)))
 

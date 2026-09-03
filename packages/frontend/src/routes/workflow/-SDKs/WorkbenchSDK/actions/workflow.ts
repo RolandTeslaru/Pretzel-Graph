@@ -8,14 +8,14 @@ import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { requestWorkflowRepair } from "./workflowRepairDialog";
 
 export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
 
     return {
-        close:    (...props) => setState(s => { reducers.workflow.close(s,    ...props) }),
-        open:     (...props) => setState(s => { reducers.workflow.open(s,     ...props) }),
-        validate: (...props) => setState(s => { reducers.workflow.validate(s, ...props) }),
-        setFields: withCommit((...props) => setState(s => { reducers.workflow.setFields(s, ...props) })),
+        close:    (...props) => setDocument(d => { reducers.workflow.close(d,    ...props) }),
+        open:     (...props) => setDocument(d => { reducers.workflow.open(d,     ...props) }),
+        validate: (...props) => setDocument(d => { reducers.workflow.validate(d, ...props) }),
+        setFields: withCommit((...props) => setDocument(d => { reducers.workflow.setFields(d, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
                 const { workflow, blueprints, repairs } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
@@ -48,10 +48,10 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 // Also update the library metadata cache
                 LibrarySDK.actions.workflow.upsertMeta(meta);
 
-                setState(s => {
-                    // Seeded before open, which builds the cache off s.blueprints.
-                    reducers.blueprint.registerMany(s, blueprints);
-                    reducers.workflow.open(s, workflowToOpen, {
+                setDocument(d => {
+                    // Seeded before open, which builds the cache off d.blueprints.
+                    reducers.blueprint.registerMany(d, blueprints);
+                    reducers.workflow.open(d, workflowToOpen, {
                         repaired: repaired.applied > 0,
                     })
                 });
@@ -60,12 +60,12 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 // one-time normalization passes (reconstructPolymorphism / pruneDefault* /
                 // dependency.pruneDefaults) are no-ops and were removed. `open` may still prune
                 // dangling edges, so persist only when it actually changed something.
-                if (sdk.state.isDirty)
+                if (sdk.document.isDirty)
                     await sdk.actions.commit();
 
                 // Hydration (empty INITIAL -> loaded workflow) would otherwise be recorded
                 // as an undoable step; drop it so undo isn't armed on a fresh load.
-                (sdk.useStore as any).temporal.getState().clear();
+                (sdk.useDocument as any).temporal.getState().clear();
 
                 // Fire and forget
                 sdk.actions.dependency.checkUpdates()

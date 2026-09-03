@@ -18,7 +18,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
     const depRef = hyNode.dependencyRef
     const hasWorkflowDependency = !!depRef
 
-    const [dependencyUpdate, mode] = WorkbenchSDK.useStore(s => s.selectors.node.getDependencyUpdate(s, hyNode.id) ?? [null, null])
+    const [dependencyUpdate, mode] = WorkbenchSDK.useDocument(d => d.selectors.node.getDependencyUpdate(d, hyNode.id) ?? [null, null])
 
     const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || hyNode.blueprint.toolCompatible || hyNode.blueprint.proxyCompatible
 
@@ -96,8 +96,8 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
 
 
 const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const proxyTemplate = WorkbenchSDK.useStore(s =>
-        s.selectors.credential.getTemplate(s, nodeId, PROXY_TEMPLATE_ID)
+    const proxyTemplate = WorkbenchSDK.useDocument(d =>
+        d.selectors.credential.getTemplate(d, nodeId, PROXY_TEMPLATE_ID)
     )
     const [proxyInstanceId, setProxyInstance] = WorkbenchSDK.useCredential(nodeId, PROXY_TEMPLATE_ID)
 
@@ -157,7 +157,7 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
 });
 
 const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, nodeId));
+    const isTool = WorkbenchSDK.useDocument(d => d.selectors.node.isTool(d, nodeId));
 
     return (
         <Tipped label={isTool ? "Revert to Node" : "Convert to Tool"}>

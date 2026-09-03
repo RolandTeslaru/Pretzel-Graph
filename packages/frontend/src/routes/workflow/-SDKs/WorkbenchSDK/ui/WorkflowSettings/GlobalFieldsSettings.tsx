@@ -11,7 +11,7 @@ type GlobalField = Extract<Foundations.Field, { variant: GlobalFieldVariant }>
 const FIELD_VARIANTS: GlobalFieldVariant[] = ['String', 'Boolean', 'Integer', 'Float']
 
 export const GlobalFieldsSettings = () => {
-    const workflowFields = WorkbenchSDK.useStore(s => s.data.fields ?? [])
+    const workflowFields = WorkbenchSDK.useDocument(d => d.data.fields ?? [])
     const [fields, setFields] = useState<GlobalField[]>(() => workflowFields.filter(isGlobalField))
 
     const hasDuplicateIds = useMemo(() => {

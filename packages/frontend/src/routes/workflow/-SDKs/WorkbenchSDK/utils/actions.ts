@@ -8,14 +8,14 @@ import { Document } from '@pretzel-graph/shared/domain/Workbench/Document';
 const workflowReducers = Document.reducers.workflow;
 
 export const commit = async () => {
-    const { workflowId, data, isDirty } = WorkbenchSDK.state;
+    const { workflowId, data, isDirty } = WorkbenchSDK.document;
     if (isDirty === false || !workflowId) return;
 
     try {
         console.log("Committing")
         await Workbench.API.Workflow.commit(api, { workflowId, data })
 
-        if (WorkbenchSDK.state.workflowId === workflowId) {
+        if (WorkbenchSDK.document.workflowId === workflowId) {
             WorkbenchSDK.actions.setDirty(false);
         }
     } catch (error) {
@@ -40,12 +40,12 @@ export const withCommit = <TArgs extends any[]>(fn: (...args: TArgs) => void, me
     };
 };
 
-export const withCyclesRecompute = (fn: (s: WorkbenchSDK.State) => void): ((s: WorkbenchSDK.State) => void) => {
-    return (s: WorkbenchSDK.State) => {
-        fn(s);
-        if(s.cyclesDirty){
-            workflowReducers.recomputeAllCycles(s);
-            s.cyclesDirty = false
+export const withCyclesRecompute = (fn: (d: Document) => void): ((d: Document) => void) => {
+    return (d: Document) => {
+        fn(d);
+        if(d.cyclesDirty){
+            workflowReducers.recomputeAllCycles(d);
+            d.cyclesDirty = false
         }
     }
 }
@@ -70,7 +70,7 @@ export const createToastPromise = <T>(promise: Promise<T>, options: Parameters<t
 }
 
 export const validateField = (nodeId: Workflow.Node.Id, field: Foundations.Field) => {
-    WorkbenchSDK.useStore.setState(s => { WorkbenchSDK.reducers.field.validate(s, nodeId, field) });
+    WorkbenchSDK.setDocument(d => { WorkbenchSDK.reducers.field.validate(d, nodeId, field) });
 };
 
 export const debouncedValidateField = debounce((nodeId: Workflow.Node.Id, field: Foundations.Field) => {
@@ -78,7 +78,7 @@ export const debouncedValidateField = debounce((nodeId: Workflow.Node.Id, field:
 }, 300);
 
 export const validateInput = (nodeId: Workflow.Node.Id, input: Foundations.Port.Input) => {
-    WorkbenchSDK.useStore.setState(s => { WorkbenchSDK.reducers.input.validate(s, nodeId, input) });
+    WorkbenchSDK.setDocument(d => { WorkbenchSDK.reducers.input.validate(d, nodeId, input) });
 };
 
 export const debouncedValidateInput = debounce((nodeId: Workflow.Node.Id, input: Foundations.Port.Input) => {

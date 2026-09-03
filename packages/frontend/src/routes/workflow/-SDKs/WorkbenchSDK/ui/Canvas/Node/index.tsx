@@ -44,10 +44,8 @@ export default CanvasNode
 
 const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
-  const [isNodeClicked, hasUpdate] = WorkbenchSDK.useStore(s => [
-    s.clickedNodeId === hyNode.id,
-    s.selectors.dependency.doesNodeHaveUpdate(s, hyNode.id)
-  ])
+  const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
+  const hasUpdate     = WorkbenchSDK.useDocument(d => d.selectors.dependency.doesNodeHaveUpdate(d, hyNode.id))
 
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled

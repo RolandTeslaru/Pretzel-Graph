@@ -17,8 +17,8 @@ const IncomingPanel = ({ nodeId }: Props) => {
   // which would freeze the ports it captured until the panel is torn down.
   const inputs = WorkbenchSDK.useInputs(nodeId)
 
-  const blueprintId = WorkbenchSDK.useStore(s => {
-    const node = s.data.nodes[nodeId]
+  const blueprintId = WorkbenchSDK.useDocument(d => {
+    const node = d.data.nodes[nodeId]
     return node?.reconciledBlueprintId ?? node?.blueprintId
   })
   const isIgniter = ShelfSDK.useStore(s => blueprintId ? s.blueprints[blueprintId]?.igniter ?? false : false)

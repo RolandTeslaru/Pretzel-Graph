@@ -31,7 +31,7 @@ function formatTimelineTimestamp(value: Date | string | null | undefined): strin
 }
 
 function VersionHistory({ className, hideHeader }: { className?: string; hideHeader?: boolean }) {
-    const [workflowId, isDirty] = WorkbenchSDK.useStore(s => [s.workflowId, s.isDirty]);
+    const [workflowId, isDirty] = WorkbenchSDK.useDocument(d => [d.workflowId, d.isDirty]);
     const workflowUpdatedAt = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.updated_at);
 
     const activePublication = VersionControlSDK.useStore(s => VersionControlSDK.selectors.getActive(s));

@@ -16,7 +16,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
     const session = ExecutionSDK.useStore(s => s.currentExecution?.session);
 
-    const expressionCtx = WorkbenchSDK.useStore(s => s.selectors.node.getLegacyExpressionContext(s, nodeId, session));
+    const expressionCtx = WorkbenchSDK.useDocument(d => d.selectors.node.getLegacyExpressionContext(d, nodeId, session));
 
     const parsedWebhook = useMemo(() => {
         if (!expressionCtx)
@@ -32,7 +32,7 @@ const WebhookRenderer: React.FC<Props> = memo(({ webhook, nodeId }) => {
 
     }, [webhook, expressionCtx, session])
 
-    const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
+    const workflowId = WorkbenchSDK.useDocument(d => d.workflowId);
 
     const [tab, setTab] = useState<'test' | 'production'>('test');
 

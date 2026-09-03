@@ -32,7 +32,7 @@ const getSelection = (sdk: WorkbenchSDKImpl): Selection | null => {
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
 
     const nodeActions        = createNodeActions(sdk);
@@ -48,27 +48,27 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         node: nodeActions,
         tool: toolActions,
         edge: {
-            create:            withCommit((conn)   => setState(withCyclesRecompute(s => { reducers.edge.create(s, conn) }))),
-            remove:            withCommit((edgeId) => setState(withCyclesRecompute(s => { reducers.edge.remove(s, edgeId) }))),
+            create:            withCommit((conn)   => setDocument(withCyclesRecompute(d => { reducers.edge.create(d, conn) }))),
+            remove:            withCommit((edgeId) => setDocument(withCyclesRecompute(d => { reducers.edge.remove(d, edgeId) }))),
         },
         port: {
-            addInput:             withCommit((...props) => setState(s => { reducers.port.addInput(s,             ...props) })),
-            removeInput:          withCommit((...props) => setState(withCyclesRecompute(s => { reducers.port.removeInput(s,          ...props) }))),
-            removeOutput:         withCommit((...props) => setState(withCyclesRecompute(s => { reducers.port.removeOutput(s,         ...props) }))),
-            addOutput:            withCommit((...props) => setState(s => { reducers.port.addOutput(s,            ...props) })),
-            setOutputDisplayName: withCommit((...props) => setState(s => { reducers.port.setOutputDisplayName(s, ...props) })),
+            addInput:             withCommit((...props) => setDocument(d => { reducers.port.addInput(d,             ...props) })),
+            removeInput:          withCommit((...props) => setDocument(withCyclesRecompute(d => { reducers.port.removeInput(d,          ...props) }))),
+            removeOutput:         withCommit((...props) => setDocument(withCyclesRecompute(d => { reducers.port.removeOutput(d,         ...props) }))),
+            addOutput:            withCommit((...props) => setDocument(d => { reducers.port.addOutput(d,            ...props) })),
+            setOutputDisplayName: withCommit((...props) => setDocument(d => { reducers.port.setOutputDisplayName(d, ...props) })),
         },
         field: fieldActions,
         input: {
             setValue: withCommit((nodeId, input, value) => {
-                setState(s => { reducers.input.setValue(s, nodeId, input.id, value) });
+                setDocument(d => { reducers.input.setValue(d, nodeId, input.id, value) });
                 debouncedValidateInput(nodeId, input);
             }),
-            validate:          (...props) => { setState(s => { reducers.input.validate(s,      ...props) }) },
+            validate:          (...props) => { setDocument(d => { reducers.input.validate(d,      ...props) }) },
         },
         credential: {
-            setInstance:       withCommit((...props) => setState(s => { reducers.credential.setInstance(s, ...props) })),
-            validate:          (...props) => { setState(s => { reducers.credential.validate(s, ...props) }) },
+            setInstance:       withCommit((...props) => setDocument(d => { reducers.credential.setInstance(d, ...props) })),
+            validate:          (...props) => { setDocument(d => { reducers.credential.validate(d, ...props) }) },
         },
         temporal: {
             // staticValues are excluded from history (see sdk equality), so a restore would
@@ -76,67 +76,65 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             // values after the structural restore. The corrective set doesn't push history
             // (equality ignores staticValues).
             undo: () => {
-                const sv = sdk.state.data.staticValues;
-                (sdk.useStore as any).temporal.getState().undo();
-                setState(s => {
-                    s.data.staticValues = sv;
-                    s.cache = Workflow.createCache(s.data, s.blueprints);
+                const sv = sdk.document.data.staticValues;
+                (sdk.useDocument as any).temporal.getState().undo();
+                setDocument(d => {
+                    d.data.staticValues = sv;
+                    d.cache = Workflow.createCache(d.data, d.blueprints);
                 });
             },
             redo: () => {
-                const sv = sdk.state.data.staticValues;
-                (sdk.useStore as any).temporal.getState().redo();
-                setState(s => {
-                    s.data.staticValues = sv;
-                    s.cache = Workflow.createCache(s.data, s.blueprints);
+                const sv = sdk.document.data.staticValues;
+                (sdk.useDocument as any).temporal.getState().redo();
+                setDocument(d => {
+                    d.data.staticValues = sv;
+                    d.cache = Workflow.createCache(d.data, d.blueprints);
                 });
             }
         },
         layout: {
             node: {
-                add:           withCommit((...props) => setState(s => { reducers.layout.node.add(s,         ...props) })),
-                remove:        withCommit((...props) => setState(s => { reducers.layout.node.remove(s,      ...props) })),
-                setPosition:   withCommit((...props) => setState(s => { reducers.layout.node.setPosition(s, ...props) })),
+                add:           withCommit((...props) => setDocument(d => { reducers.layout.node.add(d,         ...props) })),
+                remove:        withCommit((...props) => setDocument(d => { reducers.layout.node.remove(d,      ...props) })),
+                setPosition:   withCommit((...props) => setDocument(d => { reducers.layout.node.setPosition(d, ...props) })),
             },
             // Viewport is per-user view state — update the store only, no cloud commit.
             // It still rides along to the cloud inside `data` on the next real edit.
             viewport: {
-                set:           (...props) => setState(s => { reducers.layout.viewport.set(s,         ...props) }),
-                setZoom:       (...props) => setState(s => { reducers.layout.viewport.setZoom(s,     ...props) }),
-                setPosition:   (...props) => setState(s => { reducers.layout.viewport.setPosition(s, ...props) }),
+                set:           (...props) => setDocument(d => { reducers.layout.viewport.set(d,         ...props) }),
+                setZoom:       (...props) => setDocument(d => { reducers.layout.viewport.setZoom(d,     ...props) }),
+                setPosition:   (...props) => setDocument(d => { reducers.layout.viewport.setPosition(d, ...props) }),
             }
         },
         workflow: workflowActions,
-        setClickedNodeId:          (nodeId) => setState(s => { reducers.setClickedNodeId(s, nodeId) }),
-        setSelectionContextMenu:   (pos) => setState(s => { reducers.setSelectionContextMenu(s, pos) }),
-        setPaneContextMenu:        (pos) => setState(s => { reducers.setPaneContextMenu(s, pos) }),
-        setDirty:             (value) => setState(s => {
-            if (s.isDirty !== value)
-                s.isDirty = value;
+        setClickedNodeId:          (nodeId) => sdk.useStore.setState(s => { sdk.editorReducers.setClickedNodeId(s, nodeId) }),
+        setSelectionContextMenu:   (pos) => sdk.useStore.setState(s => { sdk.editorReducers.setSelectionContextMenu(s, pos) }),
+        setPaneContextMenu:        (pos) => sdk.useStore.setState(s => { sdk.editorReducers.setPaneContextMenu(s, pos) }),
+        setDirty:             (value) => setDocument(d => {
+            if (d.isDirty !== value)
+                d.isDirty = value;
         }),
         takeSnapshot:         () => { },
-        setDraggedPort: (portRef) => setState({
-            draggedPort: portRef
-        }),
+        setDraggedPort: (portRef) => sdk.useStore.setState({ draggedPort: portRef }),
         clipboard: clipboardActions,
         selection: {
             duplicate: withCommit(() => {
                 const selection = getSelection(sdk);
                 if (!selection) return;
 
-                setState(withCyclesRecompute(s => { reducers.selection.duplicate(s, selection) }));
+                setDocument(withCyclesRecompute(d => { reducers.selection.duplicate(d, selection) }));
             }),
             delete: withCommit(() => {
                 const selection = getSelection(sdk);
                 if (!selection) return;
 
-                setState(withCyclesRecompute(s => { reducers.selection.delete(s, selection) }));
+                setDocument(withCyclesRecompute(d => { reducers.selection.delete(d, selection) }));
             }),
             disable: withCommit((isDisabled) => {
                 const selection = getSelection(sdk);
                 if (!selection) return;
 
-                setState(s => { reducers.selection.disable(s, selection, isDisabled) });
+                setDocument(d => { reducers.selection.disable(d, selection, isDisabled) });
             }),
         },
         subWorkflow: subWorkflowActions,
@@ -198,9 +196,9 @@ export interface _WorkbenchSDKActions {
             set             : DropFirstArg<WorkbenchSDK.Reducers['layout']['viewport']['set']>;
         };
     };
-    setClickedNodeId             : DropFirstArg<WorkbenchSDK.Reducers['setClickedNodeId']>;
-    setSelectionContextMenu      : DropFirstArg<WorkbenchSDK.Reducers['setSelectionContextMenu']>;
-    setPaneContextMenu           : DropFirstArg<WorkbenchSDK.Reducers['setPaneContextMenu']>;
+    setClickedNodeId             : DropFirstArg<WorkbenchSDK.EditorReducers['setClickedNodeId']>;
+    setSelectionContextMenu      : DropFirstArg<WorkbenchSDK.EditorReducers['setSelectionContextMenu']>;
+    setPaneContextMenu           : DropFirstArg<WorkbenchSDK.EditorReducers['setPaneContextMenu']>;
     setDraggedPort          : (portRef: WorkbenchSDK.PortRef | null) => void;
     setDirty                : (dirty: boolean) => void;
     takeSnapshot            : (p: { force?: boolean }) => void;

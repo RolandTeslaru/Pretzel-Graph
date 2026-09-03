@@ -34,7 +34,7 @@ export const AddInputPortDialog = ({ nodeId, dialogId }: Props) => {
     })
 
     const onSubmit = (values: Values) => {
-        const state = WorkbenchSDK.state
+        const state = WorkbenchSDK.document
 
         
         const existingIds = new Set<string>(

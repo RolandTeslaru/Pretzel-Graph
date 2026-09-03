@@ -107,7 +107,7 @@ const RelationLayer = React.memo(({
 
             const srcNode   = nodes[srcUnit.trackId]
             const srcPort   = srcNode
-                ? WorkbenchSDK.state.selectors.node.getOutputs(WorkbenchSDK.state, srcUnit.trackId).find(p => p.id === srcPortId)
+                ? WorkbenchSDK.document.selectors.node.getOutputs(WorkbenchSDK.document, srcUnit.trackId).find(p => p.id === srcPortId)
                 : undefined
             const portColor = srcPort ? `var(--port-${srcPort.variant})` : "var(--muted-foreground)"
 

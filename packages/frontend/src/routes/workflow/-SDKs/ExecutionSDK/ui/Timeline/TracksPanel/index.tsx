@@ -8,7 +8,7 @@ import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'
 const TracksPanel = () => {
     const layout = ExecutionSDK.useStore(s => s.timeline.layout)
     const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording ?? null)
-    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const workbenchNodes = WorkbenchSDK.useDocument(d => d.data.nodes)
     const nodes = resolveTimelineNodes(recording, workbenchNodes)
     const { labelsRef } = ExecutionSDK.runtime.timeline
     // panelRef drives drag positioning; labelsRef (on the SDK) drives scroll sync

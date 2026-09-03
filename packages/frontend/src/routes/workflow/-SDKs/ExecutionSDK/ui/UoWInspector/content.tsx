@@ -45,14 +45,14 @@ export const Content = memo(({ uowId }: Props) => {
         return [uow, snapshotedNode]
     })
 
-    const [node, ui] = WorkbenchSDK.useStore(s => {
+    const [node, ui] = WorkbenchSDK.useDocument(d => {
         const trackId = uow?.trackId
         if (!trackId)
             return [undefined, undefined]
 
         return [
-            snapshotedNode ?? s.selectors.node.get(s, trackId),
-            s.selectors.node.getUI(s, trackId),
+            snapshotedNode ?? d.selectors.node.get(d, trackId),
+            d.selectors.node.getUI(d, trackId),
         ]
     })
 

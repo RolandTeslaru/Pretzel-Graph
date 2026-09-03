@@ -22,7 +22,7 @@ const statusVariant: Record<Execution.Status, BadgeProps["variant"]> = {
 
 const ExecutionHistoryPanel = () => {
 
-    const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
+    const workflowId = WorkbenchSDK.useDocument(d => d.workflowId);
     const executionHistory = ExecutionSDK.useStore(s => s.executionHistory)
     const currentExecutionId = ExecutionSDK.useStore(s => s.currentExecution?.id)
 

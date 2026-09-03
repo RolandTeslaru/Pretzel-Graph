@@ -206,7 +206,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                 if (layout.byTrackId.has(trackId)) 
                     return;
 
-                const nodes = resolveTimelineNodes(s.currentExecution?.recording ?? null, WorkbenchSDK.state.data.nodes);
+                const nodes = resolveTimelineNodes(s.currentExecution?.recording ?? null, WorkbenchSDK.document.data.nodes);
                 const row = buildTrackLayout(trackId, layout.totalHeight, nodes);
                 
                 layout.tracks.push(row);
@@ -216,7 +216,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
             // One-shot rebuild from a fully-loaded recording (non-live path).
             rebuild: (s) => {
                 const rec = s.currentExecution?.recording ?? null;
-                const nodes = resolveTimelineNodes(rec, WorkbenchSDK.state.data.nodes);
+                const nodes = resolveTimelineNodes(rec, WorkbenchSDK.document.data.nodes);
                 s.timeline.layout = getTimelineLayout(rec, nodes);
                 recomputeGeometry(s);
             },

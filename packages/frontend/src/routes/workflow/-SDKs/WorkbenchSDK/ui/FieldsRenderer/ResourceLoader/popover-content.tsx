@@ -28,7 +28,7 @@ export const PopoverContent = memo<Props>(({ nodeId, field, selectedValue, onSel
     const query = QuerySDK.useQuery<Workbench.API.Field.ResourceLoader.LoadOptions.Response>(
         ['resource-loader', nodeId, field.id, debouncedSearch],
         async () => {
-            const s = WorkbenchSDK.state
+            const s = WorkbenchSDK.document
             return Workbench.API.Field.ResourceLoader.loadOptions(api, {
                 blueprintId: s.data.nodes[nodeId].blueprintId,
                 loaderId: field.loaderId,

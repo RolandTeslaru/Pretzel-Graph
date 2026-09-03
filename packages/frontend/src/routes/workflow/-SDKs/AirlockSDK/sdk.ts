@@ -52,7 +52,7 @@ class AirlockSDKImpl extends BaseSDK<AirlockSDK.State> {
     // Globals keyed by the names the Airlock rewrite emits. $igniter is
     // runtime-only → present-but-undefined so referencing them previews as undefined, not a ReferenceError.
     private buildGlobals(nodeId: Workflow.Node.Id): Record<string, unknown> {
-        const ws = WorkbenchSDK.state
+        const ws = WorkbenchSDK.document
         const session = ExecutionSDK.state.currentExecution?.session
         const incoming = executionSelectors.getNodeIncomingData(ws, nodeId, session) ?? {}
 

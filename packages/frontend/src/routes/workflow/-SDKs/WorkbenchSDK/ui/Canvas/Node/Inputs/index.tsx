@@ -10,7 +10,7 @@ const Item: React.FC<{
     nodeId: Workflow.Node.Id
     isFlipped?: boolean
 }> = memo(({ input, nodeId, isFlipped }) => {
-    const hasEdge = WorkbenchSDK.useStore(s => s.selectors.input.hasEdge(s, nodeId, input.id))
+    const hasEdge = WorkbenchSDK.useDocument(d => d.selectors.input.hasEdge(d, nodeId, input.id))
 
     if (!input)
         return;

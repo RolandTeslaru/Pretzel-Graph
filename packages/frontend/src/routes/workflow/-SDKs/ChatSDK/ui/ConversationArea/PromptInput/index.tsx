@@ -20,8 +20,8 @@ interface Props {
 }
 
 const PromptInput: React.FC<Props> = ({ className }) => {
-    const hasChatInputNode = WorkbenchSDK.useStore(s => {
-        return Object.values(s.data.nodes).some(node => node.blueprintId === "Core.Chat.Input");
+    const hasChatInputNode = WorkbenchSDK.useDocument(d => {
+        return Object.values(d.data.nodes).some(node => node.blueprintId === "Core.Chat.Input");
     })
     
     const { handleSubmit, control, reset, formState: { isValid } } = useForm<PromptFormValues>({

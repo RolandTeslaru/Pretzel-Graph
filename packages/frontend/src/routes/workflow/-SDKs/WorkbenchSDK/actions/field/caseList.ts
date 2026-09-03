@@ -13,7 +13,7 @@ export function createCaseListActions(
     sdk: WorkbenchSDKImpl,
     validateFieldById: (nodeId: NodeId, fieldId: FieldId) => void
 ) {
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
     const sel      = sdk.selectors;
 
@@ -22,12 +22,12 @@ export function createCaseListActions(
             const portId = Port.Output.Id.parse(crypto.randomUUID())
             const entry  = Field.CaseList.createEntry(portId, label)
 
-            setState(s => {
-                reducers.field.caseList.addEntry(s, nodeId, fieldId, entry)
+            setDocument(d => {
+                reducers.field.caseList.addEntry(d, nodeId, fieldId, entry)
 
-                const resolvedVariant = sel.port.polymorphism.getResolvedVariantInGroup(s, nodeId, "condition") ?? "Unresolved"
+                const resolvedVariant = sel.port.polymorphism.getResolvedVariantInGroup(d, nodeId, "condition") ?? "Unresolved"
 
-                reducers.port.addOutput(s, nodeId, {
+                reducers.port.addOutput(d, nodeId, {
                     id: portId,
                     displayName: label,
                     variant: resolvedVariant,
@@ -39,28 +39,28 @@ export function createCaseListActions(
         }),
 
         removeEntry: withCommit((nodeId, fieldId, portId) => {
-            setState(s => {
-                reducers.field.caseList.removeEntry(s, nodeId, fieldId, portId)
-                reducers.port.removeOutput(s, nodeId, portId)
+            setDocument(d => {
+                reducers.field.caseList.removeEntry(d, nodeId, fieldId, portId)
+                reducers.port.removeOutput(d, nodeId, portId)
             })
             validateFieldById(nodeId, fieldId)
         }),
 
         setLabel: withCommit((nodeId, fieldId, portId, label) => {
-            setState(s => {
-                reducers.field.caseList.setLabel(s, nodeId, fieldId, portId, label)
-                reducers.port.setOutputDisplayName(s, nodeId, portId, label)
+            setDocument(d => {
+                reducers.field.caseList.setLabel(d, nodeId, fieldId, portId, label)
+                reducers.port.setOutputDisplayName(d, nodeId, portId, label)
             })
             validateFieldById(nodeId, fieldId)
         }),
 
         setValue: withCommit((nodeId, fieldId, portId, value) => {
-            setState(s => { reducers.field.caseList.setValue(s, nodeId, fieldId, portId, value) })
+            setDocument(d => { reducers.field.caseList.setValue(d, nodeId, fieldId, portId, value) })
             validateFieldById(nodeId, fieldId)
         }),
 
         setIsExpression: withCommit((nodeId, fieldId, portId, isExpression) => {
-            setState(s => { reducers.field.caseList.setIsExpression(s, nodeId, fieldId, portId, isExpression) })
+            setDocument(d => { reducers.field.caseList.setIsExpression(d, nodeId, fieldId, portId, isExpression) })
             validateFieldById(nodeId, fieldId)
         }),
     } satisfies CaseListActions

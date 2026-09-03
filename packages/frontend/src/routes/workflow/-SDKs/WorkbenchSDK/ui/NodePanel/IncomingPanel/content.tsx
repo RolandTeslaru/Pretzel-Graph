@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
-  const cache = WorkbenchSDK.useStore(s => s.cache)
+  const cache = WorkbenchSDK.useDocument(d => d.cache)
 
   const projections = useMemo(() => {
     const result: Execution.Session["node_output_projections"] = {}

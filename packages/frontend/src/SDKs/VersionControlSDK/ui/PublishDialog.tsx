@@ -41,8 +41,8 @@ function PublishDialogContent() {
         e.preventDefault()
         if (!name.trim()) return
 
-        const workflowId = WorkbenchSDK.state.workflowId
-        const workflowData = WorkbenchSDK.state.data
+        const workflowId = WorkbenchSDK.document.workflowId
+        const workflowData = WorkbenchSDK.document.data
 
         setIsLoading(true)
         try {

@@ -9,7 +9,7 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 
 export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
     const sel = sdk.selectors;
 
@@ -44,7 +44,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 return;
             }
             
-            const state = sdk.state;
+            const state = sdk.document;
             const masterData = state.data;
             const selectedNodeIds = new Set(nodeIds);
 
@@ -127,15 +127,15 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 throw error;
             }
 
-            setState(withCyclesRecompute(s => {
+            setDocument(withCyclesRecompute(d => {
                 nodeIds.forEach(nodeId => {
-                    if (s.data.nodes[nodeId])
-                        reducers.node.remove(s, nodeId)
+                    if (d.data.nodes[nodeId])
+                        reducers.node.remove(d, nodeId)
                 })
 
                 edgeIds.forEach(edgeId => {
-                    if (s.cache.edges[edgeId])
-                        reducers.edge.remove(s, edgeId)
+                    if (d.cache.edges[edgeId])
+                        reducers.edge.remove(d, edgeId)
                 })
 
                 const executeSubWorkflowBlueprint = {
@@ -149,7 +149,7 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
                 } satisfies Foundations.Blueprint;
 
                 reducers.node.create(
-                    s, executeSubWorkflowBlueprint, groupNodePos,
+                    d, executeSubWorkflowBlueprint, groupNodePos,
                     { ["workflowId" as Foundations.Field.Id]: workflowId }
                 )
             }))

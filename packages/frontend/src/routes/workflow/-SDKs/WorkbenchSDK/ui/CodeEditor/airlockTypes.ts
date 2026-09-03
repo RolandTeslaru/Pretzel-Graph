@@ -43,7 +43,7 @@ export function getIncomingShape(nodeId: Workflow.Node.Id): Record<string, unkno
     const execution = ExecutionSDK.state.currentExecution
     if (!execution) return {}
 
-    const { cache, data } = WorkbenchSDK.state
+    const { cache, data } = WorkbenchSDK.document
     const result: Record<string, unknown> = {}
 
     Object.entries(cache.inputEdgesByPort[nodeId] ?? {}).forEach(([targetPortId, edgeId]) => {
@@ -87,7 +87,7 @@ const VARIANT_TS: Partial<Record<Foundations.Field.Variant, string>> = {
 // Object type built from the workflow's config fields → `$config` key autocomplete.
 // Mirrors the runtime bag Airlock.resolveWorkflowConfig produces (field id → value).
 export function getConfigType(): string {
-    const fields = WorkbenchSDK.state.data.fields ?? []
+    const fields = WorkbenchSDK.document.data.fields ?? []
     if (fields.length === 0) return 'Record<string, any>'
 
     const entries = fields.map((field) => {
@@ -111,7 +111,7 @@ function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: s
 // `$item` / `$itemIndex` in scope (the node binds them per-element at runtime), so they're
 // surfaced in autocomplete exclusively for those fields.
 export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped?: boolean }): string {
-    const ids = Object.keys(WorkbenchSDK.state.data.nodes) as Workflow.Node.Id[]
+    const ids = Object.keys(WorkbenchSDK.document.data.nodes) as Workflow.Node.Id[]
     const configKey = `${JSON.stringify(WorkflowDomain.WORKFLOW_CONFIG_NODE_ID)}: ${getConfigType()}`
 
     const lines = [
