@@ -266,6 +266,44 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
+    public readonly TripleSplitTemplate: DialogSDK.TripleSplitTemplate = ({ children, leftSidebarClassName, rightSidebarClassName, contentClassName, leftSidebarRenderer, rightSidebarRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
+        const delayStyle = useAnimationDelay();
+        const scale_offset = (index - (dialogsSize - 1)) * 8;
+        const y_offset = (index - (dialogsSize - 1)) * 40;
+        const finalScale = 1 + scale_offset / 100;
+
+        const blockDismiss = dismissible ? undefined : (e: Event) => e.preventDefault();
+
+        return (
+            <Dialog.Root
+                open={entry.isOpen}
+                onOpenChange={() => { if (dismissible) DialogSDK.actions.pop(entry.dialogId) }}
+            >
+                <Dialog.Content
+                    unstyled
+                    style={{
+                        ...delayStyle,
+                        transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
+                    }}
+                    darkenBackground={index === 0}
+                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
+                    onInteractOutside={blockDismiss}
+                    onEscapeKeyDown={blockDismiss}
+                >
+                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + leftSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        {leftSidebarRenderer()}
+                    </div>
+                    <div className={"bg-card/80 border-y border-border backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        {children}
+                    </div>
+                    <div className={"bg-card/50 rounded-r-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + rightSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        {rightSidebarRenderer()}
+                    </div>
+                </Dialog.Content>
+            </Dialog.Root>
+        )
+    }
+
 
 
     public readonly TabsTemplate: DialogSDK.TabsTemplate = ({ children, items, defaultValue, empty, sidebarClassName, contentClassName, header, sidebarBottomRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
@@ -417,6 +455,13 @@ export namespace DialogSDK {
     export type SplitTemplate = React.FC<TemplateProps & {
         sidebarRenderer: () => React.ReactNode
         sidebarClassName?: string
+        contentClassName?: string
+    }>
+    export type TripleSplitTemplate = React.FC<TemplateProps & {
+        leftSidebarRenderer: () => React.ReactNode
+        rightSidebarRenderer: () => React.ReactNode
+        leftSidebarClassName?: string
+        rightSidebarClassName?: string
         contentClassName?: string
     }>
 
