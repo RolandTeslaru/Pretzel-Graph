@@ -13,7 +13,6 @@ import { clipboardActions } from './clipboard';
 import type { Selection } from '../reducers/selection';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import React from 'react';
-import { ShelfSDK } from '../../ShelfSDK/sdk';
 
 const FullScreenNodePanel = React.lazy(() => import('../ui/NodePanel/fullscreen'));
 
@@ -81,7 +80,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 (sdk.useStore as any).temporal.getState().undo();
                 setState(s => {
                     s.data.staticValues = sv;
-                    s.cache = Workflow.createCache(s.data, ShelfSDK.state.blueprints);
+                    s.cache = Workflow.createCache(s.data, s.blueprints);
                 });
             },
             redo: () => {
@@ -89,7 +88,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
                 (sdk.useStore as any).temporal.getState().redo();
                 setState(s => {
                     s.data.staticValues = sv;
-                    s.cache = Workflow.createCache(s.data, ShelfSDK.state.blueprints);
+                    s.cache = Workflow.createCache(s.data, s.blueprints);
                 });
             }
         },

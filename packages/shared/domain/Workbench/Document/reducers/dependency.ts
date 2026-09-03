@@ -1,6 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDK } from "../sdk"
-import { ShelfSDK } from "../../ShelfSDK/sdk"
 import { isEqual } from "lodash"
 
 const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as const
@@ -30,7 +29,7 @@ function pruneWorkflowData(s: WorkbenchSDK.State, data: Workflow.Data) {
     }
 
     for (const node of Object.values(data.nodes)) {
-        const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId]
+        const blueprint = s.selectors.blueprint.ofNode(s, node)
         if (!blueprint) continue
 
         if (node.ui)

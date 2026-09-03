@@ -3,7 +3,6 @@ import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import type { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import type { WorkbenchSDK } from "../sdk";
 import { executionSelectors } from "./execution";
-import { ShelfSDK } from '../../ShelfSDK/sdk';
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
@@ -182,7 +181,7 @@ export const nodeSelectors = {
         if (!node)
             return null;
 
-        return ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId] ?? null;
+        return s.selectors.blueprint.ofNode(s, node);
     },
     getIgniteableNodes: (s) => {
         return Object.values(s.data.nodes)
@@ -192,7 +191,7 @@ export const nodeSelectors = {
     },
     getUI: (s, nodeId) => {
         const node = s.data.nodes[nodeId];
-        const bp = node ? ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId] : undefined;
+        const bp = node ? s.selectors.blueprint.ofNode(s, node) : undefined;
         // The node may have been deleted (stale id) or its blueprint not yet hydrated. Callers
         // render unconditionally, so hand back a neutral placeholder rather than null.
         if (!node || !bp)

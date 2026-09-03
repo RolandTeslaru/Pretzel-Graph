@@ -3,7 +3,6 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import type { WorkbenchSDK } from "../sdk";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "@pretzel-graph/shared/domain/Algorithms";
-import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export const workflowReducers = {
     open: (s, workflow, options = {}) => {
@@ -11,7 +10,7 @@ export const workflowReducers = {
 
         s.workflowId = workflow.id;
         s.data = data;
-        s.cache = Workflow.createCache(data, ShelfSDK.state.blueprints);
+        s.cache = Workflow.createCache(data, s.blueprints);
 
         // Drop edges whose endpoint no longer exists — either the node itself (orphaned by a
         // deletion that didn't clean up its edges) or the port (blueprint changed shape).
@@ -39,7 +38,7 @@ export const workflowReducers = {
 
         if (prunedCount > 0) {
             data.edges = keptEdges;
-            s.cache = Workflow.createCache(data, ShelfSDK.state.blueprints);
+            s.cache = Workflow.createCache(data, s.blueprints);
         }
         s.cycles = [];
         s.stronglyConnectedComponents = [];

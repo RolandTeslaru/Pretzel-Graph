@@ -49,6 +49,8 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 LibrarySDK.actions.workflow.upsertMeta(meta);
 
                 setState(s => {
+                    // Seeded before open, which builds the cache off s.blueprints.
+                    reducers.blueprint.registerMany(s, blueprints);
                     reducers.workflow.open(s, workflowToOpen, {
                         repaired: repaired.applied > 0,
                     })

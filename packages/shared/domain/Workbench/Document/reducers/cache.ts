@@ -1,6 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
-import { ShelfSDK } from "../../ShelfSDK/sdk";
 
 export const cacheReducers = {
     resolvedShape: {
@@ -11,7 +10,7 @@ export const cacheReducers = {
                 return;
             }
 
-            const blueprint = ShelfSDK.state.blueprints[node.reconciledBlueprintId ?? node.blueprintId];
+            const blueprint = s.selectors.blueprint.ofNode(s, node);
             if (!blueprint) {
                 delete s.cache.resolvedShape[nodeId];
                 return;

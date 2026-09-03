@@ -6,6 +6,7 @@ import { credentialSelectors, type CredentialSelectors } from './credential';
 import { outputSelectors, type OutputSelectors } from './output';
 import { portSelectors, type PortSelectors } from './port';
 import { cacheSelectors, type CacheSelectors } from './cache';
+import { blueprintSelectors, type BlueprintSelectors } from './blueprint';
 import { executionSelectors, type ExecutionSelectors } from './execution';
 import { graphSelectors, type GraphSelectors } from './graph';
 import { dependencySelectors, type DependencySelectors } from './dependency';
@@ -13,7 +14,6 @@ import { layoutSelectors, type LayoutSelectors } from './layout';
 import { workflowSelectors, type WorkflowSelectors } from './workflow';
 import type { WorkbenchSDK } from '../sdk';
 import type { Foundations, Workflow } from '@pretzel-graph/shared/domain';
-import { ShelfSDK } from '../../ShelfSDK/sdk';
 
 export interface WorkbenchSDKSelectors {
     getClickedNode : (state: WorkbenchSDK.State) => Workflow.Node.Raw | null
@@ -21,6 +21,7 @@ export interface WorkbenchSDKSelectors {
     getBlueprintIds: (state: WorkbenchSDK.State, workflow: Workflow) => Foundations.Blueprint.Id[]
     /** Resolved blueprint per node (keyed by reconciledBlueprintId ?? blueprintId), for validation. */
     getBlueprints  : (state: WorkbenchSDK.State) => Record<Foundations.Blueprint.Id, Foundations.Blueprint>
+    blueprint      : BlueprintSelectors
     node           : NodeSelectors
     edge           : EdgeSelectors
     field          : FieldSelectors
@@ -51,11 +52,12 @@ export const workbenchSelectors = {
         const map: Record<Foundations.Blueprint.Id, Foundations.Blueprint> = {}
         for (const node of Object.values(s.data.nodes)) {
             const id = node.reconciledBlueprintId ?? node.blueprintId
-            const bp = ShelfSDK.state.blueprints[id]
+            const bp = s.blueprints[id]
             if (bp) map[id] = bp
         }
         return map
     },
+    blueprint      : blueprintSelectors,
     node           : nodeSelectors,
     edge           : edgeSelectors,
     field          : fieldSelectors,

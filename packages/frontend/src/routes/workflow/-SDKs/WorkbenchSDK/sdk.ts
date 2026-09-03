@@ -14,7 +14,6 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { workbenchReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
-import { ShelfSDK } from "../ShelfSDK/sdk";
 import type { NodeUI } from "./selectors/node";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
@@ -49,6 +48,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 paneContextMenu: null,
                 draggedPort: null,
                 cache: cloneDeep(Workflow.Cache.INITIAL),
+                blueprints: {},
                 issues: {
                     nodes: {},
                     cycles: []
@@ -92,25 +92,18 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
 
     public useNode(nodeId: Workflow.Node.Id | null) {
-        const [node, connectedPorts, dependency, resolvedShape] = this.useStore(s => {
+        const [node, connectedPorts, dependency, resolvedShape, blueprint] = this.useStore(s => {
             if(!nodeId)
-                return [null, {}, null, null] as const;
+                return [null, {}, null, null, null] as const;
 
             return [
                 s.data.nodes[nodeId],
                 s.selectors.node.getConnectedPorts(s, nodeId),
                 s.selectors.node.getDependency(s, nodeId),
                 s.cache.resolvedShape[nodeId] ?? null,
+                s.selectors.blueprint.forNode(s, nodeId),
             ]
         })
-
-        // A slimmed Workflow.Node.Raw cannot exist without its blueprint hydrated — load() guarantees
-        // it. If it's missing that's a hard bug, not a case to guard; assert both as present.
-        const blueprint = ShelfSDK.useStore(s => {
-            if(!node)
-                return null;
-            return s.blueprints[node!.reconciledBlueprintId ?? node!.blueprintId]
-        });
 
         return useMemo(() => {
             if (!node || !blueprint)
@@ -328,6 +321,8 @@ export namespace WorkbenchSDK {
         paneContextMenu: { x: number, y: number } | null;
         draggedPort: PortRef | null
         cache: Workflow.Cache
+        /** Bases this workflow's nodes reference, plus every derived variant they resolve to. */
+        blueprints: Record<Foundations.Blueprint.Id, Foundations.Blueprint>
         cyclesDirty: boolean
         issues: Validation.Issue.Workflow_
         cycles: Workflow.Node.Id[][]
