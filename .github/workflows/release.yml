@@ -41,9 +41,20 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      # The version this push publishes, as the manifest declares it.
+      - name: Read the version
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          [ -n "$VERSION" ] && [ "$VERSION" != "undefined" ] || { echo "package.json declares no version" >&2; exit 1; }
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Notify deployment pipeline
         run: |
           curl -sS -X POST "https://api.github.com/repos/${{ github.repository_owner }}/PretzelCloud/dispatches" \
             -H "Authorization: Bearer ${{ secrets.DISPATCH_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            -d "{\"event_type\":\"release\",\"client_payload\":{\"sha\":\"${{ github.sha }}\",\"owner\":\"${{ github.repository_owner }}\"}}"
+            -d "{\"event_type\":\"release\",\"client_payload\":{\"sha\":\"${{ github.sha }}\",\"owner\":\"${{ github.repository_owner }}\",\"version\":\"${{ steps.version.outputs.value }}\"}}"
