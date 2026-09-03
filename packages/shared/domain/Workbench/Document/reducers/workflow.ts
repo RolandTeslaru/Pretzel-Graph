@@ -92,7 +92,6 @@ export const workflowReducers: WorkflowReducers = {
         d.data.fields = [...fields];
     },
     recomputeAllCycles: (d) => {
-        console.log("RECOMPUTING ALL CYCLES")
         const arcsMap = Workflow.deriveArcs(d.cache);
         const sccs = Algorithms.Tarjan.deriveSCCs(d.data.nodes, arcsMap)[3]
 
