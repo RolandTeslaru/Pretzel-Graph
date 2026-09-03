@@ -1,23 +1,26 @@
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../sdk";
 
-export const selectionReducers = {
-    duplicate: (s) => {
-        const selection = s.lastSelection;
-        if (!selection) return;
+/** What the canvas selection resolves to. Ids only — the drivers stay on the editor side. */
+export interface Selection {
+    nodeIds: Workflow.Node.Id[]
+    edgeIds: Workflow.Edge.Id[]
+}
 
-        const selectedNodeIds = new Set(selection.nodes.map(n => n.id as Workflow.Node.Id));
+export const selectionReducers = {
+    duplicate: (s, selection) => {
+        const selectedNodeIds = new Set(selection.nodeIds);
         const newNodeIdMap = new Map<Workflow.Node.Id, Workflow.Node.Id>();
 
-        selection.nodes.forEach(nodeDriver => {
-            const node = s.data.nodes[nodeDriver.id as Workflow.Node.Id];
+        selection.nodeIds.forEach(nodeId => {
+            const node = s.data.nodes[nodeId];
             if (!node) return;
             const newNode = s.reducers.node.duplicate(s, node, undefined);
             newNodeIdMap.set(node.id, newNode.id);
         });
 
-        selection.edges.forEach(edgeDriver => {
-            const edge = s.cache.edges[edgeDriver.id as Workflow.Edge.Id];
+        selection.edgeIds.forEach(edgeId => {
+            const edge = s.cache.edges[edgeId];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) || !selectedNodeIds.has(edge.target.nodeId)) return;
 
@@ -33,37 +36,31 @@ export const selectionReducers = {
             });
         });
     },
-    delete: (s) => {
-        const selection = s.lastSelection;
-        if (!selection) return;
+    delete: (s, selection) => {
+        const selectedNodeIds = new Set(selection.nodeIds);
 
-        const selectedNodeIds = new Set(selection.nodes.map(n => n.id as Workflow.Node.Id));
-
-        selection.nodes.forEach(nodeDriver => {
-            s.reducers.node.remove(s, nodeDriver.id as Workflow.Node.Id);
+        selection.nodeIds.forEach(nodeId => {
+            s.reducers.node.remove(s, nodeId);
         });
 
         // Remove selected edges whose endpoints weren't deleted via node removal
-        selection.edges.forEach(edgeDriver => {
-            const edge = s.cache.edges[edgeDriver.id as Workflow.Edge.Id];
+        selection.edgeIds.forEach(edgeId => {
+            const edge = s.cache.edges[edgeId];
             if (!edge) return;
             if (!selectedNodeIds.has(edge.source.nodeId) && !selectedNodeIds.has(edge.target.nodeId)) {
-                s.reducers.edge.remove(s, edgeDriver.id as Workflow.Edge.Id);
+                s.reducers.edge.remove(s, edgeId);
             }
         });
     },
-    disable: (s, isDisabled) => {
-        const selection = s.lastSelection;
-        if (!selection) return;
-
-        selection.nodes.forEach(nodeDriver => {
-            s.reducers.node.setDisabled(s, nodeDriver.id as Workflow.Node.Id, isDisabled);
+    disable: (s, selection, isDisabled) => {
+        selection.nodeIds.forEach(nodeId => {
+            s.reducers.node.setDisabled(s, nodeId, isDisabled);
         });
     },
 } satisfies SelectionReducers
 
 interface SelectionReducers {
-    duplicate : (state: WorkbenchSDK.State) => void;
-    delete    : (state: WorkbenchSDK.State) => void;
-    disable   : (state: WorkbenchSDK.State, isDisabled: boolean) => void;
+    duplicate : (state: WorkbenchSDK.State, selection: Selection) => void;
+    delete    : (state: WorkbenchSDK.State, selection: Selection) => void;
+    disable   : (state: WorkbenchSDK.State, selection: Selection, isDisabled: boolean) => void;
 }

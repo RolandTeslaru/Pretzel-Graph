@@ -10,11 +10,26 @@ import { createToolActions, type ToolActions } from './tool';
 import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
 import { clipboardActions } from './clipboard';
+import type { Selection } from '../reducers/selection';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import React from 'react';
 import { ShelfSDK } from '../../ShelfSDK/sdk';
 
 const FullScreenNodePanel = React.lazy(() => import('../ui/NodePanel/fullscreen'));
+
+// The selection reducers take a Selection, so the canvas drivers are resolved here rather
+// than in them.
+const getSelection = (sdk: WorkbenchSDKImpl): Selection | null => {
+    const selection = sdk.state.lastSelection;
+
+    if (!selection)
+        return null;
+
+    return {
+        nodeIds: selection.nodes.map(n => n.id as Workflow.Node.Id),
+        edgeIds: selection.edges.map(e => e.id as Workflow.Edge.Id),
+    };
+};
 
 export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
 
@@ -106,9 +121,24 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         }),
         clipboard: clipboardActions,
         selection: {
-            duplicate: withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.duplicate(s) }))),
-            delete:    withCommit(() => setState(withCyclesRecompute(s => { reducers.selection.delete(s) }))),
-            disable:   withCommit((...props) => setState(s => { reducers.selection.disable(s, ...props) })),
+            duplicate: withCommit(() => {
+                const selection = getSelection(sdk);
+                if (!selection) return;
+
+                setState(withCyclesRecompute(s => { reducers.selection.duplicate(s, selection) }));
+            }),
+            delete: withCommit(() => {
+                const selection = getSelection(sdk);
+                if (!selection) return;
+
+                setState(withCyclesRecompute(s => { reducers.selection.delete(s, selection) }));
+            }),
+            disable: withCommit((isDisabled) => {
+                const selection = getSelection(sdk);
+                if (!selection) return;
+
+                setState(s => { reducers.selection.disable(s, selection, isDisabled) });
+            }),
         },
         subWorkflow: subWorkflowActions,
         dependency: dependencyActions,
