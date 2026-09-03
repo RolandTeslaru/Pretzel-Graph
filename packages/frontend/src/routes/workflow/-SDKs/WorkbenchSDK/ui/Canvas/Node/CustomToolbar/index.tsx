@@ -55,11 +55,11 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                     </Button>
                 </Tipped>
                 
-                <Tipped label="Run">
+                {/* <Tipped label="Run">
                     <Button variant="ghost-success" size="icon-xs" className='text-xs'>
                         <SystemIcons.Play />
                     </Button>
-                </Tipped>
+                </Tipped> */}
                 <OptionsDropdown node={hyNode}/>
             </div>
             {showExtrasPanel && (
