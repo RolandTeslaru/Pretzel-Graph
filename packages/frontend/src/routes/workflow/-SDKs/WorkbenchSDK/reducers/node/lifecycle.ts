@@ -51,7 +51,7 @@ export const nodeLifecycleReducers = {
         if(depRef)
             s.reducers.dependency.removeUnused(s);
     },
-    create: (s, blueprint, position, staticValues) => {
+    create: (s, blueprint, position, staticValues, credentialInstanceIds) => {
         s.isDirty = true;
         const nodeId = Workflow.Node.createId(blueprint.id);
 
@@ -80,7 +80,7 @@ export const nodeLifecycleReducers = {
         const resolved = derived?.blueprint ?? blueprint;
 
         s.reducers.node.populateInitialValues(s, nodeId, resolved.fields, resolved.inputs, staticValues);
-        s.reducers.node.populateCredentialInstances(s, nodeId);
+        s.reducers.node.populateCredentialInstances(s, nodeId, credentialInstanceIds);
 
         s.reducers.layout.node.add(s, nodeId, position);
         s.reducers.cache.createNode(s, newNode);
@@ -106,7 +106,7 @@ export const nodeLifecycleReducers = {
         const node = s.data.nodes[nodeId];
         if (!node) return;
     },
-    recreate: (s, nodeId, blueprint) => {
+    recreate: (s, nodeId, blueprint, credentialDefaults) => {
         const node = s.data.nodes[nodeId];
         if (!node)
             throw new Error(`Node ${nodeId} not found`);
@@ -148,7 +148,8 @@ export const nodeLifecycleReducers = {
         // Restore the carried-over values/credentials (kept where keys still exist,
         // gaps filled with the new blueprint's defaults).
         s.reducers.node.populateInitialValues(s, nodeId, blueprint.fields, blueprint.inputs, staticValues);
-        s.reducers.node.populateCredentialInstances(s, nodeId, credentialInstances);
+        // Carried-over assignments win; defaults only fill credentials the new blueprint added.
+        s.reducers.node.populateCredentialInstances(s, nodeId, { ...(credentialDefaults ?? {}), ...(credentialInstances ?? {}) });
 
         if (nodeLayout)
             s.reducers.layout.node.add(s, nodeId, nodeLayout);
@@ -299,9 +300,9 @@ export const nodeLifecycleReducers = {
 
 export interface NodeLifecycleReducers {
     remove      : (s: S, nodeId: NodeId) => void;
-    create      : (s: S, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => NodeId;
+    create      : (s: S, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>, credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => NodeId;
     disconnect  : (s: S, nodeId: NodeId) => void;
-    recreate    : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint) => void;
+    recreate    : (s: S, nodeId: NodeId, blueprint: Foundations.Blueprint, credentialDefaults?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
     duplicate   : (s: S, originalNode: Workflow.Node.Raw, position?: { x: number, y: number }, overrides?: {
         staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>;
         fieldExpressions?: Record<Foundations.Field.Id, boolean>;

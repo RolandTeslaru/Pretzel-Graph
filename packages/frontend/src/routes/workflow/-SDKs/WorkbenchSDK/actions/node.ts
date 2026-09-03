@@ -2,11 +2,30 @@ import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, SystemError, Vault, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
+
+// Policy, not document state: attach a credential automatically only when exactly one vault
+// instance matches the template. Optional templates are opt-in and never auto-attached.
+const resolveCredentialDefaults = (blueprint: Foundations.Blueprint) => {
+    const defaults: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id> = {};
+
+    for (const template of blueprint.credentials ?? []) {
+        if (template.optional)
+            continue;
+
+        const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
+
+        if (instances.length === 1)
+            defaults[template.id] = instances[0].id;
+    }
+
+    return defaults;
+};
 
 export function createNodeActions(sdk: WorkbenchSDKImpl) {
     const setState = sdk.useStore.setState;
@@ -41,7 +60,9 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             }
             
             
-            setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, blueprint)}));
+            const credentialDefaults = resolveCredentialDefaults(blueprint);
+
+            setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, blueprint, credentialDefaults)}));
         }),
         recreateAll:       withAsyncCommit( async () => {
             const s = sdk.state;
@@ -65,7 +86,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                         console.error(`Skipping recreate for ${node.id}: blueprint ${node.blueprintId} failed to hydrate`);
                         continue;
                     }
-                    reducers.node.recreate(s, node.id, blueprint);
+                    reducers.node.recreate(s, node.id, blueprint, resolveCredentialDefaults(blueprint));
                 }
             }));
         }),
@@ -99,8 +120,11 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                 }
             }
 
+            // Caller-supplied assignments win over the auto-attach defaults.
+            const credentials = { ...resolveCredentialDefaults(blueprint), ...(props[3] ?? {}) };
+
             setState(s => { 
-                nodeId = reducers.node.create(s,...props) 
+                nodeId = reducers.node.create(s, props[0], props[1], props[2], credentials) 
             })
 }),
     } satisfies NodeActions;

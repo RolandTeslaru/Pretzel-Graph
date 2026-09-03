@@ -1,8 +1,6 @@
 import { Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDK } from "../../sdk";
 import uid from "../../../../../../utils/uid";
-import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
-import { ShelfSDK } from "../../../ShelfSDK/sdk";
 import { isEqual } from "lodash";
 
 type S      = WorkbenchSDK.State
@@ -81,34 +79,17 @@ export const nodeValueReducers = {
         else
             s.data.staticValues[nodeId] = next;
     },
-    populateCredentialInstances: (s, nodeId, overrides?) => {
+    // Which instance to attach is resolved by the caller — the vault is not part of the
+    // document, so the "exactly one match" default lives in the action layer.
+    populateCredentialInstances: (s, nodeId, assignments?) => {
         const node = s.data.nodes[nodeId];
         if (!node) return;
 
-        // Seed from existing assignments, let explicit `overrides` win over them.
+        // Seed from existing assignments, let the caller's win over them.
         const next: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id> = {
             ...(s.data.credentialInstanceIds[nodeId] ?? {}),
-            ...(overrides ?? {}),
+            ...(assignments ?? {}),
         };
-
-        const blueprint = s.selectors.node.getBlueprint(s, nodeId);
-        if (!blueprint) return;
-
-        // Auto-fill any still-unassigned credential the node declares, but only when
-        // exactly one matching vault instance exists (unambiguous default).
-        for (const template of blueprint.credentials ?? []) {
-            // Optional templates (the network proxy) are opt-in — never auto-attached.
-            if (template.optional)
-                continue;
-
-            if (next[template.id] !== undefined)
-                continue;
-
-            const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
-            
-            if (instances.length === 1)
-                next[template.id] = instances[0].id;
-        }
 
         // Keep serialized workflow lean: omit the key entirely when nothing is assigned.
         if (Object.keys(next).length === 0)
@@ -123,5 +104,5 @@ export interface NodeValueReducers {
     pruneDefaultStaticValues    : (s: S, nodeId: NodeId) => void;
     pruneDefaultUI              : (s: S, nodeId: NodeId) => void;
     populateInitialValues       : (s: S, nodeId: NodeId, fields: readonly Foundations.Field[], inputs: readonly Foundations.Port.Input[], overrides?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>) => void;
-    populateCredentialInstances : (s: S, nodeId: NodeId, overrides?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
+    populateCredentialInstances : (s: S, nodeId: NodeId, assignments?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
 }
