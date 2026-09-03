@@ -122,6 +122,7 @@ export const CORE_DRAWERS = {
     icon: "Toolbox",
     blueprintIds: [
       "Core.Utils.Tool.Runner",
+      "Core.Utils.Tool.Gate",
       "Core.Utils.Tool.Catalog",
       "Core.Utils.Tool.Custom",
       "Core.Utils.Tool.MCP",

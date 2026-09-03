@@ -11,6 +11,9 @@ export const Blueprint = defineBlueprint({
         InputBuilder.ToolList("tools", "Tools", {
             required: true
         }),
+        InputBuilder.ToolList("deniedTools", "Denied", {
+            tooltip: "Calls to these tools are not run. The model is told the call was denied and can carry on without it."
+        }),
         InputBuilder.Message("input", "AIMessage Input", {
             required: true
         }),
