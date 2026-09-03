@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "../../utils";
+import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
     export const Id = z.string().brand("FieldId");

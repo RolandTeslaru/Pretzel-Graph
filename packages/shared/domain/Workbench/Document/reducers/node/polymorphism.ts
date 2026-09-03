@@ -7,7 +7,6 @@ type NodeId = Workflow.Node.Id
 
 export const nodePolymorphismReducers: NodePolymorphismReducers = {
     resolveGroup: (d, nodeId, triggerPort, resolvedVariant) => {
-        console.log("Resolving polymorphic group", { nodeId, triggerPort, resolvedVariant })
         const node = d.data.nodes[nodeId];
 
         if(!Port.isPolymorphic(triggerPort) || !triggerPort.polymorphicGroupId)
