@@ -1352,3 +1352,11 @@ export const Receipt: React.FC<BaseIconProps> = (props) => (
     </BaseIcon>
 )
 Receipt.displayName = "Receipt"
+
+export const Code: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon {...props}>
+        <path d="m16 18 6-6-6-6"/>
+        <path d="m8 6-6 6 6 6"/>
+    </BaseIcon>
+)
+Code.displayName = "Code"
