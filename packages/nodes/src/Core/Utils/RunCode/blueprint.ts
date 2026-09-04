@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.RunCode",
     displayName: "Run Code",
     description: "Runs sandboxed TypeScript over the incoming data ($in), this node ($node), the graph ($workflow), and the global fields ($globalFields).",
-    icon: "FileCode",
+    icon: "Code",
     accent: "utility",
     iconColor: "color-emerald-400",
     toolCompatible: true,

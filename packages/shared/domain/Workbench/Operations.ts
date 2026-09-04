@@ -1,5 +1,5 @@
 import type { Foundations } from "../Foundations"
-import type { Validation } from "../Validation"
+import { Validation } from "../Validation"
 import type { Workflow } from "../Workflow"
 import { Document, type DeriveResult } from "./Document"
 
@@ -361,9 +361,14 @@ export namespace Operations {
 
     export const edge: EdgeOperations = {
         create: withCyclesRecompute((d: Document, connection: Connection) => {
+            // The same rule the canvas applies before it lets a drag drop.
+            const reason = Validation.Connection.check(connection, d.data, d.cache)
+            if (reason)
+                throw new Error(`Edge not created: ${reason}`)
+
             const edge = d.reducers.edge.create(d, connection)
             if (!edge)
-                throw new Error("Edge not created: a port was not found or the types do not match")
+                throw new Error("Edge not created")
 
             return { edgeId: edge.id }
         }),

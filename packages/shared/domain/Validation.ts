@@ -331,7 +331,8 @@ export namespace Validation {
 
 
     export namespace Connection {
-        export function isValid(conn: Connection, workflowData: WorkflowD.Data, cache: WorkflowD.Cache) {
+        /** Why a connection cannot be made, or null when it can. The reason is meant to be shown. */
+        export function check(conn: Connection, workflowData: WorkflowD.Data, cache: WorkflowD.Cache): string | null {
 
             const sourceNode = workflowData.nodes[conn.source];
             const targetNode = workflowData.nodes[conn.target];
@@ -339,30 +340,46 @@ export namespace Validation {
             const sourceHandleId = conn.sourceHandle;
             const targetHandleId = conn.targetHandle;
 
-            if (!sourceNode || !targetNode || !sourceHandleId || !targetHandleId)
-                return false;
+            if (!sourceHandleId || !targetHandleId)
+                return "Both a source port and a target port are required";
+
+            if (!sourceNode)
+                return `Source node ${conn.source} not found`;
+
+            if (!targetNode)
+                return `Target node ${conn.target} not found`;
 
             if (conn.source === conn.target)
-                return false;
+                return "A node cannot connect to itself";
 
             if (doesEdgeAlreadyExist(workflowData, sourceNode.id, sourceHandleId, targetNode.id, targetHandleId))
-                return false;
+                return "This edge already exists";
 
             const sourceShape = cache.resolvedShape[sourceNode.id];
             const targetShape = cache.resolvedShape[targetNode.id];
             if (!sourceShape || !targetShape)
-                return false;
+                return "A node's shape could not be resolved";
 
             const sourcePort = sourceShape.outputs.find(o => o.id === sourceHandleId);
             const targetPort = targetShape.inputs.find(i => i.id === targetHandleId);
 
+            if (!sourcePort)
+                return `Output port ${sourceHandleId} not found on ${sourceNode.id}`;
+
+            if (!targetPort)
+                return `Input port ${targetHandleId} not found on ${targetNode.id}`;
+
             if (!arePortsCompatible(sourcePort, targetPort))
-                return false;
+                return `Port types do not match: ${sourcePort.variant} cannot feed ${targetPort.variant}`;
 
             if (isTargetPortAlreadyConnected(targetNode.id, targetHandleId, cache))
-                return false
+                return `Input port ${targetHandleId} on ${targetNode.id} already has an edge; an input takes one`;
 
-            return true;
+            return null;
+        }
+
+        export function isValid(conn: Connection, workflowData: WorkflowD.Data, cache: WorkflowD.Cache) {
+            return check(conn, workflowData, cache) === null;
         }
     }
 
