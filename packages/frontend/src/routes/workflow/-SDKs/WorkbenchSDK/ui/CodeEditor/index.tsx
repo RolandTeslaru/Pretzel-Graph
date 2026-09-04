@@ -48,7 +48,6 @@ export const CodeEditorContent = ({ node, displayName, onChange, onClose, initia
 
     return (
         <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
-
             <div style={surfaceStyle} className={`${surface} overflow-hidden w-full min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
                 <IncomingPanel nodeId={node.id} />
             </div>

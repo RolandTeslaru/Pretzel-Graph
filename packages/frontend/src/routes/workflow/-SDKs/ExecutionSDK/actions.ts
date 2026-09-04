@@ -25,6 +25,15 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             return null
         }
 
+        // The row must match the canvas before the run starts: a session opened from inside the
+        // run reads the row, and would otherwise commit over edits still waiting on the debounce.
+        await WorkbenchSDK.actions.commit()
+        if (WorkbenchSDK.document.isDirty) {
+            toast.error("Could not save the workflow before running.")
+            confirmStartedEvent();
+            return null
+        }
+
         // Generate the ID eagerly
         const executionId = Execution.createId();
         sdk._subscribeToExecutionChannel(executionId);

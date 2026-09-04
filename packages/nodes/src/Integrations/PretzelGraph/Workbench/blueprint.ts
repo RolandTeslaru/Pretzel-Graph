@@ -4,14 +4,12 @@ export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.Workbench",
     displayName: "Workbench",
     description: "Reads and edits another workflow in this workspace — its nodes, edges, and field values.",
-    icon: "Graph",
+    icon: "Pretzel",
     accent: "utility",
     credentials: [],
     fields: [
-        FieldBuilder.String("workflowId", "Workflow", {
-            required: true,
-            placeholder: "workflow id",
-            tooltip: "The workflow to read or edit. A workflow cannot edit itself.",
+        FieldBuilder.WorkflowIdSelector("workflowId", "Workflow", {
+            required: true
         }),
         FieldBuilder.MultiOption("target", "Target", {
             options: [
