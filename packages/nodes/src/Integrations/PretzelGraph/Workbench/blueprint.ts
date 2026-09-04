@@ -57,7 +57,7 @@ export const Blueprint = defineBlueprint({
         },
         "nodeOperation==create": {
             fields: [
-                FieldBuilder.String("blueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Output" }),
+                FieldBuilder.String("blueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" }),
                 FieldBuilder.Integer("positionX", "X", { initialValue: 0 }),
                 FieldBuilder.Integer("positionY", "Y", { initialValue: 0 }),
                 FieldBuilder.Json("staticValues", "Field values", {

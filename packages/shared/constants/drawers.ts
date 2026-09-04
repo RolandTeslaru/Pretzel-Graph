@@ -10,7 +10,6 @@ export const CORE_DRAWERS = {
       "Core.Chat.Input", 
       "Core.Chat.Output", 
       "Core.Text.Input", 
-      "Core.Text.Output", 
       "Core.Chat.History",
       "Core.Utils.JsonInjector",
     ],
