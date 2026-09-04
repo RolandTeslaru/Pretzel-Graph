@@ -97,6 +97,49 @@ export namespace Operations {
         layout:     (d: Document) => LayoutProjection
     }
 
+    // Global fields: the workflow's own inputs, shown when it runs as a sub-workflow node and
+    // read inside it through the workflow config. Only the scalar variants the settings panel
+    // offers; a spec is what a caller writes, a field is what the document stores.
+    export type GlobalFieldVariant = "String" | "Boolean" | "Integer" | "Float"
+
+    export interface GlobalFieldSpec {
+        id:            Foundations.Field.Id
+        displayName:   string
+        variant:       GlobalFieldVariant
+        required?:     boolean
+        tooltip?:      string
+        initialValue?: string | number | boolean
+        min?:          number
+        max?:          number
+        multiline?:    boolean
+    }
+
+    export interface GlobalFieldOperations {
+        list:   (d: Document) => readonly Foundations.Field[]
+        add:    (d: Document, spec: GlobalFieldSpec) => { field: Foundations.Field }
+        update: (d: Document, fieldId: Foundations.Field.Id, patch: Partial<Omit<GlobalFieldSpec, "id">>) => { field: Foundations.Field }
+        remove: (d: Document, fieldId: Foundations.Field.Id) => { fieldId: Foundations.Field.Id }
+    }
+
+    const createGlobalField = (spec: GlobalFieldSpec): Foundations.Field => {
+        const base = {
+            id:          spec.id,
+            displayName: spec.displayName,
+            advanced:    false,
+            required:    spec.required ?? false,
+            reconcile:   false,
+            description: "",
+            tooltip:     spec.tooltip,
+        }
+
+        switch (spec.variant) {
+            case "Boolean": return { ...base, variant: "Boolean", initialValue: Boolean(spec.initialValue ?? false) }
+            case "Integer": return { ...base, variant: "Integer", initialValue: Math.trunc(Number(spec.initialValue ?? 0)), min: spec.min, max: spec.max }
+            case "Float":   return { ...base, variant: "Float",   initialValue: Number(spec.initialValue ?? 0), min: spec.min, max: spec.max }
+            case "String":  return { ...base, variant: "String",  initialValue: String(spec.initialValue ?? ""), multiline: spec.multiline ?? false }
+        }
+    }
+
     // The canvas renders a node 250px wide with one row per port; close enough to plan around.
     const NODE_WIDTH    = 250
     const HEADER_HEIGHT = 56
@@ -228,6 +271,50 @@ export namespace Operations {
             }
 
             return { nodes, bounds }
+        },
+    }
+
+    export const globalField: GlobalFieldOperations = {
+        list: (d: Document) => d.data.fields,
+
+        add: (d: Document, spec: GlobalFieldSpec) => {
+            if (d.data.fields.some(f => f.id === spec.id))
+                throw new Error(`Global field ${spec.id} already exists`)
+
+            const field = createGlobalField(spec)
+
+            d.reducers.workflow.setFields(d, [...d.data.fields, field])
+            return { field }
+        },
+
+        update: (d: Document, fieldId: Foundations.Field.Id, patch: Partial<Omit<GlobalFieldSpec, "id">>) => {
+            const current = d.data.fields.find(f => f.id === fieldId)
+            if (!current)
+                throw new Error(`Global field ${fieldId} not found`)
+
+            // Rebuilt from the merged spec so a variant change starts from that variant's defaults.
+            const field = createGlobalField({
+                id:           fieldId,
+                displayName:  patch.displayName  ?? current.displayName,
+                variant:      patch.variant      ?? current.variant as GlobalFieldVariant,
+                required:     patch.required     ?? current.required,
+                tooltip:      patch.tooltip      ?? current.tooltip,
+                initialValue: patch.initialValue ?? ("initialValue" in current ? current.initialValue as GlobalFieldSpec["initialValue"] : undefined),
+                min:          patch.min          ?? ("min"       in current ? current.min       : undefined),
+                max:          patch.max          ?? ("max"       in current ? current.max       : undefined),
+                multiline:    patch.multiline    ?? ("multiline" in current ? current.multiline : undefined),
+            })
+
+            d.reducers.workflow.setFields(d, d.data.fields.map(f => f.id === fieldId ? field : f))
+            return { field }
+        },
+
+        remove: (d: Document, fieldId: Foundations.Field.Id) => {
+            if (!d.data.fields.some(f => f.id === fieldId))
+                throw new Error(`Global field ${fieldId} not found`)
+
+            d.reducers.workflow.setFields(d, d.data.fields.filter(f => f.id !== fieldId))
+            return { fieldId }
         },
     }
 

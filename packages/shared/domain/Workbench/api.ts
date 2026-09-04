@@ -355,6 +355,60 @@ export namespace API {
             }
         }
 
+        export namespace GlobalField {
+            const Variant = z.enum(["String", "Boolean", "Integer", "Float"])
+            const Spec = z.object({
+                id:           Foundations.Field.Id,
+                displayName:  z.string(),
+                variant:      Variant,
+                required:     z.boolean().optional(),
+                tooltip:      z.string().optional(),
+                initialValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
+                min:          z.number().optional(),
+                max:          z.number().optional(),
+                multiline:    z.boolean().optional(),
+            })
+
+            export namespace List {
+                export type Response = ReturnType<typeof Operations.globalField.list>
+            }
+            export namespace Add {
+                export const Request = Spec
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.globalField.add>
+            }
+            export namespace Update {
+                export const Request = z.object({ fieldId: Foundations.Field.Id, patch: Spec.omit({ id: true }).partial() })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.globalField.update>
+            }
+            export namespace Remove {
+                export const Request = z.object({ fieldId: Foundations.Field.Id })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.globalField.remove>
+            }
+
+            export async function list(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<List.Response> {
+                const { data } = await api.get<List.Response>(`/api/internal/workbench/workflows/${workflowId}/global-fields`)
+                return data
+            }
+
+            export async function add(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Add.Request): Promise<Add.Response> {
+                const { data } = await api.post<Add.Response>(`/api/internal/workbench/workflows/${workflowId}/session/global-field/add`, request)
+                return data
+            }
+
+            export async function update(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Update.Request): Promise<Update.Response> {
+                const { data } = await api.post<Update.Response>(`/api/internal/workbench/workflows/${workflowId}/session/global-field/update`, request)
+                return data
+            }
+
+            export async function remove(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Remove.Request): Promise<Remove.Response> {
+                const { data } = await api.post<Remove.Response>(`/api/internal/workbench/workflows/${workflowId}/session/global-field/remove`, request)
+                return data
+            }
+        }
+
         // One edit, tagged. A batch is a list of these applied in order; the single-operation
         // routes take the untagged request.
         export const Operation = z.discriminatedUnion("op", [
@@ -364,6 +418,9 @@ export namespace API {
             Edge.Create.Request.extend({ op: z.literal("edge.create") }),
             Edge.Delete.Request.extend({ op: z.literal("edge.delete") }),
             Field.Set.Request.extend({ op: z.literal("field.set") }),
+            GlobalField.Add.Request.extend({ op: z.literal("globalField.add") }),
+            GlobalField.Update.Request.extend({ op: z.literal("globalField.update") }),
+            GlobalField.Remove.Request.extend({ op: z.literal("globalField.remove") }),
         ])
         export type Operation = z.infer<typeof Operation>
 

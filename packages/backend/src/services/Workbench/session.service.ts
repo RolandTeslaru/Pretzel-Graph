@@ -232,6 +232,19 @@ export class WorkbenchSessionService implements OnModuleDestroy {
                 return result;
             }
 
+            case 'globalField.add':
+            case 'globalField.update':
+            case 'globalField.remove': {
+                const result =
+                    operation.op === 'globalField.add'    ? Workbench.Operations.globalField.add(d, operation)
+                  : operation.op === 'globalField.update' ? Workbench.Operations.globalField.update(d, operation.fieldId, operation.patch)
+                  :                                         Workbench.Operations.globalField.remove(d, operation.fieldId);
+
+                this.emit(session, { type: 'workflow:fieldsChanged', fields: [...d.data.fields] });
+
+                return result;
+            }
+
             case 'field.set': {
                 const result = Workbench.Operations.field.set(d, operation.nodeId, operation.fieldId, operation.value);
 

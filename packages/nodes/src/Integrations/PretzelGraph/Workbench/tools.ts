@@ -20,6 +20,18 @@ const edgeEndpoints = {
     targetPortId: z.string().describe("An input port id of the target node."),
 };
 
+const globalFieldSpec = {
+    displayName:  z.string(),
+    variant:      z.enum(["String", "Boolean", "Integer", "Float"]),
+    required:     z.boolean().optional(),
+    tooltip:      z.string().optional(),
+    initialValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    min:          z.number().optional().describe("Integer and Float only."),
+    max:          z.number().optional().describe("Integer and Float only."),
+    multiline:    z.boolean().optional().describe("String only."),
+};
+const globalFieldId = z.string().describe("Global field id: letters, digits, underscores.");
+
 const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.create"), blueprintId, position, staticValues }),
     z.object({ op: z.literal("node.delete"), nodeId }),
@@ -27,6 +39,9 @@ const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("edge.create"), source: z.string(), sourceHandle: z.string(), target: z.string(), targetHandle: z.string() }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
     z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
+    z.object({ op: z.literal("globalField.add"),    id: globalFieldId, ...globalFieldSpec }),
+    z.object({ op: z.literal("globalField.update"), fieldId: globalFieldId, patch: z.object(globalFieldSpec).partial() }),
+    z.object({ op: z.literal("globalField.remove"), fieldId: globalFieldId }),
 ]);
 
 
@@ -190,6 +205,50 @@ export function buildTools(wb: WorkbenchClient) {
     );
 
 
+    const listGlobalFields = tool(
+        async () => ToolBudget.list("fields", await wb.globalField.list()),
+        {
+            name:        "workbench_list_global_fields",
+            description: "List the workflow's global fields: the inputs it exposes when used as a sub-workflow node, readable inside it as workflow config. Read-only.",
+            schema:      z.object({}),
+        },
+    );
+
+
+    const addGlobalField = tool(
+        async ({ id, ...spec }) => ToolBudget.value(
+            await write(() => wb.globalField.add({ id: id as Foundations.Field.Id, ...spec })),
+        ),
+        {
+            name:        "workbench_add_global_field",
+            description: "Add a global field to the workflow. String, Boolean, Integer or Float.",
+            schema:      z.object({ id: globalFieldId, ...globalFieldSpec }),
+        },
+    );
+
+
+    const updateGlobalField = tool(
+        async ({ fieldId, patch }) => ToolBudget.value(
+            await write(() => wb.globalField.update(fieldId as Foundations.Field.Id, patch)),
+        ),
+        {
+            name:        "workbench_update_global_field",
+            description: "Change a global field's name, kind, default or limits. Only the given properties change.",
+            schema:      z.object({ fieldId: globalFieldId, patch: z.object(globalFieldSpec).partial() }),
+        },
+    );
+
+
+    const removeGlobalField = tool(
+        async ({ fieldId }) => ToolBudget.value(await write(() => wb.globalField.remove(fieldId as Foundations.Field.Id))),
+        {
+            name:        "workbench_remove_global_field",
+            description: "Remove a global field from the workflow.",
+            schema:      z.object({ fieldId: globalFieldId }),
+        },
+    );
+
+
     const apply = tool(
         async ({ operations }) => ToolBudget.value(await write(() => wb.batch(operations as never))),
         {
@@ -234,7 +293,8 @@ export function buildTools(wb: WorkbenchClient) {
 
     return [
         getMeta, queryNodes, queryEdges, getNode, getLayout,
-        createNode, deleteNode, moveNode, createEdge, deleteEdge, setField, apply,
-        commit, discard,
+        createNode, deleteNode, moveNode, createEdge, deleteEdge, setField,
+        listGlobalFields, addGlobalField, updateGlobalField, removeGlobalField,
+        apply, commit, discard,
     ];
 }

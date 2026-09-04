@@ -74,7 +74,16 @@ export namespace Event {
         export type Set = z.infer<typeof Set>
     }
 
+    export namespace Workflow_ {
+        export const FieldsChanged = Base.extend({
+            type:   z.literal("workflow:fieldsChanged"),
+            fields: z.array(Foundations.Field.Schema),
+        })
+        export type FieldsChanged = z.infer<typeof FieldsChanged>
+    }
+
     export const Schema = z.discriminatedUnion("type", [
+        Workflow_.FieldsChanged,
         Lock.Acquired, Lock.Released,
         Node.Created,  Node.Deleted, Node.Moved,
         Edge.Created,  Edge.Deleted,

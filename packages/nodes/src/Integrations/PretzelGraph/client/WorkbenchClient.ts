@@ -50,6 +50,13 @@ export class WorkbenchClient {
         set: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, value: unknown) => Session.Field.set(this.http.raw, this.workflowId, { nodeId, fieldId, value }),
     };
 
+    public readonly globalField = {
+        list:   ()                                                                  => Session.GlobalField.list(this.http.raw, this.workflowId),
+        add:    (request: Session.GlobalField.Add.Request)                          => Session.GlobalField.add(this.http.raw, this.workflowId, request),
+        update: (fieldId: Foundations.Field.Id, patch: Session.GlobalField.Update.Request["patch"]) => Session.GlobalField.update(this.http.raw, this.workflowId, { fieldId, patch }),
+        remove: (fieldId: Foundations.Field.Id)                                     => Session.GlobalField.remove(this.http.raw, this.workflowId, { fieldId }),
+    };
+
     /** Applied in order on the backend; stops at the first failure. */
     public batch(operations: Session.Operation[]) {
         return Session.Batch.apply(this.http.raw, this.workflowId, { operations });

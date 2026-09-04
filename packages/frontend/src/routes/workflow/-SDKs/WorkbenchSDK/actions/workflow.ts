@@ -62,6 +62,10 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
             case "field:set":
                 Workbench.Operations.field.set(d, event.nodeId, event.fieldId, event.value);
                 break;
+
+            case "workflow:fieldsChanged":
+                reducers.workflow.setFields(d, event.fields);
+                break;
         }
 
         // Mirrored, not authored: the holder's commit is what persists this.

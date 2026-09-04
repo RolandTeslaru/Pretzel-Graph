@@ -52,6 +52,14 @@ export class InternalWorkbenchController {
         return this.sessions.readMeta(delegate, id);
     }
 
+    @Get('workflows/:id/global-fields')
+    async listGlobalFields(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+    ): Promise<Session.GlobalField.List.Response> {
+        return Workbench.Operations.globalField.list(await this.sessions.read(delegate, id));
+    }
+
     @Get('workflows/:id/layout')
     async layout(
         @AuthenticatedDelegate() delegate: Principal.Delegate,
@@ -176,6 +184,36 @@ export class InternalWorkbenchController {
         @ZodBody(Workbench.API.Session.Field.Set.Request) body: Session.Field.Set.Request,
     ): Promise<unknown> {
         return this.sessions.apply(delegate, id, { op: 'field.set', ...body });
+    }
+
+    @Post('workflows/:id/session/global-field/add')
+    @HttpCode(200)
+    addGlobalField(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.GlobalField.Add.Request) body: Session.GlobalField.Add.Request,
+    ): Promise<unknown> {
+        return this.sessions.apply(delegate, id, { op: 'globalField.add', ...body });
+    }
+
+    @Post('workflows/:id/session/global-field/update')
+    @HttpCode(200)
+    updateGlobalField(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.GlobalField.Update.Request) body: Session.GlobalField.Update.Request,
+    ): Promise<unknown> {
+        return this.sessions.apply(delegate, id, { op: 'globalField.update', ...body });
+    }
+
+    @Post('workflows/:id/session/global-field/remove')
+    @HttpCode(200)
+    removeGlobalField(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.GlobalField.Remove.Request) body: Session.GlobalField.Remove.Request,
+    ): Promise<unknown> {
+        return this.sessions.apply(delegate, id, { op: 'globalField.remove', ...body });
     }
 
     @Post('workflows/:id/session/batch')
