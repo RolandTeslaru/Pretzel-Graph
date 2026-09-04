@@ -177,4 +177,49 @@ export namespace API {
             }
         }
     }
+
+    // A worker-side hold on a workflow: the backend keeps one transaction open, row-locked, from
+    // begin to commit, and the caller mutates a copy in between. Keyed by the execution behind
+    // the delegate, so nothing travels but the workflow id.
+    export namespace Session {
+        export namespace Begin {
+            export const Response = Workflow.Get.Response
+            export type Response = z.infer<typeof Response>
+        }
+
+        export namespace Commit {
+            export const Request = z.object({
+                data: WorkflowNs.Data.Schema,
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({})
+            export type Response = z.infer<typeof Response>
+        }
+
+        /** A snapshot without a hold — never blocks a writer, may see a write in progress. */
+        export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Begin.Response> {
+            const { data } = await api.get<Begin.Response>(`/api/internal/workbench/workflows/${workflowId}`)
+            return data
+        }
+
+        /** Lock and load. Refused while anyone holds the workflow. */
+        export async function beginTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Begin.Response> {
+            const { data } = await api.post<Begin.Response>(`/api/internal/workbench/workflows/${workflowId}/session`)
+            return data
+        }
+
+        export async function heartbeat(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<void> {
+            await api.post(`/api/internal/workbench/workflows/${workflowId}/session/heartbeat`)
+        }
+
+        export async function commitTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Commit.Request): Promise<Commit.Response> {
+            const { data } = await api.post<Commit.Response>(`/api/internal/workbench/workflows/${workflowId}/session/commit`, request)
+            return data
+        }
+
+        export async function abortTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<void> {
+            await api.post(`/api/internal/workbench/workflows/${workflowId}/session/abort`)
+        }
+    }
 }

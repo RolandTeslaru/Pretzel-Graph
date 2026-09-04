@@ -6,6 +6,7 @@ import { documentSelectors, type DocumentSelectors } from "./selectors"
 
 export type { NodeUI, LegacyExpressionContext } from "./selectors/node"
 export type { Selection } from "./reducers/selection"
+export type { DeriveResult } from "./reducers/node/lifecycle"
 export { conditionTreeReducers } from "./reducers/conditionTree"
 export { type ClipboardPayload, ClipboardPayloadSchema, CLIPBOARD_KIND, CLIPBOARD_VERSION } from "./clipboard-payload"
 
@@ -43,6 +44,25 @@ export namespace Document {
 
     export const reducers  = documentReducers
     export const selectors = documentSelectors
+
+    /**
+     * Wraps a mutation so the document is settled when it returns: edges that moved mark cycles
+     * dirty, and cycles are recomputed once at the end rather than after every reducer.
+     */
+    export function withCyclesRecompute<A extends unknown[], T>(
+        fn: (document: Document, ...args: A) => T,
+    ): (document: Document, ...args: A) => T {
+        return (document, ...args) => {
+            const result = fn(document, ...args)
+
+            if (document.cyclesDirty) {
+                documentReducers.workflow.recomputeAllCycles(document)
+                document.cyclesDirty = false
+            }
+
+            return result
+        }
+    }
 
     export interface DriverConnection {
         source: Workflow.Node.Id

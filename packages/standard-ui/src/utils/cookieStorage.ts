@@ -61,10 +61,19 @@ export function cookieStorage(options: CookieStorageOptions = {}): CookieStorage
     // follows the page rather than being declared.
     const secure = typeof location !== 'undefined' && location.protocol === 'https:';
 
+    // A Domain the current host cannot accept is dropped by the browser without an error, and
+    // the session then never persists. Degrade to a host-only cookie and say so.
+    const host          = typeof location !== 'undefined' ? location.hostname.toLowerCase() : '';
+    const wanted        = domain?.toLowerCase();
+    const domainApplies = !!wanted && (host === wanted || host.endsWith(`.${wanted}`));
+
+    if (wanted && host && !domainApplies)
+        console.warn(`[cookieStorage] Domain=${domain} does not match ${host}; storing the session host-only`);
+
     const attributes = [
         'Path=/',
         'SameSite=Lax',
-        domain ? `Domain=${domain}` : '',
+        domainApplies ? `Domain=${domain}` : '',
         secure  ? 'Secure' : '',
     ].filter(Boolean).join('; ');
 

@@ -217,6 +217,12 @@ export const BUNDLE_DRAWERS = {
     icon: "OpenRouter",
     blueprintIds: ["Integrations.OpenRouter.Chat"]
   },
+  pretzelgraph: {
+    displayName: "PretzelGraph",
+    id: "pretzelgraph",
+    icon: "Graph",
+    blueprintIds: ["Integrations.PretzelGraph.Workbench"]
+  },
   polymarket: {
     displayName: "Polymarket",
     id: "polymarket",

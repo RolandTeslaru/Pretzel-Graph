@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
 import { WorkbenchRepository } from './workbench.repository';
+import { WorkbenchSessionService } from './session.service';
 import { VaultRepository } from '../Vault/vault.repository';
 import { OAuthService } from '../Vault/OAuth/oauth.service';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
@@ -13,11 +14,12 @@ import { Listing, SystemError } from '@pretzel-graph/shared/domain';
 @Injectable()
 export class WorkbenchService {
     constructor(
-        private readonly workbenchRepository: WorkbenchRepository,
+        private readonly sessions:        WorkbenchSessionService,
+        private readonly repository:      WorkbenchRepository,
         private readonly vaultRepository: VaultRepository,
-        private readonly oauth: OAuthService,
-        private readonly shelfService: ShelfService,
-        private readonly listings: ListingService,
+        private readonly oauth:           OAuthService,
+        private readonly shelfService:    ShelfService,
+        private readonly listings:        ListingService,
     ) {}
 
     public readonly workflow = {
@@ -25,12 +27,12 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Create.Request,
         ): Promise<Workbench.API.Workflow.Create.Response> => {
-            const workflow_id = await this.workbenchRepository.workflow.create(principal, payload);
+            const workflow_id = await this.repository.workflow.create(principal, payload);
             return { workflow_id };
         },
 
         get: async (
-            principal: Principal.User,
+            principal: Principal.User | Principal.Delegate,
             workflowId: Workflow.Id,
         ): Promise<Workbench.API.Workflow.Get.Response> => {
             let workflow: Workflow;
@@ -44,11 +46,14 @@ export class WorkbenchService {
                 workflow = shared;
             }
             else {
-                workflow = await this.workbenchRepository.workflow.get(principal, workflowId);
+                workflow = await this.repository.workflow.get(principal, workflowId);
             }
 
             const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
 
+            workflow.locked = this.sessions.isLocked(workflowId)
+            
+            // Held by a session or not — the registry is the truth, not a column.
             return { workflow, blueprints, repairs };
         },
 
@@ -56,7 +61,7 @@ export class WorkbenchService {
             principal: Principal.User,
             payload: Workbench.API.Workflow.Commit.Request,
         ): Promise<Workbench.API.Workflow.Commit.Response> => {
-            await this.workbenchRepository.workflow.commit(principal, payload);
+            await this.repository.workflow.commit(principal, payload);
             return {};
         },
     };
@@ -76,7 +81,7 @@ export class WorkbenchService {
                     return { dependency: shared };
                 }
 
-                const dependency = await this.workbenchRepository.dependency.published.load(principal, payload.dependencyId);
+                const dependency = await this.repository.dependency.published.load(principal, payload.dependencyId);
 
                 return { dependency };
             },
@@ -88,7 +93,7 @@ export class WorkbenchService {
                 const local  = payload.dependencies.filter((dependency) => !Listing.isListingId(dependency.workflowId));
                 const listed = payload.dependencies.filter((dependency) => Listing.isListingId(dependency.workflowId));
 
-                const own    = await this.workbenchRepository.dependency.published.checkUpdates(principal, local);
+                const own    = await this.repository.dependency.published.checkUpdates(principal, local);
                 const shared = await this.listings.checkUpdates(listed);
 
                 return { updates: { ...own, ...shared } };
@@ -100,7 +105,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.Load.Request,
             ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-                const dependency = await this.workbenchRepository.dependency.draft.load(principal, payload.dependencyId);
+                const dependency = await this.repository.dependency.draft.load(principal, payload.dependencyId);
                 return { dependency };
             },
 
@@ -108,7 +113,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
             ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
-                const updates = await this.workbenchRepository.dependency.draft.checkUpdates(principal, payload.dependencies);
+                const updates = await this.repository.dependency.draft.checkUpdates(principal, payload.dependencies);
                 return { updates };
             },
         },

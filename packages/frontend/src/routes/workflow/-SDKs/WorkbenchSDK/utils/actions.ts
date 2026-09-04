@@ -5,7 +5,6 @@ import { Foundations, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '@/SDKs/ApiInterceptorSDK';
 import { Document } from '@pretzel-graph/shared/domain/Workbench/Document';
 
-const workflowReducers = Document.reducers.workflow;
 
 export const commit = async () => {
     const { workflowId, data, isDirty } = WorkbenchSDK.document;
@@ -40,15 +39,7 @@ export const withCommit = <TArgs extends any[]>(fn: (...args: TArgs) => void, me
     };
 };
 
-export const withCyclesRecompute = (fn: (d: Document) => void): ((d: Document) => void) => {
-    return (d: Document) => {
-        fn(d);
-        if(d.cyclesDirty){
-            workflowReducers.recomputeAllCycles(d);
-            d.cyclesDirty = false
-        }
-    }
-}
+export const withCyclesRecompute = Document.withCyclesRecompute;
 
 export const withAsyncCommit = <TArgs extends any[], TReturn>(fn: (...args: TArgs) => Promise<TReturn>, message?: string): ((...args: TArgs) => Promise<TReturn>) => {
     return async (...args) => {

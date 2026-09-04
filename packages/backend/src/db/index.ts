@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Kysely, PostgresDialect, Transaction as KyselyTransaction } from 'kysely';
+import { Kysely, PostgresDialect, Transaction as KyselyTransaction, type ControlledTransaction } from 'kysely';
 import type { ColumnType, Generated } from 'kysely';
 import { Pool, types as pgTypes, type CustomTypesConfig, type PoolConfig } from 'pg';
 import { parse as parseConnectionString } from 'pg-connection-string';
@@ -40,7 +40,7 @@ function requireEnv(name: string): string {
     return value;
 }
 
-function connect(urlEnvVar: string): Kysely<DB.Tables> {
+function connect(urlEnvVar: string, overrides: Partial<PoolConfig> = {}): Kysely<DB.Tables> {
     const parsed = parseConnectionString(requireEnv(urlEnvVar));
 
     return new Kysely<DB.Tables>({
@@ -54,6 +54,7 @@ function connect(urlEnvVar: string): Kysely<DB.Tables> {
                 host: parsed.host?.replace(/^\[|\]$/g, ''),
                 port: parsed.port ? Number(parsed.port) : undefined,
                 max: 10,
+                ...overrides,
                 types: keepTimestampsAsStrings,
             } as PoolConfig),
         }),
@@ -65,6 +66,11 @@ function connect(urlEnvVar: string): Kysely<DB.Tables> {
 let database: Kysely<DB.Tables> | undefined;
 
 const db = () => (database ??= connect('DATABASE_URL'));
+
+// Held transactions pin a connection for as long as a caller keeps a workflow open, so they
+// get their own small pool: a few open sessions can never starve the app.
+let sessionDatabase: Kysely<DB.Tables> | undefined;
+const sessionDb = () => (sessionDatabase ??= connect('DATABASE_URL', { max: 5, connectionTimeoutMillis: 2_000 }));
 
 // The persistence truth: one schema per table, column for column. Domain types
 // are referenced only for branded ids and for the contents of jsonb columns —
@@ -323,6 +329,15 @@ export namespace DB {
         return db().transaction().execute((trx) => fn(tag(trx, role)));
     }
 
+    /** A transaction whose lifetime is the caller's: nothing commits until `.commit()`. */
+    export type HeldDelegateTransaction = ControlledTransaction<Tables> & { readonly __as: typeof Role.Delegate };
+
+    /** Opens a transaction on the session pool and hands it back still open. */
+    export async function beginHeldDelegate(): Promise<HeldDelegateTransaction> {
+        const trx = await sessionDb().startTransaction().execute();
+        return tag(trx, Role.Delegate) as HeldDelegateTransaction;
+    }
+
     /** Runs `fn` inside a transaction on behalf of `principal`. */
     export async function asUser<T>(
         principal: ActingUser,
@@ -358,5 +373,7 @@ export namespace DB {
     export async function destroyPools(): Promise<void> {
         await database?.destroy();
         database = undefined;
+        await sessionDatabase?.destroy();
+        sessionDatabase = undefined;
     }
 }

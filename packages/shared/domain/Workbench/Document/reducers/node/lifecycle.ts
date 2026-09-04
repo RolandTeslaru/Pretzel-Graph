@@ -32,12 +32,20 @@ function resolveOnCreate(d: Document, blueprint: Foundations.Blueprint) {
  * Repoints a node at an already-folded derivative: removes edges on ports the new shape
  * dropped or changed the variant of, registers the fold, and rebuilds the node's shape.
  */
+/** What re-deriving a node did to its shape, and what that cost in edges. */
+export interface DeriveResult {
+    reconciledBlueprintId: Foundations.Blueprint.ReconciledId
+    inputs:  { added: Foundations.Port.Input.Id[],  removed: Foundations.Port.Input.Id[],  changed: Foundations.Port.Input.Id[] }
+    outputs: { added: Foundations.Port.Output.Id[], removed: Foundations.Port.Output.Id[], changed: Foundations.Port.Output.Id[] }
+    removedEdges: Workflow.Edge.Id[]
+}
+
 function applyDerivative(
     d:                     Document,
     node:                  Workflow.Node.Raw,
     blueprint:             Foundations.Blueprint,
     reconciledBlueprintId: Foundations.Blueprint.ReconciledId,
-) {
+): DeriveResult | undefined {
     d.isDirty = true;
 
     // A fold keeps its base's `id`, and `derive` resolves the base off the node itself, so
@@ -50,18 +58,38 @@ function applyDerivative(
     if (!oldBlueprint)
         return;
 
+    const result: DeriveResult = {
+        reconciledBlueprintId,
+        inputs:  { added: [], removed: [], changed: [] },
+        outputs: { added: [], removed: [], changed: [] },
+        removedEdges: [],
+    };
+
     // --- Diff inputs: remove edges for removed/variant-changed inputs ---
     const newInputsById = new Map(blueprint.inputs.map(i => [i.id, i]));
     const inputEdges = d.cache.inputEdgesByPort[nodeId] ?? {};
 
     for (const oldInput of oldBlueprint.inputs) {
         const newInput = newInputsById.get(oldInput.id);
-        const edgeId = inputEdges[oldInput.id];
 
-        if (edgeId && (!newInput || newInput.variant !== oldInput.variant)) {
+        if (!newInput)
+            result.inputs.removed.push(oldInput.id);
+        else if (newInput.variant !== oldInput.variant)
+            result.inputs.changed.push(oldInput.id);
+        else
+            continue;
+
+        const edgeId = inputEdges[oldInput.id];
+        if (edgeId) {
             d.reducers.edge.remove(d, edgeId);
+            result.removedEdges.push(edgeId);
         }
     }
+
+    const oldInputIds = new Set(oldBlueprint.inputs.map(i => i.id));
+    for (const input of blueprint.inputs)
+        if (!oldInputIds.has(input.id))
+            result.inputs.added.push(input.id);
 
     // --- Diff outputs: remove edges for removed/variant-changed outputs ---
     const newOutputsById = new Map(blueprint.outputs.map(o => [o.id, o]));
@@ -69,11 +97,25 @@ function applyDerivative(
 
     for (const oldOutput of oldBlueprint.outputs) {
         const newOutput = newOutputsById.get(oldOutput.id);
-        const edgeId = outputEdges[oldOutput.id];
 
-        if (edgeId && (!newOutput || newOutput.variant !== oldOutput.variant))
+        if (!newOutput)
+            result.outputs.removed.push(oldOutput.id);
+        else if (newOutput.variant !== oldOutput.variant)
+            result.outputs.changed.push(oldOutput.id);
+        else
+            continue;
+
+        const edgeId = outputEdges[oldOutput.id];
+        if (edgeId) {
             d.reducers.edge.remove(d, edgeId);
+            result.removedEdges.push(edgeId);
+        }
     }
+
+    const oldOutputIds = new Set(oldBlueprint.outputs.map(o => o.id));
+    for (const output of blueprint.outputs)
+        if (!oldOutputIds.has(output.id))
+            result.outputs.added.push(output.id);
 
     // Point the node at the resolved derivative; fields and ports now derive from it.
     d.reducers.blueprint.registerAs(d, reconciledBlueprintId, blueprint);
@@ -82,6 +124,8 @@ function applyDerivative(
 
     // Seed from existing values, then fill gaps with initialValue
     d.reducers.node.populateInitialValues(d, nodeId, blueprint.fields, blueprint.inputs);
+
+    return result;
 }
 
 export const nodeLifecycleReducers: NodeLifecycleReducers = {
@@ -277,12 +321,12 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
         // output, so re-deriving off an already-derived blueprint finds no tree.
         const base = d.selectors.blueprint.get(d, node.blueprintId);
         if (!base)
-            return;
+            return null;
 
         const { blueprint } = Foundations.Blueprint.derive(base, fieldValues);
         const reconciledBlueprintId = Foundations.Blueprint.deriveId(base, fieldValues);
 
-        applyDerivative(d, node, blueprint, reconciledBlueprintId);
+        return applyDerivative(d, node, blueprint, reconciledBlueprintId) ?? null;
     },
     wipe: (d, nodeId, replace = {}) => {
         const node = d.data.nodes[nodeId];
@@ -344,7 +388,7 @@ export interface NodeLifecycleReducers {
         fieldExpressions?: Record<Foundations.Field.Id, boolean>;
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
     }) => Workflow.Node.Raw;
-    derive      : (document: Document, nodeId: NodeId, fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>) => void;
+    derive      : (document: Document, nodeId: NodeId, fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>) => DeriveResult | null;
     wipe        : (document: Document, nodeId: NodeId, replace?: Partial<Workflow.Node.Raw>) => void;
     validate    : (document: Document, nodeId: NodeId) => void;
     clearIssues : (document: Document, nodeId: NodeId) => void;
