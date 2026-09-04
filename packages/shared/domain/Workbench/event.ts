@@ -41,8 +41,14 @@ export namespace Event {
             type:   z.literal("node:deleted"),
             nodeId: Workflow.Node.Id,
         })
+        export const Moved = Base.extend({
+            type:     z.literal("node:moved"),
+            nodeId:   Workflow.Node.Id,
+            position: Position,
+        })
         export type Created = z.infer<typeof Created>
         export type Deleted = z.infer<typeof Deleted>
+        export type Moved   = z.infer<typeof Moved>
     }
 
     export namespace Edge {
@@ -70,7 +76,7 @@ export namespace Event {
 
     export const Schema = z.discriminatedUnion("type", [
         Lock.Acquired, Lock.Released,
-        Node.Created,  Node.Deleted,
+        Node.Created,  Node.Deleted, Node.Moved,
         Edge.Created,  Edge.Deleted,
         Field.Set,
     ])

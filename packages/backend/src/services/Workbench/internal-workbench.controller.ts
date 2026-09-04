@@ -24,6 +24,34 @@ export class InternalWorkbenchController {
         return Workbench.Operations.workflow.get(await this.sessions.read(delegate, id));
     }
 
+    @Post('workflows/:id/nodes/query')
+    @HttpCode(200)
+    async queryNodes(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.Workflow.QueryNodes.Request) body: Session.Workflow.QueryNodes.Request,
+    ): Promise<Session.Workflow.QueryNodes.Response> {
+        return Workbench.Operations.workflow.queryNodes(await this.sessions.read(delegate, id), body);
+    }
+
+    @Post('workflows/:id/edges/query')
+    @HttpCode(200)
+    async queryEdges(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.Workflow.QueryEdges.Request) body: Session.Workflow.QueryEdges.Request,
+    ): Promise<Session.Workflow.QueryEdges.Response> {
+        return Workbench.Operations.workflow.queryEdges(await this.sessions.read(delegate, id), body);
+    }
+
+    @Get('workflows/:id/layout')
+    async layout(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+    ): Promise<Session.Workflow.Layout.Response> {
+        return Workbench.Operations.workflow.layout(await this.sessions.read(delegate, id));
+    }
+
     @Get('workflows/:id/nodes/:nodeId')
     async getNode(
         @AuthenticatedDelegate() delegate: Principal.Delegate,
@@ -100,6 +128,16 @@ export class InternalWorkbenchController {
         @ZodBody(Workbench.API.Session.Node.Delete.Request) body: Session.Node.Delete.Request,
     ): Promise<unknown> {
         return this.sessions.apply(delegate, id, { op: 'node.delete', ...body });
+    }
+
+    @Post('workflows/:id/session/node/move')
+    @HttpCode(200)
+    moveNode(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+        @ZodBody(Workbench.API.Session.Node.Move.Request) body: Session.Node.Move.Request,
+    ): Promise<unknown> {
+        return this.sessions.apply(delegate, id, { op: 'node.move', ...body });
     }
 
     @Post('workflows/:id/session/edge/create')

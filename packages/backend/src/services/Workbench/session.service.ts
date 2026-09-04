@@ -187,6 +187,14 @@ export class WorkbenchSessionService implements OnModuleDestroy {
                 return result;
             }
 
+            case 'node.move': {
+                const result = Workbench.Operations.node.move(d, operation.nodeId, operation.position);
+
+                this.emit(session, { type: 'node:moved', nodeId: result.nodeId, position: result.position });
+
+                return result;
+            }
+
             case 'edge.create': {
                 const result = Workbench.Operations.edge.create(d, operation);
 

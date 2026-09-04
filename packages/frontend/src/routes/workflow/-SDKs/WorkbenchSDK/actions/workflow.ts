@@ -37,6 +37,11 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                     reducers.node.remove(d, event.nodeId);
                 break;
 
+            case "node:moved":
+                if (d.data.nodes[event.nodeId])
+                    reducers.layout.node.setPosition(d, event.nodeId, event.position);
+                break;
+
             case "edge:created": {
                 const edge = Workflow.Edge.fromId(event.edgeId);
 

@@ -17,30 +17,140 @@ const { withCyclesRecompute } = Document
 export namespace Operations {
     type NodeIssues = Validation.Issue.Node | null
 
+    export interface NodeSummary {
+        id:          Workflow.Node.Id
+        blueprintId: Foundations.Blueprint.Id
+        displayName: string
+        isDisabled:  boolean
+        hasIssues:   boolean
+    }
+
+    export interface EdgeSummary {
+        id:     Workflow.Edge.Id
+        source: Workflow.Edge["source"]
+        target: Workflow.Edge["target"]
+    }
+
     export interface WorkflowProjection {
         id:     Workflow.Id
-        nodes:  Array<{ id: Workflow.Node.Id, blueprintId: Foundations.Blueprint.Id, displayName: string, isDisabled: boolean }>
-        edges:  Array<{ id: Workflow.Edge.Id, source: Workflow.Edge["source"], target: Workflow.Edge["target"] }>
+        nodes:  NodeSummary[]
+        edges:  EdgeSummary[]
         issues: Validation.Issue.Workflow
     }
 
+    export interface ConnectedEdges {
+        incoming: Record<Foundations.Port.Input.Id,  Workflow.Edge.Id[]>
+        outgoing: Record<Foundations.Port.Output.Id, Workflow.Edge.Id[]>
+    }
+
     export interface NodeProjection {
-        node:         Workflow.Node.Raw
-        fields:       readonly Foundations.Field[]
-        inputs:       readonly Foundations.Port.Input[]
-        outputs:      readonly Foundations.Port.Output[]
-        staticValues: Record<string, unknown> | null
-        issues:       NodeIssues
+        node:           Workflow.Node.Raw
+        fields:         readonly Foundations.Field[]
+        inputs:         readonly Foundations.Port.Input[]
+        outputs:        readonly Foundations.Port.Output[]
+        staticValues:   Record<string, unknown> | null
+        connectedEdges: ConnectedEdges
+        issues:         NodeIssues
+    }
+
+    // Filters AND together; an omitted one matches everything. Neighbourhood filters are one
+    // hop: `upstreamOf` is the nodes that feed the given ones, `downstreamOf` the nodes they feed.
+    export interface NodeQuery {
+        ids?:          Workflow.Node.Id[]
+        blueprintIds?: Foundations.Blueprint.Id[]
+        displayName?:  string
+        upstreamOf?:   Workflow.Node.Id[]
+        downstreamOf?: Workflow.Node.Id[]
+        limit?:        number
+    }
+
+    export interface EdgeQuery {
+        nodeIds?:       Workflow.Node.Id[]
+        sourceNodeIds?: Workflow.Node.Id[]
+        targetNodeIds?: Workflow.Node.Id[]
+        limit?:         number
+    }
+
+    export interface QueryResult<T> {
+        items: T[]
+        /** How many matched before `limit`. */
+        total: number
+    }
+
+    export interface NodeLayout {
+        id:          Workflow.Node.Id
+        displayName: string
+        position:    Position
+        /** Estimated from the node's shape; the canvas measures the real thing. */
+        size:        { width: number, height: number }
+    }
+
+    export interface LayoutProjection {
+        nodes:  NodeLayout[]
+        bounds: { minX: number, minY: number, maxX: number, maxY: number } | null
     }
 
     export interface WorkflowOperations {
-        get: (d: Document) => WorkflowProjection
+        get:        (d: Document) => WorkflowProjection
+        queryNodes: (d: Document, query: NodeQuery) => QueryResult<NodeSummary>
+        queryEdges: (d: Document, query: EdgeQuery) => QueryResult<EdgeSummary>
+        layout:     (d: Document) => LayoutProjection
+    }
+
+    // The canvas renders a node 250px wide with one row per port; close enough to plan around.
+    const NODE_WIDTH    = 250
+    const HEADER_HEIGHT = 56
+    const PORT_ROW      = 28
+    const PADDING       = 16
+
+    const estimateSize = (d: Document, nodeId: Workflow.Node.Id) => {
+        const shape = d.cache.resolvedShape[nodeId]
+        const rows  = Math.max(shape?.inputs.length ?? 0, shape?.outputs.length ?? 0)
+
+        return { width: NODE_WIDTH, height: HEADER_HEIGHT + rows * PORT_ROW + PADDING }
+    }
+
+    const DEFAULT_LIMIT = 50
+
+    const summarizeNode = (d: Document, node: Workflow.Node.Raw): NodeSummary => ({
+        id:          node.id,
+        blueprintId: node.blueprintId,
+        displayName: d.selectors.node.getUI(d, node.id).displayName,
+        isDisabled:  node.isDisabled ?? false,
+        hasIssues:   !!d.issues.nodes[node.id],
+    })
+
+    const summarizeEdge = (edge: Workflow.Edge): EdgeSummary => ({
+        id:     edge.id,
+        source: edge.source,
+        target: edge.target,
+    })
+
+    const paginate = <T>(items: T[], limit = DEFAULT_LIMIT): QueryResult<T> => ({
+        items: items.slice(0, limit),
+        total: items.length,
+    })
+
+    const connectedEdges = (d: Document, nodeId: Workflow.Node.Id): ConnectedEdges => {
+        const incoming: ConnectedEdges["incoming"] = {}
+        const outgoing: ConnectedEdges["outgoing"] = {}
+
+        for (const edge of Object.values(d.cache.edges)) {
+            if (edge.target.nodeId === nodeId)
+                (incoming[edge.target.portId] ??= []).push(edge.id)
+
+            if (edge.source.nodeId === nodeId)
+                (outgoing[edge.source.portId] ??= []).push(edge.id)
+        }
+
+        return { incoming, outgoing }
     }
 
     export interface NodeOperations {
         get:    (d: Document, nodeId: Workflow.Node.Id) => NodeProjection
         create: (d: Document, blueprint: Foundations.Blueprint, position: Position, staticValues?: Record<string, unknown>) => { nodeId: Workflow.Node.Id, issues: NodeIssues }
         delete: (d: Document, nodeId: Workflow.Node.Id) => { nodeId: Workflow.Node.Id }
+        move:   (d: Document, nodeId: Workflow.Node.Id, position: Position) => { nodeId: Workflow.Node.Id, position: Position }
     }
 
     export interface EdgeOperations {
@@ -55,20 +165,70 @@ export namespace Operations {
 
     export const workflow: WorkflowOperations = {
         get: (d: Document) => ({
-            id: d.workflowId,
-            nodes: Object.values(d.data.nodes).map(node => ({
-                id:          node.id,
-                blueprintId: node.blueprintId,
-                displayName: d.selectors.node.getUI(d, node.id).displayName,
-                isDisabled:  node.isDisabled ?? false,
-            })),
-            edges: Object.values(d.cache.edges).map(edge => ({
-                id:     edge.id,
-                source: edge.source,
-                target: edge.target,
-            })),
+            id:     d.workflowId,
+            nodes:  Object.values(d.data.nodes).map(node => summarizeNode(d, node)),
+            edges:  Object.values(d.cache.edges).map(summarizeEdge),
             issues: d.issues,
         }),
+
+        queryNodes: (d: Document, query: NodeQuery) => {
+            const ids          = query.ids          && new Set(query.ids)
+            const blueprintIds = query.blueprintIds && new Set(query.blueprintIds)
+            const needle       = query.displayName?.trim().toLowerCase()
+
+            const upstream = query.upstreamOf && new Set(
+                query.upstreamOf.flatMap(id => Object.keys(d.cache.incomingEdgesMap[id] ?? {}) as Workflow.Node.Id[]),
+            )
+            const downstream = query.downstreamOf && new Set(
+                query.downstreamOf.flatMap(id => Object.keys(d.cache.outgoingEdgesMap[id] ?? {}) as Workflow.Node.Id[]),
+            )
+
+            const matches = Object.values(d.data.nodes)
+                .map(node => summarizeNode(d, node))
+                .filter(node =>
+                    (!ids          || ids.has(node.id)) &&
+                    (!blueprintIds || blueprintIds.has(node.blueprintId)) &&
+                    (!needle       || node.displayName.toLowerCase().includes(needle)) &&
+                    (!upstream     || upstream.has(node.id)) &&
+                    (!downstream   || downstream.has(node.id)),
+                )
+
+            return paginate(matches, query.limit)
+        },
+
+        queryEdges: (d: Document, query: EdgeQuery) => {
+            const nodeIds       = query.nodeIds       && new Set(query.nodeIds)
+            const sourceNodeIds = query.sourceNodeIds && new Set(query.sourceNodeIds)
+            const targetNodeIds = query.targetNodeIds && new Set(query.targetNodeIds)
+
+            const matches = Object.values(d.cache.edges)
+                .filter(edge =>
+                    (!nodeIds       || nodeIds.has(edge.source.nodeId) || nodeIds.has(edge.target.nodeId)) &&
+                    (!sourceNodeIds || sourceNodeIds.has(edge.source.nodeId)) &&
+                    (!targetNodeIds || targetNodeIds.has(edge.target.nodeId)),
+                )
+                .map(summarizeEdge)
+
+            return paginate(matches, query.limit)
+        },
+
+        layout: (d: Document) => {
+            const nodes = Object.values(d.data.nodes).map(node => ({
+                id:          node.id,
+                displayName: d.selectors.node.getUI(d, node.id).displayName,
+                position:    d.data.ui.layout[node.id] ?? { x: 0, y: 0 },
+                size:        estimateSize(d, node.id),
+            }))
+
+            const bounds = nodes.length === 0 ? null : {
+                minX: Math.min(...nodes.map(n => n.position.x)),
+                minY: Math.min(...nodes.map(n => n.position.y)),
+                maxX: Math.max(...nodes.map(n => n.position.x + n.size.width)),
+                maxY: Math.max(...nodes.map(n => n.position.y + n.size.height)),
+            }
+
+            return { nodes, bounds }
+        },
     }
 
     export const node: NodeOperations = {
@@ -81,11 +241,12 @@ export namespace Operations {
 
             return {
                 node,
-                fields:       shape?.fields  ?? [],
-                inputs:       shape?.inputs  ?? [],
-                outputs:      shape?.outputs ?? [],
-                staticValues: d.selectors.node.getStaticValues(d, nodeId),
-                issues:       d.issues.nodes[nodeId] ?? null,
+                fields:         shape?.fields  ?? [],
+                inputs:         shape?.inputs  ?? [],
+                outputs:        shape?.outputs ?? [],
+                staticValues:   d.selectors.node.getStaticValues(d, nodeId),
+                connectedEdges: connectedEdges(d, nodeId),
+                issues:         d.issues.nodes[nodeId] ?? null,
             }
         },
 
@@ -101,6 +262,14 @@ export namespace Operations {
             d.reducers.node.remove(d, nodeId)
             return { nodeId }
         }),
+
+        move: (d: Document, nodeId: Workflow.Node.Id, position: Position) => {
+            if (!d.data.nodes[nodeId])
+                throw new Error(`Node ${nodeId} not found`)
+
+            d.reducers.layout.node.setPosition(d, nodeId, position)
+            return { nodeId, position }
+        },
     }
 
     export const edge: EdgeOperations = {

@@ -26,13 +26,17 @@ export class WorkbenchClient {
     ) {}
 
     public readonly workflow = {
-        get: () => Session.Workflow.get(this.http.raw, this.workflowId),
+        get:        ()                                            => Session.Workflow.get(this.http.raw, this.workflowId),
+        queryNodes: (request: Session.Workflow.QueryNodes.Request) => Session.Workflow.queryNodes(this.http.raw, this.workflowId, request),
+        queryEdges: (request: Session.Workflow.QueryEdges.Request) => Session.Workflow.queryEdges(this.http.raw, this.workflowId, request),
+        layout:     ()                                            => Session.Workflow.layout(this.http.raw, this.workflowId),
     };
 
     public readonly node = {
         get:    (nodeId: Workflow.Node.Id)             => Session.Node.get(this.http.raw, this.workflowId, nodeId),
         create: (request: Session.Node.Create.Request) => Session.Node.create(this.http.raw, this.workflowId, request),
         delete: (nodeId: Workflow.Node.Id)             => Session.Node.remove(this.http.raw, this.workflowId, { nodeId }),
+        move:   (nodeId: Workflow.Node.Id, position: { x: number, y: number }) => Session.Node.move(this.http.raw, this.workflowId, { nodeId, position }),
     };
 
     public readonly edge = {

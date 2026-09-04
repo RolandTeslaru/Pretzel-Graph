@@ -200,9 +200,49 @@ export namespace API {
             export namespace Get {
                 export type Response = ReturnType<typeof Operations.workflow.get>
             }
+            export namespace QueryNodes {
+                export const Request = z.object({
+                    ids:          z.array(WorkflowNs.Node.Id).optional(),
+                    blueprintIds: z.array(Foundations.Blueprint.Id).optional(),
+                    displayName:  z.string().optional(),
+                    upstreamOf:   z.array(WorkflowNs.Node.Id).optional(),
+                    downstreamOf: z.array(WorkflowNs.Node.Id).optional(),
+                    limit:        z.number().int().positive().max(500).optional(),
+                })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.workflow.queryNodes>
+            }
+            export namespace QueryEdges {
+                export const Request = z.object({
+                    nodeIds:       z.array(WorkflowNs.Node.Id).optional(),
+                    sourceNodeIds: z.array(WorkflowNs.Node.Id).optional(),
+                    targetNodeIds: z.array(WorkflowNs.Node.Id).optional(),
+                    limit:         z.number().int().positive().max(500).optional(),
+                })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.workflow.queryEdges>
+            }
+            export namespace Layout {
+                export type Response = ReturnType<typeof Operations.workflow.layout>
+            }
 
             export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Get.Response> {
                 const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}`)
+                return data
+            }
+
+            export async function queryNodes(api: AxiosInstance, workflowId: WorkflowNs.Id, request: QueryNodes.Request): Promise<QueryNodes.Response> {
+                const { data } = await api.post<QueryNodes.Response>(`/api/internal/workbench/workflows/${workflowId}/nodes/query`, request)
+                return data
+            }
+
+            export async function queryEdges(api: AxiosInstance, workflowId: WorkflowNs.Id, request: QueryEdges.Request): Promise<QueryEdges.Response> {
+                const { data } = await api.post<QueryEdges.Response>(`/api/internal/workbench/workflows/${workflowId}/edges/query`, request)
+                return data
+            }
+
+            export async function layout(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Layout.Response> {
+                const { data } = await api.get<Layout.Response>(`/api/internal/workbench/workflows/${workflowId}/layout`)
                 return data
             }
         }
@@ -226,6 +266,11 @@ export namespace API {
                 export type Request  = z.infer<typeof Request>
                 export type Response = ReturnType<typeof Operations.node.delete>
             }
+            export namespace Move {
+                export const Request = z.object({ nodeId: WorkflowNs.Node.Id, position: Position })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.node.move>
+            }
 
             export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id, nodeId: WorkflowNs.Node.Id): Promise<Get.Response> {
                 const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}/nodes/${encodeURIComponent(nodeId)}`)
@@ -239,6 +284,11 @@ export namespace API {
 
             export async function remove(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Delete.Request): Promise<Delete.Response> {
                 const { data } = await api.post<Delete.Response>(`/api/internal/workbench/workflows/${workflowId}/session/node/delete`, request)
+                return data
+            }
+
+            export async function move(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Move.Request): Promise<Move.Response> {
+                const { data } = await api.post<Move.Response>(`/api/internal/workbench/workflows/${workflowId}/session/node/move`, request)
                 return data
             }
         }
@@ -301,6 +351,7 @@ export namespace API {
         export const Operation = z.discriminatedUnion("op", [
             Node.Create.Request.extend({ op: z.literal("node.create") }),
             Node.Delete.Request.extend({ op: z.literal("node.delete") }),
+            Node.Move.Request.extend({ op: z.literal("node.move") }),
             Edge.Create.Request.extend({ op: z.literal("edge.create") }),
             Edge.Delete.Request.extend({ op: z.literal("edge.delete") }),
             Field.Set.Request.extend({ op: z.literal("field.set") }),

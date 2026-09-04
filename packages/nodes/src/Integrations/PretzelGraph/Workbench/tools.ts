@@ -23,6 +23,7 @@ const edgeEndpoints = {
 const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.create"), blueprintId, position, staticValues }),
     z.object({ op: z.literal("node.delete"), nodeId }),
+    z.object({ op: z.literal("node.move"),   nodeId, position: z.object({ x: z.number(), y: z.number() }) }),
     z.object({ op: z.literal("edge.create"), source: z.string(), sourceHandle: z.string(), target: z.string(), targetHandle: z.string() }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
     z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
@@ -40,11 +41,53 @@ export function buildTools(wb: WorkbenchClient) {
     };
 
 
-    const getWorkflow = tool(
-        async () => ToolBudget.value(await wb.workflow.get()),
+    const nodeIds = z.array(z.string()).optional();
+
+    const queryNodes = tool(
+        async (query) => {
+            const { items, total } = await wb.workflow.queryNodes(query as never);
+
+            return ToolBudget.list("nodes", items, { hint: total > items.length ? `${total} matched; ${items.length} returned. Narrow the query or raise limit.` : undefined });
+        },
         {
-            name:        "workbench_get_workflow",
-            description: "Get the workflow's nodes, edges and validation issues. Read-only.",
+            name:        "workbench_query_nodes",
+            description: "Find nodes. Filters combine; omit all to list every node. Returns id, blueprint, display name, disabled flag and whether the node has validation issues; use get_node for detail. Read-only.",
+            schema: z.object({
+                ids:          nodeIds.describe("Only these node ids."),
+                blueprintIds: z.array(z.string()).optional().describe("Only nodes of these blueprints."),
+                displayName:  z.string().optional().describe("Case-insensitive substring of the display name."),
+                upstreamOf:   nodeIds.describe("Only nodes that feed directly into any of these nodes."),
+                downstreamOf: nodeIds.describe("Only nodes fed directly by any of these nodes."),
+                limit:        z.number().int().positive().max(500).optional().describe("Default 50."),
+            }),
+        },
+    );
+
+
+    const queryEdges = tool(
+        async (query) => {
+            const { items, total } = await wb.workflow.queryEdges(query as never);
+
+            return ToolBudget.list("edges", items, { hint: total > items.length ? `${total} matched; ${items.length} returned. Narrow the query or raise limit.` : undefined });
+        },
+        {
+            name:        "workbench_query_edges",
+            description: "Find edges. Filters combine; omit all to list every edge. Each edge has an id and its source and target node and port. Read-only.",
+            schema: z.object({
+                nodeIds:       nodeIds.describe("Edges touching any of these nodes at either end."),
+                sourceNodeIds: nodeIds.describe("Edges leaving any of these nodes."),
+                targetNodeIds: nodeIds.describe("Edges entering any of these nodes."),
+                limit:         z.number().int().positive().max(500).optional().describe("Default 50."),
+            }),
+        },
+    );
+
+
+    const getLayout = tool(
+        async () => ToolBudget.value(await wb.workflow.layout()),
+        {
+            name:        "workbench_get_layout",
+            description: "Get every node's canvas position and estimated size, plus the bounding box of the whole graph. Use it to place or move nodes without overlap. Read-only.",
             schema:      z.object({}),
         },
     );
@@ -54,7 +97,7 @@ export function buildTools(wb: WorkbenchClient) {
         async ({ nodeId }) => ToolBudget.value(await wb.node.get(nodeId as Workflow.Node.Id)),
         {
             name:        "workbench_get_node",
-            description: "Get one node: its blueprint, fields, ports, current field values and validation issues. Read-only.",
+            description: "Get one node: its blueprint, fields, ports, current field values, the edges on each port, and validation issues. Read-only.",
             schema:      z.object({ nodeId }),
         },
     );
@@ -82,6 +125,18 @@ export function buildTools(wb: WorkbenchClient) {
             name:        "workbench_delete_node",
             description: "Remove a node and every edge connected to it.",
             schema:      z.object({ nodeId }),
+        },
+    );
+
+
+    const moveNode = tool(
+        async ({ nodeId, position }) => ToolBudget.value(
+            await write(() => wb.node.move(nodeId as Workflow.Node.Id, position)),
+        ),
+        {
+            name:        "workbench_move_node",
+            description: "Move a node to a canvas position. Layout only; nothing else about the node changes.",
+            schema:      z.object({ nodeId, position: z.object({ x: z.number(), y: z.number() }) }),
         },
     );
 
@@ -168,8 +223,8 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     return [
-        getWorkflow, getNode,
-        createNode, deleteNode, createEdge, deleteEdge, setField, apply,
+        queryNodes, queryEdges, getNode, getLayout,
+        createNode, deleteNode, moveNode, createEdge, deleteEdge, setField, apply,
         commit, discard,
     ];
 }
