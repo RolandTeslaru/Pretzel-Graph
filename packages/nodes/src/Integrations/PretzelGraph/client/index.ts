@@ -1,1 +1,1 @@
-export { WorkbenchClient, WorkbenchTransaction } from "./WorkbenchClient";
+export { WorkbenchClient } from "./WorkbenchClient";

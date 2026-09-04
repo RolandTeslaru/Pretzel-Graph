@@ -3,6 +3,7 @@ import z from "zod"
 import { Workflow as WorkflowNs } from "../Workflow"
 import { Foundations } from "../Foundations"
 import { Vault } from "../Vault"
+import { Operations } from "./Operations"
 
 export namespace API {
     export namespace Workflow {
@@ -178,30 +179,146 @@ export namespace API {
         }
     }
 
-    // A worker-side hold on a workflow: the backend keeps one transaction open, row-locked, from
-    // begin to commit, and the caller mutates a copy in between. Keyed by the execution behind
-    // the delegate, so nothing travels but the workflow id.
+    // A worker-side hold on a workflow. The backend keeps one transaction open, row-locked, from
+    // begin to commit, and the document being edited lives in that session: every operation is a
+    // request that applies one edit there and announces it. Keyed by the execution behind the
+    // delegate, so nothing travels but the workflow id.
     export namespace Session {
+        const Position = z.object({ x: z.number(), y: z.number() })
+
         export namespace Begin {
-            export const Response = Workflow.Get.Response
+            export const Response = z.object({ workflowId: WorkflowNs.Id })
             export type Response = z.infer<typeof Response>
         }
 
         export namespace Commit {
-            export const Request = z.object({
-                data: WorkflowNs.Data.Schema,
-            })
-            export type Request = z.infer<typeof Request>
-
             export const Response = z.object({})
             export type Response = z.infer<typeof Response>
         }
 
-        /** A snapshot without a hold — never blocks a writer, may see a write in progress. */
-        export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Begin.Response> {
-            const { data } = await api.get<Begin.Response>(`/api/internal/workbench/workflows/${workflowId}`)
-            return data
+        export namespace Workflow {
+            export namespace Get {
+                export type Response = ReturnType<typeof Operations.workflow.get>
+            }
+
+            export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}`)
+                return data
+            }
         }
+
+        export namespace Node {
+            export namespace Get {
+                export type Response = ReturnType<typeof Operations.node.get>
+            }
+            export namespace Create {
+                export const Request = z.object({
+                    blueprintId:  Foundations.Blueprint.Id,
+                    position:     Position,
+                    staticValues: z.record(z.string(), z.unknown()).optional(),
+                })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.node.create>
+            }
+            export namespace Delete {
+                export const Request = z.object({ nodeId: WorkflowNs.Node.Id })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.node.delete>
+            }
+
+            export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id, nodeId: WorkflowNs.Node.Id): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}/nodes/${encodeURIComponent(nodeId)}`)
+                return data
+            }
+
+            export async function create(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Create.Request): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>(`/api/internal/workbench/workflows/${workflowId}/session/node/create`, request)
+                return data
+            }
+
+            export async function remove(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Delete.Request): Promise<Delete.Response> {
+                const { data } = await api.post<Delete.Response>(`/api/internal/workbench/workflows/${workflowId}/session/node/delete`, request)
+                return data
+            }
+        }
+
+        export namespace Edge {
+            export namespace Create {
+                export const Request = z.object({
+                    source:       WorkflowNs.Node.Id,
+                    sourceHandle: Foundations.Port.Output.Id,
+                    target:       WorkflowNs.Node.Id,
+                    targetHandle: Foundations.Port.Input.Id,
+                })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.edge.create>
+            }
+            export namespace Delete {
+                export const Request = z.object({ edgeId: WorkflowNs.Edge.Id })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.edge.delete>
+            }
+
+            export async function create(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Create.Request): Promise<Create.Response> {
+                const { data } = await api.post<Create.Response>(`/api/internal/workbench/workflows/${workflowId}/session/edge/create`, request)
+                return data
+            }
+
+            export async function remove(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Delete.Request): Promise<Delete.Response> {
+                const { data } = await api.post<Delete.Response>(`/api/internal/workbench/workflows/${workflowId}/session/edge/delete`, request)
+                return data
+            }
+        }
+
+        export namespace Field {
+            export namespace Get {
+                export type Response = ReturnType<typeof Operations.field.get>
+            }
+            export namespace Set {
+                export const Request = z.object({
+                    nodeId:  WorkflowNs.Node.Id,
+                    fieldId: Foundations.Field.Id,
+                    value:   z.unknown(),
+                })
+                export type Request  = z.infer<typeof Request>
+                export type Response = ReturnType<typeof Operations.field.set>
+            }
+
+            export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id, nodeId: WorkflowNs.Node.Id, fieldId: Foundations.Field.Id): Promise<Get.Response> {
+                const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}/nodes/${encodeURIComponent(nodeId)}/fields/${encodeURIComponent(fieldId)}`)
+                return data
+            }
+
+            export async function set(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Set.Request): Promise<Set.Response> {
+                const { data } = await api.post<Set.Response>(`/api/internal/workbench/workflows/${workflowId}/session/field/set`, request)
+                return data
+            }
+        }
+
+        // One edit, tagged. A batch is a list of these applied in order; the single-operation
+        // routes take the untagged request.
+        export const Operation = z.discriminatedUnion("op", [
+            Node.Create.Request.extend({ op: z.literal("node.create") }),
+            Node.Delete.Request.extend({ op: z.literal("node.delete") }),
+            Edge.Create.Request.extend({ op: z.literal("edge.create") }),
+            Edge.Delete.Request.extend({ op: z.literal("edge.delete") }),
+            Field.Set.Request.extend({ op: z.literal("field.set") }),
+        ])
+        export type Operation = z.infer<typeof Operation>
+
+        export namespace Batch {
+            export const Request = z.object({ operations: z.array(Operation) })
+            export type Request  = z.infer<typeof Request>
+            export type Response = { results: unknown[] }
+
+            export async function apply(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Request): Promise<Response> {
+                const { data } = await api.post<Response>(`/api/internal/workbench/workflows/${workflowId}/session/batch`, request)
+                return data
+            }
+        }
+
+        // Reads never hold the workflow. Inside a session they see the session's own document;
+        // outside one, a snapshot of the row. Writes need an open session held by the caller.
 
         /** Lock and load. Refused while anyone holds the workflow. */
         export async function beginTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Begin.Response> {
@@ -213,8 +330,8 @@ export namespace API {
             await api.post(`/api/internal/workbench/workflows/${workflowId}/session/heartbeat`)
         }
 
-        export async function commitTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Commit.Request): Promise<Commit.Response> {
-            const { data } = await api.post<Commit.Response>(`/api/internal/workbench/workflows/${workflowId}/session/commit`, request)
+        export async function commitTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Commit.Response> {
+            const { data } = await api.post<Commit.Response>(`/api/internal/workbench/workflows/${workflowId}/session/commit`)
             return data
         }
 

@@ -64,6 +64,21 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 return false;
             }
         },
+        // The cache first; the backend only for what it lacks.
+        getBlueprint: async (blueprintId) => {
+            const cached = getState().blueprints[blueprintId];
+
+            if (cached)
+                return cached;
+
+            const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
+
+            setState(s => {
+                s.blueprints[blueprintId] = blueprint;
+            });
+
+            return blueprint;
+        },
         hydrateBlueprint: async (blueprintId) => {
             try {
                 const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
@@ -112,6 +127,7 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
 export type _ShelfActions = {
     loadSection: (section: Shelf.Section) => Promise<boolean>;
     hydrateBatch: (blueprintIds: Blueprint.Id[]) => Promise<boolean>;
+    getBlueprint: (blueprintId: Blueprint.Id) => Promise<Blueprint>;
     hydrateBlueprint: (blueprintId: Blueprint.Id) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;

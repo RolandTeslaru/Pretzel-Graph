@@ -10,6 +10,9 @@ export const commit = async () => {
     const { workflowId, data, isDirty } = WorkbenchSDK.document;
     if (isDirty === false || !workflowId) return;
 
+    // A held workflow is about to be replaced by what the holder writes; nothing local survives it.
+    if (WorkbenchSDK.isLocked) return;
+
     try {
         console.log("Committing")
         await Workbench.API.Workflow.commit(api, { workflowId, data })

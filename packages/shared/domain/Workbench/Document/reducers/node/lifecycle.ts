@@ -193,6 +193,27 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
 
         return nodeId;
     },
+    // A node authored elsewhere, placed as-is: same id, same fold. The base must already be
+    // registered; the derivative is refolded here from the values rather than carried over.
+    insert: (d, node, position, staticValues) => {
+        const base = d.selectors.blueprint.get(d, node.blueprintId);
+        if (!base)
+            throw new Error(`Blueprint ${node.blueprintId} is not registered`);
+
+        d.isDirty = true;
+
+        if (node.reconciledBlueprintId) {
+            const { blueprint } = Foundations.Blueprint.derive(base, staticValues);
+            d.reducers.blueprint.registerAs(d, node.reconciledBlueprintId, blueprint);
+        }
+
+        d.data.nodes[node.id]        = node;
+        d.data.staticValues[node.id] = staticValues;
+
+        d.reducers.layout.node.add(d, node.id, position);
+        d.reducers.cache.createNode(d, node);
+        d.reducers.node.validate(d, node.id);
+    },
     disconnect: (d, nodeId) => {
         d.isDirty = true;
 
@@ -381,6 +402,7 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
 export interface NodeLifecycleReducers {
     remove      : (document: Document, nodeId: NodeId) => void;
     create      : (document: Document, blueprint: Foundations.Blueprint, position: { x: number, y: number }, staticValues?: Record<Foundations.Field.Id | Foundations.Port.Input.Id, Foundations.Field.Value>, credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => NodeId;
+    insert      : (document: Document, node: Workflow.Node.Raw, position: { x: number, y: number }, staticValues: Workflow.Data["staticValues"][NodeId]) => void;
     disconnect  : (document: Document, nodeId: NodeId) => void;
     recreate    : (document: Document, nodeId: NodeId, blueprint: Foundations.Blueprint, credentialDefaults?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>) => void;
     duplicate   : (document: Document, originalNode: Workflow.Node.Raw, position?: { x: number, y: number }, overrides?: {
