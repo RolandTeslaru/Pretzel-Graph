@@ -45,6 +45,7 @@ export namespace Field {
         "ResourceLoader",
         "CalendarRange",
         "CalendarDateTimeRange",
+        "WorkflowIdSelector",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -414,6 +415,14 @@ export namespace Field {
 
     export interface CalendarDateTimeRange extends z.infer<typeof CalendarDateTimeRange.Schema> {}
 
+    // Stores a bare Workflow.Id. Foundations can't import Workflow without cycling, so the
+    // brand is applied by the consumer.
+    export const WorkflowIdSelector = Field.Base.extend({
+        variant:      configLiteral("WorkflowIdSelector"),
+        initialValue: z.string(),
+        placeholder:  z.string().optional(),
+    })
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -429,6 +438,7 @@ export namespace Field {
     export interface Condition extends z.infer<typeof Condition.Schema> { }
     export interface CaseList extends z.infer<typeof CaseList.Schema> { }
     export interface Variadic extends z.infer<typeof Variadic> { }
+    export interface WorkflowIdSelector extends z.infer<typeof WorkflowIdSelector> { }
 
     export const Schema = z.discriminatedUnion("variant", [
         Integer,
@@ -449,6 +459,7 @@ export namespace Field {
         ResourceLoader.Schema,
         CalendarRange.Schema,
         CalendarDateTimeRange.Schema,
+        WorkflowIdSelector,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

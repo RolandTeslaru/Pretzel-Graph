@@ -16,6 +16,7 @@ import { VariadicField } from './Variadic'
 import { ResourceLoaderField } from './ResourceLoader'
 import { CalendarRangeField } from './CalendarRange'
 import { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
+import { WorkflowIdSelectorField } from './WorkflowIdSelector'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -32,6 +33,7 @@ export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
 export { CalendarRangeField } from './CalendarRange'
 export { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
+export { WorkflowIdSelectorField } from './WorkflowIdSelector'
 
 // ── Dispatcher ──────────────────────────────────────────────
 
@@ -60,6 +62,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     ResourceLoader: ResourceLoaderField,
     CalendarRange: CalendarRangeField,
     CalendarDateTimeRange: CalendarDateTimeRangeField,
+    WorkflowIdSelector: WorkflowIdSelectorField,
 }
 
 /** Renders the appropriate field component based on variant */

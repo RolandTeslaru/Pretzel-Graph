@@ -414,6 +414,21 @@ export namespace FieldBuilder {
         };
     }
 
+    /** Picks a workflow from the library and stores its id. Does not attach it as a dependency. */
+    export function WorkflowIdSelector<T_Id extends string, T_Required extends boolean = false>(
+        id: T_Id, displayName: string, options: {
+        initialValue?: string;
+        placeholder?: string;
+    } & BaseOptions<T_Required> = {},
+    ): T_Return<T_Id, "WorkflowIdSelector", Field.WorkflowIdSelector, T_Required> {
+        return {
+            ...buildBase(id, displayName, options),
+            variant:      "WorkflowIdSelector",
+            initialValue: options.initialValue ?? "",
+            placeholder:  options.placeholder,
+        };
+    }
+
 
 
     // Framework-owned fields appended to every blueprint by defineBlueprint. They are also
