@@ -44,6 +44,14 @@ export class InternalWorkbenchController {
         return Workbench.Operations.workflow.queryEdges(await this.sessions.read(delegate, id), body);
     }
 
+    @Get('workflows/:id/meta')
+    getMeta(
+        @AuthenticatedDelegate() delegate: Principal.Delegate,
+        @Param('id') id: Workflow.Id,
+    ): Promise<Session.Workflow.Meta.Response> {
+        return this.sessions.readMeta(delegate, id);
+    }
+
     @Get('workflows/:id/layout')
     async layout(
         @AuthenticatedDelegate() delegate: Principal.Delegate,

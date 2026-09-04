@@ -225,6 +225,10 @@ export namespace API {
             export namespace Layout {
                 export type Response = ReturnType<typeof Operations.workflow.layout>
             }
+            export namespace Meta {
+                export const Response = WorkflowNs.Meta.Schema
+                export type Response = z.infer<typeof Response>
+            }
 
             export async function get(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Get.Response> {
                 const { data } = await api.get<Get.Response>(`/api/internal/workbench/workflows/${workflowId}`)
@@ -243,6 +247,11 @@ export namespace API {
 
             export async function layout(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Layout.Response> {
                 const { data } = await api.get<Layout.Response>(`/api/internal/workbench/workflows/${workflowId}/layout`)
+                return data
+            }
+
+            export async function getMeta(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Meta.Response> {
+                const { data } = await api.get<Meta.Response>(`/api/internal/workbench/workflows/${workflowId}/meta`)
                 return data
             }
         }

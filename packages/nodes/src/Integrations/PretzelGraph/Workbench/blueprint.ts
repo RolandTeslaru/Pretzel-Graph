@@ -32,7 +32,10 @@ export const Blueprint = defineBlueprint({
     "target==workflow": {
         fields: [
             FieldBuilder.MultiOption("workflowOperation", "Operation", {
-                options: [{ value: "get", displayName: "Get" }],
+                options: [
+                    { value: "get",  displayName: "Get" },
+                    { value: "meta", displayName: "Get meta" },
+                ],
                 initialValue: "get",
             }),
         ],

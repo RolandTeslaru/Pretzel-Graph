@@ -30,7 +30,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         switch (f.target) {
             case "workflow":
-                return { result: await wb.workflow.get() };
+                switch (f.workflowOperation) {
+                    case "get":  return { result: await wb.workflow.get() };
+                    case "meta": return { result: await wb.workflow.getMeta() };
+                }
+                break;
 
             case "node":
                 switch (f.nodeOperation) {

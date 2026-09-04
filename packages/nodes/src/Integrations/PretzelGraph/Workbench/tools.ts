@@ -83,6 +83,16 @@ export function buildTools(wb: WorkbenchClient) {
     );
 
 
+    const getMeta = tool(
+        async () => ToolBudget.value(await wb.workflow.getMeta()),
+        {
+            name:        "workbench_get_workflow_meta",
+            description: "Get the workflow's name, description, icon, folder, lock state and timestamps. Not its graph. Read-only.",
+            schema:      z.object({}),
+        },
+    );
+
+
     const getLayout = tool(
         async () => ToolBudget.value(await wb.workflow.layout()),
         {
@@ -223,7 +233,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     return [
-        queryNodes, queryEdges, getNode, getLayout,
+        getMeta, queryNodes, queryEdges, getNode, getLayout,
         createNode, deleteNode, moveNode, createEdge, deleteEdge, setField, apply,
         commit, discard,
     ];

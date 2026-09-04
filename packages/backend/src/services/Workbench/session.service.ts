@@ -21,9 +21,12 @@ type Session = {
     trx:         DB.HeldDelegateTransaction,
     workflowId:  Workflow.Id,
     executionId: Execution.Id,
+    meta:        Workflow.Meta,
     document:    Workbench.Document,
     unsubscribe: () => void,
 };
+
+const toMeta = ({ data: _data, ...meta }: Workflow): Workflow.Meta => meta;
 
 type Operation = Workbench.API.Session.Operation;
 
@@ -81,6 +84,21 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
 
 
+    /** The row without its graph; `locked` from the registry, as everywhere else. */
+    public async readMeta(delegate: Principal.Delegate, workflowId: Workflow.Id): Promise<Workflow.Meta> {
+        const session = this.sessions.get(workflowId);
+
+        if (session && session.executionId === delegate.executionId)
+            return { ...session.meta, locked: true };
+
+        const workflow = await this.repository.workflow.get(delegate, workflowId);
+
+        return { ...toMeta(workflow), locked: this.isLocked(workflowId) };
+    }
+
+
+
+
     public async beginTransaction(delegate: Principal.Delegate, workflowId: Workflow.Id): Promise<Workbench.API.Session.Begin.Response> {
 
         const existing = this.sessions.get(workflowId);
@@ -104,11 +122,14 @@ export class WorkbenchSessionService implements OnModuleDestroy {
             if (!row)
                 throw new SystemError(SystemError.Code.NOT_FOUND, 'Workflow not found');
 
+            const workflow = DB.Workflow.toDomain(row);
+
             const session: Session = {
                 trx,
                 workflowId,
                 executionId: delegate.executionId,
-                document:    await this.createDocument(DB.Workflow.toDomain(row)),
+                meta:        toMeta(workflow),
+                document:    await this.createDocument(workflow),
                 // The worker announces how its run ended on the execution channel; any terminal
                 // state releases whatever the run still holds.
                 unsubscribe: this.realtime.subscribe<Execution.Event.Base>(
