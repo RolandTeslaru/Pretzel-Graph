@@ -3,7 +3,7 @@ import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretz
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.Shelf",
     displayName: "Shelf",
-    description: "Lists the blueprints that can be placed on a workflow and describes their fields and ports.",
+    description: "Searches the blueprints that can be placed on a workflow and describes their fields and ports.",
     icon: "Pretzel",
     accent: "utility",
     toolCompatible: true,
@@ -11,21 +11,35 @@ export const Blueprint = defineBlueprint({
     fields: [
         FieldBuilder.MultiOption("operation", "Operation", {
             options: [
-                { value: "list", displayName: "List blueprints" },
-                { value: "get",  displayName: "Get blueprint" },
+                { value: "query",       displayName: "Query blueprints" },
+                { value: "get",         displayName: "Get blueprint" },
+                { value: "derivations", displayName: "Get derivations" },
             ],
-            initialValue: "list",
+            initialValue: "query",
         }),
     ],
     inputs: [],
     outputs: [
         OutputBuilder.Data("result", "Result", {
-            tooltip: "The drawers and their blueprint ids, or one blueprint's fields and ports.",
+            tooltip: "Matching blueprint summaries, one blueprint's fields and ports, or the branches its node can take.",
         }),
     ],
 
+    "operation==query": {
+        fields: [
+            FieldBuilder.Json("filters", "Filters", {
+                initialValue: {},
+                tooltip: "Optional filters: ids, displayName, drawerIds, toolCompatible, proxyCompatible, derivable, fieldIds, inputVariants, outputVariants, limit.",
+            }),
+        ],
+    },
+
     "operation==get": {
-        fields: [FieldBuilder.String("blueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" })],
+        fields: [FieldBuilder.String("getBlueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" })],
+    },
+
+    "operation==derivations": {
+        fields: [FieldBuilder.String("derivationsBlueprintId", "Blueprint", { required: true, placeholder: "Core.Developer.DerivativeTest" })],
     },
 
     "isConvertedToTool==true": defineTool({
