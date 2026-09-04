@@ -214,7 +214,8 @@ export namespace API {
             export namespace Create {
                 export const Request = z.object({
                     blueprintId:  Foundations.Blueprint.Id,
-                    position:     Position,
+                    /** Omitted: placed to the right of the rightmost node. */
+                    position:     Position.optional(),
                     staticValues: z.record(z.string(), z.unknown()).optional(),
                 })
                 export type Request  = z.infer<typeof Request>

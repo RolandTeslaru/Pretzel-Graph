@@ -5,6 +5,8 @@ import Session = Workbench.API.Session;
 
 const HEARTBEAT_MS = 20_000;
 
+const isGone = (error: unknown) => (error as { response?: { status?: number } })?.response?.status === 404;
+
 /**
  * One workflow as something to read and edit from inside a run, over the run's internal API.
  *
@@ -16,6 +18,7 @@ const HEARTBEAT_MS = 20_000;
 export class WorkbenchClient {
 
     #heartbeat: NodeJS.Timeout | null = null;
+    #opening:   Promise<void> | null  = null;
 
     constructor(
         private readonly http:       HTTP.Client,
@@ -59,9 +62,23 @@ export class WorkbenchClient {
         await Session.beginTransaction(this.http.raw, this.workflowId);
 
         this.#heartbeat = setInterval(() => {
-            void Session.heartbeat(this.http.raw, this.workflowId).catch(() => {});
+            void Session.heartbeat(this.http.raw, this.workflowId).catch(error => {
+                // The backend closed it without us — the run ended, or the hold was reaped.
+                if (isGone(error))
+                    void this.#finish(async () => {});
+            });
         }, HEARTBEAT_MS);
         this.#heartbeat.unref?.();
+    }
+
+    /** Opens lazily; concurrent callers share the one begin. */
+    public ensureTransaction(): Promise<void> {
+        if (this.inTransaction)
+            return Promise.resolve();
+
+        this.#opening ??= this.beginTransaction().finally(() => { this.#opening = null });
+
+        return this.#opening;
     }
 
     public async commitTransaction(): Promise<void> {

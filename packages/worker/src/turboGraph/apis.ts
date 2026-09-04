@@ -13,6 +13,7 @@ import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 import { agentToolBridgeService } from "../tool-bridge/service";
+import { lifecycleService } from "./lifecycle";
 
 type ExecutionAPIs = Pick<
     RuntimeNode.ExecutionContext,
@@ -34,6 +35,7 @@ type ExecutionAPIs = Pick<
     | "agentToolBridgeAPI"
     | "internalAPI"
     | "consultationAPI"
+    | "lifecycleAPI"
 >;
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
@@ -345,5 +347,6 @@ export function createExecutionAPIs(
         agentToolBridgeAPI,
         internalAPI,
         consultationAPI,
+        lifecycleAPI: lifecycleService.createAPI(execution.id),
     };
 }

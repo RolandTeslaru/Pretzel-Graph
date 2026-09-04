@@ -31,6 +31,20 @@ const IDLE_TIMEOUT = '60s';
 
 const isLockNotAvailable = (error: unknown) => (error as { code?: string })?.code === '55P03';
 
+const NODE_GAP = 320;
+
+// A caller with no opinion on geometry gets the next slot in a row; the canvas can tidy later.
+const placeNext = (d: Workbench.Document) => {
+    const positions = Object.values(d.data.ui.layout);
+
+    if (positions.length === 0)
+        return { x: 0, y: 0 };
+
+    const rightmost = positions.reduce((a, b) => (b.x > a.x ? b : a));
+
+    return { x: rightmost.x + NODE_GAP, y: rightmost.y };
+};
+
 @Injectable()
 export class WorkbenchSessionService implements OnModuleDestroy {
 
@@ -152,7 +166,8 @@ export class WorkbenchSessionService implements OnModuleDestroy {
         switch (operation.op) {
             case 'node.create': {
                 const blueprint = await this.resolveBlueprint(operation.blueprintId);
-                const result    = Workbench.Operations.node.create(d, blueprint, operation.position, operation.staticValues);
+                const position  = operation.position ?? placeNext(d);
+                const result    = Workbench.Operations.node.create(d, blueprint, position, operation.staticValues);
 
                 this.emit(session, {
                     type:         'node:created',

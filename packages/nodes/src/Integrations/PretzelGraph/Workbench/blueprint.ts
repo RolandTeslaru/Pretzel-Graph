@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.Workbench",
@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "Reads and edits another workflow in this workspace — its nodes, edges, and field values.",
     icon: "Pretzel",
     accent: "utility",
+    toolCompatible: true,
     credentials: [],
     fields: [
         FieldBuilder.WorkflowIdSelector("workflowId", "Workflow", {
@@ -107,4 +108,15 @@ export const Blueprint = defineBlueprint({
             fields: [FieldBuilder.Json("fieldValue", "Value", { initialValue: null })],
         },
     },
+
+    "isConvertedToTool==true": defineTool({
+        fields: [
+            FieldBuilder.WorkflowIdSelector("workflowId", "Workflow", {
+                required: true,
+                tooltip: "The workflow the tools read and edit. Edits are saved when the run completes.",
+            }),
+        ],
+        inputs:  [],
+        outputs: [OutputBuilder.ToolList("tools", "Workbench Tools")],
+    }),
 });
