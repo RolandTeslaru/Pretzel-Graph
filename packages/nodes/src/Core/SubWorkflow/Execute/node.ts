@@ -76,7 +76,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             },
         };
 
-        this.injectWorkflowConfigValues(childWorkflowData);
+        this.injectGlobalFieldValues(childWorkflowData);
 
         this.subEngineCtx = await this.subEnvironment.compile(
             subWorkflowId,
@@ -116,8 +116,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         return this.aggregatedMetrics;
     }
 
-    private injectWorkflowConfigValues(childWorkflowData: Workflow.Data): void {
-        childWorkflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] = this.fieldValues;
+    private injectGlobalFieldValues(childWorkflowData: Workflow.Data): void {
+        childWorkflowData.staticValues[Workflow.GLOBAL_FIELDS_NODE_ID] = this.fieldValues;
     }
 
     private injectInputNodeValues(incoming: InferIncoming<typeof Blueprint>): void {

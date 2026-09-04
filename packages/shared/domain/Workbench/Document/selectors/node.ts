@@ -66,7 +66,7 @@ export interface LegacyExpressionContext {
     node: Workflow.Node.Raw
     fields: Record<Field.Id, unknown>
     incoming: Record<string, unknown>
-    workflowConfig: Record<Field.Id, unknown>
+    globalFields: Record<Field.Id, unknown>
 }
 
 export const nodeSelectors: NodeSelectors = {
@@ -117,7 +117,7 @@ export const nodeSelectors: NodeSelectors = {
         node: d.data.nodes[nodeId],
         fields: d.selectors.field.getValues(d, nodeId),
         incoming: executionSelectors.getNodeIncomingData(d, nodeId, session) ?? {},
-        workflowConfig: Airlock.resolveWorkflowConfig(d.data),
+        globalFields: Airlock.resolveGlobalFieldValues(d.data),
     }),
     getDependencyRef: (d, nodeId) => d.data.nodes[nodeId]?.dependencyRef ?? null,
     getDependency: (d, nodeId) => {

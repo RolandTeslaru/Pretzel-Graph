@@ -84,10 +84,10 @@ const VARIANT_TS: Partial<Record<Foundations.Field.Variant, string>> = {
     Boolean: 'boolean',
 }
 
-// Object type built from the workflow's config fields → `$config` key autocomplete.
-// Mirrors the runtime bag Airlock.resolveWorkflowConfig produces (field id → value).
-export function getConfigType(): string {
-    const fields = WorkbenchSDK.document.data.fields ?? []
+// Object type built from the workflow's global fields → `$globalFields` key autocomplete.
+// Mirrors the runtime bag Airlock.resolveGlobalFieldValues produces (field id → value).
+export function getGlobalFieldsType(): string {
+    const fields = WorkbenchSDK.document.data.globalFields ?? []
     if (fields.length === 0) return 'Record<string, any>'
 
     const entries = fields.map((field) => {
@@ -112,7 +112,7 @@ function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: s
 // surfaced in autocomplete exclusively for those fields.
 export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped?: boolean }): string {
     const ids = Object.keys(WorkbenchSDK.document.data.nodes) as Workflow.Node.Id[]
-    const configKey = `${JSON.stringify(WorkflowDomain.WORKFLOW_CONFIG_NODE_ID)}: ${getConfigType()}`
+    const globalFieldsKey = `${JSON.stringify(WorkflowDomain.GLOBAL_FIELDS_NODE_ID)}: ${getGlobalFieldsType()}`
 
     const lines = [
         `interface WorkflowNode {`,
@@ -128,11 +128,11 @@ export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped
         `declare const $workflow: {`,
         `    id: string;`,
         `    nodes: ${keyedByNodeIds(ids, 'WorkflowNode')};`,
-        `    staticValues: ${keyedByNodeIds(ids, 'Record<string, any>', [configKey])};`,
+        `    staticValues: ${keyedByNodeIds(ids, 'Record<string, any>', [globalFieldsKey])};`,
         `    edges: Record<string, { source: { nodeId: string; portId: string }; target: { nodeId: string; portId: string } }>;`,
         `    credentialInstanceIds: Record<string, string>;`,
         `};`,
-        `declare const $config: ${getConfigType()};`,
+        `declare const $globalFields: ${getGlobalFieldsType()};`,
         `declare const $igniter: any;`,
         // Execution-scoped mutable scratch. Values are set at runtime and can be anything
         // (objects, functions, class instances), so they're untyped — these just need to exist.

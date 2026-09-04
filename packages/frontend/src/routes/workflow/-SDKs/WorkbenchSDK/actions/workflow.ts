@@ -63,8 +63,8 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                 Workbench.Operations.field.set(d, event.nodeId, event.fieldId, event.value);
                 break;
 
-            case "workflow:fieldsChanged":
-                reducers.workflow.setFields(d, event.fields);
+            case "workflow:globalFieldsChanged":
+                reducers.workflow.setGlobalFields(d, event.globalFields);
                 break;
         }
 
@@ -138,7 +138,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
         },
         open:     (...props) => setDocument(d => { reducers.workflow.open(d,     ...props) }),
         validate: (...props) => setDocument(d => { reducers.workflow.validate(d, ...props) }),
-        setFields: withCommit((...props) => setDocument(d => { reducers.workflow.setFields(d, ...props) })),
+        setGlobalFields: withCommit((...props) => setDocument(d => { reducers.workflow.setGlobalFields(d, ...props) })),
         load: async (workflowId, abortSignal) => {
             try {
                 const { workflow, blueprints, repairs } = await Workbench.API.Workflow.get(api, { workflowId }, abortSignal)
@@ -237,7 +237,7 @@ export type WorkflowActions = {
     close:    DropFirstArg<WorkbenchSDK.Reducers['workflow']['close']>;
     open:     DropFirstArg<WorkbenchSDK.Reducers['workflow']['open']>;
     validate: DropFirstArg<WorkbenchSDK.Reducers['workflow']['validate']>;
-    setFields: DropFirstArg<WorkbenchSDK.Reducers['workflow']['setFields']>;
+    setGlobalFields: DropFirstArg<WorkbenchSDK.Reducers['workflow']['setGlobalFields']>;
     load: (workflowId: Workflow.Id, abortSignal: AbortSignal) => Promise<void>;
     refetch: (workflowId: Workflow.Id) => Promise<void>;
 };

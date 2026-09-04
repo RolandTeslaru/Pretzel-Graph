@@ -11,7 +11,7 @@ export function resolveWebhook(
         node,
         fields: staticValues,
         incoming: {},
-        workflowConfig: {},
+        globalFields: {},
     };
     return Webhook.ResolvedSchema.parse({
         id: webhook.id,
@@ -25,7 +25,7 @@ interface LegacyExpressionContext {
     node: Workflow.Node.Raw
     fields: Record<Field.Id, unknown>
     incoming: Record<string, unknown>
-    workflowConfig: Record<Field.Id, unknown>
+    globalFields: Record<Field.Id, unknown>
 }
 
 const LEGACY_EXPRESSION_PATTERN = /\$\{\{\s*([\s\S]*?)\s*\}\}/;

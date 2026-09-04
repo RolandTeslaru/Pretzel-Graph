@@ -86,7 +86,7 @@ function resolveFields(
         return fields;
 
     const byId = new Map(fields.map(field => [field.id, field]));
-    for (const field of dependency.workflow_data.fields)
+    for (const field of dependency.workflow_data.globalFields)
         if (!byId.has(field.id))
             byId.set(field.id, field);
 

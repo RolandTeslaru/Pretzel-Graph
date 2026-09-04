@@ -129,7 +129,7 @@ export function toBlueprint(base: Foundations.Blueprint, args: {
             accent:      args.meta.accent ?? base.ui.accent,
             iconColor:   base.ui.iconColor,
         },
-        fields:  mergeFieldsById(base.fields, args.data.fields ?? []),
+        fields:  mergeFieldsById(base.fields, args.data.globalFields ?? []),
         inputs:  extractExposedInputs(args.data),
         outputs: extractExposedOutputs(args.data),
         flags: {

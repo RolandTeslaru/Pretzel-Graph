@@ -209,7 +209,7 @@ export function buildTools(wb: WorkbenchClient) {
         async () => ToolBudget.list("fields", await wb.globalField.list()),
         {
             name:        "workbench_list_global_fields",
-            description: "List the workflow's global fields: the inputs it exposes when used as a sub-workflow node, readable inside it as workflow config. Read-only.",
+            description: "List the workflow's global fields: the inputs it exposes when used as a sub-workflow node, read inside it as $globalFields.<id>. Read-only.",
             schema:      z.object({}),
         },
     );

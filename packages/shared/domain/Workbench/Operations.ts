@@ -98,7 +98,7 @@ export namespace Operations {
     }
 
     // Global fields: the workflow's own inputs, shown when it runs as a sub-workflow node and
-    // read inside it through the workflow config. Only the scalar variants the settings panel
+    // read inside it as $globalFields. Only the scalar variants the settings panel
     // offers; a spec is what a caller writes, a field is what the document stores.
     export type GlobalFieldVariant = "String" | "Boolean" | "Integer" | "Float"
 
@@ -275,20 +275,20 @@ export namespace Operations {
     }
 
     export const globalField: GlobalFieldOperations = {
-        list: (d: Document) => d.data.fields,
+        list: (d: Document) => d.data.globalFields,
 
         add: (d: Document, spec: GlobalFieldSpec) => {
-            if (d.data.fields.some(f => f.id === spec.id))
+            if (d.data.globalFields.some(f => f.id === spec.id))
                 throw new Error(`Global field ${spec.id} already exists`)
 
             const field = createGlobalField(spec)
 
-            d.reducers.workflow.setFields(d, [...d.data.fields, field])
+            d.reducers.workflow.setGlobalFields(d, [...d.data.globalFields, field])
             return { field }
         },
 
         update: (d: Document, fieldId: Foundations.Field.Id, patch: Partial<Omit<GlobalFieldSpec, "id">>) => {
-            const current = d.data.fields.find(f => f.id === fieldId)
+            const current = d.data.globalFields.find(f => f.id === fieldId)
             if (!current)
                 throw new Error(`Global field ${fieldId} not found`)
 
@@ -305,15 +305,15 @@ export namespace Operations {
                 multiline:    patch.multiline    ?? ("multiline" in current ? current.multiline : undefined),
             })
 
-            d.reducers.workflow.setFields(d, d.data.fields.map(f => f.id === fieldId ? field : f))
+            d.reducers.workflow.setGlobalFields(d, d.data.globalFields.map(f => f.id === fieldId ? field : f))
             return { field }
         },
 
         remove: (d: Document, fieldId: Foundations.Field.Id) => {
-            if (!d.data.fields.some(f => f.id === fieldId))
+            if (!d.data.globalFields.some(f => f.id === fieldId))
                 throw new Error(`Global field ${fieldId} not found`)
 
-            d.reducers.workflow.setFields(d, d.data.fields.filter(f => f.id !== fieldId))
+            d.reducers.workflow.setGlobalFields(d, d.data.globalFields.filter(f => f.id !== fieldId))
             return { fieldId }
         },
     }

@@ -15,8 +15,8 @@ export namespace Workflow {
     export const Id = WorkflowId
     export type Id = WorkflowId
 
-    /** Dummy node ID used as the staticValues key for workflow-level config fields. */
-    export const WORKFLOW_CONFIG_NODE_ID = "__workflow_config__" as Node.Id
+    /** Reserved node id under which a run stores the workflow's global field values. */
+    export const GLOBAL_FIELDS_NODE_ID = "__workflow_global_fields__" as Node.Id
 
     export function createId() {
         return crypto.randomUUID() as Workflow.Id
@@ -86,7 +86,7 @@ export namespace Workflow {
         updated_at:     new Date(),
         data: {
             version:               WORKFLOW_DATA_VERSION,
-            fields:                [],
+            globalFields:          [],
             nodes:                 {},
             edges:                 [],
             staticValues:          {},

@@ -26,7 +26,7 @@ export namespace Airlock {
         METRICS:    "__metrics__",
     } as const
 
-    const CONFIG_NODE_KEY = Workflow.WORKFLOW_CONFIG_NODE_ID
+    const GLOBAL_FIELDS_NODE_KEY = Workflow.GLOBAL_FIELDS_NODE_ID
 
     const STATIC_ROOTS: Record<string, string> = {
         workflow:  Globals.WORKFLOW,
@@ -37,14 +37,14 @@ export namespace Airlock {
         globals:   Globals.GLOBALS,
         metrics:   Globals.METRICS,
         
-        config:      `${Globals.WORKFLOW}.staticValues[${JSON.stringify(CONFIG_NODE_KEY)}]`,
+        globalFields: `${Globals.WORKFLOW}.staticValues[${JSON.stringify(GLOBAL_FIELDS_NODE_KEY)}]`,
         node:        `${Globals.WORKFLOW}.nodes[${Globals.NODE_ID}]`,
         nodeGlobals: `(${Globals.GLOBALS}[${Globals.NODE_ID}] ??= {})`,
     }
 
     // Matches $root at a word boundary; rewrites only the root, leaving member access intact.
     // `itemIndex` precedes `item`, and `nodeGlobals` precedes `node`, so the longer root wins.
-    const SIGIL = /\$(workflow|config|igniter|in|itemIndex|item|nodeGlobals|node|globals|metrics)\b/g
+    const SIGIL = /\$(workflow|globalFields|igniter|in|itemIndex|item|nodeGlobals|node|globals|metrics)\b/g
 
     export function rewrite(source: Source): string {
         return source.replace(SIGIL, (_m, root: string) => STATIC_ROOTS[root])
@@ -95,20 +95,20 @@ export namespace Airlock {
 
     export type EvaluateFn = (expr: Source.Expression, coerceTo?: CoerceTo) => unknown
 
-    export function resolveWorkflowConfig(
+    export function resolveGlobalFieldValues(
         workflowData: Workflow.Data,
     ): Record<Field.Id, unknown> {
-        const config: Record<Field.Id, unknown> = {};
-        const overrides = workflowData.staticValues[Workflow.WORKFLOW_CONFIG_NODE_ID] ?? {};
+        const values = {} as Record<Field.Id, unknown>;
+        const overrides = workflowData.staticValues[Workflow.GLOBAL_FIELDS_NODE_ID] ?? {};
 
-        for (const field of workflowData.fields ?? []) {
+        for (const field of workflowData.globalFields ?? []) {
             if (field.id in overrides)
-                config[field.id] = overrides[field.id as Field.Id];
+                values[field.id] = overrides[field.id as Field.Id];
             else if ("initialValue" in field)
-                config[field.id] = field.initialValue;
+                values[field.id] = field.initialValue;
         }
 
-        return config;
+        return values;
     }
 
     /**
@@ -119,7 +119,7 @@ export namespace Airlock {
      */
     export interface WorkflowView {
         id: Workflow.Id;
-        fields: Field[];
+        globalFields: Field[];
         nodes: Workflow.Data["nodes"];
         edges: Workflow.Data["edges"];
         staticValues: Workflow.Data["staticValues"];
@@ -133,13 +133,13 @@ export namespace Airlock {
         const { ui, dependencies, ...normalized } = data;
         return {
             id: workflowId,
-            fields: normalized.fields,
+            globalFields: normalized.globalFields,
             nodes: normalized.nodes,
             edges: normalized.edges,
             credentialInstanceIds: normalized.credentialInstanceIds,
             staticValues: {
                 ...normalized.staticValues,
-                [Workflow.WORKFLOW_CONFIG_NODE_ID]: resolveWorkflowConfig(data),
+                [Workflow.GLOBAL_FIELDS_NODE_ID]: resolveGlobalFieldValues(data),
             },
         };
     }

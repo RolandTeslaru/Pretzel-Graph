@@ -87,9 +87,9 @@ export const workflowReducers: WorkflowReducers = {
         const issues = Validation.Issue.checkWorkflow(d.data, d.cycles, d.cache);
         d.issues = issues;
     },
-    setFields: (d, fields) => {
+    setGlobalFields: (d, fields) => {
         d.isDirty = true;
-        d.data.fields = [...fields];
+        d.data.globalFields = [...fields];
     },
     recomputeAllCycles: (d) => {
         const arcsMap = Workflow.deriveArcs(d.cache);
@@ -109,7 +109,7 @@ type WorkflowReducers = {
     open: (document: Document, workflow: Workflow, options?: { repaired?: boolean }) => void
     close: (document: Document) => void
     validate: (document: Document) => void
-    setFields: (document: Document, fields: Foundations.Field[]) => void
+    setGlobalFields: (document: Document, fields: Foundations.Field[]) => void
 
     recomputeAllCycles: (document: Document) => void
     reconstructPolymorphism: (document: Document) => void

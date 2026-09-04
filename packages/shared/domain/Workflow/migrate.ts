@@ -7,13 +7,13 @@
 // and are reconstructed at load instead (see the load action): `reconciledBlueprintId` (needs the
 // base blueprint + values) and `polymorphicResolutions` (replayed from edges).
 
-export const WORKFLOW_DATA_VERSION = 2;
+export const WORKFLOW_DATA_VERSION = 3;
 
 export function migrateWorkflowDataToLatest(raw: any): any {
     if (!raw || typeof raw !== "object") return raw;
 
     // Structural fat-node (v1) -> slim-node (v2). Skip if already slim.
-    const data = raw.version === WORKFLOW_DATA_VERSION
+    const data = typeof raw.version === "number" && raw.version >= 2
         ? { ...raw, nodes: { ...raw.nodes } }
         : migrateV1toV2(raw);
 
@@ -31,8 +31,30 @@ export function migrateWorkflowDataToLatest(raw: any): any {
         data.edges = Object.keys(data.edges);
 
     liftAddedFieldExpressions(data);
+    renameGlobalFields(data);
+
+    data.version = WORKFLOW_DATA_VERSION;
 
     return data;
+}
+
+// v3: workflow-level fields are `globalFields`, and the reserved staticValues key that carries
+// their values follows. Feature-detected so it is idempotent on already-renamed blobs.
+function renameGlobalFields(data: any): void {
+    if ("fields" in data && !("globalFields" in data)) {
+        const { fields, ...rest } = data;
+        Object.assign(data, rest);
+        delete data.fields;
+        data.globalFields = fields;
+    }
+
+    const legacyKey = "__workflow_config__";
+
+    if (data.staticValues && legacyKey in data.staticValues) {
+        data.staticValues = { ...data.staticValues };
+        data.staticValues["__workflow_global_fields__"] ??= data.staticValues[legacyKey];
+        delete data.staticValues[legacyKey];
+    }
 }
 
 // `isExpression` used to live on the Field itself. On a user-added field that made it persisted

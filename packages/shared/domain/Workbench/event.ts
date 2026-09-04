@@ -75,15 +75,15 @@ export namespace Event {
     }
 
     export namespace Workflow_ {
-        export const FieldsChanged = Base.extend({
-            type:   z.literal("workflow:fieldsChanged"),
-            fields: z.array(Foundations.Field.Schema),
+        export const GlobalFieldsChanged = Base.extend({
+            type:         z.literal("workflow:globalFieldsChanged"),
+            globalFields: z.array(Foundations.Field.Schema),
         })
-        export type FieldsChanged = z.infer<typeof FieldsChanged>
+        export type GlobalFieldsChanged = z.infer<typeof GlobalFieldsChanged>
     }
 
     export const Schema = z.discriminatedUnion("type", [
-        Workflow_.FieldsChanged,
+        Workflow_.GlobalFieldsChanged,
         Lock.Acquired, Lock.Released,
         Node.Created,  Node.Deleted, Node.Moved,
         Edge.Created,  Edge.Deleted,
