@@ -1,0 +1,11 @@
+{
+    "name": "PretzelGraph",
+    "short_name": "PretzelGraph",
+    "icons": [
+        { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ],
+    "theme_color": "#ff8a2a",
+    "background_color": "#ff8a2a",
+    "display": "standalone"
+}
