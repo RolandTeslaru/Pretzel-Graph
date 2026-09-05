@@ -37,8 +37,10 @@ jobs:
           push: true
           tags: ghcr.io/${{ steps.owner.outputs.name }}/pretzelgraph-${{ matrix.role }}:${{ github.sha }}
 
+  # Forks build images too, but only the upstream repository has a deployment to notify.
   notify:
     needs: build
+    if: github.repository == 'RolandTeslaru/Pretzel-Graph'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

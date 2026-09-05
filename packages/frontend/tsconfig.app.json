@@ -43,7 +43,5 @@
       ]
     }
   },
-  "include": [
-    "src"
-, "../../../PretzelCloud/packages/portal/src/SDKs/WorkspaceSDK/ui/server-icon.tsx"  ]
+  "include": ["src"]
 }
