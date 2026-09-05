@@ -11,8 +11,8 @@ import type { FileSystemNodeData } from './actions';
 import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from './ui/listing-dialogs';
 import { openCreateWorkflowDialog, openEditWorkflowDialog } from './ui/workflow-dialogs';
 import { openCreateFolderDialog, openEditFolderDialog } from './ui/folder-dialogs';
-import { openDeleteWorkflowDialog } from './ui/LibraryBrowser/FolderView/items/workflow';
-import { openDeleteFolderDialog } from './ui/LibraryBrowser/FolderView/items/folder';
+import { openDeleteWorkflowDialog } from './ui/LibraryBrowser/context-menus/workflow';
+import { openDeleteFolderDialog } from './ui/LibraryBrowser/context-menus/folder';
 import { openDependencySelectorDialog } from './ui/DependencySelectorDialog';
 import { openWorkflowSelector } from './ui/WorkflowSelector';
 

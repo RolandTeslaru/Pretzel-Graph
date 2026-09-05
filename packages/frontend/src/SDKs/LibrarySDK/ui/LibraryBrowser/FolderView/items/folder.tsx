@@ -1,13 +1,9 @@
-import type { ReactNode } from 'react'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import { FolderIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 import classNames from 'classnames'
 import { sizeStyles, type ItemSize } from './sizes'
+import { FolderContextMenu } from '../../context-menus/folder'
 
 interface FolderCardProps {
     folder: Library.Folder
@@ -24,7 +20,7 @@ export function FolderItem({ folder, size = 'default', onClick }: FolderCardProp
     const styles = sizeStyles[size]
 
     return (
-        <FolderItemContextMenu folder={folder}>
+        <FolderContextMenu folder={folder} onOpen={onClick}>
             <div
                 onClick={onClick}
                 className={classNames('group flex relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card, folder.hidden && 'opacity-50')}
@@ -39,71 +35,6 @@ export function FolderItem({ folder, size = 'default', onClick }: FolderCardProp
                     </div>
                 </div>
             </div>
-        </FolderItemContextMenu>
+        </FolderContextMenu>
     )
-}
-
-
-function FolderItemContextMenu({ folder, children }: {
-    folder: Library.Folder
-    children: ReactNode
-}) {
-    return (
-        <ContextMenu.Root>
-            <ContextMenu.Trigger asChild>
-                {children}
-            </ContextMenu.Trigger>
-            <ContextMenu.Content>
-                <ContextMenu.Item
-                    icon={<SystemIcons.SquarePen className="size-4" />}
-                    onClick={() => openEditFolderDialog({ folder })}
-                >
-                    Edit
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                    icon={<SystemIcons.Copy className="size-4" />}
-                    onClick={() => navigator.clipboard.writeText(folder.id)}
-                >
-                    Copy ID
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                    icon={folder.hidden ? <SystemIcons.Eye className="size-4" /> : <SystemIcons.EyeOff className="size-4" />}
-                    onClick={() => LibrarySDK.actions.folder.setHidden(folder.id, !folder.hidden)}
-                >
-                    {folder.hidden ? 'Unhide' : 'Hide'}
-                </ContextMenu.Item>
-                <ContextMenu.Separator />
-                <ContextMenu.Item
-                    variant="destructive"
-                    icon={<SystemIcons.Trash2 className="size-4" />}
-                    onClick={() => openDeleteFolderDialog(folder)}
-                >
-                    Delete
-                </ContextMenu.Item>
-            </ContextMenu.Content>
-        </ContextMenu.Root>
-    )
-}
-
-export function openDeleteFolderDialog(folder: Library.Folder) {
-    const dialogId = `delete-folder-${folder.id}`
-
-    DialogSDK.actions.push(dialogId, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type="danger"
-            onApprove={async () => {
-                await LibrarySDK.actions.folder.delete(folder.id)
-                DialogSDK.actions.pop(dialogId)
-            }}
-            onCancel={() => DialogSDK.actions.pop(dialogId)}
-        >
-            <AlertDialog.Title>
-                Delete folder?
-            </AlertDialog.Title>
-            <AlertDialog.Description>
-                This action is irreversible. Deleting <span className="font-semibold text-destructive">{folder.display_name}</span> will also delete all nested folders and workflows inside it.
-            </AlertDialog.Description>
-        </DialogSDK.AlertTemplate>
-    ))
 }

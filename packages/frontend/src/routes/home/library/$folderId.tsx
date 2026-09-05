@@ -70,17 +70,11 @@ function FolderRoute() {
             <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
                 <LibraryCwdBreadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
                 <div className="flex gap-2 ">
-                    <SearchInput
-                        size='sm'
-                        className='rounded-full!'
-                        onSearch={setSearchQuery}
-                    />
-
-                    <Tooltip.Root>
+                    {/* <Tooltip.Root>
                         <Tooltip.Trigger asChild>
                             <Button
-                                variant="outline"
-                                size="icon"
+                                variant="input"
+                                size="icon-sm"
                                 aria-pressed={showHidden}
                                 onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
                             >
@@ -90,7 +84,13 @@ function FolderRoute() {
                         <Tooltip.Content>
                             {showHidden ? 'Hide hidden items' : 'Show hidden items'}
                         </Tooltip.Content>
-                    </Tooltip.Root>
+                    </Tooltip.Root> */}
+                    <SearchInput
+                        size='sm'
+                        className='rounded-full!'
+                        onSearch={setSearchQuery}
+                    />
+
 
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
