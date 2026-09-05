@@ -4,6 +4,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import { Library } from '@pretzel-graph/shared/domain'
 import { OpenInSubMenu } from './open-in'
+import { toast } from 'sonner'
 
 interface Props {
     folder: Library.Folder
@@ -64,6 +65,14 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
                 </ContextMenu.Item>
                 {!isRoot && (
                     <ContextMenu.Item
+                        icon={<SystemIcons.ArrowRight className='size-4' />}
+                        onClick={() => openMoveFolder(folder)}
+                    >
+                        Move to…
+                    </ContextMenu.Item>
+                )}
+                {!isRoot && (
+                    <ContextMenu.Item
                         icon={folder.hidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}
                         onClick={() => LibrarySDK.actions.folder.setHidden(folder.id, !folder.hidden)}
                     >
@@ -85,4 +94,34 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
             </ContextMenu.Content>
         </ContextMenu.Root>
     )
+}
+
+function openMoveFolder(folder: Library.Folder) {
+    LibrarySDK.dialogs.openResourceSelector({
+        accept: 'folder',
+        onSelect: async ({ id }) => {
+            if (id === folder.parent_folder_id) return
+
+            if (isSelfOrDescendant(id, folder.id)) {
+                toast.error('A folder cannot be moved into itself')
+                return
+            }
+
+            await LibrarySDK.actions.folder.move(folder.id, id)
+            toast.success('Folder moved')
+        },
+    })
+}
+
+function isSelfOrDescendant(folderId: Library.Folder.Id, ancestorId: Library.Folder.Id) {
+    const folders = LibrarySDK.state.folders
+
+    let cursor: Library.Folder.Id | null = folderId
+
+    while (cursor) {
+        if (cursor === ancestorId) return true
+        cursor = folders[cursor]?.parent_folder_id ?? null
+    }
+
+    return false
 }

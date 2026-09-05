@@ -21,6 +21,7 @@ export type _LibrarySDKActions = {
         create: (payload: Library.API.Folder.Create.Request) => Promise<Library.API.Folder.Create.Response>;
         update: (payload: Library.API.Folder.Update.Request) => Promise<Library.API.Folder.Update.Response>;
         setHidden: (id: Library.Folder.Id, hidden: boolean) => Promise<Library.API.Folder.Update.Response>;
+        move: (id: Library.Folder.Id, parentFolderId: Library.Folder.Id) => Promise<Library.API.Folder.Update.Response>;
         delete: (id: Library.Folder.Id) => Promise<Library.API.Folder.Remove.Response>;
     };
     workflow: {
@@ -29,6 +30,7 @@ export type _LibrarySDKActions = {
         update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         setLock: (id: Workflow.Id, locked: boolean) => Promise<Library.API.Workflow.Update.Response>;
         setHidden: (id: Workflow.Id, hidden: boolean) => Promise<Library.API.Workflow.Update.Response>;
+        move: (id: Workflow.Id, folderId: Library.Folder.Id) => Promise<Library.API.Workflow.Update.Response>;
         listPublicWorkflow: (id: Workflow.Id) => Promise<Library.API.Workflow.ListPublic.Response>;
         unlistPublicWorkflow: (id: Workflow.Id) => Promise<void>;
         __removeListingId: (id: Workflow.Id) => void;
@@ -180,6 +182,13 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 return data;
             },
 
+            move: async (id, parentFolderId) => {
+                const data = await Library.API.Folder.update(api, { id, parent_folder_id: parentFolderId });
+                setState((s) => { s.folders[data.id] = data; });
+                rebuildTree();
+                return data;
+            },
+
             delete: async (id) => {
                 const data = await Library.API.Folder.remove(api, { id });
                 setState((s) => {
@@ -225,6 +234,13 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             setHidden: async (id, hidden) => {
                 const data = await Library.API.Workflow.update(api, { id, hidden });
+                setState((s) => { putMeta(s, data); });
+                rebuildTree();
+                return data;
+            },
+
+            move: async (id, folderId) => {
+                const data = await Library.API.Workflow.update(api, { id, folder_id: folderId });
                 setState((s) => { putMeta(s, data); });
                 rebuildTree();
                 return data;

@@ -62,6 +62,12 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
                     </ContextMenu.SubContent>
                 </ContextMenu.Sub>
                 <ContextMenu.Item
+                    icon={<SystemIcons.ArrowRight className='size-4' />}
+                    onClick={() => openMoveWorkflow(workflow)}
+                >
+                    Move to…
+                </ContextMenu.Item>
+                <ContextMenu.Item
                     icon={<SystemIcons.Download className='size-4' />}
                     onClick={() => downloadWorkflowJson(workflow)}
                 >
@@ -84,6 +90,18 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
             </ContextMenu.Content>
         </ContextMenu.Root>
     )
+}
+
+function openMoveWorkflow(workflow: Library.WorkflowMeta) {
+    LibrarySDK.dialogs.openResourceSelector({
+        accept: 'folder',
+        onSelect: async ({ id }) => {
+            if (id === workflow.folder_id) return
+
+            await LibrarySDK.actions.workflow.move(workflow.id, id)
+            toast.success('Workflow moved')
+        },
+    })
 }
 
 async function copy(text: string, message: string) {

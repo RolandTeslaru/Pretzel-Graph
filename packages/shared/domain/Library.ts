@@ -77,6 +77,7 @@ export namespace Library {
                     display_name: z.string().min(1).optional(),
                     description: z.string().nullable().optional(),
                     hidden: z.boolean().optional(),
+                    parent_folder_id: Library.Folder.Id.optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.Folder;
@@ -187,6 +188,7 @@ export namespace Library {
                     icon_color: z.string().nullable().optional(),
                     locked: z.boolean().optional(),
                     hidden: z.boolean().optional(),
+                    folder_id: Library.Folder.Id.optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.WorkflowMeta;

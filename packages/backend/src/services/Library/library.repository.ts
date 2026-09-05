@@ -87,12 +87,33 @@ class FolderMethods extends Repository {
                     description: payload.description ?? null,
                 }),
                 ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
+                ...(payload.parent_folder_id !== undefined && { parent_folder_id: payload.parent_folder_id }),
             })
             .where('id', '=', payload.id)
             .returningAll()
             .executeTakeFirstOrThrow();
 
         return DB.Folder.toDomain(row);
+    }
+
+    // Walks up from `folderId` to the root and reports whether `ancestorId` is on the path.
+    @Transactional('user')
+    public async isSelfOrDescendant(principal: Principal.User, folderId: Library.Folder.Id, ancestorId: Library.Folder.Id): Promise<boolean> {
+        const rows = await this.trx
+            .selectFrom('folders')
+            .select(['id', 'parent_folder_id'])
+            .execute();
+
+        const parentOf = new Map(rows.map((r) => [r.id, r.parent_folder_id]));
+
+        let cursor: Library.Folder.Id | null = folderId;
+
+        while (cursor) {
+            if (cursor === ancestorId) return true;
+            cursor = parentOf.get(cursor) ?? null;
+        }
+
+        return false;
     }
 
     @Transactional('user')
@@ -183,6 +204,7 @@ class WorkflowMethods extends Repository {
                 }),
                 ...(payload.locked !== undefined && { locked: payload.locked }),
                 ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
+                ...(payload.folder_id !== undefined && { folder_id: payload.folder_id }),
             })
             .where('id', '=', payload.id)
             .returning(WORKFLOW_META_COLUMNS)

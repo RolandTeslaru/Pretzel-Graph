@@ -39,6 +39,16 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Folder.Update.Request,
         ): Promise<Library.API.Folder.Update.Response> => {
+            if (payload.parent_folder_id !== undefined) {
+                if (payload.id === Library.Folder.ROOT_ID)
+                    throw new BadRequestException('The root folder cannot be moved');
+
+                const cyclic = await this.libraryRepository.folder.isSelfOrDescendant(principal, payload.parent_folder_id, payload.id);
+
+                if (cyclic)
+                    throw new BadRequestException('A folder cannot be moved into itself');
+            }
+
             return this.libraryRepository.folder.update(principal, payload);
         },
 
