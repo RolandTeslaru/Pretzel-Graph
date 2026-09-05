@@ -136,7 +136,7 @@ export function createExecutionAPIs(
             const subCompiler = new TurboGraph();
 
             return {
-                // Same airlock ref → shared isolate (same tenant); same internalAPI → the sub-workflow
+                // Same airlock ref → shared isolate (same execution); same internalAPI → the sub-workflow
                 // reuses the parent execution id, so the parent token is the right credential for it.
                 compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
                     subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, internalAPI, compilationCtx, enclosingNodeAPI),

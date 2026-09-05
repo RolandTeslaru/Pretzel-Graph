@@ -309,7 +309,7 @@ Cache = {
 - **Pause**: `pause()` sets a gate awaited after each node completes (`awaitPause`); `resume()` releases it. The worker arms a max-pause timeout that aborts + resumes if a pause runs too long.
 - **Abort**: `abortAPI.signal`; `run()` races ignite vs abort. A plain abort → `"terminated"`; an abort whose reason is `AggexEngine.STOP_AT_TARGET_REASON` resolves as `"completed"` (see below).
 - **Execute up until this point** (`stopAtNodeId`): set from a `workbench_step` igniter (`igniter.targetNodeId`). The **full graph compiles and runs normally** — portals, cycles, sub-workflows all resolve natively — and `onNodeCompleted` aborts the run with `STOP_AT_TARGET_REASON` the moment the target node finishes. The structural "upstream cone" alternative in `compiler/partial.ts` is **parked / not wired** (it can't see portal teleport edges); read its header for the parked replay-from-cache design and why serialization of live LangChain/resource handles shelved it.
-- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `TurboGraph` (used by `Core.SubWorkflow.Execute`), **reusing the same airlock isolate** (same tenant); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
+- **Sub-workflows**: `subWorkflowAPI.createEnv()` spins up a nested `AggexEngine` + `TurboGraph` (used by `Core.SubWorkflow.Execute`), **reusing the same airlock isolate** (same execution); nested nodes get an `enclosingNodeAPI` to write/emit on the parent's ports.
 - **Flight recording**: only attached when `igniter.record` is set. On completion the `Execution.Recording` is persisted via `Execution.API.update` and published to Redis (`Execution.Recording.LIVE_TTL_SECONDS`) for the timeline viewer.
 
 ---

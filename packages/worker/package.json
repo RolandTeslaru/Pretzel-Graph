@@ -1,7 +1,7 @@
 {
     "name": "@pretzel-graph/worker",
     "version": "1.0.0",
-    "description": "Vexr Agentic Graph Execution Engine based on LangGraph",
+    "description": "PretzelGraph Worker — signal-based workflow execution engine",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {

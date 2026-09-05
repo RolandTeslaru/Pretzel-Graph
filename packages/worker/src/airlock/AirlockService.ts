@@ -21,7 +21,7 @@ export namespace AirlockService {
     }
 }
 
-// Owns one ivm.Isolate for the whole execution (the tenant/security boundary). Created in
+// Owns one ivm.Isolate for the whole execution (the security boundary). Created in
 // worker.ts and shared by reference, so subworkflows reuse the same isolate + caches.
 export class AirlockService {
     private readonly isolate: ivm.Isolate;
