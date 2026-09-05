@@ -38,6 +38,11 @@ export type _LibrarySDKActions = {
 };
 
 
+// Only the bootstrap carries listing_id; every other response leaves it as it was.
+function putMeta(s: LibrarySDK.State, meta: Library.WorkflowMeta) {
+    s.workflowMetas[meta.id] = { ...meta, listing_id: meta.listing_id ?? s.workflowMetas[meta.id]?.listing_id ?? null };
+}
+
 function buildTreeData(s: LibrarySDK.State): FileNode {
     const { folders, workflowMetas, treeExpandedByFolderId, showHidden } = s;
 
@@ -148,7 +153,7 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 setState((s) => {
                     s.folders[data.folder.id] = data.folder;
                     for (const f of data.child_folders) s.folders[f.id] = f;
-                    for (const w of data.workflows) s.workflowMetas[w.id] = w;
+                    for (const w of data.workflows) putMeta(s, w);
                 });
                 rebuildTree();
                 return data;
@@ -207,20 +212,20 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             update: async (payload) => {
                 const data = await Library.API.Workflow.update(api, payload);
-                setState((s) => { s.workflowMetas[data.id] = data; });
+                setState((s) => { putMeta(s, data); });
                 rebuildTree();
                 return data;
             },
 
             setLock: async (id, locked) => {
                 const data = await Library.API.Workflow.update(api, { id, locked });
-                setState((s) => { s.workflowMetas[data.id] = data; });
+                setState((s) => { putMeta(s, data); });
                 return data;
             },
 
             setHidden: async (id, hidden) => {
                 const data = await Library.API.Workflow.update(api, { id, hidden });
-                setState((s) => { s.workflowMetas[data.id] = data; });
+                setState((s) => { putMeta(s, data); });
                 rebuildTree();
                 return data;
             },

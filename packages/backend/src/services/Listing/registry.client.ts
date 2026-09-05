@@ -35,14 +35,38 @@ export class ListingRegistry {
         return Listing.API.Updates.Response.parse(body).updates;
     }
 
-    public async put(request: Listing.API.Put.Request): Promise<Listing.Id> {
-        const body = await this.write('PUT', `/api/workspaces/${this.cloud.workspaceId}/listings`, request);
+    // This workspace's listing ids, keyed by its workflow ids.
+    public async getOwnedIds(): Promise<Record<Workflow.Id, Listing.Id>> {
+        const body = await this.write('GET', this.ownedPath());
+
+        return Listing.API.Owned.Response.parse(body).listings;
+    }
+
+    // Lists the workflow, or replaces the copy if it already is.
+    public async put(workflowId: Workflow.Id, request: Listing.API.Put.Request): Promise<Listing.Id> {
+        const body = await this.write('PUT', this.ownedPath(workflowId), request);
 
         return Listing.API.Put.Response.parse(body).id;
     }
 
-    public async delete(id: Listing.Id): Promise<void> {
-        await this.write('DELETE', `/api/workspaces/${this.cloud.workspaceId}/listings/${id}`);
+    // Replaces the copy of a listed workflow; null when it is not listed.
+    public async update(workflowId: Workflow.Id, request: Listing.API.Put.Request): Promise<Listing.Id | null> {
+        const body = await this.write('PATCH', this.ownedPath(workflowId), request, { allowNotFound: true });
+
+        if (!body)
+            return null;
+
+        return Listing.API.Put.Response.parse(body).id;
+    }
+
+    public async delete(workflowId: Workflow.Id): Promise<void> {
+        await this.write('DELETE', this.ownedPath(workflowId), undefined, { allowNotFound: true });
+    }
+
+    private ownedPath(workflowId?: Workflow.Id): string {
+        const base = `/api/workspaces/${this.cloud.workspaceId}/listings`;
+
+        return workflowId ? `${base}/${workflowId}` : base;
     }
 
     private async read(path: string, opts: { allowNotFound?: boolean } = {}): Promise<unknown> {
@@ -57,7 +81,12 @@ export class ListingRegistry {
         return response.json();
     }
 
-    private async write(method: 'PUT' | 'DELETE', path: string, payload?: unknown): Promise<unknown> {
+    private async write(
+        method: 'GET' | 'PUT' | 'PATCH' | 'DELETE',
+        path: string,
+        payload?: unknown,
+        opts: { allowNotFound?: boolean } = {},
+    ): Promise<unknown> {
         if (!this.canShare)
             throw new SystemError(SystemError.Code.FORBIDDEN, 'This deployment cannot share workflows');
 
@@ -66,6 +95,9 @@ export class ListingRegistry {
             headers: { 'Content-Type': 'application/json' },
             body: payload === undefined ? undefined : JSON.stringify(payload),
         });
+
+        if (response.status === 404 && opts.allowNotFound)
+            return null;
 
         if (!response.ok) {
             const text = await response.text().catch(() => '');

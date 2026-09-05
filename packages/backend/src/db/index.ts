@@ -97,7 +97,6 @@ export namespace DB {
             locked:       z.boolean(),
             hidden:       z.boolean().nullable().optional(),
             mcp_enabled:  z.boolean().nullable(),
-            listing_id: z.uuid().nullable(),
             data:         WorkflowD.Data.Schema,
             created_at:   z.coerce.date(),
             updated_at:   z.coerce.date(),

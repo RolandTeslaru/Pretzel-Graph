@@ -15,7 +15,15 @@ export class LibraryService {
         get: async (
             principal: Principal.User,
         ): Promise<Library.API.Bootstrap.Get.Response> => {
-            return this.libraryRepository.bootstrap.get(principal);
+            const [bootstrap, listingIdByWorkflowId] = await Promise.all([
+                this.libraryRepository.bootstrap.get(principal),
+                this.listings.getOwnedIds(),
+            ]);
+
+            for (const meta of bootstrap.workflow_metas)
+                meta.listing_id = listingIdByWorkflowId[meta.id] ?? null;
+
+            return bootstrap;
         },
     };
 
@@ -80,7 +88,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
-            await this.listings.unshareWorkflow(principal, id);
+            await this.listings.unshareWorkflow(id);
             await this.libraryRepository.workflow.delete(principal, id);
 
             // After the commit — the cached owner is still correct until the TTL, and would

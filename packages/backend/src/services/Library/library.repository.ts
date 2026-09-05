@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Listing, Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
@@ -204,15 +204,6 @@ class WorkflowMethods extends Repository {
             .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
-    }
-
-    @Transactional('user')
-    public async setListingId(principal: Principal.User, workflowId: Workflow.Id, listingId: Listing.Id | null): Promise<void> {
-        await this.trx
-            .updateTable('workflows')
-            .set({ listing_id: listingId })
-            .where('id', '=', workflowId)
-            .execute();
     }
 
     @Transactional('user')

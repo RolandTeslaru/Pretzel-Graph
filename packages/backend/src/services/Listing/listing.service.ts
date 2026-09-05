@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { LibraryRepository } from '../Library/library.repository';
 import { VersionControlRepository } from '../VersionControl/version-control.repository';
 import { ListingRegistry } from './registry.client';
 
@@ -9,15 +8,17 @@ const ROOT_FOLDER_ID = '00000000-0000-4000-8000-000000000001' as Workflow['folde
 
 @Injectable()
 export class ListingService {
+
+    private readonly logger = new Logger(ListingService.name);
+
     constructor(
-        private readonly libraryRepository: LibraryRepository,
         private readonly versionControlRepository: VersionControlRepository,
         private readonly registry: ListingRegistry,
     ) {}
 
 
 
-    // An listing as the editor shows it: the graph, locked.
+    // A listing as the editor shows it: the graph, locked.
     public async getWorkflow(listingId: Listing.Id): Promise<Workflow | null> {
         if (!this.registry.canRead)
             return null;
@@ -81,11 +82,25 @@ export class ListingService {
         return updates;
     }
 
+    // Which of this deployment's workflows are listed; empty when the registry cannot say.
+    public async getOwnedIds(): Promise<Record<Workflow.Id, Listing.Id>> {
+        if (!this.registry.canShare)
+            return {};
+
+        try {
+            return await this.registry.getOwnedIds();
+        }
+        catch (error) {
+            this.logger.warn(`Could not read own listings: ${(error as Error).message}`);
+
+            return {};
+        }
+    }
+
     public async shareWorkflow(principal: Principal.User, workflowId: Workflow.Id): Promise<Listing.Id> {
         if (!this.registry.canShare)
             throw new SystemError(SystemError.Code.FORBIDDEN, 'This deployment cannot share workflows');
 
-        const workflow    = await this.libraryRepository.workflow.get(principal, workflowId);
         const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
 
         if (!publication)
@@ -100,48 +115,39 @@ export class ListingService {
                 { data: { nodeIds: bound } },
             );
 
-        const listingId = await this.push(workflow, publication);
-
-        await this.libraryRepository.workflow.setListingId(principal, workflowId, listingId);
-
-        return listingId;
+        return this.registry.put(workflowId, toRequest(publication));
     }
 
-    // The registry mirrors whichever publication is active now.
+    // The registry mirrors whichever publication is active now; unlisted workflows are left alone.
     public async syncActive(principal: Principal.User, workflowId: Workflow.Id): Promise<void> {
-        const workflow    = await this.libraryRepository.workflow.get(principal, workflowId);
-        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
-
-        if (!workflow.listing_id)
+        if (!this.registry.canShare)
             return;
 
+        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
+
         if (!publication) {
-            await this.unshareWorkflow(principal, workflowId);
+            await this.registry.delete(workflowId);
             return;
         }
 
-        await this.push(workflow, publication);
+        await this.registry.update(workflowId, toRequest(publication));
     }
 
-    public async unshareWorkflow(principal: Principal.User, workflowId: Workflow.Id): Promise<void> {
-        const workflow = await this.libraryRepository.workflow.get(principal, workflowId);
-
-        if (!workflow.listing_id)
+    public async unshareWorkflow(workflowId: Workflow.Id): Promise<void> {
+        if (!this.registry.canShare)
             return;
 
-        await this.registry.delete(workflow.listing_id);
-        await this.libraryRepository.workflow.setListingId(principal, workflowId, null);
+        await this.registry.delete(workflowId);
     }
+}
 
-    private async push(workflow: Workflow, publication: VersionControl.Publication): Promise<Listing.Id> {
-        const { workflow_data, ...meta } = publication;
+function toRequest(publication: VersionControl.Publication): Listing.API.Put.Request {
+    const { workflow_data, ...meta } = publication;
 
-        return this.registry.put({
-            id:              workflow.listing_id ?? undefined,
-            publicationMeta: meta,
-            workflowData:    workflow_data,
-        });
-    }
+    return {
+        publicationMeta: meta,
+        workflowData:    workflow_data,
+    };
 }
 
 function getNodesBindingCredentials(data: Workflow.Data): Workflow.Node.Id[] {
