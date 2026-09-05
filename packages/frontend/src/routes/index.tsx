@@ -22,7 +22,7 @@ function Landing() {
                     <SystemIcons.Pretzel className="size-10 fill-primary" />
                     <h1 className="text-3xl font-bold">PretzelGraph</h1>
                 </div>
-                <p className="mt-2 text-sm opacity-70">Visual agent workflow editor.</p>
+                <p className="mt-2 text-sm opacity-70">Visual agent runtime.</p>
                 <Link
                     to="/auth"
                     className="inline-block mt-6 px-4 py-2 rounded border hover:bg-muted"

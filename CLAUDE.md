@@ -1,96 +1,97 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ## Project Overview
 
-**PretzelGraph** is a monorepo for a visual agent workflow editor. Users build AI agent pipelines visually using a node-graph canvas. The system compiles those graphs and executes them via a signal-based execution engine (S²Engine).
+**PretzelGraph** is a visual agent runtime. Users compose plain workflows, agentic workflows, and multi-agent topologies on a node-graph canvas; the system compiles those graphs and executes them on a signal-based engine (S²Engine) where cycles are first-class, so agents can loop, hand off, and re-fire.
+
+## Running Locally
+
+Stateful services run in Docker; the packages run on the host.
+
+```bash
+docker compose up -d        # postgres, redis, gotrue (auth)
+cp .env.example .env        # values match the compose defaults
+npm install
+npm run dev --workspace=packages/backend    # http://localhost:3001
+npm run dev --workspace=packages/worker
+npm run dev --workspace=packages/frontend   # http://localhost:5173
+```
+
+The backend migrates its own database on boot (`packages/backend/migrations/`). The first account to sign up owns the deployment. `docker compose --profile full up -d` runs everything in containers on port 8080. See `README.md` for details.
 
 ## Development Commands
 
-### Frontend (`packages/frontend`)
-```bash
-npm run dev      # Start Vite dev server
-npm run build    # Type-check + bundle
-npm run lint     # ESLint
-npm run preview  # Preview production build
-```
+| Package | Command | What it does |
+|---|---|---|
+| root | `npm run dev` | Worker in watch mode + nodes index watcher |
+| root | `npm run build` | Build every workspace |
+| `frontend` | `npm run dev` / `build` / `lint` / `preview` | Vite dev server / `tsc -b` + bundle / ESLint / preview |
+| `backend` | `npm run dev` / `build` / `start` | nodemon + ts-node / compile + copy migrations and assets / run `dist` |
+| `worker` | `npm run dev` / `build` / `test` | `tsx watch` / compile / Node test runner over `src/**/*.test.ts` |
+| `webhook` | `npm run dev` / `build` / `start` | Standalone inbound webhook receiver on port 3002 |
+| `nodes` | `npm run generate-indexes` | Rebuild the blueprint catalog (`packages/backend/assets/blueprint_index.json`, gitignored) |
+| `nodes` | `npm run test` / `typecheck` | Node tests / `tsc --noEmit` |
+| `node-sdk` | `npm run typecheck` | `tsc --noEmit` |
 
-### Backend (`packages/backend`)
-```bash
-npm run dev    # Start with tsx watch
-npm run build  # TypeScript compile
-npm start      # Run compiled dist/index.js
-```
-
-### Execution Engine (`packages/worker`)
-```bash
-npm run dev    # Run index + server concurrently (watch mode)
-npm run build  # TypeScript compile
-npm test       # Jest tests
-npm run generate-indexes  # Regenerate barrel index files
-```
-
-### Shared Package (`packages/shared`)
-No build step — used directly as a workspace dependency.
+`shared` and `standard-ui` have no build step; they are consumed as workspace sources. The backend runs `generate-indexes` automatically in `predev` and `prebuild`.
 
 ## Architecture
 
 ### Monorepo Layout
 ```
 packages/
-  frontend/    # React 19 + Vite + XYFlow graph editor
-  backend/     # NestJS + WebSocket + BullMQ
-  shared/      # Domain models (Zod schemas) used by all packages
-  standard-ui/ # UI component library (Radix + Tailwind foundations, icons)
-  node-sdk/    # Node authoring SDK — RuntimeNode, builders, CatalogueService, db/ connection managers
-  nodes/       # Node implementations (blueprint.ts + node.ts) organized by provider
-  worker/      # Workflow execution engine (LangChain + S²Engine)
-  webhook/     # Inbound webhook receiver
+  frontend/    # React 19 + Vite + XYFlow editor, TanStack Router + Query
+  backend/     # NestJS API + WebSocket realtime + BullMQ producer; serves the built frontend
+  worker/      # Execution engine: TurboGraph compiler + AggexEngine/S²Engine + airlock sandbox
+  webhook/     # Standalone inbound webhook receiver (ignites published workflows)
+  shared/      # Domain models (Zod schemas + branded IDs) used by every package
+  standard-ui/ # UI kit: Radix + Tailwind foundations, icons, BaseSDK/SDKManager, Dialog/Notification/Query/System SDKs
+  node-sdk/    # Node authoring SDK: RuntimeNode, builders, CatalogueService, db/ connection managers
+  nodes/       # Node implementations (blueprint.ts + node.ts) by provider
 ```
 
-### Frontend State Management — SDK Pattern
-All state lives in Zustand stores wrapped by typed SDK classes. App-wide SDKs (Dialog, Vault, Query, Auth, …) live in `src/SDKs/`; the editor-scoped SDKs (`WorkbenchSDK`, `ExecutionSDK`, `ShelfSDK`, `TreeSDK`) live under `src/routes/workflow/-SDKs/`. Each SDK extends `BaseSDK<T_State>` and exposes:
-- `useStore` — Zustand store (Immer + Zundo for undo/redo)
+### Frontend State — SDK Pattern
+All state lives in Zustand stores wrapped by typed SDK classes. `BaseSDK<T_State>` and `SDKManager` (the DI container) live in `packages/standard-ui/src/SDKs/`. Each SDK exposes:
+- `useStore` — Zustand store (Immer; Zundo undo/redo where needed)
 - `reducers` — Immer-based state mutations
-- `actions` — Side-effectful operations (API calls, etc.)
+- `actions` — Side-effectful operations (API calls, sockets)
 - `selectors` — Computed/derived values
 
-`SDKManager` is a DI container that wires all SDKs together. The most complex SDK is `WorkbenchSDK`, which owns the entire workflow editor state (nodes, edges, viewport, selection, clipboard, dirty flag).
+App-wide SDKs live in `packages/frontend/src/SDKs/` (Auth, Library, Vault, Realtime, Settings, VersionControl, Webhook, Activity, ApiInterceptor). Editor-scoped SDKs live in `src/routes/workflow/-SDKs/` (Workbench, Execution, Shelf, Drawer, Stack, Airlock, Assistant, Chat, Consultation). `WorkbenchSDK` owns the editor: nodes, edges, viewport, selection, clipboard, dirty flag.
 
 ### Routing
-TanStack Router with file-based routes under `src/routes/`. The route tree is auto-generated into `routeTree.gen.ts` — do not edit this file manually.
+TanStack Router, file-based under `src/routes/`. Route groups: `auth/`, `home/` (library, executions, credentials, templates, settings, usage), `workflow/$workflowid`. `routeTree.gen.ts` is generated — never edit it.
 
-### Domain Models
-All shared types live in `packages/shared/domain/` as Zod schemas with inferred TypeScript types. Key models:
-- `Workflow` — Nodes, edges, layout, viewport, cache, validation issues
-- `Foundations` — Field, Port, Blueprint base types
-- `Vault` — Secrets/credentials
-- `Orchestrator` — Execution control messages
-
-Branded string types (e.g., `Workflow.Id`, `Node.Id`) are used throughout for type safety.
-
-### Graph Canvas
-`WorkbenchSDK/ui/Canvas/` contains the XYFlow canvas, custom node components, and edge renderers. Nodes are defined by Blueprints; the `FieldRenderer` dynamically renders each node's input fields based on the field's type.
+### Domain Models (`packages/shared/domain/`)
+Zod schemas with inferred types and branded string IDs (`Workflow.Id`, `Node.Id`, `Execution.Id`, …). Main namespaces:
+- `Workflow` — nodes, edges, data, cache, dependencies, migrations, repair
+- `Foundations` — Field, Port, Blueprint, Projection base types
+- `Execution` — session, events, signals, igniter, recording, queue
+- `Workbench` — editor document + operations (collaborative state sync)
+- `Vault`, `Auth`, `VersionControl`, `Webhook`, `Airlock`, `Chat`, `Assistant`, `Consultation`, `Activity`, `Listing`, `Workspace`
 
 ### Execution Engine (`worker`) + Nodes (`nodes`, `node-sdk`)
-**Full engine/scheduler docs: `packages/worker/README.md`** (S²Engine, signal vs data dependency, propagation strategies, cycles).
-- `compiler/` — Builds the `S2Graph` + execution context, instantiates/registers nodes, wires edges, finds start nodes
-- `engine/` — `AggexEngine` wraps the signal-based `S2Engine`; runs each node, resolves incoming port data, projects outputs. Nodes fire on accumulated signals and may re-fire — cycles are first-class.
-- Node implementations live in **`packages/nodes/src/`** (NOT in worker), organized by provider (`Core/`, `Integrations/<Provider>/`). Each node is `blueprint.ts` + `node.ts`; conditional fields and ports are inline blueprint derivatives.
-- `packages/node-sdk/` is the authoring SDK: `RuntimeNode` base class, field/credential/blueprint builders, `CatalogueService` (resolves nodes by blueprint-id path convention), and `src/db/` connection managers (`ConnectionManager` → `SqlConnectionManager`; Postgres/MySQL/Redis/Mongo adapters).
-- Agent loop execution runs on the signal-based S²Engine (see `engine/` above)
+**Full engine docs: `packages/worker/README.md`** (S² scheduling loop, signal vs data dependency, propagation strategies, error routing, sub-workflows).
+- `turboGraph/` — `TurboGraph` compiler: builds the `S2Graph` + execution context, instantiates nodes, wires edges, exposes the tiered node-facing APIs
+- `S2/` — `S2Engine`, a domain-agnostic signal scheduler driven by hooks
+- `engine/` — `AggexEngine` implements those hooks and composes the engine services (session, node IO, routing, propagation, scheduler, errors, flight recorder). Nodes fire on accumulated signals and may re-fire; cycles are first-class
+- `airlock/` — the `isolated-vm` sandbox user code runs in; one isolate per execution, shared by sub-workflows
+- `worker.ts` — BullMQ consumer of `Execution.Queue`; `server.ts` — its HTTP surface
+- Node implementations live in **`packages/nodes/src/`**, not the worker: `Core/` (Chat, LanguageModel, Routing, SubWorkflow, Text, Utils, Webhook, Workbench, Developer) and `Integrations/<Provider>/`. Each node is `blueprint.ts` + `node.ts`; conditional fields/ports are inline blueprint derivatives
+- `packages/node-sdk/` — `RuntimeNode` base class, field/port/credential/blueprint builders, `CatalogueService` (blueprint-id → path resolution), `src/db/` connection managers (Postgres, MySQL, Redis, Mongo)
 
-### Backend
-NestJS server on port 3001 (configurable via `.env` `PORT`). Routes:
-- `/api/library` — Workflow CRUD (Supabase)
-- `/api/shelf` — Node blueprint catalog
-- `/api/orchestrator` — Trigger workflow execution
-- `/api/workbench` — Editor state sync
-- WebSocket server for real-time updates (Realtime service)
+### Backend (`packages/backend`)
+NestJS on port 3001 (`PORT`). Entry `src/main.ts`; `serve-frontend.ts` serves the built editor for any non-API path.
+- **Data:** Kysely over `pg` (`src/db/`). Migrations are plain SQL in `migrations/`, applied on boot. No ORM, no PostgREST.
+- **Auth:** GoTrue issues JWTs; guards in `src/auth/` cover members (`member-auth.guard`), API keys, delegated tokens, internal service calls, and per-execution tokens. `min-role.decorator` gates by role.
+- **Controllers:** `library`, `workbench`, `shelf`, `execution`, `vault` (+ `vault/oauth`, `oauth`), `version-control`, `webhook`, `webhook-test`, `chat`, `consultation`, `activity`, `api-keys`, `auth`, `health`. `internal/*` routes are for the worker and webhook services, never the browser.
+- **Realtime:** WebSocket gateway on `/socket` pushes execution and workbench events.
+- **Queue:** BullMQ on Redis; the backend enqueues, the worker consumes.
 
 ### Styling
-Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated colors (`--port-message`, `--port-str`, etc.) defined as CSS variables. Dark/light theme is class-based. Custom animations (`neonPulse`, `border-beam`, accordion transitions) are defined in `tailwind.config.ts`.
+Tailwind CSS 4. Theme, colors, plugins, and animations live in `packages/standard-ui/src/tailwind-preset.ts` and `styles.css`; the frontend's `tailwind.config.ts` only lists content paths. Port types have dedicated CSS variables (`--port-message`, `--port-str`, …). Dark/light theme is class-based.
 
 ## Conventions
 
@@ -100,18 +101,29 @@ Tailwind CSS 4 with an extensive CSS variable system. Port types have dedicated 
 
 - **Reading SDK state inside callbacks/handlers**: Never subscribe to SDK state via `useStore` just to use it inside an event handler or async function. Read it at call time from `SDK.state` directly inside the function. `useStore` subscriptions cause re-renders on every state change — only use them for values the component must re-render on. Example: inside a `fetchOptions` function, do `const value = WorkbenchSDK.state.data.someSlice[nodeId]`, not `const value = WorkbenchSDK.useStore(s => s.data.someSlice[nodeId])` at the component level.
 
+- **Database access**: Go through Kysely and the helpers in `packages/backend/src/db/`. Schema changes are a new numbered SQL file in `packages/backend/migrations/`.
+
+- **Comments**: One line, describing what the code does. No reasoning essays, no dated notes.
+
 ## Key File Locations
 
 | Concern | Path |
 |---|---|
 | Editor state (Zustand) | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/sdk.ts` |
-| State reducers | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/reducers/` |
+| Editor reducers / actions | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/reducers.ts`, `actions/` |
 | Graph canvas | `packages/frontend/src/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas/` |
+| SDK base + DI container | `packages/standard-ui/src/SDKs/Base.ts`, `SDKManager.ts` |
 | Domain models | `packages/shared/domain/` |
-| Node authoring SDK | `packages/node-sdk/src/` (RuntimeNode, builders, `db/` connection managers) |
+| Node drawers (shelf layout) | `packages/shared/constants/drawers.ts` |
+| Node authoring SDK | `packages/node-sdk/src/` |
 | Node implementations | `packages/nodes/src/` |
-| Workflow execution | `packages/worker/src/engine/index.ts` |
-| Workflow compiler | `packages/worker/src/compiler/index.ts` |
-| Backend entry | `packages/backend/src/index.ts` |
-| Tailwind config | `packages/frontend/tailwind.config.ts` |
+| Workflow compiler | `packages/worker/src/turboGraph/` |
+| Signal scheduler | `packages/worker/src/S2/engine.ts` |
+| Execution engine | `packages/worker/src/engine/index.ts` |
+| Sandbox | `packages/worker/src/airlock/` |
+| Backend entry | `packages/backend/src/main.ts` |
+| Backend DB layer | `packages/backend/src/db/` |
+| Backend auth guards | `packages/backend/src/auth/` |
+| SQL migrations | `packages/backend/migrations/` |
+| Tailwind preset + theme | `packages/standard-ui/src/tailwind-preset.ts` |
 | UI component library | `packages/standard-ui/src/foundations/` |
