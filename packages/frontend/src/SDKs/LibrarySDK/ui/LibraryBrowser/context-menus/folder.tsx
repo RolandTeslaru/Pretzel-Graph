@@ -5,6 +5,8 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import { Library } from '@pretzel-graph/shared/domain'
 import { openEditFolderDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
+import { openCreateFolderDialog } from '@/SDKs/LibrarySDK/ui/folder-dialogs'
+import { openCreateWorkflowDialog } from '@/SDKs/LibrarySDK/ui/workflow-dialogs'
 import { OpenInSubMenu } from './open-in'
 
 interface Props {
@@ -31,6 +33,26 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
                     </ContextMenu.Item>
                 )}
                 <OpenInSubMenu url={`/home/library/${folder.id}`} />
+                <ContextMenu.Separator />
+                <ContextMenu.Sub>
+                    <ContextMenu.SubTrigger icon={<SystemIcons.Plus className='size-4' />}>
+                        New
+                    </ContextMenu.SubTrigger>
+                    <ContextMenu.SubContent>
+                        <ContextMenu.Item
+                            icon={<SystemIcons.Folder className='size-4' />}
+                            onClick={() => openCreateFolderDialog({ parent_folder_id: folder.id })}
+                        >
+                            Folder
+                        </ContextMenu.Item>
+                        <ContextMenu.Item
+                            icon={<SystemIcons.Graph className='size-4' />}
+                            onClick={() => openCreateWorkflowDialog({ folder_id: folder.id })}
+                        >
+                            Workflow
+                        </ContextMenu.Item>
+                    </ContextMenu.SubContent>
+                </ContextMenu.Sub>
                 <ContextMenu.Separator />
                 <ContextMenu.Item
                     icon={<SystemIcons.SquarePen className='size-4' />}

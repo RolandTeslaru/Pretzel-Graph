@@ -45,12 +45,24 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
                 >
                     Duplicate
                 </ContextMenu.Item>
-                <ContextMenu.Item
-                    icon={<SystemIcons.Copy className='size-4' />}
-                    onClick={() => navigator.clipboard.writeText(workflow.id)}
-                >
-                    Copy ID
-                </ContextMenu.Item>
+                <ContextMenu.Sub>
+                    <ContextMenu.SubTrigger icon={<SystemIcons.Copy className='size-4' />}>
+                        Copy
+                    </ContextMenu.SubTrigger>
+                    <ContextMenu.SubContent>
+                        <ContextMenu.Item onClick={() => copy(workflow.id, 'Workflow id copied')}>
+                            ID
+                        </ContextMenu.Item>
+                        <ContextMenu.Item onClick={() => copy(`${window.location.origin}/workflow/${workflow.id}`, 'Link copied')}>
+                            Link
+                        </ContextMenu.Item>
+                        {workflow.listing_id && (
+                            <ContextMenu.Item onClick={() => copy(workflow.listing_id!, 'Listing id copied')}>
+                                Listing ID
+                            </ContextMenu.Item>
+                        )}
+                    </ContextMenu.SubContent>
+                </ContextMenu.Sub>
                 <ContextMenu.Item
                     icon={<SystemIcons.Download className='size-4' />}
                     onClick={() => downloadWorkflowJson(workflow)}
@@ -74,6 +86,11 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
             </ContextMenu.Content>
         </ContextMenu.Root>
     )
+}
+
+async function copy(text: string, message: string) {
+    await navigator.clipboard.writeText(text)
+    toast.success(message)
 }
 
 async function downloadWorkflowJson(workflow: Library.WorkflowMeta) {
