@@ -36,7 +36,7 @@ export function WorkflowItem({ workflow, size = 'default', onClick }: WorkflowCa
         <WorkflowCardContextMenu workflow={workflow}>
             <div
                 onClick={onClick}
-                className={classNames('group flex gap-1 relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card)}
+                className={classNames('group flex gap-1 relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card, workflow.hidden && 'opacity-50')}
             >
                 <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
                     {workflow.icon ? (
@@ -104,6 +104,12 @@ function WorkflowCardContextMenu({ workflow, children }: WorkflowCardContextMenu
                     onClick={() => downloadWorkflowJson(workflow)}
                 >
                     Download JSON
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={workflow.hidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}
+                    onClick={() => LibrarySDK.actions.workflow.setHidden(workflow.id, !workflow.hidden)}
+                >
+                    {workflow.hidden ? 'Unhide' : 'Hide'}
                 </ContextMenu.Item>
                 <ContextMenu.Separator />
                 <ContextMenu.Item

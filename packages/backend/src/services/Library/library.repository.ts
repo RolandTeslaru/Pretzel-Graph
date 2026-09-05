@@ -15,6 +15,7 @@ const WORKFLOW_META_COLUMNS = [
     'accent',
     'icon_color',
     'locked',
+    'hidden',
     'mcp_enabled',
     'created_at',
     'updated_at',
@@ -79,8 +80,13 @@ class FolderMethods extends Repository {
         const row = await this.trx
             .updateTable('folders')
             .set({
-                display_name: payload.display_name,
-                description: payload.description ?? null,
+                ...(payload.display_name !== undefined && {
+                    display_name: payload.display_name,
+                }),
+                ...(payload.description !== undefined && {
+                    description: payload.description ?? null,
+                }),
+                ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
             })
             .where('id', '=', payload.id)
             .returningAll()
@@ -176,6 +182,7 @@ class WorkflowMethods extends Repository {
                     icon_color: payload.icon_color,
                 }),
                 ...(payload.locked !== undefined && { locked: payload.locked }),
+                ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
             })
             .where('id', '=', payload.id)
             .returning(WORKFLOW_META_COLUMNS)
@@ -240,6 +247,7 @@ class WorkflowMethods extends Repository {
                 data: source.data,
                 created_by: principal.userId,
                 locked: false,
+                hidden: source.hidden,
                 mcp_enabled: source.mcp_enabled,
             })
             .returningAll()

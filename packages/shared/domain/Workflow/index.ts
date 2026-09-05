@@ -52,6 +52,7 @@ export namespace Workflow {
         id:           WorkflowId,
         display_name: z.string(),
         locked:       z.boolean(),
+        hidden:       z.boolean().nullable().optional(),
         description:  z.string().optional().nullable(),
         icon:         z.string().nullable().optional(),
         accent:       z.string().nullable().optional(),

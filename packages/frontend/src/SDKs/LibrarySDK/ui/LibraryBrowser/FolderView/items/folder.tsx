@@ -17,8 +17,8 @@ interface FolderCardProps {
 
 export function FolderItem({ folder, size = 'default', onClick }: FolderCardProps) {
     const itemCount = LibrarySDK.useStore((s) =>
-        Object.values(s.folders).filter((f) => f.parent_folder_id === folder.id).length +
-        Object.values(s.workflowMetas).filter((w) => w.folder_id === folder.id).length,
+        s.selectors.childFoldersOf(folder.id).length +
+        s.selectors.workflowsInFolder(folder.id).length,
     )
 
     const styles = sizeStyles[size]
@@ -27,7 +27,7 @@ export function FolderItem({ folder, size = 'default', onClick }: FolderCardProp
         <FolderItemContextMenu folder={folder}>
             <div
                 onClick={onClick}
-                className={classNames('group flex relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card)}
+                className={classNames('group flex relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card, folder.hidden && 'opacity-50')}
             >
                 <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
                     <FolderIllustration color="var(--primary)" className={classNames('shrink-0 mx-auto', styles.folderIcon)} />
@@ -65,6 +65,12 @@ function FolderItemContextMenu({ folder, children }: {
                     onClick={() => navigator.clipboard.writeText(folder.id)}
                 >
                     Copy ID
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                    icon={folder.hidden ? <SystemIcons.Eye className="size-4" /> : <SystemIcons.EyeOff className="size-4" />}
+                    onClick={() => LibrarySDK.actions.folder.setHidden(folder.id, !folder.hidden)}
+                >
+                    {folder.hidden ? 'Unhide' : 'Hide'}
                 </ContextMenu.Item>
                 <ContextMenu.Separator />
                 <ContextMenu.Item

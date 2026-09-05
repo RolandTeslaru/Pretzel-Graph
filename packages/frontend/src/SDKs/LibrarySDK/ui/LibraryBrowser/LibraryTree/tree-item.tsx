@@ -79,6 +79,13 @@ export function TreeItem({
         }
     }
 
+    const isHidden = branch.data?.hidden === true
+
+    const handleToggleHidden = () => {
+        if (folderId) return LibrarySDK.actions.folder.setHidden(folderId, !isHidden)
+        if (workflowId) return LibrarySDK.actions.workflow.setHidden(workflowId, !isHidden)
+    }
+
     const handleDelete = () => {
         const s = LibrarySDK.useStore.getState()
         if (isFolder) {
@@ -103,6 +110,7 @@ export function TreeItem({
                         'flex items-center pr-1 pl-1 rounded-md cursor-pointer select-none',
                         styles.row,
                         isSelected ? 'bg-accent' : 'hover:bg-accent/50',
+                        isHidden && 'opacity-50',
                     )}
                     onClick={handleClick}
                 >
@@ -168,6 +176,14 @@ export function TreeItem({
                 >
                     Edit
                 </ContextMenu.Item>
+                {!isRootFolder && (
+                    <ContextMenu.Item
+                        icon={isHidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}
+                        onClick={handleToggleHidden}
+                    >
+                        {isHidden ? 'Unhide' : 'Hide'}
+                    </ContextMenu.Item>
+                )}
                 {!isRootFolder && (
                     <ContextMenu.Item
                         variant='destructive'

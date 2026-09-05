@@ -5,7 +5,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { useState } from 'react'
-import { Button, DropdownMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { Button, DropdownMenu, SearchInput, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
 const BOOTSTRAP_STALE_TIME = 60_000
@@ -55,6 +55,7 @@ function FolderRoute() {
     const folderId = _folderId as Library.Folder.Id
 
     const [folder, breadCrumbs] = LibrarySDK.useStore(s => [s.folders[folderId], s.selectors.getBreadcrumbs(s, folderId)])
+    const showHidden = LibrarySDK.useStore(s => s.showHidden)
 
     if (!folder) {
         return <div className="p-6 opacity-60">Folder not found.</div>
@@ -74,6 +75,22 @@ function FolderRoute() {
                         className='rounded-full!'
                         onSearch={setSearchQuery}
                     />
+
+                    <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                aria-pressed={showHidden}
+                                onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
+                            >
+                                {showHidden ? <SystemIcons.Eye /> : <SystemIcons.EyeOff />}
+                            </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>
+                            {showHidden ? 'Hide hidden items' : 'Show hidden items'}
+                        </Tooltip.Content>
+                    </Tooltip.Root>
 
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>

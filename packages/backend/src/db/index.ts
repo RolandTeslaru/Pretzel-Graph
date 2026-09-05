@@ -95,6 +95,7 @@ export namespace DB {
             accent:       z.string().nullable(),
             icon_color:   z.string().nullable(),
             locked:       z.boolean(),
+            hidden:       z.boolean().nullable().optional(),
             mcp_enabled:  z.boolean().nullable(),
             listing_id: z.uuid().nullable(),
             data:         WorkflowD.Data.Schema,
@@ -113,6 +114,7 @@ export namespace DB {
             parent_folder_id: Library.Folder.Id.nullable(),
             display_name:     z.string(),
             description:      z.string().nullable(),
+            hidden:           z.boolean().nullable().optional(),
             created_at:       z.string(),
             updated_at:       z.string(),
         });

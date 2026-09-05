@@ -17,6 +17,7 @@ export namespace Library {
             parent_folder_id: Folder.Id.nullable(),
             display_name: z.string(),
             description: z.string().nullable(),
+            hidden: z.boolean().nullable().optional(),
             created_at: z.string(),
             updated_at: z.string(),
         })
@@ -73,8 +74,9 @@ export namespace Library {
             export namespace Update {
                 export const Request = z.object({
                     id: Library.Folder.Id,
-                    display_name: z.string().min(1),
+                    display_name: z.string().min(1).optional(),
                     description: z.string().nullable().optional(),
+                    hidden: z.boolean().optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.Folder;
@@ -184,6 +186,7 @@ export namespace Library {
                     accent: z.string().nullable().optional(),
                     icon_color: z.string().nullable().optional(),
                     locked: z.boolean().optional(),
+                    hidden: z.boolean().optional(),
                 });
                 export type Request = z.infer<typeof Request>;
                 export type Response = Library.WorkflowMeta;

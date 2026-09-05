@@ -27,6 +27,7 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
             workflowMetas: {},
             treeExpandedByFolderId: {},
             treeData: {},
+            showHidden: readShowHidden(),
             selectors: _createLibrarySelectors_(this)
         })),
         shallow
@@ -52,6 +53,24 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 }
 
 
+const SHOW_HIDDEN_KEY = 'library.showHidden'
+
+function readShowHidden(): boolean {
+    try {
+        return localStorage.getItem(SHOW_HIDDEN_KEY) === 'true'
+    } catch {
+        return false
+    }
+}
+
+export function writeShowHidden(value: boolean) {
+    try {
+        localStorage.setItem(SHOW_HIDDEN_KEY, String(value))
+    } catch {
+        // storage unavailable; the toggle still works for this session
+    }
+}
+
 export const LibrarySDK = SDK.get<LibrarySDKImpl>("Library")
 
 export namespace LibrarySDK {
@@ -62,6 +81,7 @@ export namespace LibrarySDK {
         workflowMetas: Record<Workflow.Id, Library.WorkflowMeta>;
         treeExpandedByFolderId: Record<Library.Folder.Id, boolean>;
         treeData: TreeDomain.Dummy.Branch<FileSystemNodeData>;
+        showHidden: boolean;
     }
 
     export type Selectors = _LibrarySDKSelectors
