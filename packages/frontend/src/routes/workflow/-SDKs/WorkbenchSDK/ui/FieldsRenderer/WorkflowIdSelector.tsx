@@ -35,7 +35,7 @@ export const WorkflowIdSelectorField = memo<RendererProps<'WorkflowIdSelector'>>
                     'h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left',
                     issue && 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50',
                 )}
-                onClick={() => LibrarySDK.dialogs.openWorkflowSelector(setValue)}
+                onClick={() => LibrarySDK.dialogs.openResourceSelector({ accept: 'workflow', onSelect: (r) => setValue(r.id) })}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span
