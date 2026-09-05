@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { Switch } from '@pretzel-graph/standard-ui/foundations/switch'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -185,4 +185,27 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
             </Form.Root>
         </div>
     )
+}
+
+export function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
+    const dialogId = `delete-workflow-${workflow.id}`
+
+    DialogSDK.actions.push(dialogId, (props) => (
+        <DialogSDK.AlertTemplate
+            {...props}
+            type='danger'
+            onApprove={async () => {
+                await LibrarySDK.actions.workflow.delete(workflow.id)
+                DialogSDK.actions.pop(dialogId)
+            }}
+            onCancel={() => DialogSDK.actions.pop(dialogId)}
+        >
+            <AlertDialog.Title>
+                Delete workflow?
+            </AlertDialog.Title>
+            <AlertDialog.Description>
+                This action is irreversible. Deleting <span className='font-semibold text-destructive'>{workflow.display_name || 'Untitled'}</span> cannot be undone.
+            </AlertDialog.Description>
+        </DialogSDK.AlertTemplate>
+    ))
 }

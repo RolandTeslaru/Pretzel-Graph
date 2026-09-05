@@ -100,11 +100,11 @@ function FolderRoute() {
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content align="end">
                             <DropdownMenu.Item
-                                onClick={() => LibrarySDK.openCreateFolderDialog({ parent_folder_id: folderId })}
+                                onClick={() => LibrarySDK.dialogs.openCreateFolder({ parent_folder_id: folderId })}
                             ><SystemIcons.Folder />Create Folder</DropdownMenu.Item>
 
                             <DropdownMenu.Item
-                                onClick={() => LibrarySDK.openCreateWorkflowDialog({ folder_id: folderId })}
+                                onClick={() => LibrarySDK.dialogs.openCreateWorkflow({ folder_id: folderId })}
                             ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>

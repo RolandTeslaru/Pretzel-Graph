@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
@@ -156,4 +156,27 @@ function EditFolderContent({ dialogId, folder }: { dialogId: string; folder: Lib
             </Form.Root>
         </div>
     )
+}
+
+export function openDeleteFolderDialog(folder: Library.Folder) {
+    const dialogId = `delete-folder-${folder.id}`
+
+    DialogSDK.actions.push(dialogId, (props) => (
+        <DialogSDK.AlertTemplate
+            {...props}
+            type='danger'
+            onApprove={async () => {
+                await LibrarySDK.actions.folder.delete(folder.id)
+                DialogSDK.actions.pop(dialogId)
+            }}
+            onCancel={() => DialogSDK.actions.pop(dialogId)}
+        >
+            <AlertDialog.Title>
+                Delete folder?
+            </AlertDialog.Title>
+            <AlertDialog.Description>
+                This action is irreversible. Deleting <span className='font-semibold text-destructive'>{folder.display_name}</span> will also delete all nested folders and workflows inside it.
+            </AlertDialog.Description>
+        </DialogSDK.AlertTemplate>
+    ))
 }

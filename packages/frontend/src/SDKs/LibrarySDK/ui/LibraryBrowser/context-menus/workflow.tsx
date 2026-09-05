@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { AlertDialog, ContextMenu } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
 import { Workbench } from '@pretzel-graph/shared/domain'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { openEditWorkflowDialog } from '@/SDKs/LibrarySDK/ui/create-dialogs'
 import { OpenInSubMenu } from './open-in'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
@@ -35,7 +33,7 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
                 <ContextMenu.Separator />
                 <ContextMenu.Item
                     icon={<SystemIcons.SquarePen className='size-4' />}
-                    onClick={() => openEditWorkflowDialog({ workflow })}
+                    onClick={() => LibrarySDK.dialogs.openEditWorkflow({ workflow })}
                 >
                     Edit
                 </ContextMenu.Item>
@@ -79,7 +77,7 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
                 <ContextMenu.Item
                     variant='destructive'
                     icon={<SystemIcons.Trash2 className='size-4' />}
-                    onClick={() => openDeleteWorkflowDialog(workflow)}
+                    onClick={() => LibrarySDK.dialogs.openDeleteWorkflow(workflow)}
                 >
                     Delete
                 </ContextMenu.Item>
@@ -115,27 +113,4 @@ async function downloadWorkflowJson(workflow: Library.WorkflowMeta) {
         console.error('Failed to download workflow:', error)
         toast.error('Failed to download workflow')
     }
-}
-
-export function openDeleteWorkflowDialog(workflow: Library.WorkflowMeta) {
-    const dialogId = `delete-workflow-${workflow.id}`
-
-    DialogSDK.actions.push(dialogId, (props) => (
-        <DialogSDK.AlertTemplate
-            {...props}
-            type='danger'
-            onApprove={async () => {
-                await LibrarySDK.actions.workflow.delete(workflow.id)
-                DialogSDK.actions.pop(dialogId)
-            }}
-            onCancel={() => DialogSDK.actions.pop(dialogId)}
-        >
-            <AlertDialog.Title>
-                Delete workflow?
-            </AlertDialog.Title>
-            <AlertDialog.Description>
-                This action is irreversible. Deleting <span className='font-semibold text-destructive'>{workflow.display_name || 'Untitled'}</span> cannot be undone.
-            </AlertDialog.Description>
-        </DialogSDK.AlertTemplate>
-    ))
 }

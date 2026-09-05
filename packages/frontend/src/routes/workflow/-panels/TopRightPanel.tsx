@@ -72,7 +72,7 @@ export const TopRightPanel = () => {
                         variant="ghost" 
                         size="icon-sm" 
                         disabled={isLockPending}
-                        onClick={() => LibrarySDK.openListingManagerDialog(workflowId)} 
+                        onClick={() => LibrarySDK.dialogs.openListingManager(workflowId)} 
                     >
                         <SystemIcons.Globe strokeWidth={2} className={`size-4  ${isPubliclyListed && "text-blue-500"}`}/>
                     </Button>
