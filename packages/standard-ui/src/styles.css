@@ -58,11 +58,11 @@ code {
   --popover-foreground: theme(--color-black);
   --popover-border: var(--border);
 
-  --primary: theme(--color-orange-500);
+  --primary: #FF6A00;
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
   --primary-hover: theme(--color-amber-500);
-  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
+  --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
   --secondary: var(--color-neutral-200);
   --secondary-foreground:var(--color-neutral-700);
@@ -231,7 +231,7 @@ code {
   --popover-foreground: theme(--color-neutral-100);
   --popover-border: rgb(71, 71, 71);
 
-  --primary: theme(--color-orange-500);
+  --primary: #FF6A00;
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
 
@@ -250,7 +250,7 @@ code {
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);
-  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
+  --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
   /* Success states */
   --success-background: theme(--color-emerald-950);

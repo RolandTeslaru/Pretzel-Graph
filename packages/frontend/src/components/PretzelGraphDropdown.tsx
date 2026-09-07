@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import pretzelLogo from '@/assets/pretzel-logo.png'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
@@ -39,13 +38,13 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', 
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
                 {compact ? (
-                    <img src={pretzelLogo} alt="PretzelGraph" width={30} height={30} className="cursor-pointer" />
+                    <SystemIcons.Pretzel size={30} className="text-primary cursor-pointer" />
                 ) : (
                     <button
                         type="button"
                         className="flex items-center gap-2 rounded-md px-1 py-1 -ml-1 hover:bg-muted/60 transition-colors"
                     >
-                        <img src={pretzelLogo} alt="" width={30} height={30} />
+                        <SystemIcons.Pretzel size={30} className="fill-primary" />
                         <span className="font-semibold tracking-tight">{title}</span>
                         <SystemIcons.ChevronDown size={14} className="text-muted-foreground" />
                     </button>
