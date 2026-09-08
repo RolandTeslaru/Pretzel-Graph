@@ -82,22 +82,72 @@ export const clipboardActions = {
         const payload = await readClipboard();
         if (!payload) return;
 
-        // The payload may have been copied from another workflow, so its blueprints are not
-        // necessarily registered here — fetch any that are missing before the nodes land.
-        const blueprintIds = payload.nodes.flatMap(node => node.reconciledBlueprintId
-            ? [node.blueprintId, node.reconciledBlueprintId]
-            : [node.blueprintId]);
-
-        await ShelfSDK.actions.hydrateBatch(blueprintIds);
-
-        WorkbenchSDK.setDocument(withCyclesRecompute(d => {
-            for (const blueprintId of blueprintIds) {
-                const blueprint = ShelfSDK.state.blueprints[blueprintId];
-                if (blueprint)
-                    reducers.blueprint.registerAs(d, blueprintId, blueprint);
-            }
-
-            reducers.clipboard.pasteFromPayload(d, payload, position);
-        }));
+        await insertPayload(payload, position);
     }),
+};
+
+// Drops a payload into the current document: hydrates the blueprints it needs, then replays it
+// through the paste reducer. Shared by clipboard paste and JSON import.
+export const insertPayload = async (
+    payload: ClipboardPayload,
+    position?: { x: number, y: number },
+    dependencies?: Workflow.Data["dependencies"],
+): Promise<void> => {
+    // The payload may have been copied from another workflow, so its blueprints are not
+    // necessarily registered here — fetch any that are missing before the nodes land.
+    const blueprintIds = payload.nodes.flatMap(node => node.reconciledBlueprintId
+        ? [node.blueprintId, node.reconciledBlueprintId]
+        : [node.blueprintId]);
+
+    await ShelfSDK.actions.hydrateBatch(blueprintIds);
+
+    WorkbenchSDK.setDocument(withCyclesRecompute(d => {
+        for (const blueprintId of blueprintIds) {
+            const blueprint = ShelfSDK.state.blueprints[blueprintId];
+            if (blueprint)
+                reducers.blueprint.registerAs(d, blueprintId, blueprint);
+        }
+
+        reducers.clipboard.pasteFromPayload(d, payload, position);
+
+        if (dependencies)
+            adoptDependencies(d, payload, dependencies);
+    }));
+};
+
+// Sub-workflow nodes carry their dependency snapshot inside the source document, so it is
+// registered after the nodes land (registering earlier would be pruned as unreferenced).
+const adoptDependencies = (
+    d: Document,
+    payload: ClipboardPayload,
+    dependencies: Workflow.Data["dependencies"],
+): void => {
+    const referenced = new Set(
+        payload.nodes.flatMap(node => node.dependencyRef ? [node.dependencyRef.workflowId] : [])
+    );
+    if (referenced.size === 0) return;
+
+    const registered = new Set<string>();
+
+    for (const dependency of Object.values(dependencies.published))
+        if (referenced.has(dependency.workflow_id)) {
+            reducers.dependency.register(d, "publication", dependency);
+            registered.add(`publication:${dependency.workflow_id}`);
+        }
+
+    for (const dependency of Object.values(dependencies.draft))
+        if (referenced.has(dependency.workflow_id)) {
+            reducers.dependency.register(d, "draft", dependency);
+            registered.add(`draft:${dependency.workflow_id}`);
+        }
+
+    // The nodes were created before their snapshot existed, so their shapes resolve to nothing.
+    for (const node of Object.values(d.data.nodes)) {
+        const ref = node.dependencyRef;
+        if (!ref) continue;
+        if (!registered.has(`${ref.mode}:${ref.workflowId}`)) continue;
+
+        reducers.cache.resolvedShape.recreate(d, node.id);
+        reducers.node.validate(d, node.id);
+    }
 };

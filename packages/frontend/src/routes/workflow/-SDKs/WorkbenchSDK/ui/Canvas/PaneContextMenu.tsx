@@ -17,6 +17,12 @@ export const PaneContextMenu: React.FC = memo(() => {
         close();
     };
 
+    const handleImport = () => {
+        const canvasPosition = convertMousePositionToCanvas(menu.x, menu.y);
+        WorkbenchSDK.actions.import.fromFile(canvasPosition);
+        close();
+    };
+
     return (
         <div style={{ position: 'fixed', top: menu.y, left: menu.x, width: 0, height: 0 }}>
             <DropdownMenu.Root
@@ -27,6 +33,9 @@ export const PaneContextMenu: React.FC = memo(() => {
                 <DropdownMenu.Content align='start' side='bottom' sideOffset={0}>
                     <DropdownMenu.Item onSelect={handlePaste}>
                         <SystemIcons.Clipboard /> Paste
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onSelect={handleImport}>
+                        <SystemIcons.Braces /> Import from JSON
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>

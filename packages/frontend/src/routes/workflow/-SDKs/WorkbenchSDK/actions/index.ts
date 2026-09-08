@@ -10,6 +10,7 @@ import { createToolActions, type ToolActions } from './tool';
 import { createWorkflowActions, type WorkflowActions } from './workflow';
 import { createDependencyActions, type DependencyActions } from './dependency';
 import { clipboardActions } from './clipboard';
+import { importActions, type ImportActions } from './import';
 import type { Selection } from '@pretzel-graph/shared/domain/Workbench/Document';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK';
 import React from 'react';
@@ -117,6 +118,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         takeSnapshot:         () => { },
         setDraggedPort: (portRef) => sdk.useStore.setState({ draggedPort: portRef }),
         clipboard: clipboardActions,
+        import: importActions,
         selection: {
             duplicate: withCommit(() => {
                 const selection = getSelection(sdk);
@@ -207,6 +209,7 @@ export interface _WorkbenchSDKActions {
         copyNode           : (nodeId: Workflow.Node.Id) => Promise<void>;
         paste              : (position?: { x: number, y: number }) => Promise<void>;
     };
+    import                  : ImportActions;
     temporal                 : {
         undo                : () => void;
         redo                : () => void;
