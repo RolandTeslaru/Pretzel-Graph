@@ -1,5 +1,7 @@
 # PretzelGraph
 
+![The PretzelGraph editor, with an agent graph on the canvas](.github/assets/hero-editor.webp)
+
 A visual agent runtime. Compose plain workflows, agentic workflows, and
 multi-agent topologies on a node-graph canvas; the system compiles those
 graphs and executes them on a signal-based engine where cycles are
