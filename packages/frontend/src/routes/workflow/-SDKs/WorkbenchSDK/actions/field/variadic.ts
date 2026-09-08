@@ -7,25 +7,25 @@ type NodeId  = Workflow.Node.Id
 type FieldId = Field.Id
 
 export function createVariadicActions(sdk: WorkbenchSDKImpl) {
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
     const sel      = sdk.selectors;
 
     return {
         add: withCommit((nodeId, fieldId) => {
-            const field = sel.field.get(sdk.state, nodeId, fieldId);
+            const field = sel.field.get(sdk.document, nodeId, fieldId);
             if (!field || field.groupId === undefined)
                 throw new Error(`Field ${fieldId} not found on node ${nodeId} or is not variadic`)
 
-            setState(s => { reducers.field.variadic.add(s, nodeId, field.groupId!) })
+            setDocument(d => { reducers.field.variadic.add(d, nodeId, field.groupId!) })
         }),
 
         remove: withCommit((nodeId, fieldId) => {
-            const field = sel.field.get(sdk.state, nodeId, fieldId);
+            const field = sel.field.get(sdk.document, nodeId, fieldId);
             if (!field || field.groupId === undefined)
                 throw new Error(`Field ${fieldId} not found on node ${nodeId} or is not variadic`)
 
-            setState(s => { reducers.field.variadic.remove(s, nodeId, field.groupId!) })
+            setDocument(d => { reducers.field.variadic.remove(d, nodeId, field.groupId!) })
         }),
     } satisfies VariadicActions
 }

@@ -20,7 +20,7 @@ const TimelineView = () => {
         totalDuration: s.timeline.totalDuration,
     }))
     const recording = ExecutionSDK.useStore(s => s.currentExecution?.recording ?? null)
-    const workbenchNodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const workbenchNodes = WorkbenchSDK.useDocument(d => d.data.nodes)
     if (!recording) return null
 
     const nodes = resolveTimelineNodes(recording, workbenchNodes)

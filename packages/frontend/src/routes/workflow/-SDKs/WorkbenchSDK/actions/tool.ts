@@ -9,7 +9,7 @@ export function createToolActions(sdk: WorkbenchSDKImpl) {
     return {
         convert: async (nodeId) => {
             try {
-                const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
+                const field = sel.field.get(sdk.document, nodeId, "isConvertedToTool" as Field.Id);
                 if (!field) 
                     throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
                 
@@ -20,7 +20,7 @@ export function createToolActions(sdk: WorkbenchSDKImpl) {
         },
         revert: async (nodeId) => {
             try {
-                const field = sel.field.get(sdk.state, nodeId, "isConvertedToTool" as Field.Id);
+                const field = sel.field.get(sdk.document, nodeId, "isConvertedToTool" as Field.Id);
                 if (!field) 
                     throw new Error(`Node does not have an isConvertedToTool field — is it toolCompatible?`);
                 

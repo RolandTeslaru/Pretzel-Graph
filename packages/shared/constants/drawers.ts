@@ -10,7 +10,6 @@ export const CORE_DRAWERS = {
       "Core.Chat.Input", 
       "Core.Chat.Output", 
       "Core.Text.Input", 
-      "Core.Text.Output", 
       "Core.Chat.History",
       "Core.Utils.JsonInjector",
     ],
@@ -122,6 +121,7 @@ export const CORE_DRAWERS = {
     icon: "Toolbox",
     blueprintIds: [
       "Core.Utils.Tool.Runner",
+      "Core.Utils.Tool.Gate",
       "Core.Utils.Tool.Catalog",
       "Core.Utils.Tool.Custom",
       "Core.Utils.Tool.MCP",
@@ -215,6 +215,12 @@ export const BUNDLE_DRAWERS = {
     id: "openrouter",
     icon: "OpenRouter",
     blueprintIds: ["Integrations.OpenRouter.Chat"]
+  },
+  pretzelgraph: {
+    displayName: "PretzelGraph",
+    id: "pretzelgraph",
+    icon: "Pretzel",
+    blueprintIds: ["Integrations.PretzelGraph.Workbench", "Integrations.PretzelGraph.Shelf"]
   },
   polymarket: {
     displayName: "Polymarket",

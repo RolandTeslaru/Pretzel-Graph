@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Listing, Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
@@ -15,6 +15,7 @@ const WORKFLOW_META_COLUMNS = [
     'accent',
     'icon_color',
     'locked',
+    'hidden',
     'mcp_enabled',
     'created_at',
     'updated_at',
@@ -79,14 +80,40 @@ class FolderMethods extends Repository {
         const row = await this.trx
             .updateTable('folders')
             .set({
-                display_name: payload.display_name,
-                description: payload.description ?? null,
+                ...(payload.display_name !== undefined && {
+                    display_name: payload.display_name,
+                }),
+                ...(payload.description !== undefined && {
+                    description: payload.description ?? null,
+                }),
+                ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
+                ...(payload.parent_folder_id !== undefined && { parent_folder_id: payload.parent_folder_id }),
             })
             .where('id', '=', payload.id)
             .returningAll()
             .executeTakeFirstOrThrow();
 
         return DB.Folder.toDomain(row);
+    }
+
+    // Walks up from `folderId` to the root and reports whether `ancestorId` is on the path.
+    @Transactional('user')
+    public async isSelfOrDescendant(principal: Principal.User, folderId: Library.Folder.Id, ancestorId: Library.Folder.Id): Promise<boolean> {
+        const rows = await this.trx
+            .selectFrom('folders')
+            .select(['id', 'parent_folder_id'])
+            .execute();
+
+        const parentOf = new Map(rows.map((r) => [r.id, r.parent_folder_id]));
+
+        let cursor: Library.Folder.Id | null = folderId;
+
+        while (cursor) {
+            if (cursor === ancestorId) return true;
+            cursor = parentOf.get(cursor) ?? null;
+        }
+
+        return false;
     }
 
     @Transactional('user')
@@ -176,6 +203,8 @@ class WorkflowMethods extends Repository {
                     icon_color: payload.icon_color,
                 }),
                 ...(payload.locked !== undefined && { locked: payload.locked }),
+                ...(payload.hidden !== undefined && { hidden: payload.hidden || null }),
+                ...(payload.folder_id !== undefined && { folder_id: payload.folder_id }),
             })
             .where('id', '=', payload.id)
             .returning(WORKFLOW_META_COLUMNS)
@@ -197,15 +226,6 @@ class WorkflowMethods extends Repository {
             .executeTakeFirstOrThrow();
 
         return DB.Workflow.toDomain(row);
-    }
-
-    @Transactional('user')
-    public async setListingId(principal: Principal.User, workflowId: Workflow.Id, listingId: Listing.Id | null): Promise<void> {
-        await this.trx
-            .updateTable('workflows')
-            .set({ listing_id: listingId })
-            .where('id', '=', workflowId)
-            .execute();
     }
 
     @Transactional('user')
@@ -240,6 +260,7 @@ class WorkflowMethods extends Repository {
                 data: source.data,
                 created_by: principal.userId,
                 locked: false,
+                hidden: source.hidden,
                 mcp_enabled: source.mcp_enabled,
             })
             .returningAll()

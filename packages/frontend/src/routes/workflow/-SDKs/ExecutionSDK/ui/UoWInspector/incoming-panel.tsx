@@ -20,10 +20,10 @@ const IncomingPanel = () => {
     })
 
     const trackId = uow?.trackId
-    const node = WorkbenchSDK.useStore(s => {
+    const node = WorkbenchSDK.useDocument(d => {
         if (!trackId)
             return undefined
-        return snapshotedNode ?? s.selectors.node.get(s, trackId)
+        return snapshotedNode ?? d.selectors.node.get(d, trackId)
     })
 
     return (
@@ -59,7 +59,7 @@ const Content = ({
 
     return (
         <PortProjectionsView
-            ports={WorkbenchSDK.state.selectors.node.getInputs(WorkbenchSDK.state, node.id)}
+            ports={WorkbenchSDK.document.selectors.node.getInputs(WorkbenchSDK.document, node.id)}
             projections={projections as Execution.Session["node_output_projections"]}
             emptyMessage="No incoming data recorded."
         />

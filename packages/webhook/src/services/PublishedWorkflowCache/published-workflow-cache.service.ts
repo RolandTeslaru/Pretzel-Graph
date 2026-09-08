@@ -66,9 +66,6 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
         );
     }
 
-    // The active publication for one workflow — boot's read, narrowed. Runs on the service
-    // connection (owner, RLS bypassed) because active publications are public infrastructure
-    // and this server routes for every tenant; there is no user to scope to.
     private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
         const result = await db().query(
             `select id, workflow_id, version, name, description, workflow_meta, workflow_data, is_active, published_at

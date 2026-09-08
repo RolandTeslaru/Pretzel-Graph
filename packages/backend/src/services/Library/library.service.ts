@@ -15,7 +15,15 @@ export class LibraryService {
         get: async (
             principal: Principal.User,
         ): Promise<Library.API.Bootstrap.Get.Response> => {
-            return this.libraryRepository.bootstrap.get(principal);
+            const [bootstrap, listingIdByWorkflowId] = await Promise.all([
+                this.libraryRepository.bootstrap.get(principal),
+                this.listings.getOwnedIds(),
+            ]);
+
+            for (const meta of bootstrap.workflow_metas)
+                meta.listing_id = listingIdByWorkflowId[meta.id] ?? null;
+
+            return bootstrap;
         },
     };
 
@@ -31,6 +39,16 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Folder.Update.Request,
         ): Promise<Library.API.Folder.Update.Response> => {
+            if (payload.parent_folder_id !== undefined) {
+                if (payload.id === Library.Folder.ROOT_ID)
+                    throw new BadRequestException('The root folder cannot be moved');
+
+                const cyclic = await this.libraryRepository.folder.isSelfOrDescendant(principal, payload.parent_folder_id, payload.id);
+
+                if (cyclic)
+                    throw new BadRequestException('A folder cannot be moved into itself');
+            }
+
             return this.libraryRepository.folder.update(principal, payload);
         },
 
@@ -80,7 +98,7 @@ export class LibraryService {
             principal: Principal.User,
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Remove.Response> => {
-            await this.listings.unshareWorkflow(principal, id);
+            await this.listings.unshareWorkflow(id);
             await this.libraryRepository.workflow.delete(principal, id);
 
             // After the commit — the cached owner is still correct until the TTL, and would

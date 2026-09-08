@@ -30,7 +30,7 @@ function ExecutionsRoute() {
                 </div>
                 <div className='pr-10'>
                     <div className='flex flex-row w-full'>
-                        <Button variant={"input"} onClick={() => LibrarySDK.openWorkflowSelector(setWorkflowId)} className='w-fit'>
+                        <Button variant={"input"} onClick={() => LibrarySDK.dialogs.openResourceSelector({ accept: 'workflow', onSelect: (r) => setWorkflowId(r.id) })} className='w-fit'>
                             Select a Workflow
                         </Button>
                     </div>

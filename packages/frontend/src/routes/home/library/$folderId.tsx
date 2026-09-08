@@ -5,7 +5,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { useState } from 'react'
-import { Button, DropdownMenu, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { Button, DropdownMenu, SearchInput, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
 const BOOTSTRAP_STALE_TIME = 60_000
@@ -55,6 +55,7 @@ function FolderRoute() {
     const folderId = _folderId as Library.Folder.Id
 
     const [folder, breadCrumbs] = LibrarySDK.useStore(s => [s.folders[folderId], s.selectors.getBreadcrumbs(s, folderId)])
+    const showHidden = LibrarySDK.useStore(s => s.showHidden)
 
     if (!folder) {
         return <div className="p-6 opacity-60">Folder not found.</div>
@@ -69,11 +70,27 @@ function FolderRoute() {
             <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
                 <LibraryCwdBreadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
                 <div className="flex gap-2 ">
+                    {/* <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                            <Button
+                                variant="input"
+                                size="icon-sm"
+                                aria-pressed={showHidden}
+                                onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
+                            >
+                                {showHidden ? <SystemIcons.Eye /> : <SystemIcons.EyeOff />}
+                            </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>
+                            {showHidden ? 'Hide hidden items' : 'Show hidden items'}
+                        </Tooltip.Content>
+                    </Tooltip.Root> */}
                     <SearchInput
                         size='sm'
                         className='rounded-full!'
                         onSearch={setSearchQuery}
                     />
+
 
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
@@ -83,11 +100,11 @@ function FolderRoute() {
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content align="end">
                             <DropdownMenu.Item
-                                onClick={() => LibrarySDK.openCreateFolderDialog({ parent_folder_id: folderId })}
+                                onClick={() => LibrarySDK.dialogs.openCreateFolder({ parent_folder_id: folderId })}
                             ><SystemIcons.Folder />Create Folder</DropdownMenu.Item>
 
                             <DropdownMenu.Item
-                                onClick={() => LibrarySDK.openCreateWorkflowDialog({ folder_id: folderId })}
+                                onClick={() => LibrarySDK.dialogs.openCreateWorkflow({ folder_id: folderId })}
                             ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>

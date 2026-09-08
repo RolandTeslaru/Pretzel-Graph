@@ -95,14 +95,14 @@ export const createCanvasCallbacks = (
         },
 
         onNodesChange: (changes) => {
-            WorkbenchSDK.useStore.setState(withCyclesRecompute(s => {
+            WorkbenchSDK.setDocument(withCyclesRecompute(d => {
                 changes.forEach(change => {
                     switch (change.type) {
                         // case "position" is handled in onNodeDragStop
                         case "add":
                             break;
                         case "remove":
-                            WorkbenchSDK.reducers.node.remove(s, change.id as Workflow.Node.Id)
+                            WorkbenchSDK.reducers.node.remove(d, change.id as Workflow.Node.Id)
                             break;
                         case "replace":
                             break;
@@ -118,13 +118,13 @@ export const createCanvasCallbacks = (
         },
 
         onEdgesChange: (changes) => {
-            WorkbenchSDK.setState(withCyclesRecompute(s => {
+            WorkbenchSDK.setDocument(withCyclesRecompute(d => {
                 changes.forEach(change => {
                     switch (change.type) {
                         case "add":
                             break;
                         case "remove":
-                            WorkbenchSDK.reducers.edge.remove(s, change.id as Workflow.Edge.Id);
+                            WorkbenchSDK.reducers.edge.remove(d, change.id as Workflow.Edge.Id);
                             break;
                         case "select":
                             break;
@@ -144,7 +144,7 @@ export const createCanvasCallbacks = (
         onReconnect: (edgeDriver, newConn) => {
             if (WorkbenchSDK.isLocked) return;
 
-            const state = WorkbenchSDK.state
+            const state = WorkbenchSDK.document
 
             if (
                 Validation.Connection.isValid(
@@ -176,17 +176,17 @@ export const createCanvasCallbacks = (
             setState(s => { s.isDraggingNode = true })
         },
         onNodeDragStop: (e, node, nodes) => {
-            WorkbenchSDK.setState(s => {
-                s.isDraggingNode = false
+            const movedNodes = (nodes && nodes.length > 0) ? nodes : [node];
 
-                const movedNodes = (nodes && nodes.length > 0) ? nodes : [node];
-
+            // Positions land on the document first; the drag flag clears once they have.
+            WorkbenchSDK.setDocument(d => {
                 for (const _node of movedNodes) {
                     const newPosition = _node.position;
                     const nodeId = _node.id as Workflow.Node.Id;
-                    WorkbenchSDK.reducers.layout.node.setPosition(s, nodeId, newPosition)
+                    WorkbenchSDK.reducers.layout.node.setPosition(d, nodeId, newPosition)
                 }
             })
+            WorkbenchSDK.setState(s => { s.isDraggingNode = false })
 
             WorkbenchSDK.actions.debouncedCommit();
         },
@@ -227,13 +227,13 @@ export const createCanvasCallbacks = (
 
             if (handleType === "source")
                 port = WorkbenchSDK.selectors.output.get(
-                    WorkbenchSDK.state,
+                    WorkbenchSDK.document,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Output.Id
                 )
             else
                 port = WorkbenchSDK.selectors.input.get(
-                    WorkbenchSDK.state,
+                    WorkbenchSDK.document,
                     nodeId as Workflow.Node.Id,
                     handleId as Foundations.Port.Input.Id
                 )
@@ -277,7 +277,7 @@ export const createCanvasCallbacks = (
                 return;
             }
 
-            const sourceOutputs = WorkbenchSDK.selectors.node.getOutputs(WorkbenchSDK.state, edge.source as Workflow.Node.Id);
+            const sourceOutputs = WorkbenchSDK.selectors.node.getOutputs(WorkbenchSDK.document, edge.source as Workflow.Node.Id);
             const output = sourceOutputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
 
             if (!output) return;

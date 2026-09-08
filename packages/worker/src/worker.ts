@@ -12,6 +12,7 @@ import { createInternalClient } from './turboGraph/http';
 import { AirlockService } from './airlock';
 import { AxiosService } from './axios';
 import { SharedRealtimeService } from './realtime';
+import { lifecycleService } from './turboGraph/lifecycle';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -183,6 +184,9 @@ export class AggexWorkerImpl {
 
             const session = executionCtx.session;
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
+
+            // Holders finish what they hold before the outcome is reported.
+            await lifecycleService.runEnding(executionId, status);
             const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
             const duration = performance.now() - origin;
 
@@ -211,6 +215,8 @@ export class AggexWorkerImpl {
 
             const executionCtx = this.runningExecutionContextsMap.get(execution.id)!;
             const session = executionCtx?.session ?? Execution.Session.createInitial();
+
+            await lifecycleService.runEnding(execution.id, 'failed');
             const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
             const duration = performance.now() - origin;
 
@@ -237,6 +243,7 @@ export class AggexWorkerImpl {
             console.log("Deleting job", execution.id, "from running engines and contexts")
 
             airlock.dispose();
+            lifecycleService.clear(execution.id);
             this.runningEnginesMap.delete(execution.id);
             this.runningExecutionContextsMap.delete(execution.id);
 

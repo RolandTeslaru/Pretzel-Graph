@@ -1,3 +1,5 @@
+@import "@fontsource-variable/geist";
+
 @utility input-default {
   @apply bg-input/70 border-border focus-visible:border-ring focus-visible:ring-ring/50
     aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
@@ -56,11 +58,11 @@ code {
   --popover-foreground: theme(--color-black);
   --popover-border: var(--border);
 
-  --primary: theme(--color-orange-500);
+  --primary: #FF6A00;
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
   --primary-hover: theme(--color-amber-500);
-  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
+  --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
   --secondary: var(--color-neutral-200);
   --secondary-foreground:var(--color-neutral-700);
@@ -208,7 +210,7 @@ code {
   --blending: hard-light;
 
   /* Font families */
-  --font-sans: 'Geist', 'Geist Fallback', 'Inter', system-ui, sans-serif;
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
 }
@@ -218,18 +220,18 @@ code {
   --background: theme(--color-neutral-950);
 
   --foreground: theme(--color-white);
-  --card: rgb(40, 40, 40);
+  --card: rgb(40, 40, 42);
   --card-float: rgb(30, 30, 30);
 
   --port-Data-foreground: theme(--color-slate-500);
   --port-Text: theme(--color-slate-400);
 
   --card-foreground: theme(--color-white);
-  --popover: rgb(43, 43, 43);
+  --popover: rgb(43, 43, 44);
   --popover-foreground: theme(--color-neutral-100);
   --popover-border: rgb(71, 71, 71);
 
-  --primary: theme(--color-orange-500);
+  --primary: #FF6A00;
   --primary-foreground: theme(--color-white);
   --primary-accent: theme(--color-orange-400);
 
@@ -248,7 +250,7 @@ code {
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);
-  --ring: color-mix(in oklch, theme(--color-orange-500) 55%, transparent);
+  --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
   /* Success states */
   --success-background: theme(--color-emerald-950);
@@ -309,7 +311,7 @@ code {
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
 

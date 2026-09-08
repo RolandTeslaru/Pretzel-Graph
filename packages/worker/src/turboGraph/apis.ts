@@ -13,6 +13,7 @@ import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 import { agentToolBridgeService } from "../tool-bridge/service";
+import { lifecycleService } from "./lifecycle";
 
 type ExecutionAPIs = Pick<
     RuntimeNode.ExecutionContext,
@@ -34,6 +35,7 @@ type ExecutionAPIs = Pick<
     | "agentToolBridgeAPI"
     | "internalAPI"
     | "consultationAPI"
+    | "lifecycleAPI"
 >;
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
@@ -134,7 +136,7 @@ export function createExecutionAPIs(
             const subCompiler = new TurboGraph();
 
             return {
-                // Same airlock ref → shared isolate (same tenant); same internalAPI → the sub-workflow
+                // Same airlock ref → shared isolate (same execution); same internalAPI → the sub-workflow
                 // reuses the parent execution id, so the parent token is the right credential for it.
                 compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
                     subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, internalAPI, compilationCtx, enclosingNodeAPI),
@@ -345,5 +347,6 @@ export function createExecutionAPIs(
         agentToolBridgeAPI,
         internalAPI,
         consultationAPI,
+        lifecycleAPI: lifecycleService.createAPI(execution.id),
     };
 }

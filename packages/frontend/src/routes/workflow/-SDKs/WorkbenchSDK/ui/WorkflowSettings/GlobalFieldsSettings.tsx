@@ -11,7 +11,7 @@ type GlobalField = Extract<Foundations.Field, { variant: GlobalFieldVariant }>
 const FIELD_VARIANTS: GlobalFieldVariant[] = ['String', 'Boolean', 'Integer', 'Float']
 
 export const GlobalFieldsSettings = () => {
-    const workflowFields = WorkbenchSDK.useStore(s => s.data.fields ?? [])
+    const workflowFields = WorkbenchSDK.useDocument(d => d.data.globalFields ?? [])
     const [fields, setFields] = useState<GlobalField[]>(() => workflowFields.filter(isGlobalField))
 
     const hasDuplicateIds = useMemo(() => {
@@ -25,7 +25,7 @@ export const GlobalFieldsSettings = () => {
 
     const addField = () => {
         const id = createUniqueFieldId(fields)
-        setFields(current => [...current, createField('String', id, 'Configuration field')])
+        setFields(current => [...current, createField('String', id, 'Global field')])
     }
 
     const updateField = (index: number, next: GlobalField) => {
@@ -60,7 +60,7 @@ export const GlobalFieldsSettings = () => {
                 return
             }
         }
-        WorkbenchSDK.actions.workflow.setFields(fields)
+        WorkbenchSDK.actions.workflow.setGlobalFields(fields)
         toast.success('Global fields updated')
     }
 

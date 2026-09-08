@@ -133,8 +133,8 @@ export function buildTrackLayout(
     top:     number,
     nodes:   Record<Workflow.Node.Id, Workflow.Node.Raw>,
 ): TimelineTrackLayout {    
-    const inputPorts  = WorkbenchSDK.state.selectors.node.getInputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
-    const outputPorts = WorkbenchSDK.state.selectors.node.getOutputs(WorkbenchSDK.state, trackId).map(p => p.id) ?? []
+    const inputPorts  = WorkbenchSDK.document.selectors.node.getInputs(WorkbenchSDK.document, trackId).map(p => p.id) ?? []
+    const outputPorts = WorkbenchSDK.document.selectors.node.getOutputs(WorkbenchSDK.document, trackId).map(p => p.id) ?? []
 
     const rows        = Math.max(1, inputPorts.length, outputPorts.length)
     const blockHeight = rows * Execution.Recording.Timeline.UOW_PORT_HEIGHT

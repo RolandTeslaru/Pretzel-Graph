@@ -12,12 +12,15 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
         super(nodeId, context);
 
-        const { model, maxTokens } = this.fieldValues;
+        const { model, maxTokens, reasoningEffort } = this.fieldValues;
 
         const { apiKey, organizationId } = this.context.credentialsAPI.getDecryptedValue(this.credentials.openAiApi.blob);
 
+        // Chat Completions rejects function tools alongside reasoning, so anything above "none" goes through Responses.
         this.llm = new ChatOpenAI({
             model,
+            reasoning: { effort: reasoningEffort },
+            useResponsesApi: reasoningEffort !== "none",
             ...(typeof maxTokens === "number" ? { maxTokens } : {}),
             apiKey,
             ...(organizationId ? { configuration: { organization: organizationId } } : {}),

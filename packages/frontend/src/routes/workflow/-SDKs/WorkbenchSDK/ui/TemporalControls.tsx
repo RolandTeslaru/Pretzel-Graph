@@ -6,7 +6,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import Tipped from '@/components/Tipped'
 
 const TemporalControls = () => {
-  const temporalStore = (WorkbenchSDK.useStore as any).temporal;
+  const temporalStore = (WorkbenchSDK.useDocument as any).temporal;
 
   // Reactively subscribe to the temporal store
   const canUndo = useStore(temporalStore, (state: any) => state.pastStates.length > 0);

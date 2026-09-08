@@ -14,13 +14,13 @@ type PortId = Foundations.Port.Output.Id
 const useCaseListValue = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id
-) => WorkbenchSDK.useStore(s => s.selectors.field.caseList.getValue(s, nodeId, fieldId) ?? [])
+) => WorkbenchSDK.useDocument(d => d.selectors.field.caseList.getValue(d, nodeId, fieldId) ?? [])
 
 const useCaseListEntry = (
     nodeId: Workflow.Node.Id,
     fieldId: Foundations.Field.Id,
     portId: PortId
-) => WorkbenchSDK.useStore(s => s.selectors.field.caseList.getEntry(s, nodeId, fieldId, portId))
+) => WorkbenchSDK.useDocument(d => d.selectors.field.caseList.getEntry(d, nodeId, fieldId, portId))
 
 export const CaseListField = memo<RendererProps<'CaseList'>>(({ field, nodeId, className }) => {
     const entries = useCaseListValue(nodeId, field.id)

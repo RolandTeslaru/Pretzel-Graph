@@ -94,7 +94,7 @@ function ExpressionInput({ placeholder, className }: {
 
 export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, only, itemScoped, className, children, tabClassName }: Props) {
     const [isHovered, setIsHovered] = useState(false)
-    const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
+    const node = WorkbenchSDK.document.selectors.node.get(WorkbenchSDK.document, nodeId);
 
     const onCommitRef = useRef(onCommit)
     useEffect(() => { onCommitRef.current = onCommit }, [onCommit])

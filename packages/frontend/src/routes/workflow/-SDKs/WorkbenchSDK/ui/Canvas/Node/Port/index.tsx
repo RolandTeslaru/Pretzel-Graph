@@ -25,7 +25,7 @@ const handleStyle: React.CSSProperties = {
 const isValidConnectionCallback = (conn: Connection | Edge) => {
     const isLocked = WorkbenchSDK.isLocked;
 
-    const state = WorkbenchSDK.state
+    const state = WorkbenchSDK.document
 
     return isLocked ? false : Validation.Connection.isValid(
         conn as WorkbenchSDK.DriverConnection,
@@ -62,7 +62,7 @@ export const Port: React.FC<Props> = ({ type, port, nodeId, isFlipped }) => {
                 targetHandle: draggedPort.port.id
             }
 
-        const state = WorkbenchSDK.state
+        const state = WorkbenchSDK.document
 
         return Validation.Connection.isValid(
             conn as WorkbenchSDK.DriverConnection,

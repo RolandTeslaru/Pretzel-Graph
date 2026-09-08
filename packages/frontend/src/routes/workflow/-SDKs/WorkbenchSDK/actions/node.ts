@@ -2,31 +2,50 @@ import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
 import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
-import { Foundations, SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, SystemError, Vault, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
 
+// Policy, not document state: attach a credential automatically only when exactly one vault
+// instance matches the template. Optional templates are opt-in and never auto-attached.
+const resolveCredentialDefaults = (blueprint: Foundations.Blueprint) => {
+    const defaults: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id> = {};
+
+    for (const template of blueprint.credentials ?? []) {
+        if (template.optional)
+            continue;
+
+        const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
+
+        if (instances.length === 1)
+            defaults[template.id] = instances[0].id;
+    }
+
+    return defaults;
+};
+
 export function createNodeActions(sdk: WorkbenchSDKImpl) {
-    const setState = sdk.useStore.setState;
+    const setDocument = sdk.setDocument;
     const reducers = sdk.reducers;
 
     return {
-        remove:            withCommit((...props) => {setState(withCyclesRecompute(s => { reducers.node.remove(s, ...props) })) }),
-        duplicate:         withCommit((...props) => setState(s => { reducers.node.duplicate(s,         ...props) })),
-        setDisabled:       withCommit((...props) => setState(s => { reducers.node.setDisabled(s,       ...props) })),
-        setMinimized:      withCommit((...props) => setState(s => { reducers.node.setMinimized(s,      ...props) })),
-        setFlipped:        withCommit((...props) => setState(s => { reducers.node.setFlipped(s,        ...props) })),
-        setDisplayName:    withCommit((...props) => setState(s => { reducers.node.setDisplayName(s,    ...props) })),
-        setDescription:    withCommit((...props) => setState(s => { reducers.node.setDescription(s,    ...props) })),
-        setSignalStrategy: withCommit((...props) => setState(s => { reducers.node.setSignalStrategy(s, ...props) })),
+        remove:            withCommit((...props) => {setDocument(withCyclesRecompute(d => { reducers.node.remove(d, ...props) })) }),
+        duplicate:         withCommit((...props) => setDocument(d => { reducers.node.duplicate(d,         ...props) })),
+        setDisabled:       withCommit((...props) => setDocument(d => { reducers.node.setDisabled(d,       ...props) })),
+        setMinimized:      withCommit((...props) => setDocument(d => { reducers.node.setMinimized(d,      ...props) })),
+        setFlipped:        withCommit((...props) => setDocument(d => { reducers.node.setFlipped(d,        ...props) })),
+        setDisplayName:    withCommit((...props) => setDocument(d => { reducers.node.setDisplayName(d,    ...props) })),
+        setDescription:    withCommit((...props) => setDocument(d => { reducers.node.setDescription(d,    ...props) })),
+        setSignalStrategy: withCommit((...props) => setDocument(d => { reducers.node.setSignalStrategy(d, ...props) })),
         
-        validate:          (...props) => { setState(s => { reducers.node.validate(s,       ...props) }) },
-        clearIssues:       (...props) => { setState(s => { reducers.node.clearIssues(s,    ...props) }) },
+        validate:          (...props) => { setDocument(d => { reducers.node.validate(d,       ...props) }) },
+        clearIssues:       (...props) => { setDocument(d => { reducers.node.clearIssues(d,    ...props) }) },
 
         recreate:          withAsyncCommit( async (nodeId, ) => {
-            const s = sdk.state;
+            const s = sdk.document;
             const node = s.data.nodes[nodeId];
             
             await ShelfSDK.actions.hydrateBlueprint(node.blueprintId)
@@ -41,10 +60,12 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             }
             
             
-            setState(withCyclesRecompute(s => { reducers.node.recreate(s, nodeId, blueprint)}));
+            const credentialDefaults = resolveCredentialDefaults(blueprint);
+
+            setDocument(withCyclesRecompute(d => { reducers.node.recreate(d, nodeId, blueprint, credentialDefaults)}));
         }),
         recreateAll:       withAsyncCommit( async () => {
-            const s = sdk.state;
+            const s = sdk.document;
             const nodes = Object.values(s.data.nodes);
 
             // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
@@ -58,14 +79,14 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             const blueprints = ShelfSDK.state.blueprints;
 
             // Run every recreate in a single commit + cycles recompute → one undo step.
-            setState(withCyclesRecompute(s => {
+            setDocument(withCyclesRecompute(d => {
                 for (const node of recreatable) {
                     const blueprint = blueprints[node.blueprintId];
                     if (!blueprint) {
                         console.error(`Skipping recreate for ${node.id}: blueprint ${node.blueprintId} failed to hydrate`);
                         continue;
                     }
-                    reducers.node.recreate(s, node.id, blueprint);
+                    reducers.node.recreate(d, node.id, blueprint, resolveCredentialDefaults(blueprint));
                 }
             }));
         }),
@@ -79,8 +100,8 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             if (blueprint.dependencyRef) {
                 const { workflowId, mode } = blueprint.dependencyRef;
                 const depStore = mode === "publication"
-                    ? sdk.state.data.dependencies.published
-                    : sdk.state.data.dependencies.draft;
+                    ? sdk.document.data.dependencies.published
+                    : sdk.document.data.dependencies.draft;
 
                 if (!depStore[workflowId]) {
                     const fetchDepPromise = mode === "publication"
@@ -99,8 +120,11 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                 }
             }
 
-            setState(s => { 
-                nodeId = reducers.node.create(s,...props) 
+            // Caller-supplied assignments win over the auto-attach defaults.
+            const credentials = { ...resolveCredentialDefaults(blueprint), ...(props[3] ?? {}) };
+
+            setDocument(d => { 
+                nodeId = reducers.node.create(d, props[0], props[1], props[2], credentials) 
             })
 }),
     } satisfies NodeActions;

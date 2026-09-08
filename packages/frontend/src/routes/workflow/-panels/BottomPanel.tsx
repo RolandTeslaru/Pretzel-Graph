@@ -15,7 +15,7 @@ import Tipped from '@/components/Tipped'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const BottomPanel = () => {
-    const hasIssues = WorkbenchSDK.useStore(s => Validation.workflowHasIssues(s.issues));
+    const hasIssues = WorkbenchSDK.useDocument(d => Validation.workflowHasIssues(d.issues));
     const executionHasError = ExecutionSDK.useStore(s => {
         const exec = s.currentExecution;
         if (!exec) return false;

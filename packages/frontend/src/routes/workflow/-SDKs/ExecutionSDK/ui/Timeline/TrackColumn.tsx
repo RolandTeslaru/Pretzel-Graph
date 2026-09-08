@@ -15,7 +15,7 @@ const TrackColumn = ({ layout, nodes }: TrackColumnProps) => {
             {layout.tracks.map(tl => {
                 // Unguarded: a deleted track node falls back to the red "node-unknown" UI
                 // (shield icon + "Unknown Node") instead of a bare, unlabeled row.
-                const ui = WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, tl.trackId)
+                const ui = WorkbenchSDK.document.selectors.node.getUI(WorkbenchSDK.document, tl.trackId)
                 const label = ui.displayName
 
                 return (

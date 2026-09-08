@@ -6,10 +6,10 @@ import { Button, Input } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, className }) => {
-    const value = WorkbenchSDK.useStore(s => {
-        if(!s.data.nodes[nodeId] || field.groupId === undefined)
+    const value = WorkbenchSDK.useDocument(d => {
+        if(!d.data.nodes[nodeId] || field.groupId === undefined)
             return 0
-        return s.selectors.node.getInputs(s, nodeId).filter(i => i.groupId === field.groupId).length
+        return d.selectors.node.getInputs(d, nodeId).filter(i => i.groupId === field.groupId).length
     })
 
     return (

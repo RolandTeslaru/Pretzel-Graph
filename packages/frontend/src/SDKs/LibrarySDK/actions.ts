@@ -1,16 +1,17 @@
 import { Library, Workflow } from '@pretzel-graph/shared/domain';
 import { api } from '../ApiInterceptorSDK';
 import type { LibrarySDKImpl } from './sdk';
-import type { LibrarySDK } from './sdk';
+import { writeShowHidden, type LibrarySDK } from './sdk';
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 
-export type FileSystemNodeData = { name: string }
+export type FileSystemNodeData = { name: string; hidden?: boolean }
 type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
 export type _LibrarySDKActions = {
     rebuildTree: () => void;
     preferences: {
         setFolderExpanded: (folderId: Library.Folder.Id, isExpanded: boolean) => void;
+        setShowHidden: (showHidden: boolean) => void;
     };
     bootstrap: {
         get: () => Promise<Library.API.Bootstrap.Get.Response>;
@@ -19,6 +20,8 @@ export type _LibrarySDKActions = {
         getContents: (id: Library.Folder.Id) => Promise<Library.API.Folder.GetContents.Response>;
         create: (payload: Library.API.Folder.Create.Request) => Promise<Library.API.Folder.Create.Response>;
         update: (payload: Library.API.Folder.Update.Request) => Promise<Library.API.Folder.Update.Response>;
+        setHidden: (id: Library.Folder.Id, hidden: boolean) => Promise<Library.API.Folder.Update.Response>;
+        move: (id: Library.Folder.Id, parentFolderId: Library.Folder.Id) => Promise<Library.API.Folder.Update.Response>;
         delete: (id: Library.Folder.Id) => Promise<Library.API.Folder.Remove.Response>;
     };
     workflow: {
@@ -26,6 +29,8 @@ export type _LibrarySDKActions = {
         create: (payload: Library.API.Workflow.Create.Request) => Promise<Library.API.Workflow.Create.Response>;
         update: (payload: Library.API.Workflow.Update.Request) => Promise<Library.API.Workflow.Update.Response>;
         setLock: (id: Workflow.Id, locked: boolean) => Promise<Library.API.Workflow.Update.Response>;
+        setHidden: (id: Workflow.Id, hidden: boolean) => Promise<Library.API.Workflow.Update.Response>;
+        move: (id: Workflow.Id, folderId: Library.Folder.Id) => Promise<Library.API.Workflow.Update.Response>;
         listPublicWorkflow: (id: Workflow.Id) => Promise<Library.API.Workflow.ListPublic.Response>;
         unlistPublicWorkflow: (id: Workflow.Id) => Promise<void>;
         __removeListingId: (id: Workflow.Id) => void;
@@ -35,14 +40,20 @@ export type _LibrarySDKActions = {
 };
 
 
+// Only the bootstrap carries listing_id; every other response leaves it as it was.
+function putMeta(s: LibrarySDK.State, meta: Library.WorkflowMeta) {
+    s.workflowMetas[meta.id] = { ...meta, listing_id: meta.listing_id ?? s.workflowMetas[meta.id]?.listing_id ?? null };
+}
+
 function buildTreeData(s: LibrarySDK.State): FileNode {
-    const { folders, workflowMetas, treeExpandedByFolderId } = s;
+    const { folders, workflowMetas, treeExpandedByFolderId, showHidden } = s;
 
     const childFoldersByParent = new Map<string, Library.Folder[]>()
     const workflowsByFolder = new Map<string, Library.WorkflowMeta[]>()
 
     for (const folder of Object.values(folders)) {
         if (!folder.parent_folder_id) continue
+        if (folder.hidden && !showHidden) continue
 
         const list = childFoldersByParent.get(folder.parent_folder_id) ?? []
         list.push(folder)
@@ -50,6 +61,8 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
     }
 
     for (const workflow of Object.values(workflowMetas)) {
+        if (workflow.hidden && !showHidden) continue
+
         const list = workflowsByFolder.get(workflow.folder_id) ?? []
         list.push(workflow)
         workflowsByFolder.set(workflow.folder_id, list)
@@ -67,10 +80,18 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
         for (const child of childFoldersByParent.get(folder.id) ?? [])
             childBranches[`folder:${child.id}`] = buildFolderBranch(child)
         for (const workflow of workflowsByFolder.get(folder.id) ?? [])
-            childBranches[`workflow:${workflow.id}`] = { data: { name: workflow.display_name } }
+            childBranches[`workflow:${workflow.id}`] = { 
+                data: { 
+                    name: workflow.display_name, 
+                    hidden: workflow.hidden ?? false 
+                } 
+            }
 
         return {
-            data: { name: folder.display_name },
+            data: { 
+                name: folder.display_name, 
+                hidden: folder.hidden ?? false 
+            },
             isExpandedByDefault: treeExpandedByFolderId[folder.id] ?? true,
             childBranches: (Object.keys(childBranches).length ? childBranches : undefined) as FileNode['childBranches'],
         }
@@ -106,6 +127,14 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 });
                 rebuildTree();
             },
+
+            setShowHidden: (showHidden) => {
+                setState((s) => {
+                    s.showHidden = showHidden;
+                });
+                writeShowHidden(showHidden);
+                rebuildTree();
+            },
         },
 
         bootstrap: {
@@ -126,7 +155,7 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
                 setState((s) => {
                     s.folders[data.folder.id] = data.folder;
                     for (const f of data.child_folders) s.folders[f.id] = f;
-                    for (const w of data.workflows) s.workflowMetas[w.id] = w;
+                    for (const w of data.workflows) putMeta(s, w);
                 });
                 rebuildTree();
                 return data;
@@ -141,6 +170,20 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             update: async (payload) => {
                 const data = await Library.API.Folder.update(api, payload);
+                setState((s) => { s.folders[data.id] = data; });
+                rebuildTree();
+                return data;
+            },
+
+            setHidden: async (id, hidden) => {
+                const data = await Library.API.Folder.update(api, { id, hidden });
+                setState((s) => { s.folders[data.id] = data; });
+                rebuildTree();
+                return data;
+            },
+
+            move: async (id, parentFolderId) => {
+                const data = await Library.API.Folder.update(api, { id, parent_folder_id: parentFolderId });
                 setState((s) => { s.folders[data.id] = data; });
                 rebuildTree();
                 return data;
@@ -178,14 +221,28 @@ export function _createLibraryActions_(sdk: LibrarySDKImpl) {
 
             update: async (payload) => {
                 const data = await Library.API.Workflow.update(api, payload);
-                setState((s) => { s.workflowMetas[data.id] = data; });
+                setState((s) => { putMeta(s, data); });
                 rebuildTree();
                 return data;
             },
 
             setLock: async (id, locked) => {
                 const data = await Library.API.Workflow.update(api, { id, locked });
-                setState((s) => { s.workflowMetas[data.id] = data; });
+                setState((s) => { putMeta(s, data); });
+                return data;
+            },
+
+            setHidden: async (id, hidden) => {
+                const data = await Library.API.Workflow.update(api, { id, hidden });
+                setState((s) => { putMeta(s, data); });
+                rebuildTree();
+                return data;
+            },
+
+            move: async (id, folderId) => {
+                const data = await Library.API.Workflow.update(api, { id, folder_id: folderId });
+                setState((s) => { putMeta(s, data); });
+                rebuildTree();
                 return data;
             },
 

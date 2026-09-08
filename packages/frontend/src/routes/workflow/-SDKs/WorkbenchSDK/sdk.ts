@@ -3,7 +3,6 @@ import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
-import { workbenchSelectors, type WorkbenchSDKSelectors } from "./selectors";
 import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "react";
 import { Foundations, Validation, Vault, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
@@ -11,11 +10,10 @@ import { cloneDeep } from "lodash";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
-import { workbenchReducers } from "./reducers";
+import { editorReducers } from "./reducers";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
-import { ShelfSDK } from "../ShelfSDK/sdk";
-import type { NodeUI } from "./selectors/node";
+import { Document, type NodeUI } from "@pretzel-graph/shared/domain/Workbench/Document";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 // Stable identities so the port hooks below never return a fresh array to the store subscription.
@@ -36,36 +34,21 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         lastMousePosition: { x: 0, y: 0 }
     }
 
-    public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = createWithEqualityFn(
+    // Two stores. The document is what reducers operate on and what undo tracks; the
+    // editor store is pointer and gesture state the document has no notion of. Keeping
+    // them apart means replacing the document wholesale never touches the cursor.
+    public readonly useDocument: BaseSDK.Store<Document> = createWithEqualityFn(
         temporal(
-            immer<WorkbenchSDK.State>(() => ({
-                workflowId: '' as Workflow.Id,
-                data: cloneDeep(Workflow.INITIAL.data),
-                isDirty: false,
-                isDraggingNode: false,
-                lastSelection: null,
-                clickedNodeId: null,
-                selectionContextMenu: null,
-                paneContextMenu: null,
-                draggedPort: null,
-                cache: cloneDeep(Workflow.Cache.INITIAL),
-                issues: {
-                    nodes: {},
-                    cycles: []
-                },
-                cycles: [],
+            immer<Document>(() => ({
+                ...Document.create('' as Workflow.Id, cloneDeep(Workflow.INITIAL.data), {}),
                 cyclesDirty: false,
-                stronglyConnectedComponents: [],
-                dependencyUpdates: { published: {}, draft: {} },
-                selectors: workbenchSelectors,
-                reducers: workbenchReducers
             })), {
             limit: this.TEMPORAL_STACK_SIZE,
-            partialize: (s) => ({
+            partialize: (d) => ({
                 isDirty: true,
-                workflowId: s.workflowId,
-                data: s.data,
-                cyclesDirty: s.cyclesDirty,
+                workflowId: d.workflowId,
+                data: d.data,
+                cyclesDirty: d.cyclesDirty,
             }),
             // Skip recording history when only the camera (ui.viewport) or field/input
             // values (staticValues) changed — neither should consume undo slots. Field
@@ -80,37 +63,48 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         shallow
     )
 
-    public readonly selectors: WorkbenchSDK.Selectors = workbenchSelectors;
-    public readonly reducers: WorkbenchSDK.Reducers = workbenchReducers;
+    public readonly useStore: BaseSDK.Store<WorkbenchSDK.State> = createWithEqualityFn(
+        immer<WorkbenchSDK.State>(() => ({
+            isDraggingNode: false,
+            lastSelection: null,
+            clickedNodeId: null,
+            selectionContextMenu: null,
+            paneContextMenu: null,
+            draggedPort: null,
+        })),
+        shallow
+    )
+
+    // The document-side twins of BaseSDK's `state` / `subscribe` / `setState`.
+    public get document()          { return this.useDocument.getState() }
+    public get subscribeDocument() { return this.useDocument.subscribe }
+    public get setDocument()       { return this.useDocument.setState }
+
+    public readonly selectors: WorkbenchSDK.Selectors = Document.selectors;
+    public readonly reducers: WorkbenchSDK.Reducers = Document.reducers;
+    public readonly editorReducers: WorkbenchSDK.EditorReducers = editorReducers;
     public readonly actions: WorkbenchSDK.Actions = _createWorkbenchActions_(this)
 
 
     public get isLocked(): boolean {
-        return LibrarySDK.state.workflowMetas[this.state.workflowId]?.locked ?? false;
+        return LibrarySDK.state.workflowMetas[this.document.workflowId]?.locked ?? false;
     }
 
 
 
     public useNode(nodeId: Workflow.Node.Id | null) {
-        const [node, connectedPorts, dependency, resolvedShape] = this.useStore(s => {
+        const [node, connectedPorts, dependency, resolvedShape, blueprint] = this.useDocument(d => {
             if(!nodeId)
-                return [null, {}, null, null] as const;
+                return [null, {}, null, null, null] as const;
 
             return [
-                s.data.nodes[nodeId],
-                s.selectors.node.getConnectedPorts(s, nodeId),
-                s.selectors.node.getDependency(s, nodeId),
-                s.cache.resolvedShape[nodeId] ?? null,
+                d.data.nodes[nodeId],
+                d.selectors.node.getConnectedPorts(d, nodeId),
+                d.selectors.node.getDependency(d, nodeId),
+                d.cache.resolvedShape[nodeId] ?? null,
+                d.selectors.blueprint.forNode(d, nodeId),
             ]
         })
-
-        // A slimmed Workflow.Node.Raw cannot exist without its blueprint hydrated — load() guarantees
-        // it. If it's missing that's a hard bug, not a case to guard; assert both as present.
-        const blueprint = ShelfSDK.useStore(s => {
-            if(!node)
-                return null;
-            return s.blueprints[node!.reconciledBlueprintId ?? node!.blueprintId]
-        });
 
         return useMemo(() => {
             if (!node || !blueprint)
@@ -136,18 +130,23 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         }, [node, blueprint, resolvedShape, connectedPorts, dependency]);
     }
 
+    /** The clicked node's id, checked against the document so a deleted node cannot stay selected. */
+    public useClickedNodeId(): Workflow.Node.Id | null {
+        const clickedId = this.useStore(s => s.clickedNodeId);
+        return this.useDocument(d => clickedId && d.data.nodes[clickedId] ? clickedId : null);
+    }
+
     public useSelectedNode() {
-        const selectedNodeId = this.useStore(s => s.clickedNodeId);
-        return this.useNode(selectedNodeId);
+        return this.useNode(this.useClickedNodeId());
     }
 
 
     /** A single resolved output port from the shared node-shape cache. */
     public useOutput(nodeId: Workflow.Node.Id | null, portId: Foundations.Port.Output.Id | null) {
-        const [node, outputs] = this.useStore(s => {
+        const [node, outputs] = this.useDocument(d => {
             if (!nodeId)
                 return [null, []] as const;
-            return [s.data.nodes[nodeId] ?? null, s.cache.resolvedShape[nodeId]?.outputs ?? []] as const;
+            return [d.data.nodes[nodeId] ?? null, d.cache.resolvedShape[nodeId]?.outputs ?? []] as const;
         });
 
         return useMemo(() => {
@@ -160,19 +159,19 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
     /** A node's resolved fields from the shared node-shape cache. */
     public useFields(nodeId: Workflow.Node.Id): readonly Foundations.Field[] {
-        return this.useStore(s => s.cache.resolvedShape[nodeId]?.fields ?? []);
+        return this.useDocument(d => d.cache.resolvedShape[nodeId]?.fields ?? []);
     }
 
 
     /** A node's resolved input ports from the shared node-shape cache. */
     public useInputs(nodeId: Workflow.Node.Id): Foundations.Port.Input[] {
-        return this.useStore(s => s.cache.resolvedShape[nodeId]?.inputs) ?? EMPTY_INPUTS;
+        return this.useDocument(d => d.cache.resolvedShape[nodeId]?.inputs) ?? EMPTY_INPUTS;
     }
 
 
     /** A node's resolved output ports from the shared node-shape cache. */
     public useOutputs(nodeId: Workflow.Node.Id): Foundations.Port.Output[] {
-        return this.useStore(s => s.cache.resolvedShape[nodeId]?.outputs) ?? EMPTY_OUTPUTS;
+        return this.useDocument(d => d.cache.resolvedShape[nodeId]?.outputs) ?? EMPTY_OUTPUTS;
     }
 
 
@@ -188,10 +187,10 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
         const initialValue = 'initialValue' in field ? field.initialValue : undefined;
 
-        const [storeValue, issue, isExpression] = this.useStore(s => [
-            s.selectors.node.getStaticValue(s, nodeId, fieldId, initialValue) as T,
-            s.selectors.field.getIssue(s, nodeId, fieldId),
-            s.selectors.field.usesExpression(s, nodeId, field),
+        const [storeValue, issue, isExpression] = this.useDocument(d => [
+            d.selectors.node.getStaticValue(d, nodeId, fieldId, initialValue) as T,
+            d.selectors.field.getIssue(d, nodeId, fieldId),
+            d.selectors.field.usesExpression(d, nodeId, field),
         ] as const);
 
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
@@ -239,9 +238,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
         const initialValue = 'initialValue' in input ? input.initialValue : undefined;
         
-        const [storeValue, issue] = this.useStore(s => [
-            s.selectors.node.getStaticValue(s, nodeId, inputId, initialValue),
-            s.selectors.input.getIssue(s, nodeId, inputId)
+        const [storeValue, issue] = this.useDocument(d => [
+            d.selectors.node.getStaticValue(d, nodeId, inputId, initialValue),
+            d.selectors.input.getIssue(d, nodeId, inputId)
         ] as const);
 
         const [localValue, setLocalValue] = useState<T>(storeValue as T);
@@ -280,9 +279,9 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
      * validation issue from the store; the returned setter writes immediately.
      */
     public useCredential(nodeId: Workflow.Node.Id, templateId: Vault.Credential.Template.Id) {
-        const [instanceId, issue] = this.useStore(s => [
-            s.selectors.credential.getInstance(s, nodeId, templateId),
-            s.selectors.credential.getIssue(s, nodeId, templateId),
+        const [instanceId, issue] = this.useDocument(d => [
+            d.selectors.credential.getInstance(d, nodeId, templateId),
+            d.selectors.credential.getIssue(d, nodeId, templateId),
         ] as const);
 
         const setInstance = useCallback(
@@ -317,27 +316,14 @@ export const WorkbenchSDK = SDK.get<WorkbenchSDKImpl>("Workbench")
 
 
 export namespace WorkbenchSDK {
+    // Pointer and gesture state only. The document lives in its own store.
     export interface State {
-        workflowId: Workflow.Id;
-        data: Workflow.Data;
-        isDirty: boolean;
         isDraggingNode: boolean;
         lastSelection: OnSelectionChangeParams<NodeDriver, EdgeDriver> | null;
         clickedNodeId: Workflow.Node.Id | null;
         selectionContextMenu: { x: number, y: number } | null;
         paneContextMenu: { x: number, y: number } | null;
         draggedPort: PortRef | null
-        cache: Workflow.Cache
-        cyclesDirty: boolean
-        issues: Validation.Issue.Workflow_
-        cycles: Workflow.Node.Id[][]
-        stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>,
-        dependencyUpdates: {
-            published: Workflow.Dependency.Publication.UpdateMap
-            draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
-        }
-        selectors: WorkbenchSDKSelectors
-        reducers: typeof workbenchReducers
     }
 
     export interface PortRef {
@@ -346,20 +332,16 @@ export namespace WorkbenchSDK {
         direction: "source" | "target"
     }
 
-    export type Selectors = WorkbenchSDKSelectors
-    export type Actions = _WorkbenchSDKActions
-    export type Reducers = typeof workbenchReducers
+    export type Selectors      = Document.Selectors
+    export type Actions        = _WorkbenchSDKActions
+    export type Reducers       = Document.Reducers
+    export type EditorReducers = typeof editorReducers
 
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
     export type CycleSelectionNodeDriver = RF_Node<{ width: number, height: number, nodeIds: Workflow.Node.Id[], issue: Validation.Issue.Cycle }, "cycleSelectionNode">;
 
-    export interface DriverConnection {
-        source: Workflow.Node.Id
-        sourceHandle: Foundations.Port.Output.Id
-        target: Workflow.Node.Id
-        targetHandle: Foundations.Port.Input.Id
-    }
+    export type DriverConnection = Document.DriverConnection
 
     export type NodeBundle = [
         node: Workflow.Node.Raw,

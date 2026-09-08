@@ -1,6 +1,7 @@
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import { WorkbenchSDK } from "../sdk";
-import { workbenchReducers as reducers } from "../reducers";
+import { Document } from "@pretzel-graph/shared/domain/Workbench/Document";
+import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { withCyclesRecompute, withAsyncCommit } from "../utils/actions";
 import {
     type ClipboardPayload,
@@ -10,6 +11,8 @@ import {
     writeClipboard,
 } from "../clipboard/payload";
 
+const reducers = Document.reducers;
+
 // Build a self-contained snapshot of the given nodes (+ the supplied edges)
 // from current state. staticValues / credentials are captured here so the
 // payload is frozen at copy time.
@@ -17,7 +20,7 @@ const buildPayload = (
     nodeIds: Workflow.Node.Id[],
     edgeIds: Workflow.Edge.Id[],
 ): ClipboardPayload | null => {
-    const { data, cache } = WorkbenchSDK.state;
+    const { data, cache } = WorkbenchSDK.document;
 
     const nodes: ClipboardPayload["nodes"] = [];
     const layout: ClipboardPayload["layout"] = {};
@@ -78,8 +81,23 @@ export const clipboardActions = {
     paste: withAsyncCommit(async (position?: { x: number, y: number }): Promise<void> => {
         const payload = await readClipboard();
         if (!payload) return;
-        WorkbenchSDK.useStore.setState(withCyclesRecompute(s => {
-            reducers.clipboard.pasteFromPayload(s, payload, position);
+
+        // The payload may have been copied from another workflow, so its blueprints are not
+        // necessarily registered here — fetch any that are missing before the nodes land.
+        const blueprintIds = payload.nodes.flatMap(node => node.reconciledBlueprintId
+            ? [node.blueprintId, node.reconciledBlueprintId]
+            : [node.blueprintId]);
+
+        await ShelfSDK.actions.hydrateBatch(blueprintIds);
+
+        WorkbenchSDK.setDocument(withCyclesRecompute(d => {
+            for (const blueprintId of blueprintIds) {
+                const blueprint = ShelfSDK.state.blueprints[blueprintId];
+                if (blueprint)
+                    reducers.blueprint.registerAs(d, blueprintId, blueprint);
+            }
+
+            reducers.clipboard.pasteFromPayload(d, payload, position);
         }));
     }),
 };

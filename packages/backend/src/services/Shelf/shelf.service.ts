@@ -21,6 +21,7 @@ export class ShelfService {
     private readonly logger = new Logger(ShelfService.name);
 
     private extendedIndex: Record<Blueprint.Id, Blueprint> | null = null;
+    private summaries:     Shelf.Catalogue.Summary[] | null       = null;
 
     constructor(private readonly cloud: CloudService) {}
 
@@ -52,8 +53,20 @@ export class ShelfService {
         }
 
         this.extendedIndex = blueprints;
+        this.summaries     = null;
 
         return blueprints;
+    }
+
+    // Core index plus the extended shelf, summarized once per process and again if the extended
+    // shelf is refetched.
+    async queryBlueprints(query: Shelf.Catalogue.Query): Promise<Shelf.Catalogue.Result> {
+        const extended = await this.ensureExtendedShelfIndex();
+
+        this.summaries ??= [...Object.values(getCoreIndex().blueprints), ...Object.values(extended)]
+            .map(Shelf.Catalogue.summarize);
+
+        return Shelf.Catalogue.query(this.summaries, query);
     }
 
     private async getPretzelOfficialListings(): Promise<Listing[]> {

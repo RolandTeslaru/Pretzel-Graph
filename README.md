@@ -1,8 +1,9 @@
 # PretzelGraph
 
-A visual agent workflow editor. Build AI agent pipelines on a node-graph
-canvas; the system compiles those graphs and executes them via a
-signal-based execution engine.
+A visual agent runtime. Compose plain workflows, agentic workflows, and
+multi-agent topologies on a node-graph canvas; the system compiles those
+graphs and executes them on a signal-based engine where cycles are
+first-class, so agents can loop, hand off, and re-fire.
 
 ## Running it
 

@@ -14,7 +14,7 @@ export const ScriptField = memo(({ field, nodeId, className }: RendererProps<'Sc
             <Button variant="input" className="justify-start overflow-hidden"
                 onClick={() => {
                     const snapshot = localValue;
-                    const node = WorkbenchSDK.state.selectors.node.get(WorkbenchSDK.state, nodeId);
+                    const node = WorkbenchSDK.document.selectors.node.get(WorkbenchSDK.document, nodeId);
                     if (!node) return;
 
                     DialogSDK.actions

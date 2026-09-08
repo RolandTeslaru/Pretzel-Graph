@@ -109,7 +109,7 @@ function WorkflowLayoutComponent() {
 
             if (import.meta.env.DEV || isDevHmrFullReload()) return;
 
-            if (WorkbenchSDK.state.isDirty) {
+            if (WorkbenchSDK.document.isDirty) {
                 WorkbenchSDK.actions.commit();
                 e.preventDefault();
                 e.returnValue = '';
@@ -181,7 +181,7 @@ function WorkflowLayoutComponent() {
         }
     }, [])
 
-    const isLoaded = WorkbenchSDK.useStore(s => s.selectors.workflow.isLoaded(s))
+    const isLoaded = WorkbenchSDK.useDocument(d => d.selectors.workflow.isLoaded(d))
 
     return (
         <>

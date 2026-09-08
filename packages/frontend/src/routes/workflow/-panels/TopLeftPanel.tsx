@@ -7,7 +7,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 export const TopLeftPanel = () => {
     const navigate = useNavigate()
-    const workflowId = WorkbenchSDK.useStore(s => s.workflowId)
+    const workflowId = WorkbenchSDK.useDocument(d => d.workflowId)
     const [folder_id, display_name] = LibrarySDK.useStore(s => {
         const meta = s.workflowMetas[workflowId]
         return [meta?.folder_id, meta?.display_name] as const

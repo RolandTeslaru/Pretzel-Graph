@@ -30,7 +30,7 @@ const FullScreenContent = ({ hyNode, blockTransparency, surfaceStyle }: FullScre
 }
 
 const FullScreenNodePanel = ({ blockTransparency, surfaceStyle }: { blockTransparency: boolean; surfaceStyle: CSSProperties }) => {
-  const nodeId = WorkbenchSDK.useStore(s => s.selectors.getClickedNode(s)?.id ?? "" as Workflow.Node.Id)
+  const nodeId = WorkbenchSDK.useClickedNodeId() ?? "" as Workflow.Node.Id
 
   const hyNode = WorkbenchSDK.useNode(nodeId)
 

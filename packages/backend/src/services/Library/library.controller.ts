@@ -89,7 +89,7 @@ export class LibraryController {
         @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Workflow.Id,
     ): Promise<Library.API.Workflow.UnlistPublic.Response> {
-        await this.listingService.unshareWorkflow(principal, id);
+        await this.listingService.unshareWorkflow(id);
         return {};
     }
 

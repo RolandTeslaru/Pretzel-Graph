@@ -54,6 +54,7 @@ function LibraryLayout() {
                 <div className="absolute z-10 top-[60px] w-full flex flex-row " >
                     <SearchInput 
                         className='rounded-full!'
+                        size="sm"
                         wrapperClassName='flex-1 mx-1'
                         onSearch={(value) => setTreeSearchQuery(value.trim().toLowerCase())}
                     />
@@ -61,7 +62,7 @@ function LibraryLayout() {
                 <LibraryTree
                     scrollContainerClassName="h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]"
                     cwd={cwd}
-                    className={"pt-[100px] pr-2"}
+                    className={"pt-[95px] pr-2"}
                     searchQuery={treeSearchQuery}
                     setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
                     onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}

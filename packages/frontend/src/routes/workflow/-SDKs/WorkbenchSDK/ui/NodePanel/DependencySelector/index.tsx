@@ -13,7 +13,7 @@ interface Props {
 }
 
 const openSelector = (nodeId: Workflow.Node.Id) => {
-    LibrarySDK.openDependencySelectorDialog({
+    LibrarySDK.dialogs.openDependencySelector({
         onLocalWorkflowSelected: (workflowId, variant) =>
             WorkbenchSDK.actions.dependency.attachToNode(nodeId, workflowId, variant),
         onListingSelected: (listingId) =>
@@ -25,12 +25,12 @@ const openSelector = (nodeId: Workflow.Node.Id) => {
 
 export const DependencySelector = memo<Props>(({ nodeId, className }) => {
 
-    const [dependency, mode] = WorkbenchSDK.useStore(s => {
-        const depRef = s.selectors.node.getDependencyRef(s, nodeId)
+    const [dependency, mode] = WorkbenchSDK.useDocument(d => {
+        const depRef = d.selectors.node.getDependencyRef(d, nodeId)
         if(!depRef?.workflowId)
             return [null, null]
 
-        return [s.selectors.dependency.get(s, depRef.workflowId, depRef.mode), depRef.mode]
+        return [d.selectors.dependency.get(d, depRef.workflowId, depRef.mode), depRef.mode]
     })
 
     const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined

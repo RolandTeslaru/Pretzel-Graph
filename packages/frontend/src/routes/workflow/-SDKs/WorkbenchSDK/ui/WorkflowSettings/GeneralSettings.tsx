@@ -19,7 +19,7 @@ const Schema = z.object({
 type Values = z.infer<typeof Schema>
 
 export const GeneralSettings = () => {
-    const workflowId = WorkbenchSDK.useStore(s => s.workflowId)
+    const workflowId = WorkbenchSDK.useDocument(d => d.workflowId)
     const meta = LibrarySDK.useStore(s => s.workflowMetas[workflowId])
 
     const form = useForm<Values>({

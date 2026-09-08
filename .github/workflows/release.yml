@@ -37,8 +37,10 @@ jobs:
           push: true
           tags: ghcr.io/${{ steps.owner.outputs.name }}/pretzelgraph-${{ matrix.role }}:${{ github.sha }}
 
+  # Forks build images too, but only the upstream repository has a deployment to notify.
   notify:
     needs: build
+    if: github.repository == 'RolandTeslaru/Pretzel-Graph'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +56,23 @@ jobs:
 
       - name: Notify deployment pipeline
         run: |
-          curl -sS -X POST "https://api.github.com/repos/${{ github.repository_owner }}/PretzelCloud/dispatches" \
+          set -euo pipefail
+
+          # The body of the merge commit, whatever its shape.
+          DESCRIPTION=$(git log -1 --format=%b)
+
+          PAYLOAD=$(jq -n \
+            --arg sha "$SHA" \
+            --arg owner "$OWNER" \
+            --arg version "$VERSION" \
+            --arg description "$DESCRIPTION" \
+            '{event_type: "release", client_payload: {sha: $sha, owner: $owner, version: $version, description: $description}}')
+
+          curl -sS -X POST "https://api.github.com/repos/$OWNER/PretzelCloud/dispatches" \
             -H "Authorization: Bearer ${{ secrets.DISPATCH_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            -d "{\"event_type\":\"release\",\"client_payload\":{\"sha\":\"${{ github.sha }}\",\"owner\":\"${{ github.repository_owner }}\",\"version\":\"${{ steps.version.outputs.value }}\"}}"
+            -d "$PAYLOAD"
+        env:
+          SHA:     ${{ github.sha }}
+          OWNER:   ${{ github.repository_owner }}
+          VERSION: ${{ steps.version.outputs.value }}

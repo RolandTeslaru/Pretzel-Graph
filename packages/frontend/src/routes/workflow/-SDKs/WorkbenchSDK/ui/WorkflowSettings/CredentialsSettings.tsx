@@ -3,8 +3,8 @@ import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 
 export const CredentialsSettings = () => {
-    const nodes = WorkbenchSDK.useStore(s =>
-        Object.values(s.data.nodes).filter(n => (s.selectors.node.getBlueprint(s, n.id)?.credentials?.length ?? 0) > 0)
+    const nodes = WorkbenchSDK.useDocument(d =>
+        Object.values(d.data.nodes).filter(n => (d.selectors.node.getBlueprint(d, n.id)?.credentials?.length ?? 0) > 0)
     )
 
     if (nodes.length === 0) {
@@ -18,8 +18,8 @@ export const CredentialsSettings = () => {
     return (
         <div className='flex flex-col gap-3'>
             {nodes.map(node => {
-                const ui = WorkbenchSDK.state.selectors.node.getUI(WorkbenchSDK.state, node.id)
-                const credentials = WorkbenchSDK.state.selectors.node.getBlueprint(WorkbenchSDK.state, node.id)?.credentials ?? []
+                const ui = WorkbenchSDK.document.selectors.node.getUI(WorkbenchSDK.document, node.id)
+                const credentials = WorkbenchSDK.document.selectors.node.getBlueprint(WorkbenchSDK.document, node.id)?.credentials ?? []
                 return (
                     <div key={node.id} className='rounded-md border border-border/50 bg-card/50 p-2.5 flex flex-col gap-2'>
                         <div className='flex items-center gap-2'>

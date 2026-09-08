@@ -41,6 +41,97 @@ export namespace Shelf {
     export const Section = z.enum(["core_extended", "integrations"])
     export type Section = z.infer<typeof Section>
 
+    // The shelf as something to search: one compact summary per blueprint, built from the loaded
+    // index, and a filter that ANDs its clauses. Small enough to hand a model whole pages of.
+    export namespace Catalogue {
+        export interface Summary {
+            id:              Foundations.Blueprint.Id
+            displayName:     string
+            description?:    string
+            drawerId:        Drawer.Id | null
+            toolCompatible:  boolean
+            proxyCompatible: boolean
+            /** Has derivative branches: some field values reshape the node. */
+            derivable:       boolean
+            fieldIds:        Foundations.Field.Id[]
+            inputVariants:   Foundations.Port.Variant[]
+            outputVariants:  Foundations.Port.Variant[]
+        }
+
+        export const Query = z.object({
+            ids:             z.array(Foundations.Blueprint.Id).optional(),
+            displayName:     z.string().optional(),
+            drawerIds:       z.array(Drawer.Id).optional(),
+            toolCompatible:  z.boolean().optional(),
+            proxyCompatible: z.boolean().optional(),
+            derivable:       z.boolean().optional(),
+            /** Has every one of these fields. */
+            fieldIds:        z.array(Foundations.Field.Id).optional(),
+            /** Has an input of any of these variants. */
+            inputVariants:   z.array(Foundations.Port.Variant).optional(),
+            /** Has an output of any of these variants. */
+            outputVariants:  z.array(Foundations.Port.Variant).optional(),
+            limit:           z.number().int().positive().max(500).optional(),
+        })
+        export type Query = z.infer<typeof Query>
+
+        export interface Result {
+            items: Summary[]
+            /** How many matched before `limit`. */
+            total: number
+        }
+
+        const DEFAULT_LIMIT = 50
+
+        const drawerOf = (() => {
+            let map: Map<string, Drawer.Id> | null = null
+
+            return (blueprintId: Foundations.Blueprint.Id): Drawer.Id | null => {
+                map ??= new Map(
+                    Object.values(_ALL_DRAWERS).flatMap(d => d.blueprintIds.map(id => [id, d.id as Drawer.Id] as const)),
+                )
+                return map.get(blueprintId) ?? null
+            }
+        })()
+
+        export function summarize(bp: Foundations.Blueprint): Summary {
+            return {
+                id:              bp.id,
+                displayName:     bp.ui.displayName,
+                description:     bp.ui.description,
+                drawerId:        drawerOf(bp.id),
+                toolCompatible:  bp.toolCompatible  ?? false,
+                proxyCompatible: bp.proxyCompatible ?? false,
+                derivable:       (bp._derivatives?.length ?? 0) > 0,
+                fieldIds:        bp.fields.map(f => f.id),
+                inputVariants:   [...new Set(bp.inputs.map(p => p.variant))],
+                outputVariants:  [...new Set(bp.outputs.map(p => p.variant))],
+            }
+        }
+
+        export function query(summaries: readonly Summary[], q: Query): Result {
+            const ids       = q.ids       && new Set<string>(q.ids)
+            const drawerIds = q.drawerIds && new Set<string>(q.drawerIds)
+            const needle    = q.displayName?.trim().toLowerCase()
+            const inputs    = q.inputVariants  && new Set<string>(q.inputVariants)
+            const outputs   = q.outputVariants && new Set<string>(q.outputVariants)
+
+            const matches = summaries.filter(s =>
+                (!ids       || ids.has(s.id)) &&
+                (!drawerIds || (s.drawerId !== null && drawerIds.has(s.drawerId))) &&
+                (!needle    || s.displayName.toLowerCase().includes(needle)) &&
+                (q.toolCompatible  === undefined || s.toolCompatible  === q.toolCompatible) &&
+                (q.proxyCompatible === undefined || s.proxyCompatible === q.proxyCompatible) &&
+                (q.derivable       === undefined || s.derivable       === q.derivable) &&
+                (!q.fieldIds || q.fieldIds.every(id => s.fieldIds.includes(id))) &&
+                (!inputs    || s.inputVariants.some(v => inputs.has(v))) &&
+                (!outputs   || s.outputVariants.some(v => outputs.has(v))),
+            )
+
+            return { items: matches.slice(0, q.limit ?? DEFAULT_LIMIT), total: matches.length }
+        }
+    }
+
     export namespace API {
 
         export namespace Blueprint {
@@ -108,6 +199,25 @@ export namespace Shelf {
                 return data;
             }
 
+        }
+
+        // Reached from inside a run with the execution token.
+        export namespace Internal {
+            export namespace Query {
+                export const Request = Catalogue.Query
+                export type Request  = Catalogue.Query
+                export type Response = Catalogue.Result
+            }
+
+            export async function query(api: AxiosInstance, req: Query.Request): Promise<Query.Response> {
+                const { data } = await api.post<Query.Response>('/api/internal/shelf/blueprints/query', req)
+                return data
+            }
+
+            export async function get(api: AxiosInstance, blueprintId: Foundations.Blueprint.Id): Promise<Blueprint.Get.Response> {
+                const { data } = await api.get<Blueprint.Get.Response>(`/api/internal/shelf/blueprints/${encodeURIComponent(blueprintId)}`)
+                return data
+            }
         }
     }
 }

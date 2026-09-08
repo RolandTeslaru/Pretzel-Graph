@@ -13,6 +13,8 @@ import type {
     RealtimeAPI                  as RealtimeAPIType,
     RealtimeScope                as RealtimeScopeType,
     UnstampedConsultationRequest as UnstampedConsultationRequestType,
+    LifecycleAPI                 as LifecycleAPIType,
+    ExecutionOutcome             as ExecutionOutcomeType,
 } from "./apis";
 import type { HTTP } from "../domain/http";
 
@@ -475,4 +477,6 @@ export namespace RuntimeNode {
     export type RealtimeAPI      = RealtimeAPIType;
     export type RealtimeScope    = RealtimeScopeType;
     export type UnstampedConsultationRequest = UnstampedConsultationRequestType;
+    export type LifecycleAPI     = LifecycleAPIType;
+    export type ExecutionOutcome = ExecutionOutcomeType;
 }

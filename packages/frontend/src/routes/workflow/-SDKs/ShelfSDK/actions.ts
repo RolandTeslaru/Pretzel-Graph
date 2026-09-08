@@ -64,6 +64,21 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
                 return false;
             }
         },
+        // The cache first; the backend only for what it lacks.
+        getBlueprint: async (blueprintId) => {
+            const cached = getState().blueprints[blueprintId];
+
+            if (cached)
+                return cached;
+
+            const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
+
+            setState(s => {
+                s.blueprints[blueprintId] = blueprint;
+            });
+
+            return blueprint;
+        },
         hydrateBlueprint: async (blueprintId) => {
             try {
                 const { blueprint } = await Shelf.API.Blueprint.get(api, { blueprintId });
@@ -106,26 +121,13 @@ export function _createShelfActions_(sdk: ShelfSDKImpl) {
             setQuery: (...props: Parameters<ShelfSDK.Reducers["searchFilter"]["setQuery"]> extends [any, ...infer Rest] ? Rest : never) =>
                 setState(s => { sdk.reducers.searchFilter.setQuery(s, ...props) }),
         },
-
-        getDerivedBlueprint: (blueprint, fieldValues) => {
-            const derivedId = Blueprint.deriveId(blueprint, fieldValues);
-            const { blueprint: derivedBlueprint } = Blueprint.derive(blueprint, fieldValues);
-
-            // Keyed in the main blueprint map — derive-on-read (getInputs/getFields/…)
-            // resolves a node's blueprint by `reconciledBlueprintId` out of `blueprints`.
-            if (getState().blueprints[derivedId] !== derivedBlueprint)
-                setState(s => {
-                    s.blueprints[derivedId] = derivedBlueprint;
-                });
-
-            return derivedBlueprint;
-        }
     } satisfies _ShelfActions
 }
 
 export type _ShelfActions = {
     loadSection: (section: Shelf.Section) => Promise<boolean>;
     hydrateBatch: (blueprintIds: Blueprint.Id[]) => Promise<boolean>;
+    getBlueprint: (blueprintId: Blueprint.Id) => Promise<Blueprint>;
     hydrateBlueprint: (blueprintId: Blueprint.Id) => Promise<boolean>;
     drawer: {
         open: (drawerId: Shelf.Drawer.Id) => void;
@@ -136,11 +138,6 @@ export type _ShelfActions = {
     searchFilter: {
         setQuery:       DropFirstArg<ShelfSDK.Reducers["searchFilter"]["setQuery"]>;
     };
-
-    getDerivedBlueprint: (
-        blueprint: Blueprint,
-        fieldValues: Record<Field.Id, Field.Value>
-    ) => Blueprint;
 
     upsertBlueprint: (blueprint: Blueprint) => void;
     upsertBlueprints: (blueprints: Record<Blueprint.Id, Blueprint>) => void;

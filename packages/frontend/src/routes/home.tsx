@@ -36,8 +36,8 @@ const NAV_TOP: NavEntry[] = [
     { id: 'library',     label: 'Library',     to: '/home/library',     icon: SystemIcons.Folder },
     { id: 'credentials', label: 'Credentials', to: '/home/credentials', icon: SystemIcons.KeyRound },
     { id: 'executions',  label: 'Executions',  to: '/home/executions',  icon: SystemIcons.Activity },
-    { id: 'usage',       label: 'Usage',       to: '/home/usage',       icon: SystemIcons.Layers },
-    { id: 'templates',   label: 'Templates',   to: '/home/templates',   icon: SystemIcons.FileText },
+    // { id: 'usage',       label: 'Usage',       to: '/home/usage',       icon: SystemIcons.Layers },
+    // { id: 'templates',   label: 'Templates',   to: '/home/templates',   icon: SystemIcons.FileText },
 ]
 
 const NAV_BOTTOM: NavEntry[] = [
@@ -108,7 +108,7 @@ function Sidebar() {
 
             <div className="p-2 flex flex-col gap-0.5">
                 {WORKSPACES_URL && <ExternalNavItem href={WORKSPACES_URL} label="Admin panel" />}
-                {NAV_BOTTOM.map((e) => <NavItem key={e.id} entry={e} />)}
+                {/* {NAV_BOTTOM.map((e) => <NavItem key={e.id} entry={e} />)} */}
             </div>
         </aside>
     )

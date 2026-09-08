@@ -34,8 +34,8 @@ const ExecutionControls = ({ canRun }: Props) => {
       s.igniterAttributes,
     ]);
 
-  const igniteableNodeIds = WorkbenchSDK.useStore((s) =>
-    s.selectors.node.getIgniteableNodes(s),
+  const igniteableNodeIds = WorkbenchSDK.useDocument((d) =>
+    d.selectors.node.getIgniteableNodes(d),
   );
 
   let status = "idle";
@@ -234,7 +234,7 @@ export default ExecutionControls;
 // One entry per igniteable node. Elects that node as the run's entry point —
 // a plain Run starts none of them.
 const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-  const ui = WorkbenchSDK.useStore((s) => s.selectors.node.getUI(s, nodeId));
+  const ui = WorkbenchSDK.useDocument((d) => d.selectors.node.getUI(d, nodeId));
 
   return (
     <DropdownMenu.Item onSelect={() => ExecutionSDK.actions.runFromIgniteableNode(nodeId)}>

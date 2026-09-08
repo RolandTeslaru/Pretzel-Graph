@@ -12,7 +12,7 @@ import Tipped from '@/components/Tipped'
 import { openWorkflowSettingsDialog } from '../-SDKs/WorkbenchSDK/ui/WorkflowSettings'
 
 export const TopRightPanel = () => {
-    const workflowId = WorkbenchSDK.useStore(s => s.workflowId);
+    const workflowId = WorkbenchSDK.useDocument(d => d.workflowId);
     const [hasPublications, hasActivePublication] = VersionControlSDK.useStore(s => [
         s.currentWorkflowPublications.length > 0,
         s.currentWorkflowPublications.some(p => p.is_active),
@@ -72,7 +72,7 @@ export const TopRightPanel = () => {
                         variant="ghost" 
                         size="icon-sm" 
                         disabled={isLockPending}
-                        onClick={() => LibrarySDK.openListingManagerDialog(workflowId)} 
+                        onClick={() => LibrarySDK.dialogs.openListingManager(workflowId)} 
                     >
                         <SystemIcons.Globe strokeWidth={2} className={`size-4  ${isPubliclyListed && "text-blue-500"}`}/>
                     </Button>

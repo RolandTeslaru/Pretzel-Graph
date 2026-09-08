@@ -5,8 +5,8 @@ import { Separator } from '@pretzel-graph/standard-ui/foundations/separator'
 import { NodeBadgeFromNode } from '@/components/NodeBadge'
 
 const IssuesViewer = () => {
-    const issues = WorkbenchSDK.useStore(s => s.issues)
-    const nodes = WorkbenchSDK.useStore(s => s.data.nodes)
+    const issues = WorkbenchSDK.useDocument(d => d.issues)
+    const nodes = WorkbenchSDK.useDocument(d => d.data.nodes)
 
     const nodeIssueEntries = Object.entries(issues.nodes) as [Workflow.Node.Id, Validation.Issue.Node][]
 
@@ -28,7 +28,7 @@ const IssuesViewer = () => {
             {nodeIssueEntries.map(([nodeId, nodeIssue]) => {
                 const node = nodes[nodeId]
 
-                const state = WorkbenchSDK.state;
+                const state = WorkbenchSDK.document;
                 const ui = state.selectors.node.getUI(state, nodeId);
 
                 const messages = [
@@ -77,7 +77,7 @@ const IssuesViewer = () => {
                     <div className='flex flex-wrap items-center gap-1 text-xs text-muted-foreground'>
                         {cycle.nodes.map((id, i) => {
                             const n = nodes[id]
-                            const state = WorkbenchSDK.state;
+                            const state = WorkbenchSDK.document;
                             const ui = state.selectors.node.getUI(state, id);
                             return (
                                 <span key={id} className='flex items-center gap-1'>

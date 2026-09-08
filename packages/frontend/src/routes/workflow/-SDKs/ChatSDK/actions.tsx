@@ -28,7 +28,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             }),
             send: async ({ content, attachments }) => {
 
-                const workflow_id = WorkbenchSDK.state.workflowId
+                const workflow_id = WorkbenchSDK.document.workflowId
 
                 let currentChatId = sdk.state.currentChatId;
                 let currentChat = currentChatId ? sdk.state.chats[currentChatId] : null;

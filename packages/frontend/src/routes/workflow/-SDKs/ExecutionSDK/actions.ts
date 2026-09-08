@@ -19,8 +19,17 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
         // Pre check before running the workflow
         WorkbenchSDK.actions.workflow.validate()
-        if (Validation.workflowHasIssues(WorkbenchSDK.state.issues)) {
+        if (Validation.workflowHasIssues(WorkbenchSDK.document.issues)) {
             toast.error("Workflow has nodes with missing fields or inputs. Please fix them before running.")
+            confirmStartedEvent();
+            return null
+        }
+
+        // The row must match the canvas before the run starts: a session opened from inside the
+        // run reads the row, and would otherwise commit over edits still waiting on the debounce.
+        await WorkbenchSDK.actions.commit()
+        if (WorkbenchSDK.document.isDirty) {
+            toast.error("Could not save the workflow before running.")
             confirmStartedEvent();
             return null
         }
@@ -40,7 +49,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         sdk.setState(s => {
             s.currentExecution = {
                 id: executionId,
-                workflow_id: WorkbenchSDK.state.workflowId,
+                workflow_id: WorkbenchSDK.document.workflowId,
                 igniter,
                 status: "pending",
                 duration: 0,
@@ -52,8 +61,8 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             sdk.reducers.timeline.reset(s);
         });
 
-        const executionCreationPromise = Execution.API.run(api, WorkbenchSDK.state.workflowId, {
-            workflowData: WorkbenchSDK.state.data,
+        const executionCreationPromise = Execution.API.run(api, WorkbenchSDK.document.workflowId, {
+            workflowData: WorkbenchSDK.document.data,
             executionId,
             igniter,
         });

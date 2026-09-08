@@ -12,11 +12,11 @@ interface Props {
 }
 
 export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
-    const isTool = WorkbenchSDK.useStore(s => s.selectors.node.isTool(s, hyNode.id))
+    const isTool = WorkbenchSDK.useDocument(d => d.selectors.node.isTool(d, hyNode.id))
 
     // Auto-appended to every proxyCompatible blueprint by defineBlueprint.
-    const proxyTemplate = WorkbenchSDK.useStore(s =>
-        s.selectors.credential.getTemplate(s, hyNode.id, PROXY_TEMPLATE_ID)
+    const proxyTemplate = WorkbenchSDK.useDocument(d =>
+        d.selectors.credential.getTemplate(d, hyNode.id, PROXY_TEMPLATE_ID)
     )
 
     const [proxyInstanceId, setProxyInstance] = WorkbenchSDK.useCredential(hyNode.id, PROXY_TEMPLATE_ID)

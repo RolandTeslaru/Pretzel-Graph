@@ -17,6 +17,7 @@ const WORKFLOW_META_COLUMNS = [
     'accent',
     'icon_color',
     'locked',
+    'hidden',
     'created_at',
     'updated_at',
 ] as const;

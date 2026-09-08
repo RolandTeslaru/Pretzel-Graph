@@ -48,6 +48,8 @@ export namespace Event {
         export const Schema = z.discriminatedUnion("type", [Started, Paused, Resumed, Completed, Failed, Suspended, Terminated])
     }
 
+    export const TERMINAL = new Set<string>(['lifecycle:completed', 'lifecycle:failed', 'lifecycle:terminated']);
+
     // ─── Session ─────────────────────────────────────────────────────────
     // A standalone change to the run's session state. Node events carry their own
     // sessionPatch alongside what they report; this is the patch on its own, for

@@ -17,7 +17,7 @@ const StatusIndicator = ({
   executionStatus,
   hasUpdate = false,
 }: Props) => {
-  const hasIssues = WorkbenchSDK.useStore(s => s.selectors.node.hasIssues(s, nodeId))
+  const hasIssues = WorkbenchSDK.useDocument(d => d.selectors.node.hasIssues(d, nodeId))
 
   if (hasIssues)
     return (
@@ -69,7 +69,7 @@ const StatusIndicator = ({
 export default StatusIndicator
 
 const IssuesTooltipContent = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
-  const issues = WorkbenchSDK.useStore(s => s.issues.nodes[nodeId])
+  const issues = WorkbenchSDK.useDocument(d => d.issues.nodes[nodeId])
 
   const { inputIssues, fieldIssues, credentialIssues, total } = useMemo(() => {
     const inputIssues = Object.values(issues?.inputs ?? {})

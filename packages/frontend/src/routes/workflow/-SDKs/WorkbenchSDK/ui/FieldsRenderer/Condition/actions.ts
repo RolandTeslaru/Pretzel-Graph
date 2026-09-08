@@ -1,6 +1,6 @@
 import { WorkbenchSDK } from '../../../sdk'
 import { Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { conditionTreeReducers } from '../../../reducers/conditionTree'
+import { conditionTreeReducers } from '@pretzel-graph/shared/domain/Workbench/Document'
 
 type RuleId      = Foundations.Field.Condition.Rule.Id
 type RuleGroupId = Foundations.Field.Condition.RuleGroup.Id

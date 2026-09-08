@@ -68,9 +68,17 @@ export namespace Listing {
             export type Response = z.infer<typeof Response>
         }
 
+        // This deployment's own listings, keyed by workflow id.
+        export namespace Owned {
+            export const Response = z.object({
+                listings: z.record(Workflow.Id, Id),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+
+        // The publication to serve; the workflow is named in the path.
         export namespace Put {
             export const Request = z.object({
-                id:              Id.optional(),
                 publicationMeta: VersionControl.Publication.Meta.Schema,
                 get workflowData() { return Workflow.Data.Schema },
             })

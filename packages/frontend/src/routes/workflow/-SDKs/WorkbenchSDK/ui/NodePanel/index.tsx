@@ -41,9 +41,7 @@ const NodeSidebar = () => {
     // time, and re-pushing on its (always-new) identity would remount Content on every edit.
     // Validated against data.nodes: clickedNodeId outlives the node it points at, so a bare
     // id would keep the panel open after a delete.
-    const nodeId = WorkbenchSDK.useStore(s =>
-        s.clickedNodeId && s.data.nodes[s.clickedNodeId] ? s.clickedNodeId : null
-    )
+    const nodeId = WorkbenchSDK.useClickedNodeId()
 
     useEffect(() => {
         if (nodeId && !isFullscreen) {
