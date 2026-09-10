@@ -16,10 +16,13 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useDocument(d => Validation.workflowHasIssues(d.issues));
+
     const executionHasError = ExecutionSDK.useStore(s => {
         const exec = s.currentExecution;
-        if (!exec) return false;
-        if (exec.error) return true;
+        if (!exec) 
+            return false;
+        if (exec.error) 
+            return true;
         return Object.values(exec.session.node_status).some(ns => ns.status === 'failed');
     });
 
@@ -35,7 +38,7 @@ export const BottomPanel = () => {
         s.selectors.currentExecution.running.isDebugging(s),
     ]);
 
-    const showAttributesPanel = igniterAttributes.record || isActivelyRecording || currentExecution?.recording || igniterAttributes.debug || isActivelyDebugging
+    const showIgniterAttributesPanel = igniterAttributes.record || isActivelyRecording || currentExecution?.recording || igniterAttributes.debug || isActivelyDebugging
 
     const showRecordingIcon = igniterAttributes.record || isActivelyRecording || currentExecution?.recording
     const showDebuggingIcon = igniterAttributes.debug || isActivelyDebugging
@@ -79,7 +82,7 @@ export const BottomPanel = () => {
                 </motion.div>
 
 
-                {showAttributesPanel && (
+                {showIgniterAttributesPanel && (
                     <div key="attributes" className='px-2 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex gap-3 cursor-pointer'>
                         {showRecordingIcon && (
                             <Tipped label={isActivelyRecording ? 'Recording' : 'Ready To Record'}>

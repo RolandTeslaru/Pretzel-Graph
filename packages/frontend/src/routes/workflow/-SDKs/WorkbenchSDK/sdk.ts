@@ -340,6 +340,7 @@ export namespace WorkbenchSDK {
     export type NodeDriver = RF_Node<{}, "workflowNode">;
     export type EdgeDriver = RF_Edge<{}, "workflowEdge">;
     export type CycleSelectionNodeDriver = RF_Node<{ width: number, height: number, nodeIds: Workflow.Node.Id[], issue: Validation.Issue.Cycle }, "cycleSelectionNode">;
+    export type AnnotationDriver = RF_Node<{}, "annotation">;
 
     export type DriverConnection = Document.DriverConnection
 

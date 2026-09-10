@@ -98,6 +98,7 @@ export namespace Workflow {
                 layout:         {},
                 viewport:       { x: 0, y: 0, zoom: 1 },
                 icon_color:     null,
+                annotations:    {},
             }
         }
     } as const satisfies z.infer<typeof Schema>
