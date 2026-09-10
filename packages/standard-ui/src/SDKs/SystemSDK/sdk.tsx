@@ -2,16 +2,20 @@ import { immer } from "zustand/middleware/immer";
 import { create } from "zustand";
 import { BaseSDK } from "../Base";
 import { SDK } from "../SDKManager";
-import { getInitialPreferedTheme, resolveTheme } from "./utils";
+import { cookieStorage, type CookieStorage } from "../../utils/cookieStorage";
+import { getInitialPreferedTheme, resolveTheme, THEME_STORAGE_KEY } from "./utils";
 
 @SDK("System")
 class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
     constructor() {super()}
 
+    // Host-only until init names a domain, which is when the theme is first read.
+    private storage: CookieStorage = cookieStorage()
+
     public readonly useStore: BaseSDK.Store<SystemSDK.State> = create(
         immer<SystemSDK.State>(() => ({
-            theme: getInitialPreferedTheme(),
-            resolvedTheme: resolveTheme(getInitialPreferedTheme())
+            theme: "system",
+            resolvedTheme: resolveTheme("system")
         }))
     )
 
@@ -28,13 +32,16 @@ class SystemSDKImpl extends BaseSDK<SystemSDK.State> {
                 root.classList.remove("dark", "light")
                 root.classList.add(resolved)
 
-                localStorage.setItem("theme", newTheme)
+                this.storage.setItem(THEME_STORAGE_KEY, newTheme)
             })
         }
     }
 
-    public init(){
-        this.actions.setTheme(this.state.theme)
+    // A cookie domain shares the theme with every app under it.
+    public init(options: SystemSDK.InitOptions = {}){
+        this.storage = cookieStorage({ domain: options.cookieDomain })
+
+        this.actions.setTheme(getInitialPreferedTheme(this.storage))
         window.matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", () => {
                 if (this.state.theme === "system") {
@@ -49,6 +56,10 @@ export const SystemSDK = SDK.get<SystemSDKImpl>("System")
 
 export namespace SystemSDK {
     export type Theme = "dark" | "light" | "system"
+
+    export type InitOptions = {
+        cookieDomain?: string
+    }
 
     export type State = {
         theme: Theme

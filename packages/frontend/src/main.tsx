@@ -9,10 +9,11 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import './index.css'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from './SDKs/AuthSDK/sdk'
+import { SESSION_COOKIE_DOMAIN } from '@/config'
 import { routeTree } from './routeTree.gen'
 import { Spinner } from "@pretzel-graph/standard-ui/foundations"
 
-SystemSDK.init()
+SystemSDK.init({ cookieDomain: SESSION_COOKIE_DOMAIN })
 AuthSDK.init()
 
 

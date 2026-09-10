@@ -1,7 +1,15 @@
-export const getInitialPreferedTheme = (): "dark" | "light" | "system" => {
-    const theme = localStorage.getItem("theme")
-    if (!theme) return "system"
-    return theme as "dark" | "light" | "system"
+import type { CookieStorage } from "../../utils/cookieStorage"
+
+export const THEME_STORAGE_KEY = "pretzel.theme"
+
+const isTheme = (value: string | null): value is "dark" | "light" | "system" =>
+    value === "dark" || value === "light" || value === "system"
+
+// The stored theme, falling back to the entry earlier versions kept in localStorage.
+export const getInitialPreferedTheme = (storage: CookieStorage): "dark" | "light" | "system" => {
+    const stored = storage.getItem(THEME_STORAGE_KEY) ?? localStorage.getItem("theme")
+
+    return isTheme(stored) ? stored : "system"
 }
 
 // Collapses "system" down to the OS preference.
