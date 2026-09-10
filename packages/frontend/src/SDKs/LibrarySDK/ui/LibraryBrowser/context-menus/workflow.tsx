@@ -20,7 +20,7 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
             <ContextMenu.Trigger asChild>
                 {children}
             </ContextMenu.Trigger>
-            <ContextMenu.Content>
+            <ContextMenu.Content className='w-[170px]'>
                 {onOpen && (
                     <ContextMenu.Item
                         icon={<SystemIcons.Graph className='size-4' />}
