@@ -6,6 +6,7 @@ import { Port } from "../Foundations/Port";
 import { WorkflowId } from "./ids";
 import { Vault } from "../Vault";
 import { Dependency } from "./dependency";
+import { Annotation } from "../Annotation";
 import { migrateWorkflowDataToLatest, WORKFLOW_DATA_VERSION } from "./migrate";
 
 export namespace Data {
@@ -63,7 +64,8 @@ export namespace Data {
             layout: Layout.Schema,
             viewport: Viewport.Schema,
             icon_color: z.string().nullable().optional(),
-        }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 } }),
+            annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
+        }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
         // Getters defer the Dependency <-> Data cycle; the z.ZodType anchors
         // are required because TS can't infer through mutual recursion.
