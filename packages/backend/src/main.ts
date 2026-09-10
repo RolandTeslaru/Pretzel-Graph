@@ -66,6 +66,11 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error: unknown) => {
-    console.error('Boot failed:', error instanceof Error ? error.message : error);
+    // An AggregateError carries its causes in `errors` and has no message of its own.
+    const causes: unknown[] = Array.isArray((error as { errors?: unknown[] }).errors)
+        ? (error as { errors: unknown[] }).errors
+        : [error];
+
+    console.error('Boot failed:', ...causes.map((cause) => cause instanceof Error ? cause.message : cause));
     process.exit(1);
 });

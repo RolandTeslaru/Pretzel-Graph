@@ -5,7 +5,7 @@
     "main": "src/index.ts",
     "types": "src/index.ts",
     "scripts": {
-        "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+        "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
         "typecheck": "tsc --noEmit",
         "test": "tsx --test",
         "test:polymarket:live": "POLYMARKET_LIVE_TESTS=1 tsx --test src/Integrations/Polymarket/tests/live.test.ts",
