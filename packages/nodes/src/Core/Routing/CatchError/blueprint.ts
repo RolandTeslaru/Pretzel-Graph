@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.CatchError",
@@ -9,15 +9,15 @@ export const Blueprint = defineBlueprint({
     iconColor: "destructive",
     fields: [],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "catch_passthrough"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved("passthrough", "Passthrough", {
+        defineOutput.Unresolved("passthrough", "Passthrough", {
             polymorphicGroupId: "catch_passthrough"
         }),
-        OutputBuilder.Data("onError", "On Error", {
+        defineOutput.Data("onError", "On Error", {
             tooltip: "The serialized error (code + message) when a propagating error is caught here."
         }),
     ],

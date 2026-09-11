@@ -6,7 +6,7 @@ import { describe, it } from "node:test"
 // Via the barrel, not the deep path — importing Foundations/Blueprint as the entry module
 // trips a pre-existing init cycle (Field -> utils -> domain -> Workflow/node -> Blueprint).
 import { Foundations } from "@pretzel-graph/shared/domain"
-import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk"
+import { defineBlueprint, defineTool, defineField, defineOutput, StandardFields } from "@pretzel-graph/node-sdk"
 
 const Blueprint = Foundations.Blueprint
 
@@ -19,7 +19,7 @@ const Cascade = defineBlueprint({
     description: "Fixture.",
     icon:        "Test",
     fields: [
-        FieldBuilder.MultiOption("action", "Action", {
+        defineField.MultiOption("action", "Action", {
             options:      [option("search"), option("list"), option("get")],
             initialValue: "search",
         }),
@@ -28,21 +28,21 @@ const Cascade = defineBlueprint({
     outputs: [],
 
     "action==search": {
-        fields:  [FieldBuilder.String("query", "Query", { required: true })],
-        outputs: [OutputBuilder.DataList("markets", "Markets")],
+        fields:  [defineField.String("query", "Query", { required: true })],
+        outputs: [defineOutput.DataList("markets", "Markets")],
     },
 
     "action==list": {
         fields: [
-            FieldBuilder.MultiOption("listAPI", "Source", {
+            defineField.MultiOption("listAPI", "Source", {
                 options:      [option("gamma"), option("data")],
                 initialValue: "gamma",
             }),
         ],
 
         "listAPI==data": {
-            fields:  [FieldBuilder.String("market", "Market", {})],
-            outputs: [OutputBuilder.DataList("holders", "Holders")],
+            fields:  [defineField.String("market", "Market", {})],
+            outputs: [defineOutput.DataList("holders", "Holders")],
             ui:      { displayName: "Holders" },
         },
     },
@@ -50,7 +50,7 @@ const Cascade = defineBlueprint({
 
 const ids = (fields: readonly { id: unknown }[]) => fields.map(f => String(f.id))
 const own = (fields: readonly { id: unknown }[]) =>
-    ids(fields).filter(id => !FieldBuilder.DEFAULTS.IDS.has(id))
+    ids(fields).filter(id => !StandardFields.IDS.has(id))
 
 
 describe("blueprint derivatives", () => {
@@ -63,7 +63,7 @@ describe("blueprint derivatives", () => {
 
     it("derives discriminants from condition keys, not from hand-marking", () => {
         const discriminants = Cascade.fields
-            .filter(f => f.reconcile && !FieldBuilder.DEFAULTS.IDS.has(String(f.id)))
+            .filter(f => f.reconcile && !StandardFields.IDS.has(String(f.id)))
             .map(f => String(f.id))
 
         // `action` is branched on at the root; condition fields are stamped automatically.
@@ -130,15 +130,15 @@ describe("blueprint derivatives", () => {
         const Siblings = defineBlueprint({
             id: "Test.Derivatives.Siblings", displayName: "S", description: "S", icon: "S",
             fields: [
-                FieldBuilder.MultiOption("mode", "Mode", {
+                defineField.MultiOption("mode", "Mode", {
                     options: [{ value: "a" }, { value: "b" }], initialValue: "a",
                 }),
-                FieldBuilder.Boolean("extra", "Extra", { initialValue: true }),
+                defineField.Boolean("extra", "Extra", { initialValue: true }),
             ],
             inputs: [], outputs: [],
 
-            "mode==a":      { outputs: [OutputBuilder.Data("fromMode", "From Mode")] },
-            "extra==true":  { outputs: [OutputBuilder.Data("fromExtra", "From Extra")] },
+            "mode==a":      { outputs: [defineOutput.Data("fromMode", "From Mode")] },
+            "extra==true":  { outputs: [defineOutput.Data("fromExtra", "From Extra")] },
         })
 
         const { blueprint, derivativeId } = Blueprint.derive(Siblings as never, {})
@@ -176,7 +176,7 @@ describe("blueprint derivatives", () => {
             icon:           "Test",
             toolCompatible: true,
             fields: [
-                FieldBuilder.MultiOption("action", "Action", {
+                defineField.MultiOption("action", "Action", {
                     options:      [option("search"), option("list")],
                     initialValue: "search",
                 }),
@@ -185,15 +185,15 @@ describe("blueprint derivatives", () => {
             outputs: [],
 
             "action==search": {
-                fields:  [FieldBuilder.String("query", "Query", {})],
-                outputs: [OutputBuilder.DataList("markets", "Markets")],
+                fields:  [defineField.String("query", "Query", {})],
+                outputs: [defineOutput.DataList("markets", "Markets")],
                 ui:      { icon: "Search" },
             },
 
             "isConvertedToTool==true": defineTool({
                 fields:  [],
                 inputs:  [],
-                outputs: [OutputBuilder.ToolList("tools", "Tools")],
+                outputs: [defineOutput.ToolList("tools", "Tools")],
             }),
         })
 
@@ -255,7 +255,7 @@ describe("blueprint derivatives", () => {
 
         const base = {
             id: "Test.Derivatives.Invalid", displayName: "x", description: "x", icon: "x",
-            fields: [FieldBuilder.MultiOption("mode", "Mode", {
+            fields: [defineField.MultiOption("mode", "Mode", {
                 options: [option("a"), option("b")], initialValue: "a",
             })],
             inputs: [], outputs: [],
@@ -279,8 +279,8 @@ describe("blueprint derivatives", () => {
             assert.throws(
                 () => defineBlueprint({
                     ...base,
-                    "mode==a": { fields: [FieldBuilder.String("dupe", "Dupe", {})] },
-                    "mode==b": { fields: [FieldBuilder.String("dupe", "Dupe", {})] },
+                    "mode==a": { fields: [defineField.String("dupe", "Dupe", {})] },
+                    "mode==b": { fields: [defineField.String("dupe", "Dupe", {})] },
                 } as never),
                 /duplicate field id "dupe"/,
             )
@@ -290,7 +290,7 @@ describe("blueprint derivatives", () => {
             assert.throws(
                 () => defineBlueprint({
                     ...base,
-                    "mode==a": { fields: [FieldBuilder.String("onlyInA", "Only In A", {})] },
+                    "mode==a": { fields: [defineField.String("onlyInA", "Only In A", {})] },
                     "mode==b": { "onlyInA==x": { fields: [] } },
                 } as never),
                 /not declared at or above this level/,

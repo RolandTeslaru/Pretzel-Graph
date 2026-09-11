@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.IfElse",
@@ -10,22 +10,22 @@ export const Blueprint = defineBlueprint({
         // Single boolean expression — pre-evaluated by evaluateFieldValues() to a real boolean
         // (coerced via the "Boolean" variant). Expression-only: a literal here would pin the
         // router to one branch forever.
-        FieldBuilder.Boolean("condition", "Condition", {
+        defineField.Boolean("condition", "Condition", {
             initialValue: true,
             only: "expression"
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved("true", "True", {
+        defineOutput.Unresolved("true", "True", {
             tooltip: "Output when condition is true.",
             polymorphicGroupId: "data"
         }),
-        OutputBuilder.Unresolved("false", "False", {
+        defineOutput.Unresolved("false", "False", {
             tooltip: "Output when condition is false.",
             polymorphicGroupId: "data"
         }),

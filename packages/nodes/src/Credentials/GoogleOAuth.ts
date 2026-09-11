@@ -1,4 +1,4 @@
-import { defineOAuth2Credential, FieldBuilder, googleOAuth2Provider } from "@pretzel-graph/node-sdk"
+import { defineOAuth2Credential, defineField, googleOAuth2Provider } from "@pretzel-graph/node-sdk"
 
 // One credential per product family, so the consent screen asks only for what the node touches.
 function googleCredential<const TId extends string>(id: TId, displayName: string, scopes: string[], icon?: string) {
@@ -11,11 +11,11 @@ function googleCredential<const TId extends string>(id: TId, displayName: string
             ...scopes,
         ]),
         fields: [
-            FieldBuilder.String("clientId", "Client ID", {
+            defineField.String("clientId", "Client ID", {
                 required: true,
                 tooltip:  "OAuth client ID from Google Cloud Console → APIs & Services → Credentials.",
             }),
-            FieldBuilder.Password("clientSecret", "Client Secret", {
+            defineField.Password("clientSecret", "Client Secret", {
                 required: true,
                 tooltip:  "Client secret of the same OAuth client.",
             }),

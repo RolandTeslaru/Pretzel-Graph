@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { PolymarketApiKey } from "@pretzel-graph/nodes/Credentials/Polymarket";
 
@@ -27,7 +27,7 @@ export const Blueprint = defineBlueprint({
     // requests but not orders. Placing and cancelling live on the Trading node, behind a wallet key.
     // The account is whichever one issued the key — there is nothing to address here.
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "openOrders", displayName: "Open Orders",  description: "Orders currently resting on the book."          },
                 { value: "order",      displayName: "Order",        description: "One order, by id."                              },
@@ -46,62 +46,62 @@ export const Blueprint = defineBlueprint({
 
     "resource==openOrders": {
         fields: [
-            FieldBuilder.String("openOrdersConditionId", "Market", {
+            defineField.String("openOrdersConditionId", "Market", {
                 placeholder: "0x…",
                 tooltip:     "Condition ID. Leave empty for every market.",
             }),
-            FieldBuilder.String("openOrdersTokenId", "Outcome Token", {
+            defineField.String("openOrdersTokenId", "Outcome Token", {
                 tooltip: "Token ID. Narrows to one side of a market.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("orders", "Open Orders")],
+        outputs: [defineOutput.DataList("orders", "Open Orders")],
     },
 
     "resource==order": {
         fields: [
-            FieldBuilder.String("orderId", "Order ID", { required: true }),
+            defineField.String("orderId", "Order ID", { required: true }),
         ],
-        outputs: [OutputBuilder.Data("order", "Order")],
+        outputs: [defineOutput.Data("order", "Order")],
     },
 
     "resource==trades": {
         fields: [
-            FieldBuilder.String("tradesConditionId", "Market", {
+            defineField.String("tradesConditionId", "Market", {
                 placeholder: "0x…",
                 tooltip:     "Condition ID. Leave empty for every market.",
             }),
-            FieldBuilder.String("tradesTokenId", "Outcome Token", {
+            defineField.String("tradesTokenId", "Outcome Token", {
                 tooltip: "Token ID. Narrows to one side of a market.",
             }),
-            FieldBuilder.Boolean("tradesOnlyFirstPage", "First Page Only", {
+            defineField.Boolean("tradesOnlyFirstPage", "First Page Only", {
                 initialValue: true,
                 tooltip:      "Off walks every page, which on an active account is a lot of requests.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("trades", "Trades")],
+        outputs: [defineOutput.DataList("trades", "Trades")],
     },
 
     "resource==balance": {
         fields: [
-            FieldBuilder.MultiOption("balanceAssetType", "Asset", {
+            defineField.MultiOption("balanceAssetType", "Asset", {
                 options:      assetTypeOptions,
                 initialValue: "COLLATERAL",
                 variant:      "tab",
             }),
         ],
 
-        outputs: [OutputBuilder.Data("balance", "Balance")],
+        outputs: [defineOutput.Data("balance", "Balance")],
 
         "balanceAssetType==CONDITIONAL": {
             fields: [
-                FieldBuilder.String("balanceTokenId", "Token ID", { required: true }),
+                defineField.String("balanceTokenId", "Token ID", { required: true }),
             ],
         },
     },
 
     "resource==rewards": {
         fields: [
-            FieldBuilder.MultiOption("rewardsView", "View", {
+            defineField.MultiOption("rewardsView", "View", {
                 options: [
                     { value: "earnings",    displayName: "Earnings",    description: "What each market paid you on a given day." },
                     { value: "totals",      displayName: "Totals",      description: "Your total earnings for a given day."       },
@@ -114,48 +114,48 @@ export const Blueprint = defineBlueprint({
 
         "rewardsView==earnings": {
             fields: [
-                FieldBuilder.String("earningsDate", "Date", { required: true, placeholder: "2026-07-27" }),
+                defineField.String("earningsDate", "Date", { required: true, placeholder: "2026-07-27" }),
             ],
-            outputs: [OutputBuilder.DataList("earnings", "Earnings")],
+            outputs: [defineOutput.DataList("earnings", "Earnings")],
         },
 
         "rewardsView==totals": {
             fields: [
-                FieldBuilder.String("totalsDate", "Date", { required: true, placeholder: "2026-07-27" }),
+                defineField.String("totalsDate", "Date", { required: true, placeholder: "2026-07-27" }),
             ],
-            outputs: [OutputBuilder.DataList("totals", "Totals")],
+            outputs: [defineOutput.DataList("totals", "Totals")],
         },
 
         "rewardsView==markets": {
             fields: [
-                FieldBuilder.String("rewardMarketsDate", "Date", { required: true, placeholder: "2026-07-27" }),
+                defineField.String("rewardMarketsDate", "Date", { required: true, placeholder: "2026-07-27" }),
             ],
-            outputs: [OutputBuilder.DataList("markets", "Markets")],
+            outputs: [defineOutput.DataList("markets", "Markets")],
         },
 
         "rewardsView==percentages": {
-            outputs: [OutputBuilder.Data("percentages", "Percentages")],
+            outputs: [defineOutput.Data("percentages", "Percentages")],
         },
     },
 
     "resource==scoring": {
         fields: [
-            FieldBuilder.List("scoringOrderIds", "Order IDs", {
+            defineField.List("scoringOrderIds", "Order IDs", {
                 required: true,
                 tooltip:  "Orders to check. Only resting orders can score.",
             }),
         ],
-        outputs: [OutputBuilder.Data("scoring", "Scoring")],
+        outputs: [defineOutput.Data("scoring", "Scoring")],
     },
 
     "resource==settings": {
-        outputs: [OutputBuilder.Data("settings", "Settings")],
+        outputs: [defineOutput.Data("settings", "Settings")],
     },
 
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Polymarket Account Tools")],
+        outputs: [defineOutput.ToolList("tools", "Polymarket Account Tools")],
     }),
 });

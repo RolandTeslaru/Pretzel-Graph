@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.SubWorkflow.ExposeOutputPort",
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     iconColor: "primary",
     fields: [],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "expose_output_port"
         }),
     ],

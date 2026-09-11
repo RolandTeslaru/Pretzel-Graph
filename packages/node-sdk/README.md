@@ -9,13 +9,24 @@ Conditional fields and ports are declared directly in `blueprint.ts` as derivati
 
 Nodes are resolved by a **blueprint-id → path convention**. Blueprint id `Integrations.Postgres.Query` lives at `packages/nodes/src/Integrations/Postgres/Query/{blueprint,node}.ts`. There is no central registry import — `CatalogueService` dynamic-imports by path.
 
+Everything a blueprint declares is built with a `define*` helper:
+
+| Helper | Declares |
+|---|---|
+| `defineBlueprint` / `defineTool` | a node / its tool form |
+| `defineField.*` | a config field |
+| `defineInput.*` / `defineOutput.*` | an input / output port |
+| `defineCredential` / `defineOAuth2Credential` | a credential template |
+| `defineWebhook` | an inbound webhook |
+| `defineLoaders` | ResourceLoader data sources |
+
 ---
 
 ## Quick start — a minimal node
 
 ```ts
 // packages/nodes/src/Integrations/Acme/Hello/blueprint.ts
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Acme.Hello",
@@ -24,10 +35,10 @@ export const Blueprint = defineBlueprint({
     icon: "Acme",                // SystemIcons or integrations name
     accent: "utility",
     fields: [
-        FieldBuilder.String({ id: "greeting", displayName: "Greeting", initialValue: "Hello" }),
+        defineField.String("greeting", "Greeting", { initialValue: "Hello" }),
     ],
-    inputs:  [ InputBuilder.Text({ id: "name", displayName: "Name", required: true }) ],
-    outputs: [ OutputBuilder.Text({ id: "message", displayName: "Message" }) ],
+    inputs:  [ defineInput.Text("name", "Name", { required: true }) ],
+    outputs: [ defineOutput.Text("message", "Message") ],
 });
 ```
 
@@ -63,50 +74,63 @@ Then the **three wiring steps** (see the checklist at the bottom):
 | `description` | string | Shown in the shelf / tooltip. |
 | `icon` | string | A `SystemIcons` (Lucide-style) or `integrations` name. Unknown names render nothing. |
 | `accent` | string? | Header accent, e.g. `"utility"` or a `"port-<Type>"` color. |
-| `fields` | `FieldBuilder[]` | Static config inputs (the form). |
-| `inputs` | `InputBuilder[]` | Typed input ports (left side). |
-| `outputs` | `OutputBuilder[]` | Typed output ports (right side). |
+| `fields` | `defineField.*[]` | Static config inputs (the form). |
+| `inputs` | `defineInput.*[]` | Typed input ports (left side). |
+| `outputs` | `defineOutput.*[]` | Typed output ports (right side). |
 | `credentials` | `CredentialTemplate[]?` | Credential templates this node uses. |
-| `webhooks` | `WebhookBuilder[]?` | Inbound webhook definitions. |
+| `webhooks` | `defineWebhook(...)[]?` | Inbound webhook definitions. |
 | `toolCompatible` | boolean? | If true, the node can also be built as a LangChain tool (`onBuildTool`). |
 | `flags` | record? | Arbitrary node-level flags. |
 
-`defineBlueprint` also auto-appends the `signalDependency` / `dataDependency` strategy fields (and a hidden tool field when `toolCompatible`).
+`defineBlueprint` also appends the standard `signalDependency` / `dataDependency` / `onErrorStrategy` fields, plus a hidden tool field when `toolCompatible`. They are exported as `StandardFields`; `StandardFields.IDS` holds their ids.
 
 ---
 
-## Field builders — `FieldBuilder.*`
+## Fields — `defineField.*`
 
-Fields are the node's **static config form**. Every builder shares these `BaseProps`:
+Fields are the node's **static config form**. Every builder takes `(id, displayName, options)`:
 
-`id` (required, branded `Field.Id`), `displayName` (required), `required?`, `hidden?`, `tooltip?`, plus a per-type `initialValue`.
+```ts
+defineField.Integer("maxResults", "Max Results", { initialValue: 20, min: 1, max: 100 })
+```
+
+Shared options: `required?`, `advanced?`, `hidden?`, `tooltip?`, `itemScoped?`. Most builders also take `initialValue?`, `isExpressionInitially?` (start in expression mode) and `only?: "static" | "expression"` (lock the mode).
 
 Do not set `reconcile` manually. `defineBlueprint` marks fields used by derivative conditions so the editor knows when to resolve a new derivative.
 
 | Builder | Value type | Notes |
 |---|---|---|
 | `String` | string | `multiline?` for a textarea; `placeholder?` |
-| `UniqueString` | string | String constrained unique within a set |
+| `UniqueString` | string | generated per node; `prefix?` `length?` |
 | `Integer` / `Float` | number | `min?` `max?` `step?` `slider?` |
 | `Boolean` | boolean | renders a switch/checkbox |
-| `MultiOption` | option value | `options: [{value, displayName}]`, `variant?: "select" \| "tab"` |
+| `MultiOption` | option value | `options: [{ value, displayName?, description? }]`, `variant?: "select" \| "tab"`; `initialValue` required |
 | `Json` | any JSON | stores a **parsed** object (not a string) |
 | `Script` | string | code/SQL editor |
 | `Password` / `Secret` | string | masked input |
-| `File` | file ref | |
+| `File` | file ref | `fileTypes?` |
 | `List` | string[] | |
+| `CalendarRange` / `CalendarDateTimeRange` | date range | `placeholder?` |
+| `WorkflowIdSelector` | workflow id | picks a workflow from the library |
 | `CaseList` / `Condition` / `Variadic` | — | routing / branching constructs |
 | `ResourceLoader` | `{ mode, value }` | dynamic dropdown backed by a loader — see below |
+
+`defineField.itemScoped(field)` marks an existing field as item-scoped, the same as passing `itemScoped: true`.
 
 Read field values at runtime via **`this.fieldValues.<id>`** (typed by `InferFieldValues`).
 
 ---
 
-## Port builders — `InputBuilder.*` / `OutputBuilder.*`
+## Ports — `defineInput.*` / `defineOutput.*`
 
-Ports are **typed connections** between nodes. The variant determines connection compatibility, the port color, and (for lists) fan-out semantics.
+Ports are **typed connections** between nodes. The variant determines connection compatibility, the port color, and (for lists) fan-out semantics. Every builder takes `(id, displayName, options?)`:
 
-Shared props: `id`, `displayName`, `tooltip?`, `placeholder?`, `required?` (inputs).
+```ts
+defineInput.Data("payload", "Payload", { required: true })
+defineOutput.DataList("rows", "Rows")
+```
+
+Input options: `required?`, `tooltip?`, `placeholder?`, `groupId?`, `internal?`. Output options: `tooltip?`, `groupId?`, `internal?`.
 
 | Variant | Meaning |
 |---|---|
@@ -114,7 +138,7 @@ Shared props: `id`, `displayName`, `tooltip?`, `placeholder?`, `required?` (inpu
 | `Text` | plain string |
 | `Data` | **a single item** — a plain object or scalar |
 | `DataList` | **an array of items** — fans out downstream (the batch-array model) |
-| `Json` *(output)* / `Integer` *(output)* / `DataFrame` *(output)* | typeless / scalar / tabular |
+| `DataFrame` *(output)* | tabular data |
 | `Document` / `Retriever` / `Embeddings` / `VectorStore` | LangChain RAG handles |
 | `LanguageModel` | a chat model handle |
 | `Tool` / `ToolList` | LangChain tool(s) |
@@ -130,12 +154,12 @@ Read input values in `onRun` via the `incoming` argument (typed by `InferIncomin
 
 ```ts
 // packages/nodes/src/Credentials/Acme.ts
-import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { defineCredential, defineField } from "@pretzel-graph/node-sdk";
 export const Acme = defineCredential({
     id: "acmeApi",
     displayName: "Acme",
     icon: "Acme",
-    fields: [ FieldBuilder.Password({ id: "apiKey", displayName: "API Key", required: true }) ],
+    fields: [ defineField.Password("apiKey", "API Key", { required: true }) ],
 });
 ```
 
@@ -226,7 +250,11 @@ static loaders = defineLoaders<typeof Blueprint>()({
 });
 ```
 
-`LoaderContext` gives `fieldValues` (typed `InferFieldValues`), `credentials` + `credentialsAPI` (same as execution), `searchQuery`, `paginationCursor`. A field declares `loaderId: "schemaSearch"` and may declare `dependsOn: ["otherField"]` so changing the dependency re-fetches.
+`LoaderContext` gives `fieldValues` (typed `InferFieldValues`), `credentials` + `credentialsAPI` (same as execution), `searchQuery`, `paginationCursor`. A field declares `loaderId: "schemaSearch"` and may declare `dependsOn: ["otherField"]` so changing the dependency re-fetches:
+
+```ts
+defineField.ResourceLoader("table", "Table", { loaderId: "tableSearch", dependsOn: ["schema"] })
+```
 
 ---
 
@@ -241,21 +269,21 @@ export const Blueprint = defineBlueprint({
     description: "Reads and writes values.",
     icon: "Database",
     fields: [
-        FieldBuilder.MultiOption("operation", "Operation", {
+        defineField.MultiOption("operation", "Operation", {
             options: [
                 { value: "GET", displayName: "Get" },
                 { value: "SET", displayName: "Set" },
             ],
             initialValue: "GET",
         }),
-        FieldBuilder.String("key", "Key", { required: true }),
+        defineField.String("key", "Key", { required: true }),
     ],
     inputs: [],
-    outputs: [OutputBuilder.Data("result", "Result")],
+    outputs: [defineOutput.Data("result", "Result")],
 
     "operation==GET": {},
     "operation==SET": {
-        fields: [FieldBuilder.String("value", "Value")],
+        fields: [defineField.String("value", "Value")],
     },
 });
 ```

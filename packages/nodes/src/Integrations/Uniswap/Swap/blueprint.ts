@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 import { Uniswap } from "@pretzel-graph/nodes/Credentials/Uniswap";
 
 export const Blueprint = defineBlueprint({
@@ -12,7 +12,7 @@ export const Blueprint = defineBlueprint({
     fields: [
 
         
-        FieldBuilder.MultiOption("chain", "Chain", {
+        defineField.MultiOption("chain", "Chain", {
             options: [
                 { value: "1", displayName: "Ethereum" },
                 { value: "137", displayName: "Polygon" },
@@ -26,14 +26,14 @@ export const Blueprint = defineBlueprint({
             initialValue: "1",
             tooltip: "The EVM chain to operate on."
         }),
-        FieldBuilder.String("rpcUrl", "RPC URL", {
+        defineField.String("rpcUrl", "RPC URL", {
             placeholder: "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY",
             tooltip: "Custom RPC endpoint. If empty, uses the default public transport for the selected chain."
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList("tools", "Uniswap Tools", {
+        defineOutput.ToolList("tools", "Uniswap Tools", {
             tooltip: "3 tools: uniswap_check_approval, uniswap_get_quote, uniswap_swap_tokens."
         }),
     ],

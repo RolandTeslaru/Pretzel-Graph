@@ -1,4 +1,4 @@
-import { defineBlueprint, InputBuilder, OutputBuilder, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineInput, defineOutput, defineField } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.LanguageModel",
@@ -9,27 +9,27 @@ export const Blueprint = defineBlueprint({
     fields: [
         // Streaming is not surfaced yet — the node consumes the provider stream
         // internally and emits one complete message, so this field would do nothing.
-        // FieldBuilder.Boolean("stream", "Stream", {
+        // defineField.Boolean("stream", "Stream", {
         //     initialValue: false,
         //     tooltip: "Emit tokens as they arrive instead of one complete message.",
         //     advanced: true
         // }),
-        FieldBuilder.String("systemMessage", "System Message", {
+        defineField.String("systemMessage", "System Message", {
             initialValue: "",
             tooltip: "Instructions prepended to every run to steer how the model responds."
         })
     ],
     inputs: [
-        InputBuilder.ToolList("tools", "Tools", {}),
-        InputBuilder.LanguageModel("languageModel", "Language Model", {
+        defineInput.ToolList("tools", "Tools", {}),
+        defineInput.LanguageModel("languageModel", "Language Model", {
             required: true
         }),
-        InputBuilder.MessageList("messages", "Messages", {
+        defineInput.MessageList("messages", "Messages", {
             required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message("response", "Response", {
+        defineOutput.Message("response", "Response", {
             tooltip: "The response from the model"
         })
     ]

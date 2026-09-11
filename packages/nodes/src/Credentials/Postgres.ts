@@ -1,28 +1,28 @@
-import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk"
+import { defineCredential, defineField } from "@pretzel-graph/node-sdk"
 
 export const Postgres = defineCredential({
     id: "postgres",
     displayName: "Postgres",
     icon: "Postgres",
     fields: [
-        FieldBuilder.String("host", "Host", {
+        defineField.String("host", "Host", {
             required: true,
             initialValue: "localhost"
         }),
-        FieldBuilder.Integer("port", "Port", {
+        defineField.Integer("port", "Port", {
             required: true,
             initialValue: 5432
         }),
-        FieldBuilder.String("database", "Database", {
+        defineField.String("database", "Database", {
             required: true
         }),
-        FieldBuilder.String("user", "User", {
+        defineField.String("user", "User", {
             required: true
         }),
-        FieldBuilder.Password("password", "Password", {
+        defineField.Password("password", "Password", {
             required: true
         }),
-        FieldBuilder.Boolean("ssl", "Use SSL", {
+        defineField.Boolean("ssl", "Use SSL", {
             initialValue: false
         }),
     ],

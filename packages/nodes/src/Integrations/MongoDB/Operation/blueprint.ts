@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 import { Mongo } from "@pretzel-graph/nodes/Credentials/Mongo";
 
 export const Blueprint = defineBlueprint({
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     credentials: [Mongo],
     fields: [
-        FieldBuilder.MultiOption("operation", "Operation", {
+        defineField.MultiOption("operation", "Operation", {
             options: [
                 { value: "find",   displayName: "Find" },
                 { value: "insert", displayName: "Insert" },
@@ -20,7 +20,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "find",
             tooltip: "The MongoDB operation to run."
         }),
-        FieldBuilder.String("collection", "Collection", {
+        defineField.String("collection", "Collection", {
             required: true,
             placeholder: "users"
         }),
@@ -30,7 +30,7 @@ export const Blueprint = defineBlueprint({
 
     "operation!=insert": {
         fields: [
-            FieldBuilder.Json("query", "Query", {
+            defineField.Json("query", "Query", {
                 initialValue: {},
                 tooltip: "Filter document, e.g. { \"status\": \"active\" }."
             }),
@@ -38,13 +38,13 @@ export const Blueprint = defineBlueprint({
 
         "operation==find": {
             fields: [
-                FieldBuilder.Integer("limit", "Limit", {
+                defineField.Integer("limit", "Limit", {
                     initialValue: 50,
                     min: 1
                 }),
             ],
             outputs: [
-                OutputBuilder.DataList("result", "Documents", {
+                defineOutput.DataList("result", "Documents", {
                     tooltip: "Documents matched by the query — one item per document."
                 }),
             ],
@@ -52,13 +52,13 @@ export const Blueprint = defineBlueprint({
 
         "operation==update": {
             fields: [
-                FieldBuilder.Json("update", "Update", {
+                defineField.Json("update", "Update", {
                     initialValue: {},
                     tooltip: "Fields to $set, e.g. { \"status\": \"archived\" }."
                 }),
             ],
             outputs: [
-                OutputBuilder.Data("result", "Result", {
+                defineOutput.Data("result", "Result", {
                     tooltip: "Update result summary."
                 }),
             ],
@@ -66,7 +66,7 @@ export const Blueprint = defineBlueprint({
 
         "operation==delete": {
             outputs: [
-                OutputBuilder.Data("result", "Result", {
+                defineOutput.Data("result", "Result", {
                     tooltip: "Delete result summary."
                 }),
             ],
@@ -75,13 +75,13 @@ export const Blueprint = defineBlueprint({
 
     "operation==insert": {
         fields: [
-            FieldBuilder.Json("documents", "Documents", {
+            defineField.Json("documents", "Documents", {
                 initialValue: [],
                 tooltip: "Array of documents to insert."
             }),
         ],
         outputs: [
-            OutputBuilder.Data("result", "Result", {
+            defineOutput.Data("result", "Result", {
                 tooltip: "Insert result summary."
             }),
         ],

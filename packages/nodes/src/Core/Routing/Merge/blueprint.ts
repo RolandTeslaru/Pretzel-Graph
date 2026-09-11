@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Merge",
@@ -7,17 +7,17 @@ export const Blueprint = defineBlueprint({
     icon: "Merge",
     accent: "group-routing",
     fields: [
-        FieldBuilder.Variadic("inputPorts", "Input Ports", {
+        defineField.Variadic("inputPorts", "Input Ports", {
             initialValue: 2,
             min: 1,
             max: 32,
             inputs: [
-                InputBuilder.UnresolvedList("input_{n}", "Input {n}", {
+                defineInput.UnresolvedList("input_{n}", "Input {n}", {
                     polymorphicGroupId: "data",
                 }),
             ],
         }),
-        FieldBuilder.Integer("flattenDepth", "Flatten Depth", {
+        defineField.Integer("flattenDepth", "Flatten Depth", {
             initialValue: 1,
             min: 0,
             max: 10
@@ -25,7 +25,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.UnresolvedList("output", "Output", {
+        defineOutput.UnresolvedList("output", "Output", {
             polymorphicGroupId: "data"
         }),
     ],

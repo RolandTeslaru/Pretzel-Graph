@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Passthrough",
@@ -7,18 +7,18 @@ export const Blueprint = defineBlueprint({
     icon: "ArrowRightRight",
     accent: "group-routing",
     fields: [
-        FieldBuilder.Variadic("ports", "Ports", {
+        defineField.Variadic("ports", "Ports", {
             initialValue: 1,
             min: 1,
             max: 32,
             startIndex: 0,
             inputs: [
-                InputBuilder.Unresolved("input_{n}", "Input {n}", {
+                defineInput.Unresolved("input_{n}", "Input {n}", {
                     polymorphicGroupId: "passthrough_{n}",
                 }),
             ],
             outputs: [
-                OutputBuilder.Unresolved("output_{n}", "Output {n}", {
+                defineOutput.Unresolved("output_{n}", "Output {n}", {
                     polymorphicGroupId: "passthrough_{n}",
                 }),
             ],

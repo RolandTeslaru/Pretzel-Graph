@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Terminate",
@@ -8,7 +8,7 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     iconColor: "destructive",
     fields: [
-        FieldBuilder.MultiOption("mode", "Mode", {
+        defineField.MultiOption("mode", "Mode", {
             variant: "tab",
 
             options: [
@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved("trigger", "Trigger", {
+        defineInput.Unresolved("trigger", "Trigger", {
             required: false,
             tooltip: "Reaching this input ends the execution.",
             polymorphicGroupId: "signal"
@@ -33,7 +33,7 @@ export const Blueprint = defineBlueprint({
 
     "mode==error": {
         fields: [
-            FieldBuilder.String("message", "Error Message", {
+            defineField.String("message", "Error Message", {
                 multiline: true,
                 initialValue: "",
                 placeholder: "Workflow terminated."

@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
-    FieldBuilder,
-    InputBuilder,
-    OutputBuilder,
+    defineField,
+    defineInput,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
@@ -12,7 +12,7 @@ export const Blueprint = defineBlueprint({
     icon:        "ShieldQuestionMark",
     accent:      "utility",
     fields: [
-        FieldBuilder.MultiOption("variant", "Mode", {
+        defineField.MultiOption("variant", "Mode", {
             options: [
                 { value: "confirm", displayName: "Approve / Reject" },
                 { value: "choice",  displayName: "Choice" },
@@ -21,17 +21,17 @@ export const Blueprint = defineBlueprint({
             initialValue: "confirm",
             tooltip:     "What the workbench dialog asks the human for.",
         }),
-        FieldBuilder.String("title", "Title", {
+        defineField.String("title", "Title", {
             initialValue: "Review required",
             placeholder:  "Review required",
             required: true
         }),
-        FieldBuilder.String("message", "Message", {
+        defineField.String("message", "Message", {
             initialValue: "Approve this action?",
             placeholder:  "Approve this action?",
             required: true
         }),
-        FieldBuilder.Integer("timeoutMs", "Timeout (ms)", {
+        defineField.Integer("timeoutMs", "Timeout (ms)", {
             initialValue: 60_000,
             min:          10_000,
             max:          10 * 60_000,
@@ -39,7 +39,7 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             required:           false,
             tooltip:            "Optional data passed through on the chosen branch.",
             polymorphicGroupId: "data",
@@ -49,19 +49,19 @@ export const Blueprint = defineBlueprint({
 
     "variant==confirm": {
         fields: [
-            FieldBuilder.String("approveLabel", "Approve label", {
+            defineField.String("approveLabel", "Approve label", {
                 initialValue: "Approve",
             }),
-            FieldBuilder.String("rejectLabel", "Reject label", {
+            defineField.String("rejectLabel", "Reject label", {
                 initialValue: "Reject",
             }),
         ],
         outputs: [
-            OutputBuilder.Unresolved("approved", "Approved", {
+            defineOutput.Unresolved("approved", "Approved", {
                 tooltip:            "Fires when the human approves.",
                 polymorphicGroupId: "data",
             }),
-            OutputBuilder.Unresolved("rejected", "Rejected", {
+            defineOutput.Unresolved("rejected", "Rejected", {
                 tooltip:            "Fires when the human rejects.",
                 polymorphicGroupId: "data",
             }),
@@ -70,19 +70,19 @@ export const Blueprint = defineBlueprint({
 
     "variant==choice": {
         fields: [
-            FieldBuilder.Json("options", "Options", {
+            defineField.Json("options", "Options", {
                 initialValue: [{ label: "Option 1", value: "1" }],
                 tooltip:     "Array of { label, value }.",
             }),
-            FieldBuilder.Boolean("multiple", "Allow multiple", {
+            defineField.Boolean("multiple", "Allow multiple", {
                 initialValue: false,
             }),
-            FieldBuilder.Boolean("allowCustom", "Allow custom answer", {
+            defineField.Boolean("allowCustom", "Allow custom answer", {
                 initialValue: false,
             }),
         ],
         outputs: [
-            OutputBuilder.Data("value", "Value", {
+            defineOutput.Data("value", "Value", {
                 tooltip: "The chosen value(s).",
             }),
         ],
@@ -90,13 +90,13 @@ export const Blueprint = defineBlueprint({
 
     "variant==form": {
         fields: [
-            FieldBuilder.Json("formFields", "Form fields", {
+            defineField.Json("formFields", "Form fields", {
                 initialValue: [],
                 tooltip:     "Field definitions to render in the dialog.",
             }),
         ],
         outputs: [
-            OutputBuilder.Data("values", "Values", {
+            defineOutput.Data("values", "Values", {
                 tooltip: "The collected form values.",
             }),
         ],

@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.Tool.Gate",
@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "Shield",
     accent: "port-Tool",
     fields: [
-        FieldBuilder.MultiOption("mode", "Mode", {
+        defineField.MultiOption("mode", "Mode", {
             variant: "tab",
             options: [
                 { value: "exclude", displayName: "Exclude", description: "Drop calls to the listed tools, let every other call through." },
@@ -19,20 +19,20 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Message("input", "AIMessage Input", {
+        defineInput.Message("input", "AIMessage Input", {
             required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message("message", "Messages", {
+        defineOutput.Message("message", "Messages", {
             tooltip: "The gated AIMessage, ready to append to the conversation history."
         }),
-        OutputBuilder.ToolList("onFiltered", "On Filtered")
+        defineOutput.ToolList("onFiltered", "On Filtered")
     ],
 
     "mode==exclude": {
         inputs: [
-            InputBuilder.ToolList("excludedTools", "Excluded Tools", {
+            defineInput.ToolList("excludedTools", "Excluded Tools", {
                 tooltip: "Calls to these tools are dropped."
             }),
         ],
@@ -40,7 +40,7 @@ export const Blueprint = defineBlueprint({
 
     "mode==include": {
         inputs: [
-            InputBuilder.ToolList("includedTools", "Included Tools", {
+            defineInput.ToolList("includedTools", "Included Tools", {
                 tooltip: "Only calls to these tools are kept."
             }),
         ],

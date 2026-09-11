@@ -1,5 +1,5 @@
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { defineBlueprint, defineWebhook, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineWebhook, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Webhook",
@@ -9,13 +9,13 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     igniter: true,
     fields: [
-        FieldBuilder.UniqueString("path", "Path", {
+        defineField.UniqueString("path", "Path", {
             required: true,
             length: 32,
             placeholder: "webhook-abc123",
             tooltip: "Unique suffix appended to your webhook server base path."
         }),
-        FieldBuilder.MultiOption("method", "HTTP Method", {
+        defineField.MultiOption("method", "HTTP Method", {
             initialValue: "POST",
             variant: "select",
 
@@ -33,7 +33,7 @@ export const Blueprint = defineBlueprint({
         // of the mode, so offering the choice would promise behaviour that doesn't exist.
         // Re-enable together with the branch in webhook-igniter, and restore the expression
         // in the `webhooks` entry below.
-        // FieldBuilder.MultiOption("responseMode", "Response Mode", {
+        // defineField.MultiOption("responseMode", "Response Mode", {
         //     initialValue: "onReceived",
         //     variant: "select",
         //
@@ -45,7 +45,7 @@ export const Blueprint = defineBlueprint({
         //
         //     tooltip: "Whether the webhook response should be sent immediately with an empty body, or delayed until the workflow finishes executing and includes a response payload."
         // }),
-        FieldBuilder.Integer("testTimeoutMs", "Test Timeout (ms)", {
+        defineField.Integer("testTimeoutMs", "Test Timeout (ms)", {
             initialValue: 30_000,
             min:          10_000,
             max:          10 * 60_000,
@@ -61,7 +61,7 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     outputs: [
-        OutputBuilder.Data("payload", "Payload", {
+        defineOutput.Data("payload", "Payload", {
             tooltip: "The inbound request — method, path, headers, query and body."
         }),
     ],

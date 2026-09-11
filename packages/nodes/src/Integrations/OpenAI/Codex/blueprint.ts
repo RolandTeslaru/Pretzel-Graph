@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.OpenAI.Codex",
@@ -7,11 +7,11 @@ export const Blueprint = defineBlueprint({
     icon: "OpenAI",
     accent: "port-LanguageModel",
     fields: [
-        FieldBuilder.String("workingDirectory", "Working Directory", {
+        defineField.String("workingDirectory", "Working Directory", {
             initialValue: ".",
             tooltip: "Path relative to PRETZEL_AGENT_WORKSPACE_ROOT.",
         }),
-        FieldBuilder.MultiOption("model", "Model", {
+        defineField.MultiOption("model", "Model", {
             options: [
                 { value: "default", displayName: "Default" },
                 { value: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" },
@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "default",
             tooltip: "Model used by Codex. Availability depends on the authenticated account.",
         }),
-        FieldBuilder.MultiOption("effort", "Effort", {
+        defineField.MultiOption("effort", "Effort", {
             options: [
                 { value: "default", displayName: "Default" },
                 { value: "minimal", displayName: "Minimal" },
@@ -33,7 +33,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "default",
             tooltip: "Higher reasoning effort can improve difficult work but takes longer and uses more tokens.",
         }),
-        FieldBuilder.MultiOption("speed", "Speed", {
+        defineField.MultiOption("speed", "Speed", {
             options: [
                 { value: "standard", displayName: "Standard" },
                 { value: "fast", displayName: "Fast" },
@@ -41,14 +41,14 @@ export const Blueprint = defineBlueprint({
             initialValue: "standard",
             tooltip: "Fast uses the Codex Fast service tier when supported and consumes subscription credits faster.",
         }),
-        FieldBuilder.MultiOption("permissionMode", "Permissions", {
+        defineField.MultiOption("permissionMode", "Permissions", {
             options: [
                 { value: "read-only", displayName: "Read only" },
                 { value: "workspace-write", displayName: "Edit workspace" },
             ],
             initialValue: "read-only",
         }),
-        FieldBuilder.Integer("timeoutSeconds", "Timeout", {
+        defineField.Integer("timeoutSeconds", "Timeout", {
             initialValue: 300,
             min: 1,
             max: 3600,
@@ -58,17 +58,17 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.MessageList("messages", "Messages", {
+        defineInput.MessageList("messages", "Messages", {
             required: true,
             tooltip: "Conversation history owned by PretzelGraph. A single Message is automatically wrapped into a list.",
         }),
-        InputBuilder.ToolList("tools", "Tools", {
+        defineInput.ToolList("tools", "Tools", {
             tooltip: "Optional PretzelGraph tools exposed to Codex through a temporary MCP bridge.",
         }),
     ],
     outputs: [
-        OutputBuilder.Message("message", "Message"),
-        OutputBuilder.Data("extras", "Extras", {
+        defineOutput.Message("message", "Message"),
+        defineOutput.Data("extras", "Extras", {
             tooltip: "Provider execution metadata for the stateless agent run.",
         }),
     ],

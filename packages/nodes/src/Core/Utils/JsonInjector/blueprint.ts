@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.JsonInjector",
@@ -7,12 +7,12 @@ export const Blueprint = defineBlueprint({
     icon: "Braces",
     accent: "utility",
     fields: [
-        FieldBuilder.Json("data", "JSON Data", {
+        defineField.Json("data", "JSON Data", {
             initialValue: {}
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data("output", "Output", {}),
+        defineOutput.Data("output", "Output", {}),
     ],
 });

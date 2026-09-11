@@ -5,7 +5,7 @@ import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 export type OmitId<T> = Omit<T, "id">
 
 
-export namespace FieldBuilder {
+export namespace defineField {
 
     /** When T_ItemScoped is the literal `true`, carry `{ itemScoped: true }` so InferItemFields picks it up. */
     export type ItemScopedFlag<T_ItemScoped extends boolean> = T_ItemScoped extends true ? { itemScoped: true } : {};
@@ -27,7 +27,7 @@ export namespace FieldBuilder {
     } & Omit<T_Field, "id">
 
 
-    export const buildBase = <T_Id extends string>(
+    const buildBase = <T_Id extends string>(
         id:          T_Id,
         displayName: string,
         options:     BaseOptions<boolean, boolean>,
@@ -70,7 +70,7 @@ export namespace FieldBuilder {
      *
      * Prefer the inline `itemScoped: true` option. This wrapper is useful when composing fields.
      *
-     * @example FieldBuilder.itemScoped(FieldBuilder.Boolean("condition", "Condition", { isExpressionInitially: true }))
+     * @example defineField.itemScoped(defineField.Boolean("condition", "Condition", { isExpressionInitially: true }))
      */
     export function itemScoped<F extends { id: string }>(field: F): F & { itemScoped: true } {
         return { ...field, itemScoped: true };
@@ -444,90 +444,4 @@ export namespace FieldBuilder {
             ...buildOnly(options.only),
         };
     }
-
-
-
-    // Framework-owned fields appended to every blueprint by defineBlueprint. They are also
-    // passed to the shape compiler as ambient fields, so a blueprint can branch on one
-    // ("isConvertedToTool=true") without declaring it.
-    export namespace DEFAULTS {
-        export const toolConvertedField = FieldBuilder.Boolean(
-            "isConvertedToTool",
-            "Tool Mode",
-            {
-                hidden:       true,
-                initialValue: false,
-            },
-        );
-
-        export const signalDependencyStrategyField = FieldBuilder.MultiOption(
-            "signalDependency",
-            "Signal Dependency",
-            {
-            options: [
-                { value: "AND", displayName: "(AND) All signals required",        description: "Fire only once every upstream signal has arrived." },
-                { value: "OR",  displayName: "(OR) At least one signal required", description: "Fire as soon as any upstream signal arrives (re-fires on each — enables cycles)." },
-                { value: "XOR", displayName: "(XOR) Exactly one signal required", description: "Fire on exactly one signal. If two or more arrive at once, the run fails with a collision error." },
-            ],
-            initialValue: "OR",
-            tooltip:      "Determines how incoming signals are evaluated to trigger node execution.",
-            },
-        );
-
-        export const dataDependencyStrategyField = FieldBuilder.MultiOption(
-            "dataDependency",
-            "Data Dependency",
-            {
-            options: [
-                { value: "AND", displayName: "Wait & Join",    description: "Wait until every wired input port has resolved, then read all of them." },
-                { value: "OR",  displayName: "Follow Trigger", description: "Don't wait — read only the input port(s) that propagated the triggering signal." },
-            ],
-            initialValue: "AND",
-            tooltip:      "Controls how the node gathers its inputs once it's been triggered: wait for all wired ports, or read only the ones that fired.",
-            },
-        );
-
-        export const onErrorStrategyField = FieldBuilder.MultiOption(
-            "onErrorStrategy",
-            "On Error",
-            {
-            options: [
-                { value: "terminate",  displayName: "Terminate workflow", description: "Fail the whole run." },
-                { value: "propagate",  displayName: "Propagate error",    description: "Forward the error along outgoing edges." },
-                { value: "do_nothing", displayName: "Do nothing",         description: "Swallow the error — no signal, no termination. Downstream stalls." },
-            ],
-            initialValue: "propagate",
-            tooltip:      "What happens when this node's execution throws.",
-            },
-        );
-
-
-        export const StandardNode = [
-            signalDependencyStrategyField,
-            dataDependencyStrategyField,
-            onErrorStrategyField,
-        ] as const;
-
-        export const TOOL_FIELDS = [toolConvertedField] as const;
-
-        // `field.id as string`, not String(...) — inside this namespace `String` is
-        // FieldBuilder.String, the builder, not the global.
-        export const IDS: ReadonlySet<string> = new Set(
-            [...StandardNode, ...TOOL_FIELDS].map(field => field.id as string),
-        );
-
-        // Return type stays precise — the shape compiler infers ambient field value types from it.
-        // Tupled so anything that isn't literally `true` (a widened boolean, undefined) takes
-        // the non-tool set.
-        export function forBlueprint<const T_ToolCompatible extends boolean | undefined>(
-            toolCompatible: T_ToolCompatible,
-        ): [T_ToolCompatible] extends [true]
-            ? readonly [...typeof StandardNode, ...typeof TOOL_FIELDS]
-            : typeof StandardNode {
-
-            return (toolCompatible ? [...StandardNode, ...TOOL_FIELDS] : StandardNode) as any;
-        }
-    }
-
-
 }

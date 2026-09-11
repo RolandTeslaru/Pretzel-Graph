@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id:          "Core.Utils.Message.Compose",
@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon:        "Mail",
     accent:      "port-Message",
     fields: [
-        FieldBuilder.MultiOption("role", "Role", {
+        defineField.MultiOption("role", "Role", {
             options: [
                 { value: "Human" },
                 { value: "System" },
@@ -16,7 +16,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "Human",
             variant:      "tab",
         }),
-        FieldBuilder.String("content", "Content", {
+        defineField.String("content", "Content", {
             initialValue: "",
             multiline:    true,
             placeholder:  "Message content",
@@ -25,12 +25,12 @@ export const Blueprint = defineBlueprint({
     ],
     inputs:  [],
     outputs: [
-        OutputBuilder.Message("message", "Message", {}),
+        defineOutput.Message("message", "Message", {}),
     ],
 
     "role==Tool": {
         fields: [
-            FieldBuilder.String("toolCallId", "Tool Call ID", {
+            defineField.String("toolCallId", "Tool Call ID", {
                 initialValue: "",
                 placeholder:  "Required for Tool messages",
             }),

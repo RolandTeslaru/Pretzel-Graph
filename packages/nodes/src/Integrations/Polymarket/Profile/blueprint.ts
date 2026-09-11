@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 
 
@@ -24,12 +24,12 @@ export const Blueprint = defineBlueprint({
     // No credential: a wallet's holdings, history and value are public, keyed by its address. Only
     // resting orders and account settings need authentication, and those live on the trading side.
     fields: [
-        FieldBuilder.String("walletAddress", "Wallet Address", {
+        defineField.String("walletAddress", "Wallet Address", {
             required:    true,
             placeholder: "0x…",
             tooltip:     "The wallet to read. Any address works — it need not be yours.",
         }),
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "positions",       displayName: "Open Positions",   description: "Currently held positions and their unrealised P&L." },
                 { value: "closedPositions", displayName: "Closed Positions", description: "Settled positions and their realised P&L."          },
@@ -48,13 +48,13 @@ export const Blueprint = defineBlueprint({
 
     "resource==positions": {
         fields: [
-            FieldBuilder.Integer("positionsMaxResults", "Max Results", { initialValue: 100, min: 1, max: 500 }),
-            FieldBuilder.Float("positionsSizeThreshold", "Minimum Size", {
+            defineField.Integer("positionsMaxResults", "Max Results", { initialValue: 100, min: 1, max: 500 }),
+            defineField.Float("positionsSizeThreshold", "Minimum Size", {
                 initialValue: 1,
                 min:          0,
                 tooltip:      "Ignores dust positions below this token count.",
             }),
-            FieldBuilder.MultiOption("positionsSortBy", "Sort By", {
+            defineField.MultiOption("positionsSortBy", "Sort By", {
                 options: [
                     { value: "TOKENS",     displayName: "Size"            },
                     { value: "CURRENT",    displayName: "Current Value"   },
@@ -68,20 +68,20 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "TOKENS",
             }),
-            FieldBuilder.MultiOption("positionsSortDirection", "Direction", {
+            defineField.MultiOption("positionsSortDirection", "Direction", {
                 options:      sortDirections,
                 initialValue: "DESC",
                 variant:      "tab",
             }),
-            FieldBuilder.Boolean("positionsRedeemableOnly", "Redeemable Only", { initialValue: false }),
+            defineField.Boolean("positionsRedeemableOnly", "Redeemable Only", { initialValue: false }),
         ],
-        outputs: [OutputBuilder.DataList("positions", "Positions")],
+        outputs: [defineOutput.DataList("positions", "Positions")],
     },
 
     "resource==closedPositions": {
         fields: [
-            FieldBuilder.Integer("closedMaxResults", "Max Results", { initialValue: 10, min: 1, max: 50 }),
-            FieldBuilder.MultiOption("closedSortBy", "Sort By", {
+            defineField.Integer("closedMaxResults", "Max Results", { initialValue: 10, min: 1, max: 50 }),
+            defineField.MultiOption("closedSortBy", "Sort By", {
                 options: [
                     { value: "REALIZEDPNL", displayName: "Realised P&L" },
                     { value: "TIMESTAMP",   displayName: "Time"         },
@@ -91,19 +91,19 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "REALIZEDPNL",
             }),
-            FieldBuilder.MultiOption("closedSortDirection", "Direction", {
+            defineField.MultiOption("closedSortDirection", "Direction", {
                 options:      sortDirections,
                 initialValue: "DESC",
                 variant:      "tab",
             }),
         ],
-        outputs: [OutputBuilder.DataList("positions", "Closed Positions")],
+        outputs: [defineOutput.DataList("positions", "Closed Positions")],
     },
 
     "resource==activity": {
         fields: [
-            FieldBuilder.Integer("activityMaxResults", "Max Results", { initialValue: 100, min: 1, max: 500 }),
-            FieldBuilder.MultiOption("activityType", "Type", {
+            defineField.Integer("activityMaxResults", "Max Results", { initialValue: 100, min: 1, max: 500 }),
+            defineField.MultiOption("activityType", "Type", {
                 options: [
                     { value: "ALL",        displayName: "All"        },
                     { value: "TRADE",      displayName: "Trades"     },
@@ -116,32 +116,32 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "ALL",
             }),
-            FieldBuilder.MultiOption("activitySortDirection", "Direction", {
+            defineField.MultiOption("activitySortDirection", "Direction", {
                 options:      sortDirections,
                 initialValue: "DESC",
                 variant:      "tab",
             }),
         ],
-        outputs: [OutputBuilder.DataList("activity", "Activity")],
+        outputs: [defineOutput.DataList("activity", "Activity")],
     },
 
     "resource==value": {
-        outputs: [OutputBuilder.Data("value", "Value")],
+        outputs: [defineOutput.Data("value", "Value")],
     },
 
     "resource==tradedMarkets": {
-        outputs: [OutputBuilder.Data("traded", "Markets Traded")],
+        outputs: [defineOutput.Data("traded", "Markets Traded")],
     },
 
     // The one resource served by Gamma rather than the Data API — it's what turns a bare 0x… into
     // a person, so it pairs with any tool that hands back addresses.
     "resource==identity": {
-        outputs: [OutputBuilder.Data("profile", "Profile")],
+        outputs: [defineOutput.Data("profile", "Profile")],
     },
 
     "resource==rank": {
         fields: [
-            FieldBuilder.MultiOption("rankTimePeriod", "Period", {
+            defineField.MultiOption("rankTimePeriod", "Period", {
                 options: [
                     { value: "DAY",   displayName: "Day"       },
                     { value: "WEEK",  displayName: "Week"      },
@@ -151,7 +151,7 @@ export const Blueprint = defineBlueprint({
                 initialValue: "DAY",
                 variant:      "tab",
             }),
-            FieldBuilder.MultiOption("rankOrderBy", "Ranked By", {
+            defineField.MultiOption("rankOrderBy", "Ranked By", {
                 options: [
                     { value: "PNL", displayName: "Profit" },
                     { value: "VOL", displayName: "Volume" },
@@ -160,7 +160,7 @@ export const Blueprint = defineBlueprint({
                 variant:      "tab",
             }),
         ],
-        outputs: [OutputBuilder.DataList("leaderboard", "Leaderboard")],
+        outputs: [defineOutput.DataList("leaderboard", "Leaderboard")],
     },
 
 
@@ -169,6 +169,6 @@ export const Blueprint = defineBlueprint({
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Polymarket Profile Tools")],
+        outputs: [defineOutput.ToolList("tools", "Polymarket Profile Tools")],
     }),
 });

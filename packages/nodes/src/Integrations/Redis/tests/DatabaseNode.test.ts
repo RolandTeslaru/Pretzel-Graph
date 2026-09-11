@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url"
 
 import {
     CatalogueService,
-    FieldBuilder,
+    StandardFields,
     toRedisCreds,
 } from "@pretzel-graph/node-sdk"
 import { Foundations } from "@pretzel-graph/shared/domain"
@@ -38,7 +38,7 @@ describe("Redis Database derivatives", () => {
         for (const route of routes) {
             const { blueprint, derivativeId } = Foundations.Blueprint.derive(Blueprint, route.values as never)
             const ownFieldIds = blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id))
 
             assert.equal(derivativeId, Object.entries(route.values).map(([key, value]) => `${key}==${value}`).join("/"), route.name)
@@ -56,7 +56,7 @@ describe("Redis Database derivatives", () => {
         assert.equal(derivativeId, "resource==string/stringOperation==GET")
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             ["resource", "key", "stringOperation"],
         )

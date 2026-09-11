@@ -184,7 +184,7 @@ export type InferFieldValues<D> = 0 extends (1 & D) ? any
  * Complement of InferFieldValues: only the item-scoped fields, keyed by literal id, mapped to
  * their value type. These are NOT in `this.fieldValues` — they're evaluated per-item via
  * RuntimeNode.evalItemField. Keying off the required literal `{ itemScoped: true }` (set by
- * FieldBuilder.itemScoped) so the optional `itemScoped?: boolean` on every field's base
+ * defineField.itemScoped) so the optional `itemScoped?: boolean` on every field's base
  * never false-matches.
  */
 export type InferItemFields<D> = 0 extends (1 & D) ? any
@@ -221,7 +221,7 @@ export type InferFieldsWithInitial<D> = D extends { fields: infer T }
 /**
  * Infer runtime port input values from a Blueprint.
  *
- * Uses __reference phantom if present (set by InputBuilder.Message → BaseMessage, etc.)
+ * Uses __reference phantom if present (set by defineInput.Message → BaseMessage, etc.)
  * Falls back to initialValue type, then `any`.
  * Uses __required phantom to make optional ports (required: false, the default) produce
  * optional keys so callers must handle undefined.
@@ -311,7 +311,7 @@ export type InferToolFieldValues<D> =
 /**
  * Infer runtime output values from a Blueprint.
  * 
- * Uses __reference phantom if present (set by OutputBuilder.Message → BaseMessage, etc.)
+ * Uses __reference phantom if present (set by defineOutput.Message → BaseMessage, etc.)
  * Falls back to `any`.
  */
 /**

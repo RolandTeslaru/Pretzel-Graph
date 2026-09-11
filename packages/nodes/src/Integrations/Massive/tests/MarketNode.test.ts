@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { CatalogueService, FieldBuilder } from "@pretzel-graph/node-sdk";
+import { CatalogueService, StandardFields } from "@pretzel-graph/node-sdk";
 import { Foundations } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "../Market/blueprint";
@@ -21,7 +21,7 @@ const nodesRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 const ownFieldIds = (blueprint: Foundations.Blueprint) =>
     blueprint.fields
-        .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+        .filter(field => !StandardFields.IDS.has(String(field.id)))
         .map(field => String(field.id));
 
 describe("Massive Market derivatives", () => {

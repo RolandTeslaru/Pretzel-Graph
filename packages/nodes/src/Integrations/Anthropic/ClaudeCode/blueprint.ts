@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.Anthropic.ClaudeCode",
@@ -7,11 +7,11 @@ export const Blueprint = defineBlueprint({
     icon: "Anthropic",
     accent: "port-LanguageModel",
     fields: [
-        FieldBuilder.String("workingDirectory", "Working Directory", {
+        defineField.String("workingDirectory", "Working Directory", {
             initialValue: ".",
             tooltip: "Path relative to PRETZEL_AGENT_WORKSPACE_ROOT.",
         }),
-        FieldBuilder.MultiOption("model", "Model", {
+        defineField.MultiOption("model", "Model", {
             options: [
                 { value: "default", displayName: "Default" },
                 { value: "sonnet", displayName: "Latest Sonnet" },
@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "default",
             tooltip: "Claude Code model alias. The alias follows the latest model available to the authenticated account.",
         }),
-        FieldBuilder.MultiOption("effort", "Effort", {
+        defineField.MultiOption("effort", "Effort", {
             options: [
                 { value: "default", displayName: "Default" },
                 { value: "low", displayName: "Low" },
@@ -33,7 +33,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "default",
             tooltip: "Reasoning effort passed to Claude Code for this run.",
         }),
-        FieldBuilder.Integer("timeoutSeconds", "Timeout", {
+        defineField.Integer("timeoutSeconds", "Timeout", {
             initialValue: 300,
             min: 1,
             max: 3600,
@@ -43,17 +43,17 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.MessageList("messages", "Messages", {
+        defineInput.MessageList("messages", "Messages", {
             required: true,
             tooltip: "Conversation history owned by PretzelGraph. A single Message is automatically wrapped into a list.",
         }),
-        InputBuilder.ToolList("tools", "Tools", {
+        defineInput.ToolList("tools", "Tools", {
             tooltip: "Optional PretzelGraph tools exposed to Claude Code through a temporary MCP bridge.",
         }),
     ],
     outputs: [
-        OutputBuilder.Message("message", "Message"),
-        OutputBuilder.Data("extras", "Extras", {
+        defineOutput.Message("message", "Message"),
+        defineOutput.Data("extras", "Extras", {
             tooltip: "Provider execution metadata for the stateless agent run.",
         }),
     ],

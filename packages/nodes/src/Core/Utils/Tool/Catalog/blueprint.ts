@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.Tool.Catalog",
@@ -7,15 +7,15 @@ export const Blueprint = defineBlueprint({
     icon: "SwatchBook",
     accent: "port-Tool",
     fields: [
-        FieldBuilder.Variadic("tools_num", "Tools", {
+        defineField.Variadic("tools_num", "Tools", {
             initialValue: 1,
             min: 1,
             max: 32,
-            inputs: [InputBuilder.ToolList("tool_{n}", "Tool {n}")],
+            inputs: [defineInput.ToolList("tool_{n}", "Tool {n}")],
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.ToolList("tool_list", "Tool List", {})
+        defineOutput.ToolList("tool_list", "Tool List", {})
     ],
 });

@@ -14,7 +14,7 @@ export type LiteralOutput<
   readonly __reference?: T_Reference;
 } & Omit<T_Output, "id">;
 
-export namespace OutputBuilder {
+export namespace defineOutput {
   export type Options = {
     tooltip?: string;
     internal?: boolean;

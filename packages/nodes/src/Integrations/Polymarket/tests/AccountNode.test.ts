@@ -3,7 +3,7 @@ import "reflect-metadata";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FieldBuilder } from "@pretzel-graph/node-sdk";
+import { StandardFields } from "@pretzel-graph/node-sdk";
 import { Foundations } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "../Account/blueprint";
@@ -66,7 +66,7 @@ describe("Polymarket Account derivatives", () => {
         assert.equal(derivativeId, "resource==openOrders");
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [
                 "resource",
@@ -86,7 +86,7 @@ describe("Polymarket Account derivatives", () => {
         assert.deepEqual(blueprint.outputs.map(output => output.id), ["tools"]);
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [],
         );

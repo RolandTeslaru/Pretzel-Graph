@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineOutput } from "@pretzel-graph/node-sdk";
 import { OpenRouter } from "@pretzel-graph/nodes/Credentials/OpenRouter";
 
 const model = <const T extends string>(value: T, displayName: string) => ({
@@ -60,7 +60,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [OpenRouter],
     fields: [
-        FieldBuilder.MultiOption("provider", "Provider", {
+        defineField.MultiOption("provider", "Provider", {
             options: [
                 { value: "Anthropic" },
                 { value: "Google" },
@@ -74,7 +74,7 @@ export const Blueprint = defineBlueprint({
             initialValue: "Google",
             tooltip: "Filter the model list by provider."
         }),
-        FieldBuilder.Float("temperature", "Temperature", {
+        defineField.Float("temperature", "Temperature", {
             initialValue: 0.7,
             min: 0,
             max: 2.0,
@@ -82,12 +82,12 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Controls randomness in the output. Higher values make output more random."
         }),
-        FieldBuilder.Integer("maxTokens", "Max Tokens", {
+        defineField.Integer("maxTokens", "Max Tokens", {
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate."
         }),
-        FieldBuilder.Float("topP", "Top P", {
+        defineField.Float("topP", "Top P", {
             initialValue: 1.0,
             min: 0,
             max: 1,
@@ -98,55 +98,55 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.LanguageModel("languageModel", "Language Model", {
+        defineOutput.LanguageModel("languageModel", "Language Model", {
             tooltip: "The OpenRouter language model instance."
         })
     ],
 
     "provider==Anthropic": {
-        fields: [FieldBuilder.MultiOption("anthropicModel", "Model", {
+        fields: [defineField.MultiOption("anthropicModel", "Model", {
             options: MODELS.Anthropic,
             initialValue: "anthropic/claude-opus-5",
         })],
     },
     "provider==Google": {
-        fields: [FieldBuilder.MultiOption("googleModel", "Model", {
+        fields: [defineField.MultiOption("googleModel", "Model", {
             options: MODELS.Google,
             initialValue: "google/gemini-3.1-pro-preview",
         })],
     },
     "provider==OpenAI": {
-        fields: [FieldBuilder.MultiOption("openAIModel", "Model", {
+        fields: [defineField.MultiOption("openAIModel", "Model", {
             options: MODELS.OpenAI,
             initialValue: "openai/gpt-5.6-terra",
         })],
     },
     "provider==Meta": {
-        fields: [FieldBuilder.MultiOption("metaModel", "Model", {
+        fields: [defineField.MultiOption("metaModel", "Model", {
             options: MODELS.Meta,
             initialValue: "meta-llama/llama-4-maverick",
         })],
     },
     "provider==DeepSeek": {
-        fields: [FieldBuilder.MultiOption("deepSeekModel", "Model", {
+        fields: [defineField.MultiOption("deepSeekModel", "Model", {
             options: MODELS.DeepSeek,
             initialValue: "deepseek/deepseek-v4-pro",
         })],
     },
     "provider==Mistral": {
-        fields: [FieldBuilder.MultiOption("mistralModel", "Model", {
+        fields: [defineField.MultiOption("mistralModel", "Model", {
             options: MODELS.Mistral,
             initialValue: "mistralai/mistral-small-2603",
         })],
     },
     "provider==Cohere": {
-        fields: [FieldBuilder.MultiOption("cohereModel", "Model", {
+        fields: [defineField.MultiOption("cohereModel", "Model", {
             options: MODELS.Cohere,
             initialValue: "cohere/command-a",
         })],
     },
     "provider==xAI": {
-        fields: [FieldBuilder.MultiOption("xaiModel", "Model", {
+        fields: [defineField.MultiOption("xaiModel", "Model", {
             options: MODELS.xAI,
             initialValue: "x-ai/grok-4.6",
         })],

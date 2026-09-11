@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { HumanMessage } from "@langchain/core/messages";
-import { InputBuilder } from "@pretzel-graph/node-sdk";
+import { defineInput } from "@pretzel-graph/node-sdk";
 
 import { NodeIOService } from "./node-io-service";
 
@@ -27,8 +27,8 @@ test("synthesizes static Message inputs and preserves static Data inputs", () =>
         },
         workflowQueryAPI: {
             getInputs: () => [
-                InputBuilder.Message("prompt", "Prompt"),
-                InputBuilder.Data("data", "Data"),
+                defineInput.Message("prompt", "Prompt"),
+                defineInput.Data("data", "Data"),
             ],
         },
     };

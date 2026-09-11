@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Router",
@@ -8,7 +8,7 @@ export const Blueprint = defineBlueprint({
     icon: "ListTree",
     accent: "group-routing",
     fields: [
-        FieldBuilder.CaseList("cases", "Cases", {
+        defineField.CaseList("cases", "Cases", {
             tooltip: "List of cases to evaluate. All cases that evaluate to true will receive the input.",
 
             initialValue: [
@@ -19,18 +19,18 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "condition"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved("case-1", "Case 1", {
+        defineOutput.Unresolved("case-1", "Case 1", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved("case-2", "Case 2", {
+        defineOutput.Unresolved("case-2", "Case 2", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved("case-3", "Case 3", {
+        defineOutput.Unresolved("case-3", "Case 3", {
             polymorphicGroupId: "condition"
         }),
     ],

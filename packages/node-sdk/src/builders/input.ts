@@ -17,7 +17,7 @@ export type LiteralInput<
   readonly __required?: T_Required;
 } & Omit<T_Input, "id">;
 
-export namespace InputBuilder {
+export namespace defineInput {
   export type BaseOptions<TReq extends boolean = false> = {
     tooltip?: string;
     placeholder?: string;

@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 
 
@@ -38,7 +38,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("action", "Action", {
+        defineField.MultiOption("action", "Action", {
             options: [
                 { value: "search", displayName: "Search", description: "Find markets, or search events, tags and profiles at once." },
                 { value: "list",   displayName: "List",   description: "Browse markets, events, series, trades, holders and more." },
@@ -53,7 +53,7 @@ export const Blueprint = defineBlueprint({
 
     "action==search": {
         fields: [
-            FieldBuilder.MultiOption("searchKind", "Search", {
+            defineField.MultiOption("searchKind", "Search", {
                 options: [
                     { value: "markets", displayName: "Markets",    description: "Market questions, through Gamma's search index." },
                     { value: "all",     displayName: "Everything", description: "Events, and optionally tags and public profiles." },
@@ -65,32 +65,32 @@ export const Blueprint = defineBlueprint({
 
         "searchKind==markets": {
             fields: [
-                FieldBuilder.String("searchMarketsQuery", "Query", { placeholder: "election" }),
-                FieldBuilder.MultiOption("searchMarketsStatus", "Status", {
+                defineField.String("searchMarketsQuery", "Query", { placeholder: "election" }),
+                defineField.MultiOption("searchMarketsStatus", "Status", {
                     options:      statusOptions,
                     initialValue: "active",
                     variant:      "tab",
                 }),
-                FieldBuilder.Integer("searchMarketsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.Integer("searchMarketsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("markets", "Markets")],
+            outputs: [defineOutput.DataList("markets", "Markets")],
         },
 
         "searchKind==all": {
             fields: [
-                FieldBuilder.String("publicSearchQuery", "Query", { required: true, placeholder: "election" }),
-                FieldBuilder.Boolean("publicSearchSearchTags", "Include Tags", { initialValue: false }),
-                FieldBuilder.Boolean("publicSearchSearchProfiles", "Include Profiles", { initialValue: false }),
-                FieldBuilder.Integer("publicSearchMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.String("publicSearchQuery", "Query", { required: true, placeholder: "election" }),
+                defineField.Boolean("publicSearchSearchTags", "Include Tags", { initialValue: false }),
+                defineField.Boolean("publicSearchSearchProfiles", "Include Profiles", { initialValue: false }),
+                defineField.Integer("publicSearchMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.Data("results", "Results")],
+            outputs: [defineOutput.Data("results", "Results")],
         },
     },
 
 
     "action==list": {
         fields: [
-            FieldBuilder.MultiOption("listResource", "Resource", {
+            defineField.MultiOption("listResource", "Resource", {
                 options: [
                     { value: "markets",  displayName: "Markets"  },
                     { value: "events",   displayName: "Events"   },
@@ -108,53 +108,53 @@ export const Blueprint = defineBlueprint({
 
         "listResource==markets": {
             fields: [
-                FieldBuilder.MultiOption("listMarketsStatus", "Status", {
+                defineField.MultiOption("listMarketsStatus", "Status", {
                     options:      statusOptions,
                     initialValue: "active",
                     variant:      "tab",
                 }),
-                FieldBuilder.Integer("listMarketsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.Integer("listMarketsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("markets", "Markets")],
+            outputs: [defineOutput.DataList("markets", "Markets")],
         },
 
         "listResource==events": {
             fields: [
-                FieldBuilder.MultiOption("listEventsStatus", "Status", {
+                defineField.MultiOption("listEventsStatus", "Status", {
                     options:      statusOptions,
                     initialValue: "active",
                     variant:      "tab",
                 }),
-                FieldBuilder.Integer("listEventsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.Integer("listEventsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("events", "Events")],
+            outputs: [defineOutput.DataList("events", "Events")],
         },
 
         "listResource==series": {
             fields: [
-                FieldBuilder.String("listSeriesSlug", "Slug"),
-                FieldBuilder.Integer("listSeriesMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.String("listSeriesSlug", "Slug"),
+                defineField.Integer("listSeriesMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("series", "Series")],
+            outputs: [defineOutput.DataList("series", "Series")],
         },
 
         "listResource==tags": {
             fields: [
-                FieldBuilder.Integer("listTagsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.Integer("listTagsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("tags", "Tags")],
+            outputs: [defineOutput.DataList("tags", "Tags")],
         },
 
         "listResource==sports": {
-            outputs: [OutputBuilder.DataList("sports", "Sports")],
+            outputs: [defineOutput.DataList("sports", "Sports")],
         },
 
         "listResource==teams": {
             fields: [
-                FieldBuilder.String("listTeamsName", "Team Name"),
-                FieldBuilder.Integer("listTeamsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.String("listTeamsName", "Team Name"),
+                defineField.Integer("listTeamsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("teams", "Teams")],
+            outputs: [defineOutput.DataList("teams", "Teams")],
         },
 
         // Deliberately absent from tool mode: comments are untrusted user text, and an agent that
@@ -162,7 +162,7 @@ export const Blueprint = defineBlueprint({
         // exactly what comes back.
         "listResource==comments": {
             fields: [
-                FieldBuilder.MultiOption("listCommentsParentEntityType", "Parent Type", {
+                defineField.MultiOption("listCommentsParentEntityType", "Parent Type", {
                     options: [
                         { value: "Event",  displayName: "Event"  },
                         { value: "Series", displayName: "Series" },
@@ -171,46 +171,46 @@ export const Blueprint = defineBlueprint({
                     initialValue: "Event",
                     variant:      "tab",
                 }),
-                FieldBuilder.String("listCommentsParentId", "Parent ID", { required: true }),
-                FieldBuilder.Boolean("listCommentsGetPositions", "Include Positions", { initialValue: false }),
-                FieldBuilder.Boolean("listCommentsHoldersOnly", "Holders Only", { initialValue: false }),
-                FieldBuilder.Integer("listCommentsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
+                defineField.String("listCommentsParentId", "Parent ID", { required: true }),
+                defineField.Boolean("listCommentsGetPositions", "Include Positions", { initialValue: false }),
+                defineField.Boolean("listCommentsHoldersOnly", "Holders Only", { initialValue: false }),
+                defineField.Integer("listCommentsMaxResults", "Max Results", { initialValue: 20, min: 1, max: 500 }),
             ],
-            outputs: [OutputBuilder.DataList("comments", "Comments")],
+            outputs: [defineOutput.DataList("comments", "Comments")],
         },
 
         "listResource==trades": {
             fields: [
-                FieldBuilder.String("listTradesConditionId", "Condition ID", {
+                defineField.String("listTradesConditionId", "Condition ID", {
                     required:    true,
                     placeholder: "0x…",
                 }),
-                FieldBuilder.MultiOption("listTradesSide", "Side", {
+                defineField.MultiOption("listTradesSide", "Side", {
                     options:      tradeSideOptions,
                     initialValue: "all",
                     variant:      "tab",
                 }),
-                FieldBuilder.Integer("listTradesMaxResults", "Max Results", { initialValue: 100, min: 1, max: 1_000 }),
+                defineField.Integer("listTradesMaxResults", "Max Results", { initialValue: 100, min: 1, max: 1_000 }),
             ],
-            outputs: [OutputBuilder.DataList("trades", "Trades")],
+            outputs: [defineOutput.DataList("trades", "Trades")],
         },
 
         "listResource==holders": {
             fields: [
-                FieldBuilder.String("listHoldersConditionId", "Condition ID", {
+                defineField.String("listHoldersConditionId", "Condition ID", {
                     required:    true,
                     placeholder: "0x…",
                 }),
-                FieldBuilder.Integer("listHoldersMaxResults", "Max Results", { initialValue: 20, min: 1, max: 20 }),
+                defineField.Integer("listHoldersMaxResults", "Max Results", { initialValue: 20, min: 1, max: 20 }),
             ],
-            outputs: [OutputBuilder.DataList("holders", "Holders")],
+            outputs: [defineOutput.DataList("holders", "Holders")],
         },
     },
 
 
     "action==get": {
         fields: [
-            FieldBuilder.MultiOption("getResource", "Resource", {
+            defineField.MultiOption("getResource", "Resource", {
                 options: [
                     { value: "market",       displayName: "Market"        },
                     { value: "marketStats",  displayName: "Market Stats",  description: "Volume windows, book snapshot, price movement." },
@@ -235,52 +235,52 @@ export const Blueprint = defineBlueprint({
         // distinguishable, so the SDK routes to the right endpoint itself.
         "getResource==market": {
             fields: [
-                FieldBuilder.String("getMarketIdentifier", "Market ID or Slug", { required: true }),
+                defineField.String("getMarketIdentifier", "Market ID or Slug", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("market", "Market")],
+            outputs: [defineOutput.Data("market", "Market")],
         },
 
         "getResource==marketStats": {
             fields: [
-                FieldBuilder.String("getMarketStatsIdentifier", "Market ID or Slug", { required: true }),
+                defineField.String("getMarketStatsIdentifier", "Market ID or Slug", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("stats", "Stats")],
+            outputs: [defineOutput.Data("stats", "Stats")],
         },
 
         "getResource==event": {
             fields: [
-                FieldBuilder.String("getEventIdentifier", "Event ID or Slug", { required: true }),
+                defineField.String("getEventIdentifier", "Event ID or Slug", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("event", "Event")],
+            outputs: [defineOutput.Data("event", "Event")],
         },
 
         "getResource==eventStats": {
             fields: [
-                FieldBuilder.String("getEventStatsIdentifier", "Event ID or Slug", { required: true }),
+                defineField.String("getEventStatsIdentifier", "Event ID or Slug", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("stats", "Stats")],
+            outputs: [defineOutput.Data("stats", "Stats")],
         },
 
         "getResource==series": {
             fields: [
-                FieldBuilder.String("getSeriesIdentifier", "Series ID", { required: true }),
+                defineField.String("getSeriesIdentifier", "Series ID", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("series", "Series")],
+            outputs: [defineOutput.Data("series", "Series")],
         },
 
         "getResource==tag": {
             fields: [
-                FieldBuilder.String("getTagIdentifier", "Tag ID or Slug", { required: true }),
+                defineField.String("getTagIdentifier", "Tag ID or Slug", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("tag", "Tag")],
+            outputs: [defineOutput.Data("tag", "Tag")],
         },
 
         // Midpoint, best bid, best ask, last trade and spread were five separate branches; they
         // take the same argument and differ only in which number comes back.
         "getResource==price": {
             fields: [
-                FieldBuilder.String("getPriceTokenId", "Token ID", { required: true }),
-                FieldBuilder.MultiOption("getPriceKind", "Reading", {
+                defineField.String("getPriceTokenId", "Token ID", { required: true }),
+                defineField.MultiOption("getPriceKind", "Reading", {
                     options: [
                         { value: "midpoint", displayName: "Midpoint",   description: "Mid of the book." },
                         { value: "buy",      displayName: "Best Buy",   description: "Best price to buy at." },
@@ -291,26 +291,26 @@ export const Blueprint = defineBlueprint({
                     initialValue: "midpoint",
                 }),
             ],
-            outputs: [OutputBuilder.Data("price", "Price")],
+            outputs: [defineOutput.Data("price", "Price")],
         },
 
         "getResource==orderBook": {
             fields: [
-                FieldBuilder.String("getOrderBookTokenId", "Token ID", { required: true }),
-                FieldBuilder.Integer("getOrderBookDepth", "Depth", {
+                defineField.String("getOrderBookTokenId", "Token ID", { required: true }),
+                defineField.Integer("getOrderBookDepth", "Depth", {
                     initialValue: 15,
                     min:          1,
                     max:          50,
                     tooltip:      "Price levels per side, best first. A full book is 200+ levels, nearly all far from the money.",
                 }),
             ],
-            outputs: [OutputBuilder.Data("orderBook", "Order Book")],
+            outputs: [defineOutput.Data("orderBook", "Order Book")],
         },
 
         "getResource==priceHistory": {
             fields: [
-                FieldBuilder.String("getPriceHistoryTokenId", "Token ID", { required: true }),
-                FieldBuilder.MultiOption("getPriceHistoryInterval", "Interval", {
+                defineField.String("getPriceHistoryTokenId", "Token ID", { required: true }),
+                defineField.MultiOption("getPriceHistoryInterval", "Interval", {
                     options: [
                         { value: "1h",  displayName: "1 hour"  },
                         { value: "6h",  displayName: "6 hours" },
@@ -320,54 +320,54 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "1d",
                 }),
-                FieldBuilder.Integer("getPriceHistoryFidelity", "Fidelity (minutes)", { initialValue: 60, min: 1 }),
-                FieldBuilder.Integer("getPriceHistoryPoints", "Readings to return", { initialValue: 60, min: 2 }),
+                defineField.Integer("getPriceHistoryFidelity", "Fidelity (minutes)", { initialValue: 60, min: 1 }),
+                defineField.Integer("getPriceHistoryPoints", "Readings to return", { initialValue: 60, min: 2 }),
             ],
-            outputs: [OutputBuilder.Data("history", "History")],
+            outputs: [defineOutput.Data("history", "History")],
         },
 
         "getResource==mechanics": {
             fields: [
-                FieldBuilder.String("getMarketMechanicsTokenId", "Token ID", { required: true }),
+                defineField.String("getMarketMechanicsTokenId", "Token ID", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("mechanics", "Mechanics")],
+            outputs: [defineOutput.Data("mechanics", "Mechanics")],
         },
 
         "getResource==marketConfig": {
             fields: [
-                FieldBuilder.String("getClobMarketConditionId", "Condition ID", {
+                defineField.String("getClobMarketConditionId", "Condition ID", {
                     required:    true,
                     placeholder: "0x…",
                 }),
             ],
-            outputs: [OutputBuilder.Data("market", "Market")],
+            outputs: [defineOutput.Data("market", "Market")],
         },
 
         "getResource==rewards": {
             fields: [
-                FieldBuilder.String("getMarketRewardsConditionId", "Condition ID", {
+                defineField.String("getMarketRewardsConditionId", "Condition ID", {
                     required:    true,
                     placeholder: "0x…",
                 }),
             ],
-            outputs: [OutputBuilder.Data("rewards", "Rewards")],
+            outputs: [defineOutput.Data("rewards", "Rewards")],
         },
 
         "getResource==openInterest": {
             fields: [
-                FieldBuilder.String("getOpenInterestConditionId", "Condition ID", {
+                defineField.String("getOpenInterestConditionId", "Condition ID", {
                     required:    true,
                     placeholder: "0x…",
                 }),
             ],
-            outputs: [OutputBuilder.Data("openInterest", "Open Interest")],
+            outputs: [defineOutput.Data("openInterest", "Open Interest")],
         },
 
         "getResource==liveVolume": {
             fields: [
-                FieldBuilder.String("getLiveVolumeEventId", "Event ID", { required: true }),
+                defineField.String("getLiveVolumeEventId", "Event ID", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("volume", "Volume")],
+            outputs: [defineOutput.Data("volume", "Volume")],
         },
     },
 
@@ -376,9 +376,9 @@ export const Blueprint = defineBlueprint({
         fields:  [],
         inputs:  [],
         outputs: [
-            OutputBuilder.ToolList("discoveryTools", "Discovery Tools"),
-            OutputBuilder.ToolList("exchangeTools", "Exchange Tools"),
-            OutputBuilder.ToolList("analyticsTools", "Analytics Tools"),
+            defineOutput.ToolList("discoveryTools", "Discovery Tools"),
+            defineOutput.ToolList("exchangeTools", "Exchange Tools"),
+            defineOutput.ToolList("analyticsTools", "Analytics Tools"),
         ],
     }),
 });

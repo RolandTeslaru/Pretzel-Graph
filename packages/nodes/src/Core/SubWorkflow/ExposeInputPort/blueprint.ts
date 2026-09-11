@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.SubWorkflow.ExposeInputPort",
@@ -11,11 +11,11 @@ export const Blueprint = defineBlueprint({
     fields: [
         // Both static-only: extractExposedPorts reads them to build the enclosing Execute
         // node's port shape, which happens in the editor with no airlock in sight.
-        FieldBuilder.Boolean("required", "Required", {
+        defineField.Boolean("required", "Required", {
             initialValue: false,
             only: "static"
         }),
-        FieldBuilder.UniqueString("exposed_port_id", "Exposed Port ID", {
+        defineField.UniqueString("exposed_port_id", "Exposed Port ID", {
             prefix: "ExposedInputPort-",
             length: 5,
             required: false,
@@ -24,7 +24,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Unresolved("output", "Output", {
+        defineOutput.Unresolved("output", "Output", {
             polymorphicGroupId: "expose_input_port"
         }),
     ],

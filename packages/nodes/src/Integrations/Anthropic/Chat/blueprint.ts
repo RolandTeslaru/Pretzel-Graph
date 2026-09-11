@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineOutput } from "@pretzel-graph/node-sdk";
 import { Anthropic } from "@pretzel-graph/nodes/Credentials/Anthropic";
 
 export const Blueprint = defineBlueprint({
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [Anthropic],
     fields: [
-        FieldBuilder.MultiOption("model", "Model", {
+        defineField.MultiOption("model", "Model", {
             options: [
                 { value: "claude-fable-5", displayName: "Claude Fable 5" },
                 { value: "claude-opus-5", displayName: "Claude Opus 5" },
@@ -19,7 +19,7 @@ export const Blueprint = defineBlueprint({
 
             initialValue: "claude-sonnet-5"
         }),
-        FieldBuilder.Integer("maxTokens", "Max Tokens", {
+        defineField.Integer("maxTokens", "Max Tokens", {
             required: false,
             min: 1,
             step: 1,
@@ -28,7 +28,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.LanguageModel("languageModel", "Language Model", {
+        defineOutput.LanguageModel("languageModel", "Language Model", {
             tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings."
         })
     ]

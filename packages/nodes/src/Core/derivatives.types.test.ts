@@ -3,13 +3,13 @@ import "reflect-metadata"
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk"
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk"
 import type { InferFieldValues } from "@pretzel-graph/node-sdk"
 
 const Cascade = defineBlueprint({
     id: "Test.Derivatives.Types", displayName: "T", description: "T", icon: "T",
     fields: [
-        FieldBuilder.MultiOption("action", "Action", {
+        defineField.MultiOption("action", "Action", {
             options: [{ value: "search" }, { value: "list" }, { value: "get" }],
             initialValue: "search",
         }),
@@ -17,25 +17,25 @@ const Cascade = defineBlueprint({
     inputs: [], outputs: [],
 
     "action==search": {
-        fields:  [FieldBuilder.String("query", "Query", { required: true })],
-        outputs: [OutputBuilder.DataList("markets", "Markets")],
+        fields:  [defineField.String("query", "Query", { required: true })],
+        outputs: [defineOutput.DataList("markets", "Markets")],
     },
     "action==list": {
-        fields: [FieldBuilder.MultiOption("listAPI", "Source", {
+        fields: [defineField.MultiOption("listAPI", "Source", {
             options: [{ value: "gamma" }, { value: "data" }],
             initialValue: "gamma",
         })],
 
         "listAPI==data": {
-            fields: [FieldBuilder.String("market", "Market", {})],
+            fields: [defineField.String("market", "Market", {})],
         },
     },
 })
 
 const Plain = defineBlueprint({
     id: "Test.Derivatives.Plain", displayName: "P", description: "P", icon: "P",
-    fields: [FieldBuilder.String("name", "Name", {})],
-    inputs: [InputBuilder.Data("in", "In")], outputs: [],
+    fields: [defineField.String("name", "Name", {})],
+    inputs: [defineInput.Data("in", "In")], outputs: [],
 })
 
 

@@ -1,4 +1,4 @@
-import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineTool, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.ShelfSDK",
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible: true,
     credentials: [],
     fields: [
-        FieldBuilder.MultiOption("operation", "Operation", {
+        defineField.MultiOption("operation", "Operation", {
             options: [
                 { value: "query",       displayName: "Query blueprints" },
                 { value: "get",         displayName: "Get blueprint" },
@@ -20,14 +20,14 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data("result", "Result", {
+        defineOutput.Data("result", "Result", {
             tooltip: "Matching blueprint summaries, one blueprint's fields and ports, or the branches its node can take.",
         }),
     ],
 
     "operation==query": {
         fields: [
-            FieldBuilder.Json("filters", "Filters", {
+            defineField.Json("filters", "Filters", {
                 initialValue: {},
                 tooltip: "Optional filters: ids, displayName, drawerIds, toolCompatible, proxyCompatible, derivable, fieldIds, inputVariants, outputVariants, limit.",
             }),
@@ -35,16 +35,16 @@ export const Blueprint = defineBlueprint({
     },
 
     "operation==get": {
-        fields: [FieldBuilder.String("getBlueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" })],
+        fields: [defineField.String("getBlueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" })],
     },
 
     "operation==derivations": {
-        fields: [FieldBuilder.String("derivationsBlueprintId", "Blueprint", { required: true, placeholder: "Core.Developer.DerivativeTest" })],
+        fields: [defineField.String("derivationsBlueprintId", "Blueprint", { required: true, placeholder: "Core.Developer.DerivativeTest" })],
     },
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Shelf Tools")],
+        outputs: [defineOutput.ToolList("tools", "Shelf Tools")],
     }),
 });

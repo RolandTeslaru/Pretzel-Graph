@@ -1,24 +1,24 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { GoogleSearch } from "@pretzel-graph/nodes/Credentials/GoogleSearch";
 
-const queryField = FieldBuilder.String("query", "Query", {
+const queryField = defineField.String("query", "Query", {
     required: true,
     placeholder: "What do you want to search for?"
 });
 
 const searchSettings = () => [
-    FieldBuilder.Integer("maxResults", "Max Results", {
+    defineField.Integer("maxResults", "Max Results", {
         initialValue: 5,
         min: 1,
         max: 10,
         tooltip: "Google Custom Search returns up to 10 results per request."
     }),
-    FieldBuilder.MultiOption("searchType", "Search Type", {
+    defineField.MultiOption("searchType", "Search Type", {
         options: [
             { value: "web", displayName: "Web" },
             { value: "image", displayName: "Image" },
@@ -26,7 +26,7 @@ const searchSettings = () => [
 
         initialValue: "web"
     }),
-    FieldBuilder.MultiOption("safeSearch", "Safe Search", {
+    defineField.MultiOption("safeSearch", "Safe Search", {
         options: [
             { value: "off", displayName: "Off" },
             { value: "active", displayName: "Active" },
@@ -47,7 +47,7 @@ export const Blueprint = defineBlueprint({
     fields: [queryField, ...searchSettings()],
     inputs: [],
     outputs: [
-        OutputBuilder.DataList("documents", "Documents", {
+        defineOutput.DataList("documents", "Documents", {
             tooltip: "Search results as Document objects (pageContent + metadata)."
         }),
     ],
@@ -56,7 +56,7 @@ export const Blueprint = defineBlueprint({
         fields: searchSettings(),
         inputs: [],
         outputs: [
-            OutputBuilder.Tool("tool", "Search Tool", {
+            defineOutput.Tool("tool", "Search Tool", {
                 tooltip: "A tool that can be called to perform a Google search with the specified query."
             }),
         ],

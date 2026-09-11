@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk"
 
 import { Alpaca } from "@pretzel-graph/nodes/Credentials/Alpaca"
@@ -19,7 +19,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "summary",       displayName: "Account Summary" },
                 { value: "configuration", displayName: "Configuration"   },
@@ -37,18 +37,18 @@ export const Blueprint = defineBlueprint({
 
 
     "resource==summary": {
-        outputs: [OutputBuilder.Data("account", "Account")],
+        outputs: [defineOutput.Data("account", "Account")],
     },
 
 
     "resource==configuration": {
-        outputs: [OutputBuilder.Data("configuration", "Configuration")],
+        outputs: [defineOutput.Data("configuration", "Configuration")],
     },
 
 
     "resource==positions": {
         fields: [
-            FieldBuilder.MultiOption("positionsAction", "Action", {
+            defineField.MultiOption("positionsAction", "Action", {
                 options: [
                     { value: "list", displayName: "List" },
                     { value: "get",  displayName: "Get"  },
@@ -59,24 +59,24 @@ export const Blueprint = defineBlueprint({
         ],
 
         "positionsAction==list": {
-            outputs: [OutputBuilder.DataList("positions", "Positions")],
+            outputs: [defineOutput.DataList("positions", "Positions")],
         },
 
         "positionsAction==get": {
             fields: [
-                FieldBuilder.String("positionSymbolOrId", "Symbol or Asset ID", {
+                defineField.String("positionSymbolOrId", "Symbol or Asset ID", {
                     required:    true,
                     placeholder: "AAPL",
                 }),
             ],
-            outputs: [OutputBuilder.Data("position", "Position")],
+            outputs: [defineOutput.Data("position", "Position")],
         },
     },
 
 
     "resource==orders": {
         fields: [
-            FieldBuilder.MultiOption("ordersAction", "Action", {
+            defineField.MultiOption("ordersAction", "Action", {
                 options: [
                     { value: "list", displayName: "List" },
                     { value: "get",  displayName: "Get"  },
@@ -88,7 +88,7 @@ export const Blueprint = defineBlueprint({
 
         "ordersAction==list": {
             fields: [
-                FieldBuilder.MultiOption("ordersStatus", "Status", {
+                defineField.MultiOption("ordersStatus", "Status", {
                     options: [
                         { value: "open",   displayName: "Open"   },
                         { value: "closed", displayName: "Closed" },
@@ -96,10 +96,10 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "open",
                 }),
-                FieldBuilder.List("ordersSymbols", "Symbols", {
+                defineField.List("ordersSymbols", "Symbols", {
                     tooltip: "Optional symbol filter.",
                 }),
-                FieldBuilder.MultiOption("ordersSide", "Side", {
+                defineField.MultiOption("ordersSide", "Side", {
                     options: [
                         { value: "all",  displayName: "Both" },
                         { value: "buy",  displayName: "Buy"  },
@@ -107,7 +107,7 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "all",
                 }),
-                FieldBuilder.MultiOption("ordersDirection", "Direction", {
+                defineField.MultiOption("ordersDirection", "Direction", {
                     options: [
                         { value: "desc", displayName: "Newest First" },
                         { value: "asc",  displayName: "Oldest First" },
@@ -115,38 +115,38 @@ export const Blueprint = defineBlueprint({
                     initialValue: "desc",
                     advanced:     true,
                 }),
-                FieldBuilder.String("ordersAfter", "After", {
+                defineField.String("ordersAfter", "After", {
                     placeholder: "2026-07-01T00:00:00Z",
                     advanced:    true,
                 }),
-                FieldBuilder.String("ordersUntil", "Until", {
+                defineField.String("ordersUntil", "Until", {
                     placeholder: "2026-08-01T00:00:00Z",
                     advanced:    true,
                 }),
-                FieldBuilder.Integer("ordersLimit", "Max Orders", {
+                defineField.Integer("ordersLimit", "Max Orders", {
                     initialValue: 50,
                     min:          1,
                     max:          500,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("orders", "Orders")],
+            outputs: [defineOutput.DataList("orders", "Orders")],
         },
 
         "ordersAction==get": {
             fields: [
-                FieldBuilder.String("orderId", "Order ID", { required: true }),
+                defineField.String("orderId", "Order ID", { required: true }),
             ],
-            outputs: [OutputBuilder.Data("order", "Order")],
+            outputs: [defineOutput.Data("order", "Order")],
         },
     },
 
 
     "resource==activities": {
         fields: [
-            FieldBuilder.List("activityTypes", "Activity Types", {
+            defineField.List("activityTypes", "Activity Types", {
                 tooltip: "Optional Alpaca activity codes, e.g. FILL, DIV, FEE.",
             }),
-            FieldBuilder.MultiOption("activityCategory", "Category", {
+            defineField.MultiOption("activityCategory", "Category", {
                 options: [
                     { value: "all",                displayName: "All"       },
                     { value: "trade_activity",     displayName: "Trades"    },
@@ -154,56 +154,56 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "all",
             }),
-            FieldBuilder.MultiOption("activityDirection", "Direction", {
+            defineField.MultiOption("activityDirection", "Direction", {
                 options: [
                     { value: "desc", displayName: "Newest First" },
                     { value: "asc",  displayName: "Oldest First" },
                 ],
                 initialValue: "desc",
             }),
-            FieldBuilder.String("activityAfter", "After", {
+            defineField.String("activityAfter", "After", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("activityUntil", "Until", {
+            defineField.String("activityUntil", "Until", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Integer("activityLimit", "Max Activities", {
+            defineField.Integer("activityLimit", "Max Activities", {
                 initialValue: 50,
                 min:          1,
                 max:          500,
             }),
         ],
-        outputs: [OutputBuilder.DataList("activities", "Activities")],
+        outputs: [defineOutput.DataList("activities", "Activities")],
     },
 
 
     "resource==portfolio": {
         fields: [
-            FieldBuilder.String("portfolioPeriod", "Period", {
+            defineField.String("portfolioPeriod", "Period", {
                 initialValue: "1M",
                 tooltip:      "Examples: 1D, 1M, 3M, 1A or all.",
             }),
-            FieldBuilder.String("portfolioTimeframe", "Timeframe", {
+            defineField.String("portfolioTimeframe", "Timeframe", {
                 initialValue: "1D",
                 tooltip:      "Examples: 1Min, 5Min, 1H or 1D.",
             }),
-            FieldBuilder.String("portfolioStart", "Start", {
+            defineField.String("portfolioStart", "Start", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("portfolioEnd", "End", {
+            defineField.String("portfolioEnd", "End", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Boolean("portfolioExtendedHours", "Extended Hours", {
+            defineField.Boolean("portfolioExtendedHours", "Extended Hours", {
                 initialValue: false,
             }),
         ],
-        outputs: [OutputBuilder.Data("portfolio", "Portfolio History")],
+        outputs: [defineOutput.Data("portfolio", "Portfolio History")],
     },
 
 
     "resource==watchlists": {
         fields: [
-            FieldBuilder.MultiOption("watchlistsAction", "Action", {
+            defineField.MultiOption("watchlistsAction", "Action", {
                 options: [
                     { value: "list", displayName: "List" },
                     { value: "get",  displayName: "Get"  },
@@ -214,17 +214,17 @@ export const Blueprint = defineBlueprint({
         ],
 
         "watchlistsAction==list": {
-            outputs: [OutputBuilder.DataList("watchlists", "Watchlists")],
+            outputs: [defineOutput.DataList("watchlists", "Watchlists")],
         },
 
         "watchlistsAction==get": {
             fields: [
-                FieldBuilder.String("watchlistId", "Watchlist ID", {
+                defineField.String("watchlistId", "Watchlist ID", {
                     tooltip: "Provide an ID, or leave empty and use Name.",
                 }),
-                FieldBuilder.String("watchlistName", "Watchlist Name"),
+                defineField.String("watchlistName", "Watchlist Name"),
             ],
-            outputs: [OutputBuilder.Data("watchlist", "Watchlist")],
+            outputs: [defineOutput.Data("watchlist", "Watchlist")],
         },
     },
 
@@ -232,6 +232,6 @@ export const Blueprint = defineBlueprint({
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Alpaca Account Tools")],
+        outputs: [defineOutput.ToolList("tools", "Alpaca Account Tools")],
     }),
 })

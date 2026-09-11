@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Text.Input",
@@ -7,14 +7,14 @@ export const Blueprint = defineBlueprint({
     icon: "Type",
     accent: "port-Text",
     fields: [
-        FieldBuilder.String("text", "Text", {
+        defineField.String("text", "Text", {
             required: true,
             multiline: true
         })
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Message("output", "Output", {
+        defineOutput.Message("output", "Output", {
             tooltip: "The output from the model"
         })
     ]

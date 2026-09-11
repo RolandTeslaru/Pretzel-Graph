@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Chat.Input",
@@ -7,18 +7,18 @@ export const Blueprint = defineBlueprint({
     icon: "MessagesSquare",
     accent: "port-Message",
     fields: [
-        FieldBuilder.String("chat_id", "Chat ID", {
+        defineField.String("chat_id", "Chat ID", {
             initialValue: "$igniter.chat_id",
             isExpressionInitially: true,
             tooltip: "The chat session to receive and store this message in."
         }),
-        FieldBuilder.Boolean("write_to_session", "Write to Session", {
+        defineField.Boolean("write_to_session", "Write to Session", {
             initialValue: true
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Message("response", "Response", {
+        defineOutput.Message("response", "Response", {
             tooltip: "The response from the model"
         })
     ]
