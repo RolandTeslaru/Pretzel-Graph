@@ -20,6 +20,8 @@ const openSelector = (nodeId: Workflow.Node.Id) => {
             WorkbenchSDK.actions.dependency.attachToNode(nodeId, listingId, 'publication'),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
+    }, {
+        initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
     })
 }
 

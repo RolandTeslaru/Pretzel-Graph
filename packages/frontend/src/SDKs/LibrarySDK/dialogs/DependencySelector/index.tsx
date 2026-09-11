@@ -14,9 +14,15 @@ import { openDependencyTypeDialog } from './dependency-type-dialog'
 
 interface Props {
     callbacks: DependencySelectorCallbacks
+    initialFolderId?: Library.Folder.Id
 }
 
-export const openDependencySelectorDialog = (callbacks: DependencySelectorCallbacks) => {
+export interface DependencySelectorOptions {
+    /** Folder the local library opens in. Defaults to the root. */
+    initialFolderId?: Library.Folder.Id
+}
+
+export const openDependencySelectorDialog = (callbacks: DependencySelectorCallbacks, options: DependencySelectorOptions = {}) => {
     DialogSDK.actions.push(DEPENDENCY_SELECTOR_DIALOG_ID, (props) => (
         <Tabs.Root defaultValue={"local"}>
             <DialogSDK.SplitTemplate {...props}
@@ -44,14 +50,14 @@ export const openDependencySelectorDialog = (callbacks: DependencySelectorCallba
                 sidebarClassName='w-[260px] shrink-0'
                 contentClassName=' pr-0! pl-1! py-0! gap-0!'
             >
-                <WorkflowSelector callbacks={callbacks}/>
+                <WorkflowSelector callbacks={callbacks} initialFolderId={options.initialFolderId} />
             </DialogSDK.SplitTemplate>
         </Tabs.Root>
     ))
 }
 
-const WorkflowSelector = memo<Props>(({ callbacks }) => {
-    const [cwd, setCwd] = useState<Library.Folder.Id>(Library.Folder.ROOT_ID)
+const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId }) => {
+    const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
 
     const query = QuerySDK.useQuery(
         ['version-control', 'active-workflows'],
