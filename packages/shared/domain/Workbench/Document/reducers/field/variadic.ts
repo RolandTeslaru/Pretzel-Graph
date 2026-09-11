@@ -10,18 +10,12 @@ export const fieldVariadicReducers: FieldVariadicReducers = {
     // and incrementing its numeric suffix (e.g. input_1 → input_2).
     add: (d, nodeId, groupId) => {
         d.isDirty = true;
-        const node      = d.selectors.node.get(d, nodeId);
-        const blueprint = d.selectors.node.getBlueprint(d, nodeId);
-        if (!blueprint)
-            return;
+        const node = d.selectors.node.get(d, nodeId);
 
         // Live ports only give us the slot count / last index. New slots are cloned from the
         // BASE blueprint port so they carry its pristine unresolved variant — cloning from the
         // resolved live port would bake the group's resolved variant into every new slot.
-        const inputs     = d.selectors.node.getInputs(d, nodeId).filter(i => i.groupId === groupId);
-        const outputs    = d.selectors.node.getOutputs(d, nodeId).filter(o => o.groupId === groupId);
-        const baseInput  = blueprint.inputs.find(i => i.groupId === groupId);
-        const baseOutput = blueprint.outputs.find(o => o.groupId === groupId);
+        const { inputs, outputs, baseInput, baseOutput } = d.selectors.node.getGroup(d, nodeId, groupId);
 
         if (baseInput && inputs.length > 0) {
             const newIndex  = Number(inputs[inputs.length - 1].id.split("_").slice(-1)[0]) + 1;
@@ -57,15 +51,14 @@ export const fieldVariadicReducers: FieldVariadicReducers = {
     // 1 slot so the group always retains at least one input and one output.
     remove: (d, nodeId, groupId) => {
         d.isDirty = true;
-        const node    = d.selectors.node.get(d, nodeId);
-        const inputs  = node.addedInputs?.filter(i => i.groupId === groupId) ?? [];
-        const outputs = node.addedOutputs?.filter(o => o.groupId === groupId) ?? [];
+        const node = d.selectors.node.get(d, nodeId);
+        const { addedInputs, addedOutputs } = d.selectors.node.getGroup(d, nodeId, groupId);
 
-        if (inputs.length > 0) {
-            d.reducers.input.remove(d, nodeId, inputs[inputs.length - 1].id);
+        if (addedInputs.length > 0) {
+            d.reducers.input.remove(d, nodeId, addedInputs[addedInputs.length - 1].id);
         }
-        if (outputs.length > 0) {
-            const lastOutput = outputs[outputs.length - 1];
+        if (addedOutputs.length > 0) {
+            const lastOutput = addedOutputs[addedOutputs.length - 1];
             // Disconnect any edge wired to the output before removing the port
             const edgeId = d.cache.outputEdgesByPort[nodeId]?.[lastOutput.id];
             if (edgeId)

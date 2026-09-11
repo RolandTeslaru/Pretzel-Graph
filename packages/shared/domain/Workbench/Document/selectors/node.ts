@@ -10,6 +10,15 @@ import type { Blueprint } from "../../../Foundations/Blueprint";
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
 
+export interface PortGroup {
+    inputs:       Foundations.Port.Input[]
+    outputs:      Foundations.Port.Output[]
+    baseInput:    Foundations.Port.Input | null
+    baseOutput:   Foundations.Port.Output | null
+    addedInputs:  Foundations.Port.Input[]
+    addedOutputs: Foundations.Port.Output[]
+}
+
 export interface NodeSelectors {
     get:              (document: Document, nodeId: Workflow.Node.Id) => Workflow.Node.Raw
     hasIssues:        (document: Document, nodeId: Workflow.Node.Id) => boolean
@@ -35,6 +44,8 @@ export interface NodeSelectors {
 
     getInputs: (document: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
     getOutputs: (document: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Output[]
+    /** One port group on a node: its live slots, the blueprint ports it grows from, and the slots added so far. */
+    getGroup: (document: Document, nodeId: Workflow.Node.Id, groupId: string) => PortGroup
     getFields: (document: Document, nodeId: Workflow.Node.Id) => readonly Foundations.Field[]
     getBlueprint: (document: Document, nodeId: Workflow.Node.Id) => Blueprint | null
     getUI: (document: Document, nodeId: Workflow.Node.Id) => NodeUI
@@ -175,6 +186,19 @@ export const nodeSelectors: NodeSelectors = {
     },
     getOutputs: (d, nodeId) => {
         return d.cache.resolvedShape[nodeId]?.outputs ?? [];
+    },
+    getGroup: (d, nodeId, groupId) => {
+        const node      = d.data.nodes[nodeId];
+        const blueprint = d.selectors.node.getBlueprint(d, nodeId);
+
+        return {
+            inputs:       d.selectors.node.getInputs(d, nodeId).filter(i => i.groupId === groupId),
+            outputs:      d.selectors.node.getOutputs(d, nodeId).filter(o => o.groupId === groupId),
+            baseInput:    blueprint?.inputs.find(i => i.groupId === groupId)  ?? null,
+            baseOutput:   blueprint?.outputs.find(o => o.groupId === groupId) ?? null,
+            addedInputs:  node?.addedInputs?.filter(i => i.groupId === groupId)  ?? [],
+            addedOutputs: node?.addedOutputs?.filter(o => o.groupId === groupId) ?? [],
+        };
     },
     getFields: (d, nodeId) => {
         return d.cache.resolvedShape[nodeId]?.fields ?? [];

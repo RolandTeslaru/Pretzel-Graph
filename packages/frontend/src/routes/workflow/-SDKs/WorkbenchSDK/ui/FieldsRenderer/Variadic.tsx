@@ -19,6 +19,7 @@ export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, c
                 <Input
                     id="number-of-gpus-f6l"
                     value={value}
+                    onChange={() => {}}
                     size='xs'
                     className='w-13'
                 />
@@ -32,7 +33,7 @@ export const VariadicField = memo<RendererProps<'Variadic'>>(({ field, nodeId, c
                     }}
                 >
                     <SystemIcons.Minus
-                    />
+                />
                 </Button>
                 <Button
                     variant="outline"
