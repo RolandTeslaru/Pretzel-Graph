@@ -2,6 +2,7 @@ import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
 import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { MemberAuthGuard } from '../../auth/member-auth.guard';
+import { MemberOrDelegateGuard } from '../../auth/member-or-delegate.guard';
 import { MinRole } from '../../auth/min-role.decorator';
 import { InternalAuthGuard, InternalAuthenticatedRequest } from '../../auth/internal-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
@@ -26,7 +27,7 @@ export class ExecutionController {
     }
 
     @Post(':workflowId/run')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async run(
         @AuthenticatedUser() principal: Principal.User,
@@ -37,7 +38,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/pause')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async pause(
         @AuthenticatedUser() principal: Principal.User,
@@ -47,7 +48,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/resume')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async resume(
         @AuthenticatedUser() principal: Principal.User,
@@ -57,7 +58,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/heartbeat')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async heartbeat(
         @AuthenticatedUser() principal: Principal.User,
@@ -67,7 +68,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/suspend')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async suspend(
         @AuthenticatedUser() principal: Principal.User,
@@ -77,7 +78,7 @@ export class ExecutionController {
     }
 
     @Post(':executionId/terminate')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async terminate(
         @AuthenticatedUser() principal: Principal.User,
@@ -113,7 +114,7 @@ export class ExecutionController {
     }
 
     @Post(':workflowId/meta/list')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async metaList(
         @AuthenticatedUser() principal: Principal.User,
@@ -124,7 +125,7 @@ export class ExecutionController {
 
     // Unscoped by design, like :executionId/get — an RLS-covered read.
     @Post(':executionId/meta/get')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async metaGet(
         @AuthenticatedUser() principal: Principal.User,
@@ -134,7 +135,7 @@ export class ExecutionController {
     }
 
     @Post('meta/list-active')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @MinRole('admin')
     @HttpCode(200)
     async metaListActive(@AuthenticatedUser() principal: Principal.User) {
@@ -144,7 +145,7 @@ export class ExecutionController {
     // Unscoped by design: the read runs through RLS, which already confines it to the
     // caller's own executions.
     @Post(':executionId/get')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async get(
         @AuthenticatedUser() principal: Principal.User,
@@ -155,7 +156,7 @@ export class ExecutionController {
 
 
     @Post(':executionId/recording/get-live')
-    @UseGuards(MemberAuthGuard)
+    @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)
     async recordingGetLive(
         @ExecutionIdParam() executionId: Execution.Id,

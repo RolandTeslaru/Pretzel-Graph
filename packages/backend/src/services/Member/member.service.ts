@@ -31,6 +31,19 @@ export class MemberService {
      * A verified token proves who someone is, never what they may do — that is this
      * lookup, run per request so a removal or demotion applies to the next one.
      */
+    /** The role a member holds, or null. A read only; never claims the deployment. */
+    public async roleOfUser(userId: Auth.User.Id): Promise<Workspace.Role | null> {
+        const row = await DB.asService('read member role', (db) =>
+            db
+                .selectFrom('members')
+                .select('role')
+                .where('user_id', '=', userId)
+                .executeTakeFirst(),
+        );
+
+        return row?.role ?? null;
+    }
+
     public async roleOf(token: VerifiedToken): Promise<Workspace.Role | null> {
         const existing = await DB.asService('read member role', (db) =>
             db
