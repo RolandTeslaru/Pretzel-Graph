@@ -155,6 +155,18 @@ export class ExecutionController {
     }
 
 
+    @Post(':executionId/wait')
+    @UseGuards(MemberOrDelegateGuard)
+    @HttpCode(200)
+    async wait(
+        @AuthenticatedUser() principal: Principal.User,
+        @ExecutionIdParam() executionId: Execution.Id,
+        @ZodBody(Execution.API.Wait.Request) body: Execution.API.Wait.Request,
+    ): Promise<Execution.API.Wait.Response> {
+        return this.executionService.waitForSettled(principal, executionId, body.timeoutMs);
+    }
+
+
     @Post(':executionId/recording/get-live')
     @UseGuards(MemberOrDelegateGuard)
     @HttpCode(200)

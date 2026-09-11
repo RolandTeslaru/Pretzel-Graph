@@ -10,27 +10,56 @@ const executionId = z.string().describe("Execution id, as returned by execution_
 
 export function buildTools(api: HTTP.Client) {
 
+    const runSchema = {
+        workflowId:  z.string().describe("The workflow to run."),
+        executionId: z.string().optional().describe("Pre-assign the run's id. Usually omitted."),
+        message:     z.string().optional().describe("Start the run as a chat message to the workflow. Omitted, the run starts as a manual one."),
+        chatId:      z.string().optional().describe("With message: an existing chat to continue. Omitted, a new chat starts."),
+        record:      z.boolean().optional().describe("Keep a flight recording of the run."),
+    };
+
+    const timeoutSeconds = z.number().int().positive().max(600).optional()
+        .describe("Seconds to hold for, default 300. Past it the run is returned as it is, with settled false.");
+
+    const start = (args: { workflowId: string, executionId?: string, message?: string, chatId?: string, record?: boolean }, wait?: { timeoutMs: number }) =>
+        Execution.API.run(api.raw, args.workflowId as never, {
+            executionId: args.executionId as never,
+            igniter:     Execution.buildIgniter(
+                args.message !== undefined
+                    ? { variant: "chat", message: args.message, chatId: args.chatId as never, record: args.record }
+                    : { variant: "manual", record: args.record },
+            ),
+            await: wait,
+        });
+
     const run = tool(
-        async ({ workflowId, executionId, message, chatId, record }) => ToolBudget.value(
-            await Execution.API.run(api.raw, workflowId as never, {
-                executionId: executionId as never,
-                igniter:     Execution.buildIgniter(
-                    message !== undefined
-                        ? { variant: "chat", message, chatId: chatId as never, record }
-                        : { variant: "manual", record },
-                ),
-            }),
-        ),
+        async (args) => ToolBudget.value(await start(args)),
         {
             name:        "execution_run",
-            description: "Start a run of a workflow from its saved graph. Returns the run, including its id. The run proceeds on its own; use execution_get to check on it.",
-            schema: z.object({
-                workflowId:    z.string().describe("The workflow to run."),
-                executionId:   z.string().optional().describe("Pre-assign the run's id. Usually omitted."),
-                message:       z.string().optional().describe("Start the run as a chat message to the workflow. Omitted, the run starts as a manual one."),
-                chatId:        z.string().optional().describe("With message: an existing chat to continue. Omitted, a new chat starts."),
-                record:        z.boolean().optional().describe("Keep a flight recording of the run."),
-            }),
+            description: "Start a run of a workflow from its saved graph and return at once. Returns the run, including its id. Use execution_wait or execution_get to follow it.",
+            schema:      z.object(runSchema),
+        },
+    );
+
+
+    const runAndAwait = tool(
+        async ({ timeoutSeconds, ...args }) => ToolBudget.value(await start(args, { timeoutMs: (timeoutSeconds ?? 300) * 1_000 })),
+        {
+            name:        "execution_run_and_await",
+            description: "Start a run of a workflow and hold until it settles. Returns the run as it ended, with settled true, or as it stands at the timeout, with settled false.",
+            schema:      z.object({ ...runSchema, timeoutSeconds }),
+        },
+    );
+
+
+    const wait = tool(
+        async ({ executionId, timeoutSeconds }) => ToolBudget.value(
+            await Execution.API.wait(api.raw, executionId as Execution.Id, { timeoutMs: (timeoutSeconds ?? 300) * 1_000 }),
+        ),
+        {
+            name:        "execution_wait",
+            description: "Hold until an execution settles. Safe to call on one that already has. Returns the run with settled true, or as it stands at the timeout with settled false.",
+            schema:      z.object({ executionId, timeoutSeconds }),
         },
     );
 
@@ -56,5 +85,5 @@ export function buildTools(api: HTTP.Client) {
     );
 
 
-    return [run, pause, resume, suspend, terminate, get];
+    return [run, runAndAwait, wait, pause, resume, suspend, terminate, get];
 }

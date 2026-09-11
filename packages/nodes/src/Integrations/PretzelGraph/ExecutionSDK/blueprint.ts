@@ -17,6 +17,7 @@ export const Blueprint = defineBlueprint({
                 { value: "suspend",   displayName: "Suspend" },
                 { value: "terminate", displayName: "Terminate" },
                 { value: "get",       displayName: "Get" },
+                { value: "wait",      displayName: "Wait" },
             ],
             initialValue: "run",
         }),
@@ -34,6 +35,17 @@ export const Blueprint = defineBlueprint({
                 required: true,
                 placeholder: "execution id",
                 tooltip: "The run to act on.",
+            }),
+        ],
+    },
+
+    "action==wait": {
+        fields: [
+            FieldBuilder.Integer("waitTimeoutSeconds", "Timeout", {
+                initialValue: 300,
+                min: 1,
+                max: 600,
+                tooltip: "Seconds to hold for. Past it the run is returned as it is, still going.",
             }),
         ],
     },
@@ -64,7 +76,21 @@ export const Blueprint = defineBlueprint({
                 tooltip: "How the run is started: as if from the editor, or as a message sent to the workflow's chat.",
             }),
             FieldBuilder.Boolean("record", "Record", { initialValue: false }),
+            FieldBuilder.Boolean("await", "Await", {
+                initialValue: false,
+                tooltip: "Hold until the run settles, then return it as it ended.",
+            }),
         ],
+        "await==true": {
+            fields: [
+                FieldBuilder.Integer("awaitTimeoutSeconds", "Timeout", {
+                    initialValue: 300,
+                    min: 1,
+                    max: 600,
+                    tooltip: "Seconds to hold for. Past it the run is returned as it is, still going.",
+                }),
+            ],
+        },
         "igniter==chat": {
             fields: [
                 FieldBuilder.String("chatMessage", "Message", {

@@ -148,15 +148,40 @@ export namespace Execution {
 
     export namespace API {
 
+        // Blocks until the run settles or the timeout passes; a timeout is an answer, not an error.
+        export namespace Wait {
+            export const MAX_TIMEOUT_MS     = 10 * 60_000
+            export const DEFAULT_TIMEOUT_MS = 5 * 60_000
+
+            export const Request = z.object({
+                timeoutMs: z.number().int().positive().max(MAX_TIMEOUT_MS).optional(),
+            })
+            export type Request = z.infer<typeof Request>
+
+            export const Response = z.object({
+                execution: Execution.Schema,
+                settled:   z.boolean(),
+            })
+            export type Response = z.infer<typeof Response>
+        }
+
+        export async function wait(api: AxiosInstance, executionId: Execution.Id, req: Wait.Request = {}): Promise<Wait.Response> {
+            const timeoutMs = (req.timeoutMs ?? Wait.DEFAULT_TIMEOUT_MS) + 5_000
+            const { data } = await api.post<Wait.Response>(`/api/execution/${executionId}/wait`, req, { timeout: timeoutMs })
+            return data
+        }
+
         export namespace Run {
             // executionId stays in the body because it is a proposal: the client mints it and
             // subscribes to its channel before the row exists, so there is nothing to authorize
             // against. workflowId is the authorization boundary and travels in the path.
-            // workflowData may be left out to run the workflow as it is saved.
+            // workflowData may be left out to run the workflow as it is saved. `await` holds the
+            // response until the run settles or the timeout passes.
             export const Request = z.strictObject({
                 workflowData: Workflow.Data.Schema.optional(),
                 executionId:  Execution.Id.optional(),
                 igniter:      Igniter.Schema,
+                await:        Wait.Request.optional(),
             })
             export type Request = z.infer<typeof Request>
 
@@ -171,9 +196,12 @@ export namespace Execution {
             export const Response = z.object({
                 execution: Execution.Schema,
                 isRecording: z.boolean(),
+                /** Only when awaited: whether the run settled before the timeout. */
+                settled: z.boolean().optional(),
             })
             export type Response = z.infer<typeof Response>
         }
+
         export namespace SdkRun {
             export const Request = z.object({
                 workflowId: Workflow.Id,

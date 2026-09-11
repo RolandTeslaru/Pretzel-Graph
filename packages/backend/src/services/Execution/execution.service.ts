@@ -79,8 +79,45 @@ export class ExecutionService {
         payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
         const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, workflowId)).data;
+        const started      = await this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
 
-        return this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
+        if (!payload.await)
+            return started;
+
+        const { execution, settled } = await this.waitForSettled(principal, started.execution.id, payload.await.timeoutMs);
+
+        return { ...started, execution, settled };
+    }
+
+
+
+
+    /**
+     * The waiter is registered before the row is read: the worker writes the final status before
+     * it emits the terminal event, so a run that settles in between is seen by the read, and one
+     * that settles after is caught by the waiter.
+     */
+    public async waitForSettled(
+        principal:   Principal.User,
+        executionId: Execution.Id,
+        timeoutMs:   number = Execution.API.Wait.DEFAULT_TIMEOUT_MS,
+    ): Promise<Execution.API.Wait.Response> {
+        const settled = this.realtime.awaitEvent(
+            Execution.Event.getChannel(executionId),
+            'lifecycle:completed',
+            timeoutMs,
+            event => Execution.Event.TERMINAL.has(event.type),
+        );
+
+        const current = await this.executionRepository.get(principal, executionId);
+
+        if (Execution.isSettled(current))
+            return { execution: current, settled: true };
+
+        const arrived   = await settled;
+        const execution = arrived ? await this.executionRepository.get(principal, executionId) : current;
+
+        return { execution, settled: arrived };
     }
 
 

@@ -20,9 +20,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 ? Execution.buildIgniter({ variant: "chat", message: f.chatMessage, chatId: (f.chatId || undefined) as Chat.Id | undefined, record: f.record })
                 : Execution.buildIgniter({ variant: "manual", record: f.record });
             const executionId = (f.proposedExecutionId || undefined) as Execution.Id | undefined;
+            const wait        = "awaitTimeoutSeconds" in f ? { timeoutMs: f.awaitTimeoutSeconds * 1_000 } : undefined;
 
             if ("workflowId" in f)
-                return { result: await Execution.API.run(api.raw, f.workflowId as Workflow.Id, { executionId, igniter }) };
+                return { result: await Execution.API.run(api.raw, f.workflowId as Workflow.Id, { executionId, igniter, await: wait }) };
 
             const slots = this.incomingFor(f, incoming);
 
@@ -31,8 +32,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             const { id, data } = Workflow.Schema.pick({ id: true, data: true }).parse(slots.workflow);
 
-            return { result: await Execution.API.run(api.raw, id, { workflowData: data, executionId, igniter }) };
+            return { result: await Execution.API.run(api.raw, id, { workflowData: data, executionId, igniter, await: wait }) };
         }
+
+        // Every non-run action declares executionId; the wait arm is narrowed apart from them.
+        if (!("executionId" in f))
+            throw new Error(`Action ${f.action} needs an execution id`);
 
         const executionId = f.executionId as Execution.Id;
 
@@ -42,6 +47,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             case "suspend":   return { result: await Execution.API.suspend(api.raw, executionId) };
             case "terminate": return { result: await Execution.API.terminate(api.raw, executionId) };
             case "get":       return { result: await Execution.API.get(api.raw, executionId) };
+            case "wait":      return { result: await Execution.API.wait(api.raw, executionId, { timeoutMs: ("waitTimeoutSeconds" in f ? Number(f.waitTimeoutSeconds) : 300) * 1_000 }) };
         }
 
         throw new Error("Unsupported action");
