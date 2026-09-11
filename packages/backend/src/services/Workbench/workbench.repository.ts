@@ -35,9 +35,9 @@ class WorkflowMethods extends Repository {
         return row.id;
     }
 
-    @Transactional('user', 'delegate')
+    @Transactional('user', 'delegate', 'service')
     @ZodReturn(Workflow.Schema)
-    public async get(principal: Principal.User | Principal.Delegate, workflowId: Workflow.Id): Promise<Workflow> {
+    public async get(principal: Principal.User | Principal.Delegate | Principal.Service, workflowId: Workflow.Id): Promise<Workflow> {
         const row = await this.trx
             .selectFrom('workflows')
             .selectAll()

@@ -12,7 +12,7 @@ type FieldId = Foundations.Field.Id
 // i.e. the ones that have both a static and an expression mode to toggle between. The Expression
 // variant is deliberately absent: it has no static mode, so there is nothing to toggle.
 const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
-    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List",
+    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List", "WorkflowIdSelector",
 ])
 
 export const fieldReducers: FieldReducers = {

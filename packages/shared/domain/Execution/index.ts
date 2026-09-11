@@ -56,6 +56,8 @@ export namespace Execution {
 
     export import Session = SessionMod.Session
     export import Igniter = IgniterMod.Igniter
+    export const buildIgniter = IgniterMod.buildIgniter
+    export type BuildIgniterOptions = IgniterMod.BuildIgniterOptions
 
     /**
      * A per-execution bearer credential: signed at enqueue, presented by the worker on
@@ -150,8 +152,9 @@ export namespace Execution {
             // executionId stays in the body because it is a proposal: the client mints it and
             // subscribes to its channel before the row exists, so there is nothing to authorize
             // against. workflowId is the authorization boundary and travels in the path.
+            // workflowData may be left out to run the workflow as it is saved.
             export const Request = z.strictObject({
-                workflowData: Workflow.Data.Schema,
+                workflowData: Workflow.Data.Schema.optional(),
                 executionId:  Execution.Id.optional(),
                 igniter:      Igniter.Schema,
             })

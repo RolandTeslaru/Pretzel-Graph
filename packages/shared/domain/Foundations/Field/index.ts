@@ -430,6 +430,8 @@ export namespace Field {
         variant:      configLiteral("WorkflowIdSelector"),
         initialValue: z.string(),
         placeholder:  z.string().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
 
     export interface Integer extends z.infer<typeof Integer> { }

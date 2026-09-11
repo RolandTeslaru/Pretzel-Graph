@@ -14,6 +14,7 @@ import { PermissionService } from '../Permission/permission.service';
 import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultRepository } from '../Vault/vault.repository';
+import { WorkbenchRepository } from '../Workbench/workbench.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
@@ -35,6 +36,7 @@ export class ExecutionService {
         private readonly executionRepository: ExecutionRepository,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultRepository: VaultRepository,
+        private readonly workbenchRepository: WorkbenchRepository,
         @Inject(forwardRef(() => WorkerLifecycleService))
         private readonly workerLifecycle: WorkerLifecycleService,
     ) {
@@ -70,15 +72,16 @@ export class ExecutionService {
 
 
 
-    // Attributed to whoever triggered it.
+    // Attributed to whoever triggered it. Runs the saved graph when the caller sends none.
     public async runFromUser(
         principal:  Principal.User,
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        return this.runCore(principal, workflowId, payload, payload.igniter);
-    }
+        const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, workflowId)).data;
 
+        return this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
+    }
 
 
 
@@ -89,7 +92,10 @@ export class ExecutionService {
         service: string,
     ): Promise<Execution.API.Run.Response> {
         // No human behind this run; `igniter` records what triggered it.
-        return this.runCore({ type: 'service', service }, payload.workflowId, payload, payload.igniter);
+        const principal    = { type: 'service', service } as const;
+        const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, payload.workflowId)).data;
+
+        return this.runCore(principal, payload.workflowId, workflowData, payload.igniter, payload.executionId);
     }
 
 
@@ -142,13 +148,13 @@ export class ExecutionService {
     }
 
     private async runCore(
-        principal:  Principal.User | Principal.Service,
-        workflowId: Workflow.Id,
-        payload:    Execution.API.Run.Request,
-        igniter:    Execution.Igniter,
+        principal:    Principal.User | Principal.Service,
+        workflowId:   Workflow.Id,
+        workflowData: Workflow.Data,
+        igniter:      Execution.Igniter,
+        proposedId?:  Execution.Id,
     ): Promise<Execution.API.Run.Response> {
         const chatId = igniter.chat_id;
-        const workflowData = payload.workflowData;
 
         const blueprints = await this.resolveBlueprints(workflowData);
         const wfCache = Workflow.createCache(workflowData, blueprints);
@@ -170,7 +176,7 @@ export class ExecutionService {
             await this.ensureChat(principal, chatId, workflowId);
 
         const session = Execution.Session.createInitial();
-        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: payload.executionId, chatId });
+        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: proposedId, chatId });
         const executionId = created.id;
 
         this.announce(created);
@@ -240,7 +246,7 @@ export class ExecutionService {
                 created_at: now,
                 updated_at: now,
             },
-            isRecording: payload.igniter.record ?? false,
+            isRecording: igniter.record ?? false,
         };
     }
 

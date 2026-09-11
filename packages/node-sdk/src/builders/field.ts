@@ -431,6 +431,8 @@ export namespace FieldBuilder {
         id: T_Id, displayName: string, options: {
         initialValue?: string;
         placeholder?: string;
+        isExpressionInitially?: boolean;
+        only?: "static" | "expression";
     } & BaseOptions<T_Required> = {},
     ): T_Return<T_Id, "WorkflowIdSelector", Field.WorkflowIdSelector, T_Required> {
         return {
@@ -438,6 +440,8 @@ export namespace FieldBuilder {
             variant:      "WorkflowIdSelector",
             initialValue: options.initialValue ?? "",
             placeholder:  options.placeholder,
+            ...buildIsExpression(options.isExpressionInitially),
+            ...buildOnly(options.only),
         };
     }
 
