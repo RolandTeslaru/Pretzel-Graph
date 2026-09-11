@@ -106,7 +106,7 @@ class CatalogueServiceImpl {
         if (!base) 
             return null;
         
-        if (!base._derivatives?.length)
+        if (!Blueprint.isDerivable(base))
             return base;
 
         // Derive and check cache

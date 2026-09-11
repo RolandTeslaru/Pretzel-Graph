@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { Port } from "../Port"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
@@ -157,10 +158,18 @@ export namespace Field {
         only: z.enum(["static", "expression"]).optional(),
     })
 
+    // A slot count. The template ports are repeated that many times at derive time, `{n}` in
+    // an id, display name, or polymorphic group filled per slot; they are never live ports.
     export const Variadic = Field.Base.extend({
         variant: configLiteral("Variadic"),
-        initialValue: z.array(z.string()),
-        groupId: z.string().brand("GroupId"),
+        initialValue: z.int(),
+        min: z.int().optional(),
+        max: z.int().optional(),
+        startIndex: z.int().optional(),
+        template: z.object({
+            inputs:  z.array(Port.Input.Schema).optional(),
+            outputs: z.array(Port.Output.Schema).optional(),
+        }),
     })
 
     export namespace Condition {

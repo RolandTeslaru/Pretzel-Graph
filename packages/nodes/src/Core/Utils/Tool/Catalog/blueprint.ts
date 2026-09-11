@@ -8,14 +8,13 @@ export const Blueprint = defineBlueprint({
     accent: "port-Tool",
     fields: [
         FieldBuilder.Variadic("tools_num", "Tools", {
-            groupId: "tools_group"
-        })
-    ],
-    inputs: [
-        InputBuilder.ToolList("tool_1", "Tool 1", {
-            groupId: "tools_group"
+            initialValue: 1,
+            min: 1,
+            max: 32,
+            inputs: [InputBuilder.ToolList("tool_{n}", "Tool {n}")],
         }),
     ],
+    inputs: [],
     outputs: [
         OutputBuilder.ToolList("tool_list", "Tool List", {})
     ],

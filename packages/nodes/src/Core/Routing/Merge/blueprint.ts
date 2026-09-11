@@ -8,7 +8,14 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     fields: [
         FieldBuilder.Variadic("inputPorts", "Input Ports", {
-            groupId: "variadic_inputs_1"
+            initialValue: 2,
+            min: 1,
+            max: 32,
+            inputs: [
+                InputBuilder.UnresolvedList("input_{n}", "Input {n}", {
+                    polymorphicGroupId: "data",
+                }),
+            ],
         }),
         FieldBuilder.Integer("flattenDepth", "Flatten Depth", {
             initialValue: 1,
@@ -16,16 +23,7 @@ export const Blueprint = defineBlueprint({
             max: 10
         }),
     ],
-    inputs: [
-        InputBuilder.UnresolvedList("input_1", "Input 1", {
-            polymorphicGroupId: "data",
-            groupId: "variadic_inputs_1"
-        }),
-        InputBuilder.UnresolvedList("input_2", "Input 2", {
-            polymorphicGroupId: "data",
-            groupId: "variadic_inputs_1"
-        }),
-    ],
+    inputs: [],
     outputs: [
         OutputBuilder.UnresolvedList("output", "Output", {
             polymorphicGroupId: "data"

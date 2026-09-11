@@ -4,7 +4,6 @@ import type { NodeActions } from "../node";
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import type { DropFirstArg } from "@/SDKs/types";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { createVariadicActions, type VariadicActions } from "./variadic";
 import { createConditionActions, type ConditionActions } from "./condition";
 import { createCaseListActions, type CaseListActions } from "./caseList";
 
@@ -53,7 +52,6 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
         }),
         validate:        (...props) => { setDocument(d => { reducers.field.validate(d, ...props) }) },
         setIsExpression: withCommit((...props) => { setDocument(d => { reducers.field.setIsExpression(d, ...props) }) }),
-        variadic:  createVariadicActions(sdk),
         condition: createConditionActions(sdk, validateFieldById),
         caseList:  createCaseListActions(sdk, validateFieldById),
     } satisfies FieldActions;
@@ -64,7 +62,6 @@ export interface FieldActions {
     setValue        : (nodeId: Workflow.Node.Id, field: Field, value: any) => void
     validate        : DropFirstArg<WorkbenchSDK.Reducers['field']['validate']>
     setIsExpression : DropFirstArg<WorkbenchSDK.Reducers['field']['setIsExpression']>
-    variadic        : VariadicActions
     condition       : ConditionActions
     caseList        : CaseListActions
 }

@@ -7,13 +7,15 @@
 // and are reconstructed at load instead (see the load action): `reconciledBlueprintId` (needs the
 // base blueprint + values) and `polymorphicResolutions` (replayed from edges).
 
-export const WORKFLOW_DATA_VERSION = 3;
+export const WORKFLOW_DATA_VERSION = 4;
 
 export function migrateWorkflowDataToLatest(raw: any): any {
     if (!raw || typeof raw !== "object") return raw;
 
+    const from = typeof raw.version === "number" ? raw.version : 1;
+
     // Structural fat-node (v1) -> slim-node (v2). Skip if already slim.
-    const data = typeof raw.version === "number" && raw.version >= 2
+    const data = from >= 2
         ? { ...raw, nodes: { ...raw.nodes } }
         : migrateV1toV2(raw);
 
@@ -32,6 +34,9 @@ export function migrateWorkflowDataToLatest(raw: any): any {
 
     liftAddedFieldExpressions(data);
     renameGlobalFields(data);
+
+    if (from < 4)
+        foldVariadicSlots(data);
 
     data.version = WORKFLOW_DATA_VERSION;
 
@@ -77,6 +82,39 @@ function liftAddedFieldExpressions(data: any): void {
 
             return rest;
         });
+    }
+}
+
+// v4: a variadic group is a slot count on its field, derived into ports on read, instead of
+// extra ports stored on the node. Base slot counts are what each blueprint used to declare.
+const LEGACY_VARIADIC: Record<string, { groupId: string; fieldId: string; base: number }> = {
+    "Core.Routing.Merge":       { groupId: "variadic_inputs_1", fieldId: "inputPorts", base: 2 },
+    "Core.Routing.Passthrough": { groupId: "passthrough",       fieldId: "ports",      base: 1 },
+    "Core.Utils.Tool.Catalog":  { groupId: "tools_group",       fieldId: "tools_num",  base: 1 },
+};
+
+function foldVariadicSlots(data: any): void {
+    for (const node of Object.values<any>(data.nodes ?? {})) {
+        const legacy = LEGACY_VARIADIC[node?.blueprintId];
+        if (!legacy)
+            continue;
+
+        const isSlot = (port: any) => port?.groupId === legacy.groupId;
+
+        const addedInputs  = (node.addedInputs  ?? []).filter(isSlot).length;
+        const addedOutputs = (node.addedOutputs ?? []).filter(isSlot).length;
+        const count        = legacy.base + Math.max(addedInputs, addedOutputs);
+
+        data.staticValues ??= {};
+        data.staticValues[node.id] = { ...(data.staticValues[node.id] ?? {}), [legacy.fieldId]: count };
+
+        const keptInputs  = (node.addedInputs  ?? []).filter((p: any) => !isSlot(p));
+        const keptOutputs = (node.addedOutputs ?? []).filter((p: any) => !isSlot(p));
+
+        if (keptInputs.length)  node.addedInputs  = keptInputs;  else delete node.addedInputs;
+        if (keptOutputs.length) node.addedOutputs = keptOutputs; else delete node.addedOutputs;
+
+        node.reconciledBlueprintId = `${node.blueprintId}:${legacy.fieldId}==${count}`;
     }
 }
 

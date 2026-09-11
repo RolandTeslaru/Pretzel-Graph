@@ -102,7 +102,7 @@ export namespace Shelf {
                 drawerId:        drawerOf(bp.id),
                 toolCompatible:  bp.toolCompatible  ?? false,
                 proxyCompatible: bp.proxyCompatible ?? false,
-                derivable:       (bp._derivatives?.length ?? 0) > 0,
+                derivable:       Foundations.Blueprint.isDerivable(bp),
                 fieldIds:        bp.fields.map(f => f.id),
                 inputVariants:   [...new Set(bp.inputs.map(p => p.variant))],
                 outputVariants:  [...new Set(bp.outputs.map(p => p.variant))],

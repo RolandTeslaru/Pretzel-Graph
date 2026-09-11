@@ -13,7 +13,7 @@ type NodeId = Workflow.Node.Id
  * both cases the base already is the answer.
  */
 function resolveOnCreate(d: Document, blueprint: Foundations.Blueprint) {
-    if (!blueprint._derivatives?.length)
+    if (!Foundations.Blueprint.isDerivable(blueprint))
         return null;
 
     const { blueprint: derived, derivativeId } = Foundations.Blueprint.derive(blueprint, {});

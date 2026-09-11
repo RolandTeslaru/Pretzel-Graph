@@ -2,7 +2,6 @@ import { Validation } from "../../../../Validation";
 import { Foundations } from "../../../../Foundations";
 import type { Workflow } from "../../../../Workflow";
 import type { Document } from "../../index";
-import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
 
@@ -113,7 +112,6 @@ export const fieldReducers: FieldReducers = {
         expressionOverrides[fieldId] = value
         d.isDirty = true;
     },
-    variadic:  fieldVariadicReducers,
     condition: fieldConditionReducers,
     caseList:  fieldCaseListReducers,
 }
@@ -142,7 +140,6 @@ export interface FieldReducers {
         fieldId: FieldId,
         value: boolean
     ) => void
-    variadic  : FieldVariadicReducers
     condition : FieldConditionReducers
     caseList  : FieldCaseListReducers
 }

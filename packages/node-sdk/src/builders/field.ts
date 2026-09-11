@@ -1,5 +1,6 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 
 export type OmitId<T> = Omit<T, "id">
 
@@ -335,13 +336,24 @@ export namespace FieldBuilder {
 
 
     export function Variadic<T_Id extends string>(
-        id: T_Id, displayName: string, options: { groupId: string } & BaseOptions,
+        id: T_Id, displayName: string, options: {
+            initialValue: number;
+            min?:         number;
+            max?:         number;
+            startIndex?:  number;
+            inputs?:      readonly Port.Input[];
+            outputs?:     readonly Port.Output[];
+        } & BaseOptions,
     ): T_Return<T_Id, "Variadic", Field.Variadic, false> {
         return {
             ...buildBase(id, displayName, options),
-            variant: "Variadic",
-            initialValue: [],
-            groupId: options.groupId as Field.Variadic["groupId"],
+            variant:      "Variadic",
+            reconcile:    true,
+            initialValue: options.initialValue,
+            min:          options.min,
+            max:          options.max,
+            startIndex:   options.startIndex,
+            template:     { inputs: [...(options.inputs ?? [])], outputs: [...(options.outputs ?? [])] },
         };
     }
 

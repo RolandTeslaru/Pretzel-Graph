@@ -8,19 +8,22 @@ export const Blueprint = defineBlueprint({
     accent: "group-routing",
     fields: [
         FieldBuilder.Variadic("ports", "Ports", {
-            groupId: "passthrough"
+            initialValue: 1,
+            min: 1,
+            max: 32,
+            startIndex: 0,
+            inputs: [
+                InputBuilder.Unresolved("input_{n}", "Input {n}", {
+                    polymorphicGroupId: "passthrough_{n}",
+                }),
+            ],
+            outputs: [
+                OutputBuilder.Unresolved("output_{n}", "Output {n}", {
+                    polymorphicGroupId: "passthrough_{n}",
+                }),
+            ],
         }),
     ],
-    inputs: [
-        InputBuilder.Unresolved("input_0", "Input 0", {
-            polymorphicGroupId: "passthrough_0",
-            groupId: "passthrough"
-        }),
-    ],
-    outputs: [
-        OutputBuilder.Unresolved("output_0", "Output 0", {
-            polymorphicGroupId: "passthrough_0",
-            groupId: "passthrough"
-        }),
-    ],
+    inputs: [],
+    outputs: [],
 });

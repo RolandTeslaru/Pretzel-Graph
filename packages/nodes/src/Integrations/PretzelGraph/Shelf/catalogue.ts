@@ -66,5 +66,21 @@ export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
 
     walk(bp._derivatives, "");
 
+    // A Variadic field is a slot count rather than a branch: one entry, the template as it repeats.
+    for (const field of bp.fields) {
+        if (field.variant !== "Variadic")
+            continue;
+
+        out.push({
+            path: `${field.id}==<count>`,
+            adds: {
+                fields:  [],
+                inputs:  (field.template.inputs  ?? []).map(p => p.id),
+                outputs: (field.template.outputs ?? []).map(p => p.id),
+            },
+            replaces: {},
+        });
+    }
+
     return out;
 };
