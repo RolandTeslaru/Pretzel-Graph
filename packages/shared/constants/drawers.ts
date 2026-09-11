@@ -220,7 +220,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "PretzelGraph",
     id: "pretzelgraph",
     icon: "PretzelGraphAppIcon",
-    blueprintIds: ["Integrations.PretzelGraph.Workbench", "Integrations.PretzelGraph.Shelf"]
+    blueprintIds: ["Integrations.PretzelGraph.WorkbenchSDK", "Integrations.PretzelGraph.ShelfSDK"]
   },
   polymarket: {
     displayName: "Polymarket",
