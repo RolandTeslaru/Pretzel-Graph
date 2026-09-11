@@ -8,7 +8,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
-import { _createLibraryDialogs_, type _LibrarySDKDialogs } from './ui/dialogs';
+import { _createLibraryDialogs_, type _LibrarySDKDialogs } from './dialogs';
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {

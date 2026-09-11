@@ -3,6 +3,7 @@ import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
+import { _createWorkbenchDialogs_, type _WorkbenchSDKDialogs } from "./dialogs";
 import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "react";
 import { Foundations, Validation, Vault, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
@@ -84,6 +85,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly reducers: WorkbenchSDK.Reducers = Document.reducers;
     public readonly editorReducers: WorkbenchSDK.EditorReducers = editorReducers;
     public readonly actions: WorkbenchSDK.Actions = _createWorkbenchActions_(this)
+    public readonly dialogs: WorkbenchSDK.Dialogs = _createWorkbenchDialogs_()
 
 
     public get isLocked(): boolean {
@@ -334,6 +336,7 @@ export namespace WorkbenchSDK {
 
     export type Selectors      = Document.Selectors
     export type Actions        = _WorkbenchSDKActions
+    export type Dialogs        = _WorkbenchSDKDialogs
     export type Reducers       = Document.Reducers
     export type EditorReducers = typeof editorReducers
 

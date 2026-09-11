@@ -1,7 +1,7 @@
 import { openCreateFolderDialog, openEditFolderDialog, openDeleteFolderDialog } from './folder-dialogs'
-import { openCreateWorkflowDialog, openEditWorkflowDialog, openDeleteWorkflowDialog } from './workflow-dialogs'
-import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from './listing-dialogs'
-import { openDependencySelectorDialog } from './DependencySelectorDialog'
+import { openCreateWorkflowDialog, openEditWorkflowDialog, openDeleteWorkflowDialog } from "./workflow-dialogs"
+import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from "./listing-dialogs"
+import { openDependencySelectorDialog } from './DependencySelector'
 import { openResourceSelector } from './ResourceSelector'
 
 export function _createLibraryDialogs_() {
