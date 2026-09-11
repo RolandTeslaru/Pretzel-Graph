@@ -13,6 +13,11 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
             return Object.values(s.folders).filter((f) => f.parent_folder_id === folderId && isVisible(f, s.showHidden));
         },
 
+        // The folder a workflow lives in; the root when the workflow is unknown here.
+        folderOf: (workflowId: Workflow.Id): Library.Folder.Id => {
+            return sdk.useStore.getState().workflowMetas[workflowId]?.folder_id ?? Library.Folder.ROOT_ID;
+        },
+
         // Workflows living directly inside a folder.
         workflowsInFolder: (folderId: Library.Folder.Id): Library.WorkflowMeta[] => {
             const s = sdk.useStore.getState();

@@ -1,88 +1,8 @@
 import React, { memo } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { WorkbenchSDK } from '../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Button, Dialog, Form, Input } from '@pretzel-graph/standard-ui/foundations'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { Workflow } from '@pretzel-graph/shared/domain'
-
-const NameSchema = z.object({
-    display_name: z.string().trim().min(1, 'Name is required'),
-})
-type NameValues = z.infer<typeof NameSchema>
-
-function openCreateSubWorkflowDialog(nodeIds: Workflow.Node.Id[], edgeIds: Workflow.Edge.Id[]) {
-    const id = 'create-sub-workflow'
-    DialogSDK.actions.push(id, (props) => (
-        <DialogSDK.Template {...props} className='sm:max-w-112.5 w-full'>
-            <CreateSubWorkflowContent dialogId={id} nodeIds={nodeIds} edgeIds={edgeIds} />
-        </DialogSDK.Template>
-    ))
-}
-
-function CreateSubWorkflowContent({
-    dialogId,
-    nodeIds,
-    edgeIds,
-}: {
-    dialogId: string
-    nodeIds: Workflow.Node.Id[]
-    edgeIds: Workflow.Edge.Id[]
-}) {
-    const form = useForm<NameValues>({
-        resolver: zodResolver(NameSchema),
-        defaultValues: { display_name: '' },
-    })
-
-    const onSubmit = (values: NameValues) => {
-        WorkbenchSDK.actions.subWorkflow.create(nodeIds, edgeIds, values.display_name)
-        DialogSDK.actions.pop(dialogId)
-    }
-
-    return (
-        <div className='p-3 flex flex-col gap-4'>
-            <Dialog.Header className='my-1'>
-                <Dialog.Title className='flex items-center gap-2'>
-                    <SystemIcons.Graph />
-                    Create Sub-Workflow
-                </Dialog.Title>
-                <Dialog.Description className='text-muted-foreground'>
-                    Extract the selected nodes into a new reusable sub-workflow.
-                </Dialog.Description>
-            </Dialog.Header>
-
-            <Form.Root {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-4' autoComplete='off'>
-                    <Form.Field
-                        control={form.control}
-                        name='display_name'
-                        render={({ field }) => (
-                            <Form.Item>
-                                <Form.Label>Name</Form.Label>
-                                <Form.Control>
-                                    <Input {...field} placeholder='Untitled sub-workflow' autoFocus />
-                                </Form.Control>
-                                <Form.Message />
-                            </Form.Item>
-                        )}
-                    />
-                    <Dialog.Footer>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
-                            Cancel
-                        </Button>
-                        <Button type='submit'>
-                            Create
-                        </Button>
-                    </Dialog.Footer>
-                </form>
-            </Form.Root>
-
-        </div>
-    )
-}
+import type { Workflow } from '@pretzel-graph/shared/domain'
 
 export const SelectionContextMenu: React.FC = memo(() => {
     const [menu, selectedNodeCount] = WorkbenchSDK.useStore(s => [
@@ -100,7 +20,7 @@ export const SelectionContextMenu: React.FC = memo(() => {
         const nodeIds = selection.nodes.map(n => n.id as Workflow.Node.Id);
         const edgeIds = selection.edges.map(e => e.id as Workflow.Edge.Id);
         close();
-        openCreateSubWorkflowDialog(nodeIds, edgeIds);
+        WorkbenchSDK.dialogs.openCreateSubWorkflow(nodeIds, edgeIds);
     }
 
     return (

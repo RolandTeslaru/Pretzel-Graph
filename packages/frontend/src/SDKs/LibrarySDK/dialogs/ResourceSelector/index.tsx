@@ -26,6 +26,8 @@ export namespace ResourceSelector {
 
     export interface Options<A extends Accept> {
         accept: A
+        /** Folder the browser opens in. Defaults to the library root. */
+        initialFolderId?: Library.Folder.Id
         onSelect: (resource: ResourceFor<A>) => void
     }
 }
@@ -40,18 +42,19 @@ export function openResourceSelector<A extends ResourceSelector.Accept>(options:
     const onSelect = options.onSelect as (resource: ResourceSelector.Resource) => void
 
     DialogSDK.actions.push(RESOURCE_SELECTOR_DIALOG_ID, (props) => (
-        <ResourceSelectorDialog dialogProps={props} accept={options.accept} onSelect={onSelect} />
+        <ResourceSelectorDialog dialogProps={props} accept={options.accept} initialFolderId={options.initialFolderId} onSelect={onSelect} />
     ))
 }
 
 interface Props {
     dialogProps: DialogSDK.TemplateProps
     accept: ResourceSelector.Accept
+    initialFolderId?: Library.Folder.Id
     onSelect: (resource: ResourceSelector.Resource) => void
 }
 
-const ResourceSelectorDialog = ({ dialogProps, accept, onSelect }: Props) => {
-    const [cwd, setCwd] = useState<Library.Folder.Id>(Library.Folder.ROOT_ID)
+const ResourceSelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect }: Props) => {
+    const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
     const [viewSearchQuery, setViewSearchQuery] = useState('')
