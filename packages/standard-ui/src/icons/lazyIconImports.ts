@@ -20,6 +20,7 @@ export const lazyIconsMapping = {
   OpenAI: () => import("./integrations/OpenAI"),
   OpenRouter: () => import("./integrations/OpenRouter"),
   Postgres: () => import("./integrations/Postgres"),
+  PretzelGraphAppIcon: () => import("./integrations/PretzelGraphAppIcon"),
   Redis: () => import("./integrations/Redis"),
   Tavily: () => import("./integrations/Tavily"),
   Uniswap: () => import("./integrations/Uniswap"),

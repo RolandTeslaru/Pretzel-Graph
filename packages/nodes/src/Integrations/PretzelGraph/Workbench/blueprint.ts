@@ -2,9 +2,9 @@ import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretz
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.Workbench",
-    displayName: "Workbench",
+    displayName: "Workbench SDK",
     description: "Reads and edits another workflow in this workspace — its nodes, edges, and field values.",
-    icon: "Pretzel",
+    icon: "PretzelGraphAppIcon",
     accent: "utility",
     toolCompatible: true,
     credentials: [],

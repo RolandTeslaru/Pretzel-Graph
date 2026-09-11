@@ -11,7 +11,7 @@ const blueprintId = z.string().describe("Blueprint id, e.g. Core.Text.Input. The
 const position    = z.object({ x: z.number(), y: z.number() }).optional()
     .describe("Canvas position. Omit to place the node to the right of the rightmost one.");
 const staticValues = z.record(z.unknown()).optional()
-    .describe("Initial field values keyed by field id.");
+    .describe("Initial values for the blueprint's base fields, keyed by field id. Fields marked reconcile are rejected here; set them with workbench_set_field after creating.");
 
 const edgeEndpoints = {
     sourceNodeId: z.string(),
@@ -138,7 +138,7 @@ export function buildTools(wb: WorkbenchClient) {
         ),
         {
             name:        "workbench_create_node",
-            description: "Add a node to the workflow. Returns its id and any validation issues.",
+            description: "Add a node on its base branch. Returns its id and any validation issues. Reshape it afterwards with workbench_set_field on a reconcile field.",
             schema:      z.object({ blueprintId, position, staticValues }),
         },
     );

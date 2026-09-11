@@ -2,9 +2,9 @@ import { defineBlueprint, defineTool, FieldBuilder, OutputBuilder } from "@pretz
 
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.Shelf",
-    displayName: "Shelf",
+    displayName: "Shelf SDK",
     description: "Searches the blueprints that can be placed on a workflow and describes their fields and ports.",
-    icon: "Pretzel",
+    icon: "PretzelGraphAppIcon",
     accent: "utility",
     toolCompatible: true,
     credentials: [],

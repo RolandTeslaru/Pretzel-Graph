@@ -337,7 +337,22 @@ export namespace Operations {
             }
         },
 
+        // A new node starts on its base branch with plain values only. A reconciling field
+        // reshapes the node, so it is set afterwards through field.set, which reports the reshape.
         create: withCyclesRecompute((d: Document, blueprint: Foundations.Blueprint, position: Position, staticValues?: Record<string, unknown>) => {
+            const fields  = new Map(blueprint.fields.map(f => [f.id as string, f]))
+            const inputs  = new Set(blueprint.inputs.map(i => i.id as string))
+
+            for (const id of Object.keys(staticValues ?? {})) {
+                const field = fields.get(id)
+
+                if (field?.reconcile)
+                    throw new Error(`Field ${id} reshapes the node; create it first, then set the field`)
+
+                if (!field && !inputs.has(id))
+                    throw new Error(`Unknown field ${id}; the base has ${[...fields.keys()].join(", ") || "no fields"}`)
+            }
+
             const nodeId = d.reducers.node.create(d, blueprint, position, staticValues as never)
             return { nodeId, issues: d.issues.nodes[nodeId] ?? null }
         }),
