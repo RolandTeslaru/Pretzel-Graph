@@ -12,35 +12,35 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     // tool set, the first write opens one hold that lasts until the run ends or a tool commits.
     protected override async onRun() {
         const f  = this.fieldValues;
-        const wb = new WorkbenchClient(this.context.internalAPI, f.workflowId as Workflow.Id);
+        const client = await WorkbenchClient.open(this.context.internalAPI, this.context.realtimeAPI, f.workflowId as Workflow.Id);
 
         if (f.isConvertedToTool === true) {
             this.context.lifecycleAPI.onEnding(async outcome => {
-                if (!wb.inTransaction)
+                if (!client.inTransaction)
                     return;
 
                 if (outcome === "completed")
-                    await wb.commitTransaction();
+                    await client.commitTransaction();
                 else
-                    await wb.abortTransaction();
+                    await client.abortTransaction();
             });
 
-            return { tools: buildTools(wb) };
+            return { tools: buildTools(client) };
         }
 
         switch (f.target) {
             case "workflow":
                 switch (f.workflowOperation) {
-                    case "get":  return { result: await wb.workflow.get() };
-                    case "meta": return { result: await wb.workflow.getMeta() };
+                    case "get":  return { result: client.operations.workflow.get() };
+                    case "meta": return { result: await client.getMeta() };
                 }
                 break;
 
             case "node":
                 switch (f.nodeOperation) {
-                    case "get":    return { result: await wb.node.get(f.getNodeId as Workflow.Node.Id) };
-                    case "delete": return { result: await wb.write(() => wb.node.delete(f.deleteNodeId as Workflow.Node.Id)) };
-                    case "create": return { result: await wb.write(() => wb.node.create({
+                    case "get":    return { result: client.operations.node.get(f.getNodeId as Workflow.Node.Id) };
+                    case "delete": return { result: await client.runTransaction(() => client.operations.node.delete(f.deleteNodeId as Workflow.Node.Id)) };
+                    case "create": return { result: await client.runTransaction(() => client.operations.node.create({
                         blueprintId:  f.blueprintId as Foundations.Blueprint.Id,
                         position:     { x: f.positionX, y: f.positionY },
                         staticValues: (f.staticValues ?? {}) as Record<string, unknown>,
@@ -50,13 +50,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             case "edge":
                 switch (f.edgeOperation) {
-                    case "create": return { result: await wb.write(() => wb.edge.create({
+                    case "create": return { result: await client.runTransaction(() => client.operations.edge.create({
                         source:       f.sourceNodeId as Workflow.Node.Id,
                         sourceHandle: f.sourcePortId as Foundations.Port.Output.Id,
                         target:       f.targetNodeId as Workflow.Node.Id,
                         targetHandle: f.targetPortId as Foundations.Port.Input.Id,
                     })) };
-                    case "delete": return { result: await wb.write(() => wb.edge.delete(f.edgeId as Workflow.Edge.Id)) };
+                    case "delete": return { result: await client.runTransaction(() => client.operations.edge.delete(f.edgeId as Workflow.Edge.Id)) };
                 }
                 break;
 
@@ -65,8 +65,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 const fieldId = f.fieldId as Foundations.Field.Id;
 
                 switch (f.fieldOperation) {
-                    case "get": return { result: await wb.field.get(nodeId, fieldId) };
-                    case "set": return { result: await wb.write(() => wb.field.set(nodeId, fieldId, f.fieldValue)) };
+                    case "get": return { result: client.operations.field.get(nodeId, fieldId) };
+                    case "set": return { result: await client.runTransaction(() => client.operations.field.set(nodeId, fieldId, f.fieldValue)) };
                 }
                 break;
             }

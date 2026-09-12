@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { sql } from 'kysely';
-import { Execution, Foundations, SystemError, Workbench, Workflow } from '@pretzel-graph/shared/domain';
+import { Execution, SystemError, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -8,45 +8,27 @@ import { ShelfService } from '../Shelf/shelf.service';
 import { WorkbenchRepository } from './workbench.repository';
 
 // A worker-side hold on a workflow. The row is locked by one transaction kept open from begin
-// to commit, and the document being edited lives here for that long: each operation applies
-// one edit to it and announces the edit on the workflow's channel; commit writes it back whole.
-// Postgres is the lock: a dead connection releases it, and the idle timeout below reaps a
-// caller that stops heartbeating.
+// to commit; the run edits its own copy and sends the result back whole. Postgres is the lock:
+// a dead connection releases it, and the idle timeout below reaps a caller that stops
+// heartbeating. Edits the run announces on its own channel are relayed onto the workflow's.
 //
 // One session per workflow at a time — the row lock guarantees it — recorded with the execution
-// that holds it, so only that execution may edit, heartbeat, commit, or abort it. A second begin
-// is refused whoever asks, before Postgres has to block on it.
+// that holds it, so only that execution may heartbeat, commit, or abort it. A second begin is
+// refused whoever asks, before Postgres has to block on it.
 
 type Session = {
     trx:         DB.HeldDelegateTransaction,
     workflowId:  Workflow.Id,
     executionId: Execution.Id,
     meta:        Workflow.Meta,
-    document:    Workbench.Document,
     unsubscribe: () => void,
 };
 
 const toMeta = ({ data: _data, ...meta }: Workflow): Workflow.Meta => meta;
 
-type Operation = Workbench.API.Session.Operation;
-
 const IDLE_TIMEOUT = '60s';
 
 const isLockNotAvailable = (error: unknown) => (error as { code?: string })?.code === '55P03';
-
-const NODE_GAP = 320;
-
-// A caller with no opinion on geometry gets the next slot in a row; the canvas can tidy later.
-const placeNext = (d: Workbench.Document) => {
-    const positions = Object.values(d.data.ui.layout);
-
-    if (positions.length === 0)
-        return { x: 0, y: 0 };
-
-    const rightmost = positions.reduce((a, b) => (b.x > a.x ? b : a));
-
-    return { x: rightmost.x + NODE_GAP, y: rightmost.y };
-};
 
 @Injectable()
 export class WorkbenchSessionService implements OnModuleDestroy {
@@ -64,21 +46,6 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
     public isLocked(workflowId: Workflow.Id): boolean {
         return this.sessions.has(workflowId);
-    }
-
-
-
-
-    /** The session's own document while this execution holds the workflow; a snapshot otherwise. */
-    public async read(delegate: Principal.Delegate, workflowId: Workflow.Id): Promise<Workbench.Document> {
-        const session = this.sessions.get(workflowId);
-
-        if (session && session.executionId === delegate.executionId)
-            return session.document;
-
-        const workflow = await this.repository.workflow.get(delegate, workflowId);
-
-        return this.createDocument(workflow);
     }
 
 
@@ -129,15 +96,10 @@ export class WorkbenchSessionService implements OnModuleDestroy {
                 workflowId,
                 executionId: delegate.executionId,
                 meta:        toMeta(workflow),
-                document:    await this.createDocument(workflow),
-                // The worker announces how its run ended on the execution channel; any terminal
-                // state releases whatever the run still holds.
-                unsubscribe: this.realtime.subscribe<Execution.Event.Base>(
+                // The run's own channel carries both its lifecycle and the edits it makes.
+                unsubscribe: this.realtime.subscribe<Execution.Event>(
                     Execution.Event.getChannel(delegate.executionId),
-                    event => {
-                        if (Execution.Event.TERMINAL.has(event.type))
-                            void this.releaseExecution(delegate.executionId);
-                    },
+                    event => this.onExecutionEvent(session, event),
                 ),
             };
 
@@ -145,7 +107,7 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
             this.emit(session, { type: 'lock:acquired' });
 
-            return { workflowId };
+            return this.snapshot(workflow, true);
         }
         catch (error) {
             await trx.rollback().execute().catch(() => {});
@@ -175,122 +137,13 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
 
 
-    /** One edit on the held document, announced as it lands. */
-    public async apply(delegate: Principal.Delegate, workflowId: Workflow.Id, operation: Operation): Promise<unknown> {
-        const session = this.require(delegate, workflowId);
-        const d = session.document;
-
-        // The edit never reaches Postgres, so the hold looks idle to it; every operation counts
-        // as a heartbeat.
-        await this.heartbeat(delegate, workflowId);
-
-        switch (operation.op) {
-            case 'node.create': {
-                const blueprint = await this.resolveBlueprint(operation.blueprintId);
-                const position  = operation.position ?? placeNext(d);
-                const result    = Workbench.Operations.node.create(d, blueprint, position, operation.staticValues);
-
-                this.emit(session, {
-                    type:         'node:created',
-                    node:         d.data.nodes[result.nodeId],
-                    position:     d.data.ui.layout[result.nodeId],
-                    staticValues: d.data.staticValues[result.nodeId] ?? {},
-                });
-
-                return result;
-            }
-
-            case 'node.delete': {
-                const result = Workbench.Operations.node.delete(d, operation.nodeId);
-
-                this.emit(session, { type: 'node:deleted', nodeId: result.nodeId });
-
-                return result;
-            }
-
-            case 'node.move': {
-                const result = Workbench.Operations.node.move(d, operation.nodeId, operation.position);
-
-                this.emit(session, { type: 'node:moved', nodeId: result.nodeId, position: result.position });
-
-                return result;
-            }
-
-            case 'edge.create': {
-                const result = Workbench.Operations.edge.create(d, operation);
-
-                this.emit(session, { type: 'edge:created', edgeId: result.edgeId });
-
-                return result;
-            }
-
-            case 'edge.delete': {
-                const result = Workbench.Operations.edge.delete(d, operation.edgeId);
-
-                this.emit(session, { type: 'edge:deleted', edgeId: result.edgeId });
-
-                return result;
-            }
-
-            case 'globalField.add':
-            case 'globalField.update':
-            case 'globalField.remove': {
-                const result =
-                    operation.op === 'globalField.add'    ? Workbench.Operations.globalField.add(d, operation)
-                  : operation.op === 'globalField.update' ? Workbench.Operations.globalField.update(d, operation.fieldId, operation.patch)
-                  :                                         Workbench.Operations.globalField.remove(d, operation.fieldId);
-
-                this.emit(session, { type: 'workflow:globalFieldsChanged', globalFields: [...d.data.globalFields] });
-
-                return result;
-            }
-
-            case 'field.set': {
-                const result = Workbench.Operations.field.set(d, operation.nodeId, operation.fieldId, operation.value);
-
-                this.emit(session, {
-                    type:    'field:set',
-                    nodeId:  result.nodeId,
-                    fieldId: result.fieldId,
-                    value:   operation.value,
-                });
-
-                return result;
-            }
-        }
-    }
-
-
-
-
-    /** In order, stopping at the first failure; what landed before it stays applied. */
-    public async applyBatch(delegate: Principal.Delegate, workflowId: Workflow.Id, operations: Operation[]): Promise<Workbench.API.Session.Batch.Response> {
-        const results: unknown[] = [];
-
-        for (const [index, operation] of operations.entries()) {
-            try {
-                results.push(await this.apply(delegate, workflowId, operation));
-            }
-            catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-
-                throw new SystemError(SystemError.Code.BAD_REQUEST, `Operation ${index} (${operation.op}) failed: ${message}`);
-            }
-        }
-
-        return { results };
-    }
-
-
-
-
-    public async commitTransaction(delegate: Principal.Delegate, workflowId: Workflow.Id): Promise<void> {
+    public async commitTransaction(delegate: Principal.Delegate, workflowId: Workflow.Id, data: Workflow.Data): Promise<void> {
         const session = this.require(delegate, workflowId);
 
         try {
             await session.trx
                 .updateTable('workflows')
-                .set({ data: session.document.data })
+                .set({ data })
                 .where('id', '=', workflowId)
                 .execute();
 
@@ -333,6 +186,22 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
 
 
+    // An edit is relayed only for the workflow this session holds; a terminal state releases it.
+    private onExecutionEvent(session: Session, event: Execution.Event) {
+        if (event.type === 'workbench:edit') {
+            if (event.targetWorkflowId === session.workflowId)
+                this.emit(session, event.edit);
+
+            return;
+        }
+
+        if (Execution.Event.TERMINAL.has(event.type))
+            void this.releaseExecution(session.executionId);
+    }
+
+
+
+
     private require(delegate: Principal.Delegate, workflowId: Workflow.Id): Session {
         const session = this.sessions.get(workflowId);
 
@@ -345,26 +214,10 @@ export class WorkbenchSessionService implements OnModuleDestroy {
 
 
 
-    private async createDocument(workflow: Workflow): Promise<Workbench.Document> {
-        const { blueprints } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
-        const document       = Workbench.Document.create(workflow.id, workflow.data, blueprints);
+    private async snapshot(workflow: Workflow, locked: boolean): Promise<Workbench.API.Session.Begin.Response> {
+        const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
 
-        Workbench.Document.withCyclesRecompute(d => d.reducers.workflow.validate(d))(document);
-
-        return document;
-    }
-
-
-
-
-    private async resolveBlueprint(blueprintId: Foundations.Blueprint.Id): Promise<Foundations.Blueprint> {
-        const { blueprints } = await this.shelfService.getBatchBlueprints({ blueprintIds: [blueprintId] });
-        const blueprint      = blueprints[blueprintId];
-
-        if (!blueprint)
-            throw new SystemError(SystemError.Code.NOT_FOUND, `Blueprint ${blueprintId} not found`);
-
-        return blueprint;
+        return { workflow: { ...workflow, locked }, blueprints, repairs };
     }
 
 

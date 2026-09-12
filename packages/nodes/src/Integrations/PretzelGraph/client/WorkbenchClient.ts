@@ -1,5 +1,5 @@
-import type { HTTP } from "@pretzel-graph/node-sdk";
-import { Workbench, type Foundations, type Workflow } from "@pretzel-graph/shared/domain";
+import type { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
+import { Execution, Shelf, Workbench, Workflow, type Foundations } from "@pretzel-graph/shared/domain";
 
 import Session = Workbench.API.Session;
 
@@ -10,68 +10,54 @@ const isGone = (error: unknown) => (error as { response?: { status?: number } })
 /**
  * One workflow as something to read and edit from inside a run, over the run's internal API.
  *
- * Reads never hold the workflow: inside a transaction they see its document, outside one a
- * snapshot that may see a write in progress. Writes need a transaction, which the backend
- * enforces; while one is open the row is locked, the document lives in the session, and this
- * keeps it alive until commit or abort.
+ * The document is here, in the run, inside `operations`. It opens on a snapshot for reading;
+ * a transaction replaces it with the row as held and opens it for writing, the backend keeps
+ * the row locked for the transaction's length, every edit is announced on the run's channel,
+ * and commit sends the whole graph back.
  */
 export class WorkbenchClient {
+
+    public readonly operations = new Workbench.OperationalClient(
+        blueprintId => this.resolveBlueprint(blueprintId),
+        edit        => this.announce(edit),
+    );
 
     #heartbeat: NodeJS.Timeout | null = null;
     #opening:   Promise<void> | null  = null;
 
-    constructor(
+    private constructor(
         private readonly http:       HTTP.Client,
+        private readonly realtime:   RuntimeNode.RealtimeAPI,
         private readonly workflowId: Workflow.Id,
     ) {}
 
-    public readonly workflow = {
-        get:        ()                                             => Session.Workflow.get(this.http.raw, this.workflowId),
-        queryNodes: (request: Session.Workflow.QueryNodes.Request) => Session.Workflow.queryNodes(this.http.raw, this.workflowId, request),
-        queryEdges: (request: Session.Workflow.QueryEdges.Request) => Session.Workflow.queryEdges(this.http.raw, this.workflowId, request),
-        layout:     ()                                             => Session.Workflow.layout(this.http.raw, this.workflowId),
-        getMeta:    ()                                             => Session.Workflow.getMeta(this.http.raw, this.workflowId),
-    };
+    /** Reads are answerable from the first call: the snapshot is fetched before the client is handed out. */
+    public static async open(http: HTTP.Client, realtime: RuntimeNode.RealtimeAPI, workflowId: Workflow.Id): Promise<WorkbenchClient> {
+        const client = new WorkbenchClient(http, realtime, workflowId);
 
-    public readonly node = {
-        get:    (nodeId: Workflow.Node.Id)             => Session.Node.get(this.http.raw, this.workflowId, nodeId),
-        create: (request: Session.Node.Create.Request) => Session.Node.create(this.http.raw, this.workflowId, request),
-        delete: (nodeId: Workflow.Node.Id)             => Session.Node.remove(this.http.raw, this.workflowId, { nodeId }),
-        move:   (nodeId: Workflow.Node.Id, position: { x: number, y: number }) => Session.Node.move(this.http.raw, this.workflowId, { nodeId, position }),
-    };
+        await client.loadSnapshot();
 
-    public readonly edge = {
-        create: (request: Session.Edge.Create.Request) => Session.Edge.create(this.http.raw, this.workflowId, request),
-        delete: (edgeId: Workflow.Edge.Id)             => Session.Edge.remove(this.http.raw, this.workflowId, { edgeId }),
-    };
-
-    public readonly field = {
-        get: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id)                 => Session.Field.get(this.http.raw, this.workflowId, nodeId, fieldId),
-        set: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, value: unknown) => Session.Field.set(this.http.raw, this.workflowId, { nodeId, fieldId, value }),
-    };
-
-    public readonly globalField = {
-        list:   ()                                                                  => Session.GlobalField.list(this.http.raw, this.workflowId),
-        add:    (request: Session.GlobalField.Add.Request)                          => Session.GlobalField.add(this.http.raw, this.workflowId, request),
-        update: (fieldId: Foundations.Field.Id, patch: Session.GlobalField.Update.Request["patch"]) => Session.GlobalField.update(this.http.raw, this.workflowId, { fieldId, patch }),
-        remove: (fieldId: Foundations.Field.Id)                                     => Session.GlobalField.remove(this.http.raw, this.workflowId, { fieldId }),
-    };
-
-    /** Applied in order on the backend; stops at the first failure. */
-    public batch(operations: Session.Operation[]) {
-        return Session.Batch.apply(this.http.raw, this.workflowId, { operations });
+        return client;
     }
 
     public get inTransaction(): boolean {
         return this.#heartbeat !== null;
     }
 
+    public getMeta() {
+        return Session.getMeta(this.http.raw, this.workflowId);
+    }
+
+    // ── Transaction ──────────────────────────────────────────────────────────
+
     /** Lock and load. Refused while anyone — this run included — holds the workflow. */
     public async beginTransaction(): Promise<void> {
         if (this.inTransaction)
             throw new Error(`A transaction on ${this.workflowId} is already open`);
 
-        await Session.beginTransaction(this.http.raw, this.workflowId);
+        const snapshot = await Session.beginTransaction(this.http.raw, this.workflowId);
+
+        this.operations.load(this.build(snapshot), "write");
 
         this.#heartbeat = setInterval(() => {
             void Session.heartbeat(this.http.raw, this.workflowId).catch(error => {
@@ -93,22 +79,29 @@ export class WorkbenchClient {
         return this.#opening;
     }
 
+    /** Writes the held graph back; what was held stays loaded, now as the read snapshot. */
     public async commitTransaction(): Promise<void> {
         if (!this.inTransaction)
             throw new Error(`No open transaction on ${this.workflowId}`);
 
-        await this.#finish(() => Session.commitTransaction(this.http.raw, this.workflowId));
+        const document = this.operations.getDocument();
+
+        await this.#finish(() => Session.commitTransaction(this.http.raw, this.workflowId, { data: document.data }));
+
+        this.operations.load(document, "read");
     }
 
+    /** Drops the held graph; reads go back to the row. */
     public async abortTransaction(): Promise<void> {
         if (!this.inTransaction)
             return;
 
         await this.#finish(() => Session.abortTransaction(this.http.raw, this.workflowId));
+        await this.loadSnapshot();
     }
 
     /** One edit, one short hold. */
-    public async write<T>(fn: () => Promise<T>): Promise<T> {
+    public async runTransaction<T>(fn: () => T | Promise<T>): Promise<T> {
         await this.beginTransaction();
 
         try {
@@ -120,6 +113,41 @@ export class WorkbenchClient {
             await this.abortTransaction();
             throw error;
         }
+    }
+
+    // ── Internals ────────────────────────────────────────────────────────────
+
+    private async loadSnapshot() {
+        this.operations.load(this.build(await Workbench.API.Workflow.get(this.http.raw, { workflowId: this.workflowId })), "read");
+    }
+
+    private build(snapshot: Session.Begin.Response): Workbench.Document {
+        const { workflow, blueprints, repairs } = snapshot;
+        const data     = Workflow.Repair.applyAll(workflow.data, repairs).data;
+        const document = Workbench.Document.create(workflow.id, data, blueprints);
+
+        Workbench.Document.withCyclesRecompute(d => d.reducers.workflow.validate(d))(document);
+
+        return document;
+    }
+
+    /** From the document when it already knows the blueprint, from the shelf otherwise. */
+    private async resolveBlueprint(blueprintId: Foundations.Blueprint.Id): Promise<Foundations.Blueprint> {
+        const d     = this.operations.document;
+        const known = d.selectors.blueprint.get(d, blueprintId);
+
+        if (known)
+            return known;
+
+        const { blueprint } = await Shelf.API.Internal.get(this.http.raw, blueprintId);
+
+        return blueprint;
+    }
+
+    // Edits travel on the run's own channel; the backend relays them onto the workflow's once
+    // it has checked this run holds it.
+    private announce(edit: Workbench.Event.Unstamped) {
+        this.realtime.emit(Execution.Event.create("workbench:edit", { targetWorkflowId: this.workflowId, edit }));
     }
 
     async #finish(send: () => Promise<unknown>) {

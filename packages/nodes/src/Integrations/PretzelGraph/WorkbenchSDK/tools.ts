@@ -32,10 +32,21 @@ const globalFieldSpec = {
 };
 const globalFieldId = z.string().describe("Global field id: letters, digits, underscores.");
 
+const PORT_VARIANTS = ["Message", "MessageList", "Text", "Data", "DataList", "Document", "LanguageModel", "Embeddings", "VectorStore", "Retriever", "Tool", "ToolList", "DataFrame"] as const;
+
+const inputPort = z.object({
+    id:          z.string().describe("Port id: letters, digits, underscores. Must be new on the node."),
+    displayName: z.string(),
+    variant:     z.enum(PORT_VARIANTS).describe("The kind of data the port accepts."),
+    required:    z.boolean().optional().describe("Whether a connection must be present to run."),
+});
+
 const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.create"), blueprintId, position, staticValues }),
     z.object({ op: z.literal("node.delete"), nodeId }),
     z.object({ op: z.literal("node.move"),   nodeId, position: z.object({ x: z.number(), y: z.number() }) }),
+    z.object({ op: z.literal("node.addInputPort"),    nodeId, port: inputPort }),
+    z.object({ op: z.literal("node.removeInputPort"), nodeId, portId: z.string() }),
     z.object({ op: z.literal("edge.create"), source: z.string(), sourceHandle: z.string(), target: z.string(), targetHandle: z.string() }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
     z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
@@ -47,11 +58,11 @@ const operation = z.discriminatedUnion("op", [
 
 
 
-export function buildTools(wb: WorkbenchClient) {
+export function buildTools(client: WorkbenchClient) {
 
     // Writes open the transaction on first use and keep it until the run ends or commit is called.
-    const write = async <T>(fn: () => Promise<T>): Promise<T> => {
-        await wb.ensureTransaction();
+    const write = async <T>(fn: () => T | Promise<T>): Promise<T> => {
+        await client.ensureTransaction();
         return fn();
     };
 
@@ -60,7 +71,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const queryNodes = tool(
         async (query) => {
-            const { items, total } = await wb.workflow.queryNodes(query as never);
+            const { items, total } = client.operations.workflow.queryNodes(query as never);
 
             return ToolBudget.list("nodes", items, { hint: total > items.length ? `${total} matched; ${items.length} returned. Narrow the query or raise limit.` : undefined });
         },
@@ -81,7 +92,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const queryEdges = tool(
         async (query) => {
-            const { items, total } = await wb.workflow.queryEdges(query as never);
+            const { items, total } = client.operations.workflow.queryEdges(query as never);
 
             return ToolBudget.list("edges", items, { hint: total > items.length ? `${total} matched; ${items.length} returned. Narrow the query or raise limit.` : undefined });
         },
@@ -99,7 +110,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const getMeta = tool(
-        async () => ToolBudget.value(await wb.workflow.getMeta()),
+        async () => ToolBudget.value(await client.getMeta()),
         {
             name:        "workbench_get_workflow_meta",
             description: "Get the workflow's name, description, icon, folder, lock state and timestamps. Not its graph. Read-only.",
@@ -109,7 +120,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const getLayout = tool(
-        async () => ToolBudget.value(await wb.workflow.layout()),
+        async () => ToolBudget.value(client.operations.workflow.layout()),
         {
             name:        "workbench_get_layout",
             description: "Get every node's canvas position and estimated size, plus the bounding box of the whole graph. Use it to place or move nodes without overlap. Read-only.",
@@ -119,7 +130,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const getNode = tool(
-        async ({ nodeId }) => ToolBudget.value(await wb.node.get(nodeId as Workflow.Node.Id)),
+        async ({ nodeId }) => ToolBudget.value(client.operations.node.get(nodeId as Workflow.Node.Id)),
         {
             name:        "workbench_get_node",
             description: "Get one node: its blueprint, fields, ports, current field values, the edges on each port, and validation issues. Read-only.",
@@ -130,7 +141,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const createNode = tool(
         async ({ blueprintId, position, staticValues }) => ToolBudget.value(
-            await write(() => wb.node.create({
+            await write(() => client.operations.node.create({
                 blueprintId: blueprintId as Foundations.Blueprint.Id,
                 position,
                 staticValues,
@@ -145,7 +156,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const deleteNode = tool(
-        async ({ nodeId }) => ToolBudget.value(await write(() => wb.node.delete(nodeId as Workflow.Node.Id))),
+        async ({ nodeId }) => ToolBudget.value(await write(() => client.operations.node.delete(nodeId as Workflow.Node.Id))),
         {
             name:        "workbench_delete_node",
             description: "Remove a node and every edge connected to it.",
@@ -156,7 +167,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const moveNode = tool(
         async ({ nodeId, position }) => ToolBudget.value(
-            await write(() => wb.node.move(nodeId as Workflow.Node.Id, position)),
+            await write(() => client.operations.node.move(nodeId as Workflow.Node.Id, position)),
         ),
         {
             name:        "workbench_move_node",
@@ -166,9 +177,33 @@ export function buildTools(wb: WorkbenchClient) {
     );
 
 
+    const addInputPort = tool(
+        async ({ nodeId, port }) => ToolBudget.value(
+            await write(() => client.operations.node.input.addPort(nodeId as Workflow.Node.Id, port as never)),
+        ),
+        {
+            name:        "workbench_add_input_port",
+            description: "Add an input port to a node beyond what its blueprint declares, so an edge can bring extra data in. Not for sub-workflow nodes, whose ports come from the sub-workflow.",
+            schema:      z.object({ nodeId, port: inputPort }),
+        },
+    );
+
+
+    const removeInputPort = tool(
+        async ({ nodeId, portId }) => ToolBudget.value(
+            await write(() => client.operations.node.input.removePort(nodeId as Workflow.Node.Id, portId as Foundations.Port.Input.Id)),
+        ),
+        {
+            name:        "workbench_remove_input_port",
+            description: "Remove an input port that was added to a node, along with any edge into it. Blueprint ports cannot be removed.",
+            schema:      z.object({ nodeId, portId: z.string() }),
+        },
+    );
+
+
     const createEdge = tool(
         async ({ sourceNodeId, sourcePortId, targetNodeId, targetPortId }) => ToolBudget.value(
-            await write(() => wb.edge.create({
+            await write(() => client.operations.edge.create({
                 source:       sourceNodeId as Workflow.Node.Id,
                 sourceHandle: sourcePortId as Foundations.Port.Output.Id,
                 target:       targetNodeId as Workflow.Node.Id,
@@ -184,7 +219,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const deleteEdge = tool(
-        async ({ edgeId }) => ToolBudget.value(await write(() => wb.edge.delete(edgeId as Workflow.Edge.Id))),
+        async ({ edgeId }) => ToolBudget.value(await write(() => client.operations.edge.delete(edgeId as Workflow.Edge.Id))),
         {
             name:        "workbench_delete_edge",
             description: "Remove an edge by id.",
@@ -195,7 +230,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const setField = tool(
         async ({ nodeId, fieldId, value }) => ToolBudget.value(
-            await write(() => wb.field.set(nodeId as Workflow.Node.Id, fieldId as Foundations.Field.Id, value)),
+            await write(() => client.operations.field.set(nodeId as Workflow.Node.Id, fieldId as Foundations.Field.Id, value)),
         ),
         {
             name:        "workbench_set_field",
@@ -206,7 +241,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const listGlobalFields = tool(
-        async () => ToolBudget.list("fields", await wb.globalField.list()),
+        async () => ToolBudget.list("fields", client.operations.globalField.list()),
         {
             name:        "workbench_list_global_fields",
             description: "List the workflow's global fields: the inputs it exposes when used as a sub-workflow node, read inside it as $globalFields.<id>. Read-only.",
@@ -217,7 +252,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const addGlobalField = tool(
         async ({ id, ...spec }) => ToolBudget.value(
-            await write(() => wb.globalField.add({ id: id as Foundations.Field.Id, ...spec })),
+            await write(() => client.operations.globalField.add({ id: id as Foundations.Field.Id, ...spec })),
         ),
         {
             name:        "workbench_add_global_field",
@@ -229,7 +264,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     const updateGlobalField = tool(
         async ({ fieldId, patch }) => ToolBudget.value(
-            await write(() => wb.globalField.update(fieldId as Foundations.Field.Id, patch)),
+            await write(() => client.operations.globalField.update(fieldId as Foundations.Field.Id, patch)),
         ),
         {
             name:        "workbench_update_global_field",
@@ -240,7 +275,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const removeGlobalField = tool(
-        async ({ fieldId }) => ToolBudget.value(await write(() => wb.globalField.remove(fieldId as Foundations.Field.Id))),
+        async ({ fieldId }) => ToolBudget.value(await write(() => client.operations.globalField.remove(fieldId as Foundations.Field.Id))),
         {
             name:        "workbench_remove_global_field",
             description: "Remove a global field from the workflow.",
@@ -250,7 +285,7 @@ export function buildTools(wb: WorkbenchClient) {
 
 
     const apply = tool(
-        async ({ operations }) => ToolBudget.value(await write(() => wb.batch(operations as never))),
+        async ({ operations }) => ToolBudget.value(await write(() => client.operations.batch(operations as never))),
         {
             name:        "workbench_apply",
             description: "Apply several operations in order in one call. Stops at the first failure; earlier operations stay applied.",
@@ -261,10 +296,10 @@ export function buildTools(wb: WorkbenchClient) {
 
     const commit = tool(
         async () => {
-            if (!wb.inTransaction)
+            if (!client.inTransaction)
                 return "Nothing to save.";
 
-            await wb.commitTransaction();
+            await client.commitTransaction();
             return "Saved.";
         },
         {
@@ -277,10 +312,10 @@ export function buildTools(wb: WorkbenchClient) {
 
     const discard = tool(
         async () => {
-            if (!wb.inTransaction)
+            if (!client.inTransaction)
                 return "Nothing to discard.";
 
-            await wb.abortTransaction();
+            await client.abortTransaction();
             return "Discarded.";
         },
         {
@@ -293,7 +328,7 @@ export function buildTools(wb: WorkbenchClient) {
 
     return [
         getMeta, queryNodes, queryEdges, getNode, getLayout,
-        createNode, deleteNode, moveNode, createEdge, deleteEdge, setField,
+        createNode, deleteNode, moveNode, addInputPort, removeInputPort, createEdge, deleteEdge, setField,
         listGlobalFields, addGlobalField, updateGlobalField, removeGlobalField,
         apply, commit, discard,
     ];

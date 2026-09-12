@@ -12,6 +12,8 @@ import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { editorReducers } from "./reducers";
+import { handleWorkbenchEvent } from "./handle-events";
+import { AsyncEventQueueHandler } from "@/SDKs/Realtime/EventQueue";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
 import { Document, type NodeUI } from "@pretzel-graph/shared/domain/Workbench/Document";
@@ -32,12 +34,14 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly runtime = {
         isReconnectionSuccessful: true,
         canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver, WorkbenchSDK.EdgeDriver> | null,
-        lastMousePosition: { x: 0, y: 0 }
+        lastMousePosition: { x: 0, y: 0 },
+        // The open workflow's channel; see handle-events.
+        channel: {
+            unsubscribe: null as (() => void) | null,
+            events:      new AsyncEventQueueHandler<Workbench.Event>(event => handleWorkbenchEvent(this, event)),
+        },
     }
 
-    // Two stores. The document is what reducers operate on and what undo tracks; the
-    // editor store is pointer and gesture state the document has no notion of. Keeping
-    // them apart means replacing the document wholesale never touches the cursor.
     public readonly useDocument: BaseSDK.Store<Document> = createWithEqualityFn(
         temporal(
             immer<Document>(() => ({

@@ -1,17 +1,18 @@
 import { Controller, UseGuards, Get, Post, Param, HttpCode } from '@nestjs/common';
 import { WorkbenchService } from './workbench.service';
 import { MemberAuthGuard } from '../../auth/member-auth.guard';
+import { MemberOrDelegateGuard } from '../../auth/member-or-delegate.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
 import { Workflow, Workbench } from '@pretzel-graph/shared/domain';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('workbench')
-@UseGuards(MemberAuthGuard)
 export class WorkbenchController {
     constructor(private readonly workbenchService: WorkbenchService) { }
 
     @Post('workflows')
+    @UseGuards(MemberAuthGuard)
     @HttpCode(200)
     async createWorkflow(
         @AuthenticatedUser() principal: Principal.User,
@@ -21,11 +22,13 @@ export class WorkbenchController {
     }
 
     @Get('workflows/:id')
+    @UseGuards(MemberOrDelegateGuard)
     async getWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
         return await this.workbenchService.workflow.get(principal, id);
     }
 
     @Post('workflows/commit')
+    @UseGuards(MemberAuthGuard)
     @HttpCode(200)
     async commitWorkflow(
         @AuthenticatedUser() principal: Principal.User,
@@ -35,6 +38,7 @@ export class WorkbenchController {
     }
 
     @Get('dependencies/workflows/:dependencyId/published')
+    @UseGuards(MemberAuthGuard)
     async loadPublishedDependency(
         @AuthenticatedUser() principal: Principal.User,
         @Param('dependencyId') dependencyId: Workflow.Id
@@ -44,6 +48,7 @@ export class WorkbenchController {
     }
 
     @Get('dependencies/workflows/:dependencyId/draft')
+    @UseGuards(MemberAuthGuard)
     async loadDraftDependency(
         @AuthenticatedUser() principal: Principal.User,
         @Param('dependencyId') dependencyId: Workflow.Id
@@ -53,6 +58,7 @@ export class WorkbenchController {
     }
 
     @Post('dependencies/check-updates')
+    @UseGuards(MemberAuthGuard)
     @HttpCode(200)
     async checkPublishedDependencyUpdates(
         @AuthenticatedUser() principal: Principal.User,
@@ -62,6 +68,7 @@ export class WorkbenchController {
     }
 
     @Post('dependencies/check-draft-updates')
+    @UseGuards(MemberAuthGuard)
     @HttpCode(200)
     async checkDraftDependencyUpdates(
         @AuthenticatedUser() principal: Principal.User,
@@ -71,6 +78,7 @@ export class WorkbenchController {
     }
 
     @Post('field/resource-loader/load-options')
+    @UseGuards(MemberAuthGuard)
     @HttpCode(200)
     async loadResourceLoaderOptions(
         @AuthenticatedUser() principal: Principal.User,

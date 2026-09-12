@@ -5,6 +5,7 @@ import { SystemError } from "../SystemError"
 import { Session as SessionModule } from "./session"
 import { Recording as RecordingModule } from "./recording"
 import * as EventBase from "./event-base"
+import type { Event as WorkbenchEvent } from "../Workbench/event"
 
 // ─── Events ───────────────────────────────────────────────────────────────
 // Single channel per execution: execution:<executionId>
@@ -160,11 +161,23 @@ export namespace Event {
     }
 
 
+    // An edit a run made to a workflow it holds. Travels on the run's own channel; the backend
+    // relays it onto the workflow's channel once it has checked the run holds that workflow.
+    export namespace Workbench {
+        export const Edit = Base.extend({
+            type:             z.literal('workbench:edit'),
+            targetWorkflowId: Workflow.Id,
+            edit:             z.custom<WorkbenchEvent.Unstamped>(value => typeof value === 'object' && value !== null && 'type' in value),
+        })
+        export type Edit = z.infer<typeof Edit>
+    }
+
     export const Schema = z.discriminatedUnion("type", [
         Lifecycle.Schema,
         Session.Patch,
         Node.Schema,
         Recording.Schema,
+        Workbench.Edit,
     ])
 
     // Returns a member without its addressing; the publisher derives that from the execution.
