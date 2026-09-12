@@ -5,6 +5,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../sdk'
 import { ExpressionEditor } from '../ExpressionEditor'
+import IncomingPanel from '../NodePanel/IncomingPanel'
 
 interface Props {
     value: string
@@ -62,18 +63,22 @@ function ExpressionInput({ placeholder, className }: {
 
                     DialogSDK.actions
                         .push("ExpressionEditorDialog", (dialogProps) => (
-                            <DialogSDK.UnstyledTemplate {...dialogProps}>
-                                <ExpressionEditor 
-                                    node={node} 
-                                    displayName={displayName} 
-                                    onChange={onChange} 
-                                    onClose={() => onCommitRef.current()} 
-                                    initialValue={value} 
-                                    itemScoped={itemScoped} 
-                                    blockTransparency={dialogProps.blockTransparency} 
-                                    surfaceStyle={dialogProps.surfaceStyle} 
+                            <DialogSDK.SplitTemplate
+                                {...dialogProps}
+                                className='h-[85vh] w-[90vw]'
+                                sidebarClassName='w-[30%] p-0! overflow-hidden'
+                                contentClassName='p-0! gap-0! min-w-0 overflow-hidden'
+                                sidebarRenderer={() => <IncomingPanel nodeId={node.id} />}
+                            >
+                                <ExpressionEditor
+                                    node={node}
+                                    displayName={displayName}
+                                    onChange={onChange}
+                                    onClose={() => onCommitRef.current()}
+                                    initialValue={value}
+                                    itemScoped={itemScoped}
                                 />
-                            </DialogSDK.UnstyledTemplate>
+                            </DialogSDK.SplitTemplate>
                         ))
                 }}
             >

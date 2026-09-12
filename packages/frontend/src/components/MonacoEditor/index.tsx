@@ -81,7 +81,7 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
                     options={{
                         minimap: { enabled: false },
                         fontSize: 14,
-                        padding: { top: 50 },
+                        padding: { top: 12 },
                         scrollBeyondLastLine: false,
                         ...options,
                     }}
