@@ -48,6 +48,7 @@ export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 
                             {...props}
                             isSelected={props.branch.key === selectedFolderKey || props.branch.key === selectedWorkflowKey}
                             styles={styles}
+                            size={size}
                             onFolderClick={(id) => setCwd(id)}
                             onWorkflowClick={onWorkflowClick}
                         />

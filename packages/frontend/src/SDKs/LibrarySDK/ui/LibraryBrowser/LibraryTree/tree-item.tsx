@@ -1,4 +1,5 @@
 import type { Tree as TreeDomain } from '@/components/Tree/domain'
+import { Tree } from '@/components/Tree'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '../../../sdk'
 import type { FileSystemNodeData } from '../../../actions'
@@ -18,11 +19,13 @@ export function TreeItem({
     onToggle,
     isSelected,
     styles,
+    size,
     onFolderClick,
     onWorkflowClick,
 }: TreeDomain.Branch.RenderProps<FileSystemNodeData> & {
     isSelected: boolean
     styles: (typeof sizeStyles)[FileSystemTreeSize]
+    size: FileSystemTreeSize
     onFolderClick?: (folderId: Library.Folder.Id) => void
     onWorkflowClick?: (workflowId: Workflow.Id) => void
 }) {
@@ -71,27 +74,7 @@ export function TreeItem({
             )}
             onClick={handleClick}
         >
-            {Array.from({ length: level }).map((_, i) => {
-                const isInnermost = i === level - 1
-                return (
-                    <span key={i} className={classNames('shrink-0 relative self-stretch opacity-20', styles.indent)}>
-                        {isInnermost ? (
-                            isLastSibling ? (
-                                <span className={classNames('absolute top-0 h-1/2 right-0.5 border-l border-b border-accent-foreground', styles.line, styles.radius)} />
-                            ) : (
-                                <>
-                                    <span className={classNames('absolute inset-y-0 border-l border-accent-foreground', styles.line)} />
-                                    {isFolder && (
-                                        <span className={classNames('absolute right-0.5 border-l border-b border-accent-foreground', styles.line, styles.radius, styles.corner)} />
-                                    )}
-                                </>
-                            )
-                        ) : !branch.ancestorIsLast[i + 1] ? (
-                            <span className={classNames('absolute inset-y-0 border-l border-accent-foreground', styles.line)} />
-                        ) : null}
-                    </span>
-                )
-            })}
+            <Tree.IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} elbow={isFolder} size={size} />
             {!isLeaf ? (
                 <span className='shrink-0' onClick={handleToggle}>
                     <SystemIcons.ChevronRight

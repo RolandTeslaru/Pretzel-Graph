@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { buildTree } from "./builder"
 import { DefaultBranchRenderer } from "./BranchRenderer"
+import { IndentGuides } from "./IndentGuides"
 import type { Tree as TreeD } from "./domain"
 
 interface TreeProps<T_Data = any> {
@@ -79,3 +80,5 @@ export function Tree<T_Data = any>({ root, renderBranch, className }: TreeProps<
         </div>
     )
 }
+
+Tree.IndentGuides = IndentGuides

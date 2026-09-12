@@ -6,6 +6,9 @@ import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 
 const LazyEditor = lazy(() => import('@monaco-editor/react'))
 
+const FONT_FAMILY = "'JetBrains Mono', monospace"
+const FONT_SIZE = 14
+
 // Roots whose unmount is deferred (queued, not yet run) — keyed by container so a StrictMode
 // dev-only mount→cleanup→mount probe (same container DOM node, re-runs synchronously before the
 // queued microtask fires) can cancel the pending unmount and reuse the same root instead of
@@ -69,6 +72,13 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
     }, [])
 
     useEffect(() => {
+        const handleBeforeMount: BeforeMount = (monaco) => {
+            // re-measure glyph widths once the web font has loaded
+            document.fonts.load(`${FONT_SIZE}px ${FONT_FAMILY}`).then(() => monaco.editor.remeasureFonts())
+
+            beforeMount?.(monaco)
+        }
+
         rootRef.current?.render(
             <Suspense fallback={loadingFallback}>
                 <LazyEditor
@@ -76,11 +86,12 @@ const MonacoMount = ({ theme, height, defaultLanguage, defaultValue, onChange, b
                     defaultLanguage={defaultLanguage}
                     theme={theme}
                     defaultValue={defaultValue}
-                    beforeMount={beforeMount}
+                    beforeMount={handleBeforeMount}
                     onChange={(val) => onChange(val || "")}
                     options={{
                         minimap: { enabled: false },
-                        fontSize: 14,
+                        fontFamily: FONT_FAMILY,
+                        fontSize: FONT_SIZE,
                         padding: { top: 12 },
                         scrollBeyondLastLine: false,
                         ...options,
