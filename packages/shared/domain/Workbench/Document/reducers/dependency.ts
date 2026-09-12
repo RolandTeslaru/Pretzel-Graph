@@ -76,14 +76,6 @@ export const dependencyReducers: DependencyReducers = {
         else
             d.data.dependencies.draft[slim.workflow_id] = slim as Workflow.Dependency.Draft
     },
-    attachToNode: (d, nodeId, mode, dependency) => {
-        d.reducers.dependency.register(d, mode, dependency)
-
-        d.data.nodes[nodeId].dependencyRef = { workflowId: dependency.workflow_id, mode };
-        d.reducers.cache.resolvedShape.recreate(d, nodeId);
-        d.isDirty = true
-        d.reducers.node.validate(d, nodeId)
-    },
     applyUpdate: (d, mode, dependency) => {
         const workflowId = dependency.workflow_id as Workflow.Id
 
@@ -127,12 +119,6 @@ export const dependencyReducers: DependencyReducers = {
 export interface DependencyReducers {
     applyUpdate: (
         document:      Document,
-        mode:       "publication" | "draft",
-        dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
-    ) => void
-    attachToNode: (
-        document:      Document,
-        nodeId:     Workflow.Node.Id,
         mode:       "publication" | "draft",
         dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
     ) => void

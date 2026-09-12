@@ -75,42 +75,6 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
         },
 
-        attachToNode: withAsyncCommit(async (nodeId, workflowId, mode) => {
-            // Chheck if the workflow already uses the dependency
-            let dependency = sdk.selectors.dependency.get(sdk.document, workflowId, mode)
-
-            if(dependency){
-                setDocument(withCyclesRecompute(d => {
-                    reducers.dependency.attachToNode(d, nodeId, mode, dependency)
-                }))
-                return true
-            }
-
-            // Make the API call
-
-            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
-                mode === "publication"
-                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
-                {
-                    loading: "Loading workflow…",
-                    success: "Workflow attached",
-                    error:   (err: unknown) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
-                }
-            )
-
-            try {
-                const { dependency } = await promise
-
-                setDocument(withCyclesRecompute(d => {
-                    reducers.dependency.attachToNode(d, nodeId, mode, dependency)
-                }))
-            } catch (err) {
-                console.error("Failed to attach dependency", err)
-                return false
-            }
-            return true
-        }),
         published: {
             update: withAsyncCommit((updateInfo) => applyUpdate("publication", updateInfo.workflowId)),
         },
@@ -137,7 +101,6 @@ export type DependencyActions = {
     registerDependency: (dependency: Workflow.Dependency.Publication) => void
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
-    attachToNode:       (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => Promise<boolean>
     published: {
         update: (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
     }

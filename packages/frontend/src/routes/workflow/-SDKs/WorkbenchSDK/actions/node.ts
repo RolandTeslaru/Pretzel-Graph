@@ -1,6 +1,6 @@
 import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
-import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
+import { withAsyncCommit, withCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { Foundations, SystemError, Vault, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
@@ -127,6 +127,41 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
                 nodeId = reducers.node.create(d, props[0], props[1], props[2], credentials) 
             })
 }),
+        attachDependency: withAsyncCommit(async (nodeId, workflowId, mode) => {
+            // Reuse the snapshot when the workflow already embeds this dependency.
+            const existing = sdk.selectors.dependency.get(sdk.document, workflowId, mode)
+
+            if (existing) {
+                setDocument(withCyclesRecompute(d => {
+                    reducers.node.attachDependency(d, nodeId, mode, existing)
+                }))
+                return true
+            }
+
+            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
+                mode === "publication"
+                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
+                {
+                    loading: "Loading workflow…",
+                    success: "Workflow attached",
+                    error:   (err: unknown) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
+                }
+            )
+
+            try {
+                const { dependency } = await promise
+
+                setDocument(withCyclesRecompute(d => {
+                    reducers.node.attachDependency(d, nodeId, mode, dependency)
+                }))
+            } catch (err) {
+                console.error("Failed to attach dependency", err)
+                return false
+            }
+
+            return true
+        }),
     } satisfies NodeActions;
 }
 
@@ -144,4 +179,5 @@ export type NodeActions = {
     clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
     recreate            : (nodeId: Workflow.Node.Id) => void;
     recreateAll         : () => void;
+    attachDependency    : (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => Promise<boolean>;
 };

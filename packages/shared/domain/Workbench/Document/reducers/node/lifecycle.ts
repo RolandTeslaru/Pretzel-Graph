@@ -349,6 +349,15 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
 
         return applyDerivative(d, node, blueprint, reconciledBlueprintId) ?? null;
     },
+    // Embeds the dependency snapshot and points the node at it; the node's ports derive from it.
+    attachDependency: (d, nodeId, mode, dependency) => {
+        d.reducers.dependency.register(d, mode, dependency);
+
+        d.data.nodes[nodeId].dependencyRef = { workflowId: dependency.workflow_id, mode };
+        d.reducers.cache.resolvedShape.recreate(d, nodeId);
+        d.isDirty = true;
+        d.reducers.node.validate(d, nodeId);
+    },
     wipe: (d, nodeId, replace = {}) => {
         const node = d.data.nodes[nodeId];
         if (!node) return;
@@ -411,6 +420,7 @@ export interface NodeLifecycleReducers {
         credentialInstanceIds?: Record<Vault.Credential.Template.Id, Vault.Credential.Instance.Id>;
     }) => Workflow.Node.Raw;
     derive      : (document: Document, nodeId: NodeId, fieldValues: Record<Foundations.Field.Id, Foundations.Field.Value>) => DeriveResult | null;
+    attachDependency : (document: Document, nodeId: NodeId, mode: "publication" | "draft", dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft) => void;
     wipe        : (document: Document, nodeId: NodeId, replace?: Partial<Workflow.Node.Raw>) => void;
     validate    : (document: Document, nodeId: NodeId) => void;
     clearIssues : (document: Document, nodeId: NodeId) => void;

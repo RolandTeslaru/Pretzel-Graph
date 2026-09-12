@@ -15,9 +15,9 @@ interface Props {
 const openSelector = (nodeId: Workflow.Node.Id) => {
     LibrarySDK.dialogs.openDependencySelector({
         onLocalWorkflowSelected: (workflowId, variant) =>
-            WorkbenchSDK.actions.dependency.attachToNode(nodeId, workflowId, variant),
+            WorkbenchSDK.actions.node.attachDependency(nodeId, workflowId, variant),
         onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.dependency.attachToNode(nodeId, listingId, 'publication'),
+            WorkbenchSDK.actions.node.attachDependency(nodeId, listingId, 'publication'),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
     }, {
