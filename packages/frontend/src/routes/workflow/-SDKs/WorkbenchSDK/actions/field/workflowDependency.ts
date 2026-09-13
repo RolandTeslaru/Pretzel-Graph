@@ -1,3 +1,4 @@
+import type { Dependency } from "@pretzel-graph/shared/domain";
 import type { WorkbenchSDKImpl } from "../../sdk";
 import { withAsyncCommit, withCyclesRecompute, createToastPromise } from "../../utils/actions";
 import { SystemError, Workbench, type Foundations, type Workflow } from "@pretzel-graph/shared/domain";
@@ -20,10 +21,10 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
                 return true
             }
 
-            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
-                mode === "publication"
-                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
+            const promise = createToastPromise<{ dependency: Dependency }>(
+                mode === "draft"
+                    ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+                    : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId }),
                 {
                     loading: "Loading workflow…",
                     success: "Workflow attached",
@@ -48,5 +49,5 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export interface WorkflowDependencyActions {
-    select: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, workflowId: Workflow.Id, mode: Workflow.Dependency.WorkflowRef["mode"]) => Promise<boolean>
+    select: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, workflowId: Workflow.Id, mode: Dependency.Ref.Workflow["mode"]) => Promise<boolean>
 }

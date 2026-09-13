@@ -7,7 +7,7 @@
 // and are reconstructed at load instead (see the load action): `reconciledBlueprintId` (needs the
 // base blueprint + values) and `polymorphicResolutions` (replayed from edges).
 
-import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
+import { SHAPE_DEPENDENCY_FIELD_ID, isListingId } from "./ids";
 
 export const WORKFLOW_DATA_VERSION = 5;
 
@@ -33,9 +33,14 @@ export function migrateWorkflowDataToLatest(raw: any): any {
         delete rest.dependencyRef;
         data.nodes[id] = rest;
 
+        // v5: a listing pointer has its own mode.
+        const shapeDepRef = { ...dependencyRef };
+        if (typeof shapeDepRef.workflowId === "string" && isListingId(shapeDepRef.workflowId))
+            shapeDepRef.mode = "listing";
+
         // v5: a sub-workflow node's pointer is a reserved static value, not a node property.
         data.staticValues = { ...data.staticValues };
-        data.staticValues[id] = { ...data.staticValues[id], [SHAPE_DEPENDENCY_FIELD_ID]: dependencyRef };
+        data.staticValues[id] = { ...data.staticValues[id], [SHAPE_DEPENDENCY_FIELD_ID]: shapeDepRef };
     }
 
     // Edges: legacy record<id, {id, source, target}> -> id-only array (endpoints derive from the id).
@@ -45,6 +50,8 @@ export function migrateWorkflowDataToLatest(raw: any): any {
     liftAddedFieldExpressions(data);
     renameGlobalFields(data);
     renameDependencyStores(data);
+    fillDependencyStores(data);
+    reshapeWorkflowSnapshots(data);
 
     if (from < 4)
         foldVariadicSlots(data);
@@ -89,6 +96,46 @@ function renameDependencyStores(data: any): void {
         publishedWorkflows: rest.publishedWorkflows ?? published ?? {},
         draftWorkflows:     rest.draftWorkflows ?? draft ?? {},
     };
+}
+
+// Every dependency store is present, including on blobs saved before the store existed.
+function fillDependencyStores(data: any): void {
+    data.dependencies = {
+        publishedWorkflows: {},
+        draftWorkflows:     {},
+        ...data.dependencies,
+    };
+}
+
+// v5: a draft snapshot uses the workflow row's field names and a published one the publication row's; feature-detected so it is idempotent.
+function reshapeWorkflowSnapshots(data: any): void {
+    const draftWorkflows     = { ...data.dependencies.draftWorkflows };
+    const publishedWorkflows = { ...data.dependencies.publishedWorkflows };
+
+    for (const [id, snapshot] of Object.entries<any>(draftWorkflows)) {
+        if (!snapshot || !("workflow_data" in snapshot))
+            continue;
+
+        draftWorkflows[id] = {
+            id:           snapshot.workflow_id,
+            display_name: snapshot.display_name,
+            icon:         snapshot.icon,
+            accent:       snapshot.accent,
+            updated_at:   snapshot.workflow_updated_at,
+            data:         snapshot.workflow_data,
+        };
+    }
+
+    for (const [id, snapshot] of Object.entries<any>(publishedWorkflows)) {
+        if (!snapshot || !("publication_name" in snapshot))
+            continue;
+
+        const { publication_name, ...rest } = snapshot;
+
+        publishedWorkflows[id] = { ...rest, name: publication_name };
+    }
+
+    data.dependencies = { ...data.dependencies, draftWorkflows, publishedWorkflows };
 }
 
 // `isExpression` used to live on the Field itself. On a user-added field that made it persisted

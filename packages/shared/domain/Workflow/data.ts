@@ -5,7 +5,7 @@ import { Edge } from "./edge";
 import { Port } from "../Foundations/Port";
 import { WorkflowId } from "./ids";
 import { Vault } from "../Vault";
-import { Dependency } from "./dependency";
+import { Dependency } from "../Dependency";
 import { Annotation } from "../Annotation";
 import { migrateWorkflowDataToLatest, WORKFLOW_DATA_VERSION } from "./migrate";
 
@@ -67,16 +67,11 @@ export namespace Data {
             annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
         }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
-        // Getters defer the Dependency <-> Data cycle; the z.ZodType anchors
-        // are required because TS can't infer through mutual recursion.
+        // Getters defer the Dependency <-> Data cycle; the migration fills in missing stores.
         dependencies: z.object({
-            get publishedWorkflows(): z.ZodType<Record<WorkflowId, Dependency.Publication>> {
-                return z.record(WorkflowId, Dependency.Publication.Schema).default({});
-            },
-            get draftWorkflows(): z.ZodType<Record<WorkflowId, Dependency.Draft>> {
-                return z.record(WorkflowId, Dependency.Draft.Schema).default({});
-            },
-        }).default({ publishedWorkflows: {}, draftWorkflows: {} }),
+            get publishedWorkflows() { return z.record(WorkflowId, Dependency.Value.Publication.Schema) },
+            get draftWorkflows()     { return z.record(WorkflowId, Dependency.Value.Draft.Schema) },
+        }),
     })
 
     // Migrate legacy (fat-node) blobs to the latest slim shape before validation. The migrate

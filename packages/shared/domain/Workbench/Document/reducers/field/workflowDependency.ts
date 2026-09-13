@@ -1,3 +1,4 @@
+import type { Dependency } from "../../../../Dependency";
 import { Workflow } from "../../../../Workflow";
 import type { Foundations } from "../../../../Foundations";
 import type { Document } from "../../index";
@@ -10,8 +11,12 @@ export const fieldWorkflowDependencyReducers: FieldWorkflowDependencyReducers = 
     set: (d, nodeId, fieldId, mode, dependency) => {
         d.reducers.dependency.register(d, mode, dependency)
 
+        const workflowId = mode === "draft"
+            ? (dependency as Dependency.Value.Draft).id
+            : (dependency as Dependency.Value.Publication).workflow_id
+
         const staticValues = d.reducers.node.ensureStaticValues(d, nodeId)
-        staticValues[fieldId] = { workflowId: dependency.workflow_id, mode }
+        staticValues[fieldId] = { workflowId, mode }
 
         if (fieldId === Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID)
             d.reducers.cache.resolvedShape.recreate(d, nodeId)
@@ -27,7 +32,7 @@ export interface FieldWorkflowDependencyReducers {
         document:   Document,
         nodeId:     NodeId,
         fieldId:    FieldId,
-        mode:       Workflow.Dependency.WorkflowRef["mode"],
-        dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
+        mode:       Dependency.Ref.Workflow["mode"],
+        dependency: Dependency.Value.Publication | Dependency.Value.Draft,
     ) => void
 }

@@ -1,3 +1,4 @@
+import type { Dependency } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
@@ -23,7 +24,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
         const staticValues   = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
-        const dependencyRef  = staticValues[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID] as unknown as Workflow.Dependency.WorkflowRef | undefined;
+        const dependencyRef  = staticValues[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID] as unknown as Dependency.Ref.Workflow | undefined;
         const subWorkflowId  = dependencyRef?.workflowId as Workflow.Id;
         const dependencyMode = dependencyRef?.mode ?? "publication";
 
@@ -38,7 +39,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const isDraft = dependencyMode === "draft";
 
         const childWorkflowData = isDraft
-            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
+            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).data)
             : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
 
         const igniter = {

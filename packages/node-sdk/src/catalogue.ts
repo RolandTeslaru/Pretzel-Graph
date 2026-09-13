@@ -142,7 +142,7 @@ class CatalogueServiceImpl {
             await this.warmBlueprintCache(dependency.workflow_data);
 
         for (const dependency of Object.values(wfData.dependencies?.draftWorkflows ?? {}))
-            await this.warmBlueprintCache(dependency.workflow_data);
+            await this.warmBlueprintCache(dependency.data);
     }
 
     // Sync cache read for the hot path — warmBlueprintCache runs before compilation, so
@@ -168,9 +168,9 @@ class CatalogueServiceImpl {
 
         const { workflowId, mode } = shapeDepRef;
 
-        const store = mode === "publication"
-            ? wfData.dependencies?.publishedWorkflows
-            : wfData.dependencies?.draftWorkflows;
+        const store = mode === "draft"
+            ? wfData.dependencies?.draftWorkflows
+            : wfData.dependencies?.publishedWorkflows;
 
         if(!store?.[workflowId])
             throw new Error(`Node ${wfNode.id} has a dependency (${workflowId}) but its not in the store`)
@@ -204,7 +204,7 @@ class CatalogueServiceImpl {
         const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID) as Blueprint;
 
         if (!RuntimeNode || !dummyBlueprint)
-            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${depedency.workflow_id}. Core.SubWorkflow.Execute node not found in the catalogue`)
+            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)?.workflowId}. Core.SubWorkflow.Execute node not found in the catalogue`)
         
         return { RuntimeNode, blueprint: dummyBlueprint };
     }

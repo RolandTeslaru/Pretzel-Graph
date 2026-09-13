@@ -1,3 +1,4 @@
+import { Dependency } from '@pretzel-graph/shared/domain';
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { SystemError, Workflow, Workbench } from '@pretzel-graph/shared/domain';
@@ -64,17 +65,11 @@ class WorkflowMethods extends Repository {
 class PublishedDependencyMethods extends Repository {
 
     @Transactional('user')
-    @ZodReturn(Workflow.Dependency.Publication.Schema)
+    @ZodReturn(Dependency.Value.Publication.Schema)
     public async load(
         principal: Principal.User,
         workflowId: Workflow.Id,
-    ): Promise<Workflow.Dependency.Publication> {
-        const workflow = await this.trx
-            .selectFrom('workflows')
-            .select(['id', 'display_name', 'icon', 'accent'])
-            .where('id', '=', workflowId)
-            .executeTakeFirstOrThrow();
-
+    ): Promise<Dependency.Value.Publication> {
         const row = await this.trx
             .selectFrom('version_control')
             .selectAll()
@@ -92,20 +87,19 @@ class PublishedDependencyMethods extends Repository {
 
         return {
             ...publication,
-            publication_name: publication.name,
-            display_name: workflow.display_name,
-            icon: workflow.icon,
-            accent: workflow.accent,
+            display_name: publication.workflow_meta.display_name,
+            icon:         publication.workflow_meta.icon,
+            accent:       publication.workflow_meta.accent,
         };
     }
 
 
     @Transactional('user')
-    @ZodReturn(Workflow.Dependency.Publication.UpdateMap)
+    @ZodReturn(Dependency.Update.PublicationMap)
     public async checkUpdates(
         principal: Principal.User,
         dependencies: Workbench.API.Dependency.Published.CheckUpdates.Request['dependencies'],
-    ): Promise<Workflow.Dependency.Publication.UpdateMap> {
+    ): Promise<Dependency.Update.PublicationMap> {
         if (!dependencies.length)
             return {};
 
@@ -124,7 +118,7 @@ class PublishedDependencyMethods extends Repository {
             .where('is_active', '=', true)
             .execute();
 
-        const updates: Workflow.Dependency.Publication.UpdateMap = {};
+        const updates: Dependency.Update.PublicationMap = {};
 
         for (const row of rows) {
             if (storedByWorkflow.get(row.workflow_id) === row.id)
@@ -146,11 +140,11 @@ class PublishedDependencyMethods extends Repository {
 class DraftDependencyMethods extends Repository {
 
     @Transactional('user')
-    @ZodReturn(Workflow.Dependency.Draft.Schema)
+    @ZodReturn(Dependency.Value.Draft.Schema)
     public async load(
         principal: Principal.User,
         workflowId: Workflow.Id,
-    ): Promise<Workflow.Dependency.Draft> {
+    ): Promise<Dependency.Value.Draft> {
         const row = await this.trx
             .selectFrom('workflows')
             .select(['id', 'display_name', 'icon', 'accent', 'data', 'updated_at'])
@@ -164,28 +158,28 @@ class DraftDependencyMethods extends Repository {
             );
 
         return {
-            workflow_id: row.id,
-            workflow_data: Workflow.Data.Schema.parse(row.data),
+            id:           row.id,
             display_name: row.display_name,
-            icon: row.icon,
-            accent: row.accent,
-            workflow_updated_at: row.updated_at,
+            icon:         row.icon,
+            accent:       row.accent,
+            updated_at:   row.updated_at,
+            data:         Workflow.Data.Schema.parse(row.data),
         };
     }
 
     @Transactional('user')
-    @ZodReturn(z.record(Workflow.Id, Workflow.Dependency.Draft.UpdateInfo))
+    @ZodReturn(z.record(Workflow.Id, Dependency.Update.Draft))
     public async checkUpdates(
         principal: Principal.User,
         dependencies: Workbench.API.Dependency.Draft.CheckUpdates.Request['dependencies'],
-    ): Promise<Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>> {
+    ): Promise<Record<Workflow.Id, Dependency.Update.Draft>> {
         if (!dependencies.length)
             return {};
 
         const storedByWorkflow = new Map(
             dependencies.map((dependency) => [
                 dependency.workflowId,
-                dependency.workflow_updated_at,
+                dependency.updated_at,
             ]),
         );
         const workflowIds = dependencies.map((dependency) => dependency.workflowId);
@@ -196,7 +190,7 @@ class DraftDependencyMethods extends Repository {
             .where('id', 'in', workflowIds)
             .execute();
 
-        const updates: Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> = {};
+        const updates: Record<Workflow.Id, Dependency.Update.Draft> = {};
 
         for (const row of rows) {
             const stored = storedByWorkflow.get(row.id);
@@ -205,7 +199,7 @@ class DraftDependencyMethods extends Repository {
             if (changed) {
                 updates[row.id] = {
                     workflowId: row.id,
-                    workflow_updated_at: row.updated_at,
+                    updated_at: row.updated_at,
                 };
             }
         }

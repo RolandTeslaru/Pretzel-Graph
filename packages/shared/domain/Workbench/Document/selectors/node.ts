@@ -1,3 +1,4 @@
+import type { Dependency } from "../../../Dependency";
 import { Airlock } from "../../../Airlock";
 import { Workflow } from "../../../Workflow";
 import type { Execution } from "../../../Execution";
@@ -35,14 +36,16 @@ export interface NodeSelectors {
     // Legacy webhook-only `@`-sigil context. Temporary until webhook resolution moves onto Airlock.
     getLegacyExpressionContext: (document: Document, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
     // Read plain workflow data only, so callers outside the editor can pass `{ data }`.
-    getShapeDependencyRef: (document: { data: Pick<Workflow.Data, "staticValues"> }, nodeId: Workflow.Node.Id) => Workflow.Dependency.WorkflowRef | null
-    getShapeDependency: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
+    getShapeDependencyRef: (document: { data: Pick<Workflow.Data, "staticValues"> }, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow | null
+    getShapeDependency: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Dependency | null
+    // The graph of the workflow the shape dependency points at.
+    getShapeDependencyData: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Workflow.Data | null
     // Every WorkflowDependency field value on the node, the shape dependency included.
-    getWorkflowDependencyRefs: (document: Document, nodeId: Workflow.Node.Id) => Workflow.Dependency.WorkflowRef[]
+    getWorkflowDependencyRefs: (document: Document, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow[]
     hasDraftDependency: (document: Document, nodeId: Workflow.Node.Id) => boolean
     hasPublishedDependency: (document: Document, nodeId: Workflow.Node.Id) => boolean
     getDependencyUpdate: (document: Document, nodeId: Workflow.Node.Id) => [ 
-        Workflow.Dependency.Publication.UpdateInfo | Workflow.Dependency.Draft.UpdateInfo,
+        Dependency.Update.Publication | Dependency.Update.Draft,
         "draft" | "publication"
     ] | null
 
@@ -137,7 +140,7 @@ export const nodeSelectors: NodeSelectors = {
     getShapeDependencyRef: (d, nodeId) => {
         const value = d.data.staticValues[nodeId]?.[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID];
 
-        return (value as unknown as Workflow.Dependency.WorkflowRef | undefined) ?? null;
+        return (value as unknown as Dependency.Ref.Workflow | undefined) ?? null;
     },
     getShapeDependency: (d, nodeId) => {
         const shapeDepRef = nodeSelectors.getShapeDependencyRef(d, nodeId);
@@ -145,6 +148,16 @@ export const nodeSelectors: NodeSelectors = {
             return null;
 
         return dependencySelectors.getWorkflow(d, shapeDepRef.workflowId, shapeDepRef.mode);
+    },
+    getShapeDependencyData: (d, nodeId) => {
+        const shapeDepRef = nodeSelectors.getShapeDependencyRef(d, nodeId);
+        if (!shapeDepRef)
+            return null;
+
+        if (shapeDepRef.mode === "draft")
+            return d.data.dependencies.draftWorkflows[shapeDepRef.workflowId]?.data ?? null;
+
+        return d.data.dependencies.publishedWorkflows[shapeDepRef.workflowId]?.workflow_data ?? null;
     },
     getWorkflowDependencyRefs: (d, nodeId) => {
         const values = d.data.staticValues[nodeId] ?? {};
@@ -155,8 +168,8 @@ export const nodeSelectors: NodeSelectors = {
                 ids.add(field.id);
 
         return [...ids]
-            .map(id => values[id] as unknown as Workflow.Dependency.WorkflowRef | undefined)
-            .filter((ref): ref is Workflow.Dependency.WorkflowRef => !!ref);
+            .map(id => values[id] as unknown as Dependency.Ref.Workflow | undefined)
+            .filter((ref): ref is Dependency.Ref.Workflow => !!ref);
     },
     hasDraftDependency: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
@@ -170,14 +183,14 @@ export const nodeSelectors: NodeSelectors = {
         if (!shapeDepRef?.workflowId)
             return false;
 
-        return shapeDepRef.mode === "publication" && shapeDepRef.workflowId in d.data.dependencies.publishedWorkflows;
+        return shapeDepRef.mode !== "draft" && shapeDepRef.workflowId in d.data.dependencies.publishedWorkflows;
     },
     getDependencyUpdate: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
         if (!shapeDepRef?.workflowId)
             return null;
 
-        if (shapeDepRef.mode === "publication") {
+        if (shapeDepRef.mode !== "draft") {
             const update = d.dependencyUpdates.publishedWorkflows[shapeDepRef.workflowId] ?? null
             if (update)
                 return [update, "publication"]

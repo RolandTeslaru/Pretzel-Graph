@@ -1,4 +1,4 @@
-import { SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain"
+import { SystemError, Workbench, type Dependency, type Workflow } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
@@ -9,7 +9,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const reducers = sdk.reducers
 
     const applyUpdate = async (mode: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
-        const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
+        const promise = createToastPromise<{ dependency: Dependency }>(
             mode === "publication"
                 ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
                 : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
@@ -49,17 +49,17 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             }))
 
             const draftEntries = Object.values(draftWorkflows).map(dep => ({
-                workflowId:          dep.workflow_id as Workflow.Id,
-                workflow_updated_at: dep.workflow_updated_at,
+                workflowId: dep.id,
+                updated_at: dep.updated_at,
             }))
 
             const [publishedResult, draftResult] = await Promise.allSettled([
                 publishedEntries.length > 0
                     ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
-                    : Promise.resolve({ updates: {} as Workflow.Dependency.Publication.UpdateMap }),
+                    : Promise.resolve({ updates: {} as Dependency.Update.PublicationMap }),
                 draftEntries.length > 0
                     ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> }),
+                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Dependency.Update.Draft> }),
             ])
 
             setDocument(d => {
@@ -98,13 +98,13 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export type DependencyActions = {
-    registerDependency: (dependency: Workflow.Dependency.Publication) => void
+    registerDependency: (dependency: Dependency.Value.Publication) => void
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
     publishedWorkflows: {
-        update: (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
+        update: (updateInfo: Dependency.Update.Publication) => Promise<boolean>
     }
     draftWorkflows: {
-        update: (updateInfo: Workflow.Dependency.Draft.UpdateInfo) => Promise<boolean>
+        update: (updateInfo: Dependency.Update.Draft) => Promise<boolean>
     }
 }

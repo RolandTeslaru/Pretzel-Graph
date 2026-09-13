@@ -1,3 +1,4 @@
+import type { Dependency } from '@pretzel-graph/shared/domain'
 import { memo } from 'react'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
@@ -14,7 +15,7 @@ const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) =
         onLocalWorkflowSelected: (workflowId, variant) =>
             WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, workflowId, variant),
         onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, listingId, 'publication'),
+            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, listingId, 'listing'),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
     }, {
@@ -24,7 +25,7 @@ const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) =
 
 export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>(({ field, nodeId, className }) => {
 
-    const [value, , , issue] = WorkbenchSDK.useField<Workflow.Dependency.WorkflowRef | null>(nodeId, field)
+    const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref.Workflow | null>(nodeId, field)
 
     const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.getWorkflow(d, value.workflowId, value.mode) : null)
     const mode = value?.mode ?? null
@@ -60,14 +61,11 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
                             {dependency?.display_name ?? "Select workflow"}
                         </span>
                         <span className='flex text-[10px] font-normal text-muted-foreground'>
-                            {
-                                // @ts-expect-error
-                                dependency?.publication_name
-                            }
+                            {dependency && "name" in dependency ? dependency.name : null}
                         </span>
                     </span>
                 </span>
-                {mode === "publication" && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
+                {(mode === "publication" || mode === "listing") && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
                 {mode === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
                 <SystemIcons.ChevronDown />
             </Button>

@@ -1,3 +1,4 @@
+import type { Dependency } from '@pretzel-graph/shared/domain'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -24,9 +25,9 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
 
     const handleDependencyUpdate = () => {
         if(mode === "draft")
-            WorkbenchSDK.actions.dependency.draftWorkflows.update(dependencyUpdate as Workflow.Dependency.Draft.UpdateInfo)
+            WorkbenchSDK.actions.dependency.draftWorkflows.update(dependencyUpdate as Dependency.Update.Draft)
         else if(mode === "publication")
-            WorkbenchSDK.actions.dependency.publishedWorkflows.update(dependencyUpdate as Workflow.Dependency.Publication.UpdateInfo)
+            WorkbenchSDK.actions.dependency.publishedWorkflows.update(dependencyUpdate as Dependency.Update.Publication)
     }
 
     return (

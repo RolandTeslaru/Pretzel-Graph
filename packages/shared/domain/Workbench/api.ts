@@ -1,19 +1,21 @@
 import type { AxiosInstance } from "axios"
 import z from "zod"
-import { Workflow as WorkflowNs } from "../Workflow"
+import { Workflow as WorkflowD } from "../Workflow"
 import { Foundations } from "../Foundations"
+import { Dependency as DependencyD } from "../Dependency"
+import { PublicationId } from "../Workflow/ids"
 import { Vault } from "../Vault"
 
 export namespace API {
     export namespace Workflow {
         export namespace Create {
             export const Request = z.object({
-                workflow: WorkflowNs.Schema,
+                workflow: WorkflowD.Schema,
             })
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                workflow_id: WorkflowNs.Id,
+                workflow_id: WorkflowD.Id,
             })
             export type Response = z.infer<typeof Response>
         }
@@ -25,14 +27,14 @@ export namespace API {
 
         export namespace Get {
             export const Request = z.object({
-                workflowId: WorkflowNs.Id,
+                workflowId: WorkflowD.Id,
             })
             export type Request = z.infer<typeof Request>
 
             export const Response = z.object({
-                workflow: WorkflowNs.Schema,
+                workflow: WorkflowD.Schema,
                 blueprints: z.record(Foundations.Blueprint.Id, Foundations.Blueprint.Schema),
-                repairs: z.array(WorkflowNs.Repair.Schema),
+                repairs: z.array(WorkflowD.Repair.Schema),
             })
             export type Response = z.infer<typeof Response>
         }
@@ -44,8 +46,8 @@ export namespace API {
 
         export namespace Commit {
             export const Request = z.object({
-                workflowId: WorkflowNs.Id,
-                data: WorkflowNs.Data.Schema,
+                workflowId: WorkflowD.Id,
+                data: WorkflowD.Data.Schema,
             })
             export type Request = z.infer<typeof Request>
 
@@ -67,12 +69,12 @@ export namespace API {
         export namespace Published {
             export namespace Load {
                 export const Request = z.object({
-                    dependencyId: WorkflowNs.Id,
+                    dependencyId: WorkflowD.Id,
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    dependency: WorkflowNs.Dependency.Publication.Schema,
+                    dependency: DependencyD.Value.Publication.Schema,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -85,14 +87,14 @@ export namespace API {
             export namespace CheckUpdates {
                 export const Request = z.object({
                     dependencies: z.array(z.object({
-                        workflowId:    WorkflowNs.Id,
-                        publicationId: WorkflowNs.Dependency.Publication.Id,
+                        workflowId:    WorkflowD.Id,
+                        publicationId: PublicationId,
                     })),
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    updates: WorkflowNs.Dependency.Publication.UpdateMap,
+                    updates: DependencyD.Update.PublicationMap,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -106,12 +108,12 @@ export namespace API {
         export namespace Draft {
             export namespace Load {
                 export const Request = z.object({
-                    dependencyId: WorkflowNs.Id,
+                    dependencyId: WorkflowD.Id,
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    dependency: WorkflowNs.Dependency.Draft.Schema,
+                    dependency: DependencyD.Value.Draft.Schema,
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -124,14 +126,14 @@ export namespace API {
             export namespace CheckUpdates {
                 export const Request = z.object({
                     dependencies: z.array(z.object({
-                        workflowId:          WorkflowNs.Id,
-                        workflow_updated_at: z.coerce.date(),
+                        workflowId: WorkflowD.Id,
+                        updated_at: z.coerce.date(),
                     })),
                 })
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    updates: z.record(WorkflowNs.Id, WorkflowNs.Dependency.Draft.UpdateInfo),
+                    updates: z.record(WorkflowD.Id, DependencyD.Update.Draft),
                 })
                 export type Response = z.infer<typeof Response>
             }
@@ -189,38 +191,38 @@ export namespace API {
         }
 
         export namespace Commit {
-            export const Request = z.object({ data: WorkflowNs.Data.Schema })
+            export const Request = z.object({ data: WorkflowD.Data.Schema })
             export type Request  = z.infer<typeof Request>
             export const Response = z.object({})
             export type Response = z.infer<typeof Response>
         }
 
         export namespace Meta {
-            export const Response = WorkflowNs.Meta.Schema
+            export const Response = WorkflowD.Meta.Schema
             export type Response = z.infer<typeof Response>
         }
 
-        export async function getMeta(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Meta.Response> {
+        export async function getMeta(api: AxiosInstance, workflowId: WorkflowD.Id): Promise<Meta.Response> {
             const { data } = await api.get<Meta.Response>(`/api/internal/workbench/workflows/${workflowId}/meta`)
             return data
         }
 
         /** Lock and load. Refused while anyone holds the workflow. */
-        export async function beginTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<Begin.Response> {
+        export async function beginTransaction(api: AxiosInstance, workflowId: WorkflowD.Id): Promise<Begin.Response> {
             const { data } = await api.post<Begin.Response>(`/api/internal/workbench/workflows/${workflowId}/session`)
             return data
         }
 
-        export async function heartbeat(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<void> {
+        export async function heartbeat(api: AxiosInstance, workflowId: WorkflowD.Id): Promise<void> {
             await api.post(`/api/internal/workbench/workflows/${workflowId}/session/heartbeat`)
         }
 
-        export async function commitTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id, request: Commit.Request): Promise<Commit.Response> {
+        export async function commitTransaction(api: AxiosInstance, workflowId: WorkflowD.Id, request: Commit.Request): Promise<Commit.Response> {
             const { data } = await api.post<Commit.Response>(`/api/internal/workbench/workflows/${workflowId}/session/commit`, request)
             return data
         }
 
-        export async function abortTransaction(api: AxiosInstance, workflowId: WorkflowNs.Id): Promise<void> {
+        export async function abortTransaction(api: AxiosInstance, workflowId: WorkflowD.Id): Promise<void> {
             await api.post(`/api/internal/workbench/workflows/${workflowId}/session/abort`)
         }
     }

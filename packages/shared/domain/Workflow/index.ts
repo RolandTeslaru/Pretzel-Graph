@@ -4,7 +4,6 @@ import { Auth } from "../Auth"
 import * as NodeMod from "./node"
 import * as EdgeMod from "./edge"
 import * as DataMod from "./data"
-import * as DepMod from "./dependency"
 import * as CacheMod from "./cache"
 import * as RepairMod from "./repair"
 import { WorkflowId, FolderId, ListingId } from "./ids"
@@ -32,7 +31,6 @@ export namespace Workflow {
     export import Data         = DataMod.Data
     export import Layout       = DataMod.Data.Layout
     export import Viewport     = DataMod.Data.Viewport
-    export import Dependency   = DepMod.Dependency
     export import Cache        = CacheMod.Cache
     export import Repair       = RepairMod.Repair
 

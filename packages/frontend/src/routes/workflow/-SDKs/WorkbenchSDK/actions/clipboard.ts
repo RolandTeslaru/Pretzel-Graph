@@ -1,3 +1,4 @@
+import type { Dependency } from "@pretzel-graph/shared/domain";
 import { Workflow, type Foundations } from "@pretzel-graph/shared/domain";
 import { WorkbenchSDK } from "../sdk";
 import { Document } from "@pretzel-graph/shared/domain/Workbench/Document";
@@ -116,7 +117,7 @@ export const insertPayload = async (
 };
 
 // The dependency pointers a copied node carries: its shape dependency plus any other WorkflowDependency field.
-const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Workflow.Node.Raw): Workflow.Dependency.WorkflowRef[] => {
+const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Workflow.Node.Raw): Dependency.Ref.Workflow[] => {
     const values    = payload.staticValues[node.id] ?? {};
     const blueprint = d.selectors.blueprint.ofNode(d, node);
     const ids       = new Set<Foundations.Field.Id>([Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID]);
@@ -126,8 +127,8 @@ const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Wor
             ids.add(field.id);
 
     return [...ids]
-        .map(id => values[id] as unknown as Workflow.Dependency.WorkflowRef | undefined)
-        .filter((ref): ref is Workflow.Dependency.WorkflowRef => !!ref);
+        .map(id => values[id] as unknown as Dependency.Ref.Workflow | undefined)
+        .filter((ref): ref is Dependency.Ref.Workflow => !!ref);
 };
 
 // Sub-workflow nodes carry their dependency snapshot inside the source document, so it is
@@ -142,25 +143,28 @@ const adoptDependencies = (
     );
     if (referenced.size === 0) return;
 
-    const registered = new Set<string>();
+    const registeredPublished = new Set<string>();
+    const registeredDrafts    = new Set<string>();
 
     for (const dependency of Object.values(dependencies.publishedWorkflows))
         if (referenced.has(dependency.workflow_id)) {
             reducers.dependency.register(d, "publication", dependency);
-            registered.add(`publication:${dependency.workflow_id}`);
+            registeredPublished.add(dependency.workflow_id);
         }
 
     for (const dependency of Object.values(dependencies.draftWorkflows))
-        if (referenced.has(dependency.workflow_id)) {
+        if (referenced.has(dependency.id)) {
             reducers.dependency.register(d, "draft", dependency);
-            registered.add(`draft:${dependency.workflow_id}`);
+            registeredDrafts.add(dependency.id);
         }
 
     // The nodes were created before their snapshot existed, so their shapes resolve to nothing.
     for (const node of Object.values(d.data.nodes)) {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id);
         if (!shapeDepRef) continue;
-        if (!registered.has(`${shapeDepRef.mode}:${shapeDepRef.workflowId}`)) continue;
+
+        const registered = shapeDepRef.mode === "draft" ? registeredDrafts : registeredPublished;
+        if (!registered.has(shapeDepRef.workflowId)) continue;
 
         reducers.cache.resolvedShape.recreate(d, node.id);
         reducers.node.validate(d, node.id);

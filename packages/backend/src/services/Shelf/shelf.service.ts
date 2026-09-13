@@ -84,7 +84,7 @@ export class ShelfService {
                 id:            (listing.blueprintId ?? listing.id) as Blueprint.Id,
                 meta:          listing.publicationMeta.workflow_meta,
                 data:          listing.workflowData,
-                dependencyRef: { workflowId: listing.id, mode: 'publication' },
+                dependencyRef: { workflowId: listing.id, mode: 'listing' },
             });
         } catch (error) {
             this.logger.warn(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);

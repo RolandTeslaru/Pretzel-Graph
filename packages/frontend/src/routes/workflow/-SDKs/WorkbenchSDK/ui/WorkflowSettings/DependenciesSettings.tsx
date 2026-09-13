@@ -3,7 +3,7 @@ import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkbenchSDK } from '../../sdk'
-import type { Workflow } from '@pretzel-graph/shared/domain'
+import type { Dependency, Workflow } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
     const publishedWorkflows = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.publishedWorkflows))
@@ -52,9 +52,9 @@ export const DependenciesSettings = () => {
                     ))}
                     {draftWorkflows.map(dep => (
                         <DraftDependencyRow
-                            key={dep.workflow_id}
+                            key={dep.id}
                             dep={dep}
-                            updateInfo={dependencyUpdates.draftWorkflows[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.draftWorkflows[dep.id] ?? null}
                         />
                     ))}
                 </div>
@@ -64,8 +64,8 @@ export const DependenciesSettings = () => {
 }
 
 function PublishedDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.Dependency.Publication
-    updateInfo: Workflow.Dependency.Publication.UpdateInfo | null
+    dep: Dependency.Value.Publication
+    updateInfo: Dependency.Update.Publication | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 
@@ -93,7 +93,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
 
             <div className='flex-1 min-w-0'>
                 <p className='text-sm font-medium truncate'>{dep.display_name}</p>
-                <p className='text-xs text-muted-foreground'>{dep.publication_name} · v{dep.version}</p>
+                <p className='text-xs text-muted-foreground'>{dep.name} · v{dep.version}</p>
             </div>
 
             {updateInfo ? (
@@ -109,8 +109,8 @@ function PublishedDependencyRow({ dep, updateInfo }: {
 }
 
 function DraftDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.Dependency.Draft
-    updateInfo: Workflow.Dependency.Draft.UpdateInfo | null
+    dep: Dependency.Value.Draft
+    updateInfo: Dependency.Update.Draft | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 

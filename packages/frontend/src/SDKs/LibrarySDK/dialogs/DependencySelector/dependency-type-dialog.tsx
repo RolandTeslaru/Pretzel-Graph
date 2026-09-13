@@ -1,3 +1,4 @@
+import type { Dependency } from '@pretzel-graph/shared/domain'
 import { useState } from 'react'
 import { Badge, Button, Dialog, Spinner, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
@@ -23,7 +24,7 @@ export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelected: De
     ))
 }
 
-const variantDescriptions: Record<Workflow.Dependency.Variant, string> = {
+const variantDescriptions: Record<Dependency.Variant, string> = {
     draft: "Follows the workflow's current working version. You'll be offered an update whenever it's saved with changes.",
     publication: "Pins to the workflow's active published version. You'll be offered an update only when a new version is published.",
 }
@@ -37,7 +38,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
 
     const dialogId = getDependencyTypeDialogId(workflowId)
 
-    const [variant, setVariant] = useState<Workflow.Dependency.Variant>("draft")
+    const [variant, setVariant] = useState<Dependency.Variant>("draft")
 
     const [isAttaching, setIsAttaching] = useState(false)
 
@@ -76,7 +77,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
                 </div>
             ) : (
                 <>
-                    <Tabs.Root value={variant} onValueChange={(val) => setVariant(val as Workflow.Dependency.Variant)}>
+                    <Tabs.Root value={variant} onValueChange={(val) => setVariant(val as Dependency.Variant)}>
                         <Tabs.List size="lg" className='w-full'>
                             <Tabs.Trigger value='draft' className='w-1/2 flex flex-col gap-2'>
                                 <SystemIcons.DraftingCompass className='size-10' />

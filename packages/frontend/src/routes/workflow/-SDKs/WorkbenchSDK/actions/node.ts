@@ -117,9 +117,9 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             if (sdk.selectors.dependency.getWorkflow(sdk.document, workflowId, mode))
                 return;
 
-            const fetchDepPromise = mode === "publication"
-                ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId });
+            const fetchDepPromise = mode === "draft"
+                ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
+                : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId });
 
             fetchDepPromise.then(({ dependency }) => {
                 sdk.actions.dependency.registerDependency(dependency as any);

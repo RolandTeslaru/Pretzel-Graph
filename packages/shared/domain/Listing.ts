@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { AxiosInstance } from "axios"
 import { Workflow } from "./Workflow"
 import { VersionControl } from "./VersionControl"
+import { Dependency } from "./Dependency"
 import { ListingId, LISTING_ID_PREFIX, isListingId as isListingIdValue } from "./Workflow/ids"
 
 // A workflow shared through the listing registry, usable by any deployment.
@@ -28,21 +29,18 @@ export namespace Listing {
         updatedAt:       z.coerce.date(),
     })
 
-    // The embedded form a depending workflow keeps.
-    export function toPublication(listing: Listing): Workflow.Dependency.Publication {
+    // The embedded form a depending workflow keeps, under the registry's id.
+    export function toPublication(listing: Listing): Dependency.Value.Publication {
         const meta = listing.publicationMeta
 
-        return {
-            id:               meta.id,
-            workflow_id:      listing.id,
-            version:          meta.version,
-            workflow_data:    listing.workflowData,
-            published_at:     meta.published_at,
-            publication_name: meta.name,
-            display_name:     meta.workflow_meta.display_name,
-            icon:             meta.workflow_meta.icon ?? null,
-            accent:           meta.workflow_meta.accent ?? null,
-        }
+        return Dependency.Value.Publication.Schema.parse({
+            ...meta,
+            workflow_id:   listing.id,
+            display_name:  meta.workflow_meta.display_name,
+            icon:          meta.workflow_meta.icon,
+            accent:        meta.workflow_meta.accent,
+            workflow_data: listing.workflowData,
+        })
     }
 
     export namespace API {

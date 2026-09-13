@@ -4,6 +4,7 @@ import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import type { Node } from "./node";
 import type { Workflow } from "./index";
+import type { Dependency } from "../Dependency";
 import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
@@ -88,7 +89,7 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
 
 
 /**
- * Derive a slim node's live input ports. When the node is a subworkflow (a `dependency` record is
+ * Derive a slim node's live input ports. When the node is a subworkflow (its dependency's graph is
  * passed), its ports ARE the subworkflow's exposed inputs — the `base` (blueprint's own inputs) is
  * only a drawer-preview snapshot and would double the ports if concatenated, so it's dropped.
  * Otherwise it's the blueprint base plus the node's own `addedInputs`.
@@ -96,21 +97,21 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
 export function resolveInputs(
     base: readonly Port.Input[],
     node: Node.Raw,
-    dependency: Workflow.Dependency | null,
+    shapeDepData: Workflow.Data | null,
 ): Port.Input[] {
-    if (dependency)
-        return resolve([], extractExposedInputs(dependency.workflow_data), node.polymorphicResolutions);
+    if (shapeDepData)
+        return resolve([], extractExposedInputs(shapeDepData), node.polymorphicResolutions);
     return resolve(base, node.addedInputs, node.polymorphicResolutions);
 }
 
-/** Derive a slim node's live output ports. See {@link resolveInputs} for the `dependency` behavior. */
+/** Derive a slim node's live output ports. See {@link resolveInputs} for the `shapeDepData` behavior. */
 export function resolveOutputs(
     base: readonly Port.Output[],
     node: Node.Raw,
-    dependency: Workflow.Dependency | null,
+    shapeDepData: Workflow.Data | null,
 ): Port.Output[] {
-    if (dependency)
-        return resolve([], extractExposedOutputs(dependency.workflow_data), node.polymorphicResolutions);
+    if (shapeDepData)
+        return resolve([], extractExposedOutputs(shapeDepData), node.polymorphicResolutions);
     return resolve(base, node.addedOutputs, node.polymorphicResolutions);
 }
 
@@ -121,7 +122,7 @@ export function toBlueprint(
         id: Blueprint.Id;
         meta: Workflow.Meta;
         data: Workflow.Data;
-        dependencyRef: Workflow.Dependency.WorkflowRef;
+        dependencyRef: Dependency.Ref.Workflow;
     }
 ): Blueprint {
     return {
@@ -141,7 +142,7 @@ export function toBlueprint(
 }
 
 // Presets the node's own dependency field to the workflow and hides it; other dependency fields stay as declared.
-function pinDependency(fields: readonly Foundations.Field[], dependencyRef: Workflow.Dependency.WorkflowRef): Foundations.Field[] {
+function pinDependency(fields: readonly Foundations.Field[], dependencyRef: Dependency.Ref.Workflow): Foundations.Field[] {
     return fields.map(field => {
         if (field.id !== SHAPE_DEPENDENCY_FIELD_ID || field.variant !== "WorkflowDependency")
             return field;

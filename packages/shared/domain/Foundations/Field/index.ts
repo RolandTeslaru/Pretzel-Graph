@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { Port } from "../Port"
+import { Ref } from "../../Dependency/ref"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
@@ -437,15 +438,9 @@ export namespace Field {
 
     // A sub-workflow node's pointer into the workflow's embedded dependency snapshots.
     export namespace WorkflowDependency {
-        export const Value = z.object({
-            workflowId: z.uuid().brand("WorkflowId"),
-            mode:       z.enum(["publication", "draft"]),
-        })
-        export type Value = z.infer<typeof Value>
-
         export const Schema = Field.Base.extend({
             variant:      configLiteral("WorkflowDependency"),
-            initialValue: Value.nullable(),
+            initialValue: Ref.Workflow.Schema.nullable(),
         })
     }
 

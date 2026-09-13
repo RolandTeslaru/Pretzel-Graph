@@ -1,18 +1,24 @@
+import type { Dependency } from "../../../Dependency";
 import { Workflow } from "../../../Workflow";
 import type { Document } from "../index";
 import { isEqual } from "lodash"
 
 const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as const
 
-// Mode-aware: a workflow can be referenced as a publication and/or a draft, and each mode is a
-// separate stored snapshot. Keyed `${mode}:${workflowId}` so removeUnused can't retain the
-// opposite-mode copy of a still-referenced workflow.
+// Listings share the published store until they get their own.
+function storeKey(mode: Dependency.Ref.Workflow["mode"], workflowId: Workflow.Id): string {
+    const store = mode === "draft" ? "draft" : "publication"
+    return `${store}:${workflowId}`
+}
+
+// Store-aware: a workflow can be referenced as a publication and/or a draft, and each is a separate
+// stored snapshot, so keys carry the store and removeUnused can't retain the other copy.
 function collectUsedDependencyKeys(d: Document): Set<string> {
     const used = new Set<string>()
     Object.values(d.data.nodes).forEach(node => {
         for (const ref of d.selectors.node.getWorkflowDependencyRefs(d, node.id))
             if (ref.workflowId)
-                used.add(`${ref.mode}:${ref.workflowId}`)
+                used.add(storeKey(ref.mode, ref.workflowId))
     })
     return used
 }
@@ -65,20 +71,29 @@ function pruneWorkflowData(d: Document, data: Workflow.Data) {
     }
 }
 
+// Layout/viewport are editor-only; a dependency is executed, not rendered, so its snapshot drops the ui.
+function withoutUi(data: Workflow.Data): Workflow.Data {
+    const { ui: _ui, ...rest } = data
+    return rest as Workflow.Data
+}
+
 export const dependencyReducers: DependencyReducers = {
     register: (d, mode, dependency) => {
         d.reducers.dependency.removeUnused(d)
-        // Layout/viewport are editor-only; a dependency is executed, not rendered — drop the ui so it
-        // doesn't bloat the persisted parent (schema defaults it back if ever re-parsed).
-        const { ui: _ui, ...workflow_data } = dependency.workflow_data
-        const slim = { ...dependency, workflow_data } as typeof dependency
-        if (mode === "publication")
-            d.data.dependencies.publishedWorkflows[slim.workflow_id] = slim as Workflow.Dependency.Publication
-        else
-            d.data.dependencies.draftWorkflows[slim.workflow_id] = slim as Workflow.Dependency.Draft
+
+        if (mode === "draft") {
+            const draft = dependency as Dependency.Value.Draft
+            d.data.dependencies.draftWorkflows[draft.id] = { ...draft, data: withoutUi(draft.data) }
+        }
+        else {
+            const publication = dependency as Dependency.Value.Publication
+            d.data.dependencies.publishedWorkflows[publication.workflow_id] = { ...publication, workflow_data: withoutUi(publication.workflow_data) }
+        }
     },
     applyUpdate: (d, mode, dependency) => {
-        const workflowId = dependency.workflow_id as Workflow.Id
+        const workflowId = mode === "draft"
+            ? (dependency as Dependency.Value.Draft).id
+            : (dependency as Dependency.Value.Publication).workflow_id
 
         d.reducers.dependency.register(d, mode, dependency)
         d.isDirty = true
@@ -88,32 +103,34 @@ export const dependencyReducers: DependencyReducers = {
         for (const node of Object.values(d.data.nodes)) {
             const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id)
 
-            if (shapeDepRef?.workflowId === workflowId && shapeDepRef?.mode === mode) {
+            if (shapeDepRef && storeKey(shapeDepRef.mode, shapeDepRef.workflowId) === storeKey(mode, workflowId)) {
                 d.reducers.cache.resolvedShape.recreate(d, node.id)
                 d.reducers.node.validate(d, node.id)
             }
         }
 
-        if (mode === "publication")
-            delete d.dependencyUpdates.publishedWorkflows[workflowId]
-        else
+        if (mode === "draft")
             delete d.dependencyUpdates.draftWorkflows[workflowId]
+        else
+            delete d.dependencyUpdates.publishedWorkflows[workflowId]
     },
     // Retroactively slim already-persisted (remnant) dependency snapshots. New deps enter slim via
     // `register`, but load bypasses register, so this runs from the load action's normalize pass.
     pruneDefaults: (d) => {
-        for (const store of [d.data.dependencies.publishedWorkflows, d.data.dependencies.draftWorkflows])
-            for (const dep of Object.values(store))
-                pruneWorkflowData(d, dep.workflow_data)
+        for (const dep of Object.values(d.data.dependencies.publishedWorkflows))
+            pruneWorkflowData(d, dep.workflow_data)
+
+        for (const dep of Object.values(d.data.dependencies.draftWorkflows))
+            pruneWorkflowData(d, dep.data)
     },
     removeUnused: (d) => {
         const used = collectUsedDependencyKeys(d)
 
         for (const id of Object.keys(d.data.dependencies.publishedWorkflows) as Workflow.Id[])
-            if (!used.has(`publication:${id}`)) delete d.data.dependencies.publishedWorkflows[id]
+            if (!used.has(storeKey("publication", id))) delete d.data.dependencies.publishedWorkflows[id]
 
         for (const id of Object.keys(d.data.dependencies.draftWorkflows) as Workflow.Id[])
-            if (!used.has(`draft:${id}`)) delete d.data.dependencies.draftWorkflows[id]
+            if (!used.has(storeKey("draft", id))) delete d.data.dependencies.draftWorkflows[id]
     },
 }
 
@@ -122,14 +139,14 @@ export const dependencyReducers: DependencyReducers = {
 
 export interface DependencyReducers {
     applyUpdate: (
-        document:      Document,
-        mode:       "publication" | "draft",
-        dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
+        document:   Document,
+        mode:       Dependency.Ref.Workflow["mode"],
+        dependency: Dependency.Value.Publication | Dependency.Value.Draft,
     ) => void
     register: (
-        document:      Document,
-        mode:       "publication" | "draft",
-        dependency: Workflow.Dependency.Publication | Workflow.Dependency.Draft,
+        document:   Document,
+        mode:       Dependency.Ref.Workflow["mode"],
+        dependency: Dependency.Value.Publication | Dependency.Value.Draft,
     ) => void
     pruneDefaults: (document: Document) => void
     removeUnused: (document: Document) => void

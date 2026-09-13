@@ -1,6 +1,7 @@
 import type { Foundations } from "../../Foundations"
 import type { Validation } from "../../Validation"
 import { Workflow } from "../../Workflow"
+import type { Dependency } from "../../Dependency"
 import { documentReducers } from "./reducers"
 import { documentSelectors, type DocumentSelectors } from "./selectors"
 import { createCache as _createCache, resolveShape as _resolveShape, deriveArcs as _deriveArcs, deriveReversedArcs as _deriveReversedArcs } from "./cache"
@@ -27,8 +28,8 @@ export interface Document {
     stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>
     cyclesDirty: boolean
     dependencyUpdates: {
-        publishedWorkflows: Workflow.Dependency.Publication.UpdateMap
-        draftWorkflows:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
+        publishedWorkflows: Dependency.Update.PublicationMap
+        draftWorkflows:     Record<Workflow.Id, Dependency.Update.Draft>
     }
 
     /** The document differs from what was last persisted. */

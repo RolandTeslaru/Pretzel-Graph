@@ -1,3 +1,4 @@
+import type { Dependency } from '@pretzel-graph/shared/domain';
 import { Injectable, Logger } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
@@ -46,7 +47,7 @@ export class ListingService {
         });
     }
 
-    public async getPublication(listingId: Listing.Id): Promise<Workflow.Dependency.Publication | null> {
+    public async getPublication(listingId: Listing.Id): Promise<Dependency.Value.Publication | null> {
         if (!this.registry.canRead)
             return null;
 
@@ -57,12 +58,12 @@ export class ListingService {
 
     public async checkUpdates(
         dependencies: Array<{ workflowId: Workflow.Id; publicationId: VersionControl.Publication.Id }>,
-    ): Promise<Workflow.Dependency.Publication.UpdateMap> {
+    ): Promise<Dependency.Update.PublicationMap> {
         if (!this.registry.canRead || dependencies.length === 0)
             return {};
 
         const current = await this.registry.getUpdates(dependencies.map((dependency) => dependency.workflowId));
-        const updates: Workflow.Dependency.Publication.UpdateMap = {};
+        const updates: Dependency.Update.PublicationMap = {};
 
         for (const dependency of dependencies) {
             const info = current[dependency.workflowId];
