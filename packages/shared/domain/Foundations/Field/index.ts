@@ -47,6 +47,7 @@ export namespace Field {
         "CalendarRange",
         "CalendarDateTimeRange",
         "WorkflowIdSelector",
+        "WorkflowDependency",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -434,6 +435,22 @@ export namespace Field {
         only: z.enum(["static", "expression"]).optional(),
     })
 
+    // A sub-workflow node's pointer into the workflow's embedded dependency snapshots.
+    export namespace WorkflowDependency {
+        export const Value = z.object({
+            workflowId: z.uuid().brand("WorkflowId"),
+            mode:       z.enum(["publication", "draft"]),
+        })
+        export type Value = z.infer<typeof Value>
+
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("WorkflowDependency"),
+            initialValue: Value.nullable(),
+        })
+    }
+
+    export interface WorkflowDependency extends z.infer<typeof WorkflowDependency.Schema> { }
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -471,6 +488,7 @@ export namespace Field {
         CalendarRange.Schema,
         CalendarDateTimeRange.Schema,
         WorkflowIdSelector,
+        WorkflowDependency.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

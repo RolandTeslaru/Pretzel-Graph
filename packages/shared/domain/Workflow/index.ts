@@ -36,11 +36,6 @@ export namespace Workflow {
     export import Cache        = CacheMod.Cache
     export import Repair       = RepairMod.Repair
 
-    export const createCache        = CacheMod.createCache
-    export const resolveShape       = CacheMod.resolveShape
-    export const deriveArcs         = CacheMod.deriveArcs
-    export const deriveReversedArcs = CacheMod.deriveReversedArcs
-
     // A subworkflow's exposed ports, read from its Expose*Port nodes. Impl in ./resolvers.
     export const extractExposedInputs  = _extractExposedInputs
     export const extractExposedOutputs = _extractExposedOutputs
@@ -93,7 +88,7 @@ export namespace Workflow {
             staticValues:          {},
             fieldExpressions:      {},
             credentialInstanceIds: {},
-            dependencies:          { published: {}, draft: {} },
+            dependencies:          { publishedWorkflows: {}, draftWorkflows: {} },
             ui: {
                 layout:         {},
                 viewport:       { x: 0, y: 0, zoom: 1 },

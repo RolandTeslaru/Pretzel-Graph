@@ -6,14 +6,14 @@ import { WorkbenchSDK } from '../../sdk'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const publishedDependencies = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.published))
-    const draftDependencies     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draft))
-    const dependencyUpdates     = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
+    const publishedWorkflows = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.publishedWorkflows))
+    const draftWorkflows     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draftWorkflows))
+    const dependencyUpdates  = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
 
     const hasAnyUpdate =
-        Object.keys(dependencyUpdates.published).length > 0 ||
-        Object.keys(dependencyUpdates.draft).length > 0
+        Object.keys(dependencyUpdates.publishedWorkflows).length > 0 ||
+        Object.keys(dependencyUpdates.draftWorkflows).length > 0
 
     const updateAll = async () => {
         setUpdatingAll(true)
@@ -24,7 +24,7 @@ export const DependenciesSettings = () => {
         }
     }
 
-    const isEmpty = publishedDependencies.length === 0 && draftDependencies.length === 0
+    const isEmpty = publishedWorkflows.length === 0 && draftWorkflows.length === 0
 
     return (
         <>
@@ -43,18 +43,18 @@ export const DependenciesSettings = () => {
                 </div>
             ) : (
                 <div className='flex flex-col gap-2'>
-                    {publishedDependencies.map(dep => (
+                    {publishedWorkflows.map(dep => (
                         <PublishedDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
-                            updateInfo={dependencyUpdates.published[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.publishedWorkflows[dep.workflow_id as Workflow.Id] ?? null}
                         />
                     ))}
-                    {draftDependencies.map(dep => (
+                    {draftWorkflows.map(dep => (
                         <DraftDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
-                            updateInfo={dependencyUpdates.draft[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.draftWorkflows[dep.workflow_id as Workflow.Id] ?? null}
                         />
                     ))}
                 </div>
@@ -76,7 +76,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.published.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.publishedWorkflows.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }
@@ -121,7 +121,7 @@ function DraftDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.draft.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.draftWorkflows.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }

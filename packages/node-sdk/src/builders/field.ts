@@ -444,4 +444,17 @@ export namespace defineField {
             ...buildOnly(options.only),
         };
     }
+
+    /** Points a sub-workflow node at one of the workflow's embedded dependency snapshots. */
+    export function WorkflowDependency<T_Id extends string, T_Required extends boolean = false>(
+        id: T_Id, displayName: string, options: {
+        initialValue?: Field.WorkflowDependency.Value | null;
+    } & BaseOptions<T_Required> = {},
+    ): T_Return<T_Id, "WorkflowDependency", Field.WorkflowDependency, T_Required> {
+        return {
+            ...buildBase(id, displayName, options),
+            variant:      "WorkflowDependency",
+            initialValue: options.initialValue ?? null,
+        };
+    }
 }

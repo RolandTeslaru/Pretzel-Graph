@@ -1,8 +1,15 @@
 import { z } from "zod"
+import { Field } from "../Foundations/Field";
 import { PublicationId, WorkflowId } from "./ids";
 import { Data } from "./data";
 
 export namespace Dependency {
+    // Points at one embedded workflow snapshot: the workflow, and which store it lives in.
+    export namespace WorkflowRef {
+        export const Schema = Field.WorkflowDependency.Value
+    }
+    export type WorkflowRef = Field.WorkflowDependency.Value
+
     // Hand-written anchors: TS cannot infer the Data <-> Dependency cycle.
     // Merged with the namespaces below so `Dependency.Publication` is this type.
     //

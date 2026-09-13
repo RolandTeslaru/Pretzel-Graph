@@ -55,10 +55,10 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 data: d.data,
                 cyclesDirty: d.cyclesDirty,
             }),
-            // Skip recording history when only the camera (ui.viewport) or field/input
-            // values (staticValues) changed — neither should consume undo slots. Field
-            // values are preserved across undo/redo in actions.temporal. Cheap thanks to
-            // immer's structural sharing.
+            // Skip recording history when only the camera (ui.viewport), field/input values
+            // (staticValues) or embedded snapshots (dependencies) changed — none should consume
+            // undo slots. Values and snapshots are preserved across undo/redo in actions.temporal.
+            // Cheap thanks to immer's structural sharing.
             equality: (a, b) =>
                 a.workflowId === b.workflowId &&
                 a.cyclesDirty === b.cyclesDirty &&
@@ -106,7 +106,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
             return [
                 d.data.nodes[nodeId],
                 d.selectors.node.getConnectedPorts(d, nodeId),
-                d.selectors.node.getDependency(d, nodeId),
+                d.selectors.node.getShapeDependency(d, nodeId),
                 d.cache.resolvedShape[nodeId] ?? null,
                 d.selectors.blueprint.forNode(d, nodeId),
             ]

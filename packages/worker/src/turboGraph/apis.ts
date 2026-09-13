@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Consultation, Execution, Vault } from "@pretzel-graph/shared/domain";
+import { Consultation, Execution, Vault, Workbench } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
@@ -94,19 +94,7 @@ export function createExecutionAPIs(
                         ctxRef.current.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
-        getNodeDependency: (nodeId) => {
-            const depRef = ctxRef.current.workflowData.nodes[nodeId]?.dependencyRef;
-
-            if (!depRef) {
-                return null;
-            }
-
-            const store = depRef.mode === "publication"
-                ? ctxRef.current.workflowData.dependencies.published
-                : ctxRef.current.workflowData.dependencies.draft;
-
-            return store[depRef.workflowId] ?? null;
-        },
+        getNodeDependency: (nodeId) => Workbench.Document.selectors.node.getShapeDependency({ data: ctxRef.current.workflowData }, nodeId),
     } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
 
@@ -151,7 +139,7 @@ export function createExecutionAPIs(
 
     const dependencyAPI = {
         getPublished: (wfId) => {
-            const dep = workflowData.dependencies?.published?.[wfId];
+            const dep = workflowData.dependencies?.publishedWorkflows?.[wfId];
 
             if (!dep) {
                 throw new Error(`Missing published dependency "${wfId}"`);
@@ -161,7 +149,7 @@ export function createExecutionAPIs(
         },
 
         getDraft: (wfId) => {
-            const draft = workflowData.dependencies?.draft?.[wfId];
+            const draft = workflowData.dependencies?.draftWorkflows?.[wfId];
 
             if (!draft) {
                 throw new Error(`Missing draft dependency "${wfId}"`);

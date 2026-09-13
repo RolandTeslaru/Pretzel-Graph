@@ -5,6 +5,7 @@ import { Port } from "../../../Foundations/Port";
 import type { Document } from "../index";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "../../../Algorithms";
+import { createCache, deriveArcs } from "../cache";
 
 export const workflowReducers: WorkflowReducers = {
     open: (d, workflow, options = {}) => {
@@ -12,7 +13,7 @@ export const workflowReducers: WorkflowReducers = {
 
         d.workflowId = workflow.id;
         d.data = data;
-        d.cache = Workflow.createCache(data, d.blueprints);
+        d.cache = createCache(data, d.blueprints);
 
         // Drop edges whose endpoint no longer exists — either the node itself (orphaned by a
         // deletion that didn't clean up its edges) or the port (blueprint changed shape).
@@ -40,7 +41,7 @@ export const workflowReducers: WorkflowReducers = {
 
         if (prunedCount > 0) {
             data.edges = keptEdges;
-            d.cache = Workflow.createCache(data, d.blueprints);
+            d.cache = createCache(data, d.blueprints);
         }
         d.cycles = [];
         d.stronglyConnectedComponents = [];
@@ -48,7 +49,7 @@ export const workflowReducers: WorkflowReducers = {
             nodes: {},
             cycles: []
         }
-        d.dependencyUpdates = { published: {}, draft: {} }
+        d.dependencyUpdates = { publishedWorkflows: {}, draftWorkflows: {} }
 
         d.reducers.dependency.removeUnused(d);
 
@@ -80,7 +81,7 @@ export const workflowReducers: WorkflowReducers = {
     close: (d) => {
         d.workflowId = '' as Workflow.Id;
         d.data = cloneDeep(Workflow.INITIAL.data);
-        d.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data), {});
+        d.cache = createCache(cloneDeep(Workflow.INITIAL.data), {});
         d.isDirty = false;
     },
     validate: (d) => {
@@ -92,7 +93,7 @@ export const workflowReducers: WorkflowReducers = {
         d.data.globalFields = [...fields];
     },
     recomputeAllCycles: (d) => {
-        const arcsMap = Workflow.deriveArcs(d.cache);
+        const arcsMap = deriveArcs(d.cache);
         const sccs = Algorithms.Tarjan.deriveSCCs(d.data.nodes, arcsMap)[3]
 
         d.stronglyConnectedComponents = sccs;

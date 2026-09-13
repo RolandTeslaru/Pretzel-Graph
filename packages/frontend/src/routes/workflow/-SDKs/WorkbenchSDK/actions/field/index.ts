@@ -6,6 +6,7 @@ import type { DropFirstArg } from "@/SDKs/types";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { createConditionActions, type ConditionActions } from "./condition";
 import { createCaseListActions, type CaseListActions } from "./caseList";
+import { createWorkflowDependencyActions, type WorkflowDependencyActions } from "./workflowDependency";
 
 export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActions) {
     const setDocument = sdk.setDocument;
@@ -54,6 +55,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
         setIsExpression: withCommit((...props) => { setDocument(d => { reducers.field.setIsExpression(d, ...props) }) }),
         condition: createConditionActions(sdk, validateFieldById),
         caseList:  createCaseListActions(sdk, validateFieldById),
+        workflowDependency: createWorkflowDependencyActions(sdk),
     } satisfies FieldActions;
 }
 
@@ -64,4 +66,5 @@ export interface FieldActions {
     setIsExpression : DropFirstArg<WorkbenchSDK.Reducers['field']['setIsExpression']>
     condition       : ConditionActions
     caseList        : CaseListActions
+    workflowDependency : WorkflowDependencyActions
 }

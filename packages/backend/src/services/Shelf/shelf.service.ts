@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Listing, Shelf, Workflow } from '@pretzel-graph/shared/domain';
+import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { CloudService } from '../Cloud/cloud.service';
@@ -46,7 +46,7 @@ export class ShelfService {
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
 
         for (const listing of listings) {
-            const blueprint = this.toExtendedBlueprint(base, listing);
+            const blueprint = this.convertListingToExtendedBlueprint(base, listing);
 
             if (blueprint)
                 blueprints[blueprint.id] = blueprint;
@@ -78,7 +78,7 @@ export class ShelfService {
         return Listing.API.ExtendedShelf.Response.parse(await response.json()).workflows;
     }
 
-    private toExtendedBlueprint(base: Blueprint, listing: Listing): Blueprint | null {
+    private convertListingToExtendedBlueprint(base: Blueprint, listing: Listing): Blueprint | null {
         try {
             return Workflow.toBlueprint(base, {
                 id:            (listing.blueprintId ?? listing.id) as Blueprint.Id,
@@ -221,7 +221,7 @@ export class ShelfService {
             for (const node of Object.values(data.nodes)) {
                 if (failure.code === "MISSING_BLUEPRINT") {
                     // Dependency nodes may use a cosmetic blueprint id absent from the catalogue by design.
-                    if (node.dependencyRef || node.blueprintId !== failure.blueprintId)
+                    if (Workbench.Document.selectors.node.getShapeDependencyRef({ data }, node.id) || node.blueprintId !== failure.blueprintId)
                         continue;
 
                     repairs.push({

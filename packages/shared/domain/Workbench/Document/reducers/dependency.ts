@@ -10,8 +10,9 @@ const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as
 function collectUsedDependencyKeys(d: Document): Set<string> {
     const used = new Set<string>()
     Object.values(d.data.nodes).forEach(node => {
-        if (node.dependencyRef && node.dependencyRef.workflowId)
-            used.add(`${node.dependencyRef.mode}:${node.dependencyRef.workflowId}`)
+        for (const ref of d.selectors.node.getWorkflowDependencyRefs(d, node.id))
+            if (ref.workflowId)
+                used.add(`${ref.mode}:${ref.workflowId}`)
     })
     return used
 }
@@ -45,7 +46,7 @@ function pruneWorkflowData(d: Document, data: Workflow.Data) {
         const initialById = new Map<string, unknown>()
         const fields = node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields
         for (const field of fields) {
-            if (field.variant === "UniqueString") continue
+            if (field.variant === "UniqueString" || field.variant === "WorkflowDependency") continue
             if ("initialValue" in field) initialById.set(field.id, field.initialValue)
         }
         for (const input of Workflow.Node.resolveInputs(blueprint.inputs, node, null))
@@ -72,9 +73,9 @@ export const dependencyReducers: DependencyReducers = {
         const { ui: _ui, ...workflow_data } = dependency.workflow_data
         const slim = { ...dependency, workflow_data } as typeof dependency
         if (mode === "publication")
-            d.data.dependencies.published[slim.workflow_id] = slim as Workflow.Dependency.Publication
+            d.data.dependencies.publishedWorkflows[slim.workflow_id] = slim as Workflow.Dependency.Publication
         else
-            d.data.dependencies.draft[slim.workflow_id] = slim as Workflow.Dependency.Draft
+            d.data.dependencies.draftWorkflows[slim.workflow_id] = slim as Workflow.Dependency.Draft
     },
     applyUpdate: (d, mode, dependency) => {
         const workflowId = dependency.workflow_id as Workflow.Id
@@ -84,32 +85,35 @@ export const dependencyReducers: DependencyReducers = {
 
         // Ports / ui / fields all derive from the registered record on read, so there's no node to
         // recreate — just re-validate the nodes that reference it against their new shape.
-        for (const node of Object.values(d.data.nodes))
-            if (node.dependencyRef?.workflowId === workflowId && node.dependencyRef?.mode === mode) {
+        for (const node of Object.values(d.data.nodes)) {
+            const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id)
+
+            if (shapeDepRef?.workflowId === workflowId && shapeDepRef?.mode === mode) {
                 d.reducers.cache.resolvedShape.recreate(d, node.id)
                 d.reducers.node.validate(d, node.id)
             }
+        }
 
         if (mode === "publication")
-            delete d.dependencyUpdates.published[workflowId]
+            delete d.dependencyUpdates.publishedWorkflows[workflowId]
         else
-            delete d.dependencyUpdates.draft[workflowId]
+            delete d.dependencyUpdates.draftWorkflows[workflowId]
     },
     // Retroactively slim already-persisted (remnant) dependency snapshots. New deps enter slim via
     // `register`, but load bypasses register, so this runs from the load action's normalize pass.
     pruneDefaults: (d) => {
-        for (const store of [d.data.dependencies.published, d.data.dependencies.draft])
+        for (const store of [d.data.dependencies.publishedWorkflows, d.data.dependencies.draftWorkflows])
             for (const dep of Object.values(store))
                 pruneWorkflowData(d, dep.workflow_data)
     },
     removeUnused: (d) => {
         const used = collectUsedDependencyKeys(d)
 
-        for (const id of Object.keys(d.data.dependencies.published) as Workflow.Id[])
-            if (!used.has(`publication:${id}`)) delete d.data.dependencies.published[id]
+        for (const id of Object.keys(d.data.dependencies.publishedWorkflows) as Workflow.Id[])
+            if (!used.has(`publication:${id}`)) delete d.data.dependencies.publishedWorkflows[id]
 
-        for (const id of Object.keys(d.data.dependencies.draft) as Workflow.Id[])
-            if (!used.has(`draft:${id}`)) delete d.data.dependencies.draft[id]
+        for (const id of Object.keys(d.data.dependencies.draftWorkflows) as Workflow.Id[])
+            if (!used.has(`draft:${id}`)) delete d.data.dependencies.draftWorkflows[id]
     },
 }
 

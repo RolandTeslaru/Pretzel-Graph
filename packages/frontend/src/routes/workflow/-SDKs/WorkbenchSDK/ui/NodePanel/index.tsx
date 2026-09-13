@@ -12,7 +12,6 @@ import { NodeSidebarFooter  as Footer} from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
 import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker';
-import { DependencySelector } from './DependencySelector'
 import { PROXY_TEMPLATE_ID } from './proxy'
 
 
@@ -119,7 +118,6 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
     const credentials = (hyNode.blueprint.credentials ?? [])
         .filter(cred => cred.id !== PROXY_TEMPLATE_ID)
     const webhooks = hyNode.blueprint.webhooks ?? []
-    const flags = hyNode.blueprint.flags ?? {}
 
     const defaultOpen = useMemo(() => {
         const sections: string[] = ["execution-strategy", "output", "webhooks"];
@@ -178,8 +176,6 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
                         </SidebarAccordionItem>
                     )}
                         <SidebarAccordionItem label='Fields' value='fields'>
-                            {flags?.SHOW_DEPENDENCY_SELECTOR ? <DependencySelector className="px-4" nodeId={hyNode.id} /> : null}
-
                             {fields.map(field => field.hidden ? null : (
                                 <div key={field.id} className='px-4 py-1 min-w-0'>
                                     <FieldRenderer field={field} nodeId={hyNode.id} />

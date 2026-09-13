@@ -6,6 +6,7 @@ import { Field } from "../../../Foundations/Field";
 import type { Port } from "../../../Foundations/Port";
 import type { Document } from "../index";
 import { executionSelectors } from "./execution";
+import { dependencySelectors } from "./dependency";
 import type { Blueprint } from "../../../Foundations/Blueprint";
 
 const EMPTY_CONNECTED_PORTS: Record<string, Workflow.Edge.Id> = {}
@@ -33,8 +34,11 @@ export interface NodeSelectors {
     getStaticValue:       (document: Document, nodeId: Workflow.Node.Id, id: Field.Id | Port.Input.Id, fallback?: Field.Value | null) => Field.Value | null
     // Legacy webhook-only `@`-sigil context. Temporary until webhook resolution moves onto Airlock.
     getLegacyExpressionContext: (document: Document, nodeId: Workflow.Node.Id, session?: Execution.Session) => LegacyExpressionContext
-    getDependencyRef: (document: Document, nodeId: Workflow.Node.Id) => Workflow.Node.DependencyRef | null
-    getDependency: (document: Document, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
+    // Read plain workflow data only, so callers outside the editor can pass `{ data }`.
+    getShapeDependencyRef: (document: { data: Pick<Workflow.Data, "staticValues"> }, nodeId: Workflow.Node.Id) => Workflow.Dependency.WorkflowRef | null
+    getShapeDependency: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Workflow.Dependency | null
+    // Every WorkflowDependency field value on the node, the shape dependency included.
+    getWorkflowDependencyRefs: (document: Document, nodeId: Workflow.Node.Id) => Workflow.Dependency.WorkflowRef[]
     hasDraftDependency: (document: Document, nodeId: Workflow.Node.Id) => boolean
     hasPublishedDependency: (document: Document, nodeId: Workflow.Node.Id) => boolean
     getDependencyUpdate: (document: Document, nodeId: Workflow.Node.Id) => [ 
@@ -130,55 +134,61 @@ export const nodeSelectors: NodeSelectors = {
         incoming: executionSelectors.getNodeIncomingData(d, nodeId, session) ?? {},
         globalFields: Airlock.resolveGlobalFieldValues(d.data),
     }),
-    getDependencyRef: (d, nodeId) => d.data.nodes[nodeId]?.dependencyRef ?? null,
-    getDependency: (d, nodeId) => {
-        const ref = d.data.nodes[nodeId]?.dependencyRef;
-        if (!ref) return null;
-        const store = ref.mode === "publication" ? d.data.dependencies.published : d.data.dependencies.draft;
-        return store[ref.workflowId] ?? null;
+    getShapeDependencyRef: (d, nodeId) => {
+        const value = d.data.staticValues[nodeId]?.[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID];
+
+        return (value as unknown as Workflow.Dependency.WorkflowRef | undefined) ?? null;
+    },
+    getShapeDependency: (d, nodeId) => {
+        const shapeDepRef = nodeSelectors.getShapeDependencyRef(d, nodeId);
+        if (!shapeDepRef)
+            return null;
+
+        return dependencySelectors.getWorkflow(d, shapeDepRef.workflowId, shapeDepRef.mode);
+    },
+    getWorkflowDependencyRefs: (d, nodeId) => {
+        const values = d.data.staticValues[nodeId] ?? {};
+        const ids    = new Set<Field.Id>([Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID]);
+
+        for (const field of d.selectors.node.getFields(d, nodeId))
+            if (field.variant === "WorkflowDependency")
+                ids.add(field.id);
+
+        return [...ids]
+            .map(id => values[id] as unknown as Workflow.Dependency.WorkflowRef | undefined)
+            .filter((ref): ref is Workflow.Dependency.WorkflowRef => !!ref);
     },
     hasDraftDependency: (d, nodeId) => {
-        const node = d.data.nodes[nodeId];
-        if (!node?.dependencyRef)
+        const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
+        if (!shapeDepRef?.workflowId)
             return false;
-        
-        const { workflowId, mode } = node.dependencyRef;
-        if(!workflowId) 
-            return false
-        return mode === "draft" && workflowId in d.data.dependencies.draft;
+
+        return shapeDepRef.mode === "draft" && shapeDepRef.workflowId in d.data.dependencies.draftWorkflows;
     },
     hasPublishedDependency: (d, nodeId) => {
-        const node = d.data.nodes[nodeId];
-        if (!node?.dependencyRef) 
+        const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
+        if (!shapeDepRef?.workflowId)
             return false;
-        
-        const { workflowId, mode } = node.dependencyRef;
-        if(!workflowId) 
-            return false
-        return mode === "publication" && workflowId in d.data.dependencies.published;
+
+        return shapeDepRef.mode === "publication" && shapeDepRef.workflowId in d.data.dependencies.publishedWorkflows;
     },
     getDependencyUpdate: (d, nodeId) => {
-        const node = d.data.nodes[nodeId];
+        const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
+        if (!shapeDepRef?.workflowId)
+            return null;
 
-        if(node.dependencyRef){
-            const { workflowId, mode } = node.dependencyRef;
-            
-            if(!workflowId) 
-                return null
-
-            if(mode === "publication"){
-                const update = d.dependencyUpdates.published[workflowId] ?? null
-                if(update)
-                    return [update, "publication"]
-            }
-            
-            if(mode === "draft"){
-                const update = d.dependencyUpdates.draft[workflowId] ?? null
-                if(update)
-                    return [update, "draft"]
-            }
+        if (shapeDepRef.mode === "publication") {
+            const update = d.dependencyUpdates.publishedWorkflows[shapeDepRef.workflowId] ?? null
+            if (update)
+                return [update, "publication"]
         }
-        
+
+        if (shapeDepRef.mode === "draft") {
+            const update = d.dependencyUpdates.draftWorkflows[shapeDepRef.workflowId] ?? null
+            if (update)
+                return [update, "draft"]
+        }
+
         return null
     },
     getInputs: (d, nodeId) => {
@@ -226,7 +236,7 @@ export const nodeSelectors: NodeSelectors = {
 
         // Subworkflow nodes take their identity from the attached dependency record; node-level
         // overrides still win, then the dependency, then the (generic container) blueprint.
-        const dep = d.selectors.node.getDependency(d, nodeId);
+        const dep = d.selectors.node.getShapeDependency(d, nodeId);
 
         return {
             displayName: node?.ui?.displayName ?? dep?.display_name ?? bp.ui.displayName,

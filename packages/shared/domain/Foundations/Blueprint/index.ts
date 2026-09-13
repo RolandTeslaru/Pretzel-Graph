@@ -73,14 +73,6 @@ export namespace Blueprint {
 
     export namespace Meta {
 
-        export namespace DependencyRef {
-            export const Schema = z.object({
-                workflowId: z.uuid().brand("WorkflowId"),
-                mode:       z.enum(["publication", "draft"]),
-            })
-        }
-        export type DependencyRef = z.infer<typeof DependencyRef.Schema>
-
         export const Schema = z.object({
             id:                   Blueprint.Id,
             toolCompatible:       z.boolean().optional(),
@@ -93,7 +85,6 @@ export namespace Blueprint {
             // Node never self-starts and is never electable either — it only fires when
             // another node triggers it mid-run via schedulerAPI/propagationAPI.
             passive:              z.boolean().optional(),
-            dependencyRef:        DependencyRef.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
             

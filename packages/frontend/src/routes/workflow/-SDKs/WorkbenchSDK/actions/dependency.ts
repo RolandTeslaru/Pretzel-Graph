@@ -36,19 +36,19 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const actions = {
         registerDependency: withCommit((dependency) => {
             setDocument(d => {
-                d.data.dependencies.published[dependency.workflow_id] = dependency
+                d.data.dependencies.publishedWorkflows[dependency.workflow_id] = dependency
             })
         }),
         checkUpdates: async () => {
-            const dependencies      = sdk.document.data.dependencies.published
-            const draftDependencies = sdk.document.data.dependencies.draft
+            const publishedWorkflows = sdk.document.data.dependencies.publishedWorkflows
+            const draftWorkflows     = sdk.document.data.dependencies.draftWorkflows
 
-            const publishedEntries = Object.values(dependencies).map(dep => ({
+            const publishedEntries = Object.values(publishedWorkflows).map(dep => ({
                 workflowId:    dep.workflow_id as Workflow.Id,
                 publicationId: dep.id,
             }))
 
-            const draftEntries = Object.values(draftDependencies).map(dep => ({
+            const draftEntries = Object.values(draftWorkflows).map(dep => ({
                 workflowId:          dep.workflow_id as Workflow.Id,
                 workflow_updated_at: dep.workflow_updated_at,
             }))
@@ -63,8 +63,8 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             ])
 
             setDocument(d => {
-                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.published = publishedResult.value.updates
-                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draft    = draftResult.value.updates
+                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.publishedWorkflows = publishedResult.value.updates
+                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draftWorkflows     = draftResult.value.updates
             })
 
             const count =
@@ -75,17 +75,17 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
         },
 
-        published: {
+        publishedWorkflows: {
             update: withAsyncCommit((updateInfo) => applyUpdate("publication", updateInfo.workflowId)),
         },
 
-        draft: {
+        draftWorkflows: {
             update: withAsyncCommit((updateInfo) => applyUpdate("draft", updateInfo.workflowId)),
         },
 
         updateAll: withAsyncCommit(async () => {
-            const publishedUpdates = Object.values(sdk.document.dependencyUpdates.published)
-            const draftUpdates     = Object.values(sdk.document.dependencyUpdates.draft)
+            const publishedUpdates = Object.values(sdk.document.dependencyUpdates.publishedWorkflows)
+            const draftUpdates     = Object.values(sdk.document.dependencyUpdates.draftWorkflows)
             const results = await Promise.all([
                 ...publishedUpdates.map(u => applyUpdate("publication", u.workflowId)),
                 ...draftUpdates.map(u => applyUpdate("draft", u.workflowId)),
@@ -101,10 +101,10 @@ export type DependencyActions = {
     registerDependency: (dependency: Workflow.Dependency.Publication) => void
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
-    published: {
+    publishedWorkflows: {
         update: (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
     }
-    draft: {
+    draftWorkflows: {
         update: (updateInfo: Workflow.Dependency.Draft.UpdateInfo) => Promise<boolean>
     }
 }

@@ -2,22 +2,19 @@ import { memo } from 'react'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
-import { Workflow } from '@pretzel-graph/shared/domain'
-import { WorkbenchSDK } from '../../../sdk'
+import type { Foundations, Workflow } from '@pretzel-graph/shared/domain'
+import { WorkbenchSDK } from '../../sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { FieldLabel } from './FieldLabel'
+import type { RendererProps } from './FieldLabel'
 
-interface Props {
-    nodeId: Workflow.Node.Id
-    className?: string
-}
-
-const openSelector = (nodeId: Workflow.Node.Id) => {
+const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => {
     LibrarySDK.dialogs.openDependencySelector({
         onLocalWorkflowSelected: (workflowId, variant) =>
-            WorkbenchSDK.actions.node.attachDependency(nodeId, workflowId, variant),
+            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, workflowId, variant),
         onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.node.attachDependency(nodeId, listingId, 'publication'),
+            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, listingId, 'publication'),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
     }, {
@@ -25,27 +22,27 @@ const openSelector = (nodeId: Workflow.Node.Id) => {
     })
 }
 
-export const DependencySelector = memo<Props>(({ nodeId, className }) => {
+export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>(({ field, nodeId, className }) => {
 
-    const [dependency, mode] = WorkbenchSDK.useDocument(d => {
-        const depRef = d.selectors.node.getDependencyRef(d, nodeId)
-        if(!depRef?.workflowId)
-            return [null, null]
+    const [value, , , issue] = WorkbenchSDK.useField<Workflow.Dependency.WorkflowRef | null>(nodeId, field)
 
-        return [d.selectors.dependency.get(d, depRef.workflowId, depRef.mode), depRef.mode]
-    })
+    const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.getWorkflow(d, value.workflowId, value.mode) : null)
+    const mode = value?.mode ?? null
 
     const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
     const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
 
+    const errorClass = issue ? 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50' : ''
+
     return (
         <div className={cn(className, "w-full nodrag cursor-auto flex flex-col gap-1")}>
+            <FieldLabel field={field} />
             <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left"
-                onClick={() => openSelector(nodeId)}
+                className={cn("h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left", errorClass)}
+                onClick={() => openSelector(nodeId, field.id)}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span
@@ -77,4 +74,4 @@ export const DependencySelector = memo<Props>(({ nodeId, className }) => {
         </div>
     )
 })
-DependencySelector.displayName = "DependencySelector"
+WorkflowDependencyField.displayName = "WorkflowDependencyField"

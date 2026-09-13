@@ -1,6 +1,6 @@
 import type { WorkbenchSDKImpl, WorkbenchSDK } from '../sdk';
 import type { DropFirstArg } from '@/SDKs/types';
-import { Workflow } from '@pretzel-graph/shared/domain';
+import { Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { Port } from '@pretzel-graph/shared/domain/Foundations/Port';
 import { commit, debouncedCommit, withCommit, debouncedValidateInput, withCyclesRecompute } from '../utils/actions';
 import { createSubWorkflowActions, type SubWorkflowActions } from './subWorkflow';
@@ -72,24 +72,25 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
             validate:          (...props) => { setDocument(d => { reducers.credential.validate(d, ...props) }) },
         },
         temporal: {
-            // staticValues are excluded from history (see sdk equality), so a restore would
-            // otherwise revert field/input values to a stale snapshot. Re-apply the live
-            // values after the structural restore. The corrective set doesn't push history
-            // (equality ignores staticValues).
+            // staticValues and dependencies are excluded from history (see sdk equality), so a
+            // restore would otherwise revert them to a stale snapshot. Re-apply the live ones after
+            // the structural restore. The corrective set doesn't push history (equality ignores them).
             undo: () => {
-                const sv = sdk.document.data.staticValues;
+                const { staticValues, dependencies } = sdk.document.data;
                 (sdk.useDocument as any).temporal.getState().undo();
                 setDocument(d => {
-                    d.data.staticValues = sv;
-                    d.cache = Workflow.createCache(d.data, d.blueprints);
+                    d.data.staticValues = staticValues;
+                    d.data.dependencies = dependencies;
+                    d.cache = Workbench.Document.createCache(d.data, d.blueprints);
                 });
             },
             redo: () => {
-                const sv = sdk.document.data.staticValues;
+                const { staticValues, dependencies } = sdk.document.data;
                 (sdk.useDocument as any).temporal.getState().redo();
                 setDocument(d => {
-                    d.data.staticValues = sv;
-                    d.cache = Workflow.createCache(d.data, d.blueprints);
+                    d.data.staticValues = staticValues;
+                    d.data.dependencies = dependencies;
+                    d.cache = Workbench.Document.createCache(d.data, d.blueprints);
                 });
             }
         },

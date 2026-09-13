@@ -1,5 +1,5 @@
 import { container, singleton } from "tsyringe";
-import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { RuntimeNode } from "./node";
@@ -13,6 +13,8 @@ export type NodeConstructor = {
         context: RuntimeNode.ExecutionContext
     ): RuntimeNode<any, any>;
 }
+
+const documentSelectors = Workbench.Document.selectors
 
 @singleton()
 class CatalogueServiceImpl {
@@ -124,7 +126,7 @@ class CatalogueServiceImpl {
     // Dependency nodes cache the SubWorkflow Execute blueprint under their cosmetic id.
     public async warmBlueprintCache(wfData: Workflow.Data): Promise<void> {
         for (const wfNode of Object.values(wfData.nodes)) {
-            if (wfNode.dependencyRef) {
+            if (documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)) {
                 const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID);
 
                 if (dummyBlueprint)
@@ -136,10 +138,10 @@ class CatalogueServiceImpl {
             await this.resolveBlueprint(wfNode.blueprintId, wfData.staticValues[wfNode.id] ?? {});
         }
 
-        for (const dependency of Object.values(wfData.dependencies?.published ?? {}))
+        for (const dependency of Object.values(wfData.dependencies?.publishedWorkflows ?? {}))
             await this.warmBlueprintCache(dependency.workflow_data);
 
-        for (const dependency of Object.values(wfData.dependencies?.draft ?? {}))
+        for (const dependency of Object.values(wfData.dependencies?.draftWorkflows ?? {}))
             await this.warmBlueprintCache(dependency.workflow_data);
     }
 
@@ -158,15 +160,17 @@ class CatalogueServiceImpl {
         return (NodeClass as any).loaders?.[loaderId] ?? null;
     }
 
-    private getNodeDependency(wfNode: Workflow.Node.Raw, wfData: Workflow.Data){
-        if(!wfNode.dependencyRef)
+    private getNodeShapeDependency(wfNode: Workflow.Node.Raw, wfData: Workflow.Data){
+        const shapeDepRef = documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id);
+
+        if(!shapeDepRef)
             return null;
 
-        const { workflowId, mode } = wfNode.dependencyRef;
+        const { workflowId, mode } = shapeDepRef;
 
         const store = mode === "publication"
-            ? wfData.dependencies?.published
-            : wfData.dependencies?.draft;
+            ? wfData.dependencies?.publishedWorkflows
+            : wfData.dependencies?.draftWorkflows;
 
         if(!store?.[workflowId])
             throw new Error(`Node ${wfNode.id} has a dependency (${workflowId}) but its not in the store`)
@@ -180,7 +184,7 @@ class CatalogueServiceImpl {
         wfData: Workflow.Data
     ): Promise<{ RuntimeNode: NodeConstructor; blueprint: Blueprint }>  {
         
-        const depedency = this.getNodeDependency(wfNode, wfData)
+        const depedency = this.getNodeShapeDependency(wfNode, wfData)
 
         // if the node doesnt have a dependency, get its runtime and blueprint like normal
         if (!depedency) {

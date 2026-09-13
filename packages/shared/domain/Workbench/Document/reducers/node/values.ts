@@ -25,7 +25,8 @@ export const nodeValueReducers: NodeValueReducers = {
 
         const initialById = new Map<string, any>();
         for (const field of d.selectors.node.getFields(d, nodeId)) {
-            if (field.variant === "UniqueString") continue;
+            if (field.variant === "UniqueString" || field.variant === "WorkflowDependency") 
+                continue;
             if ("initialValue" in field) initialById.set(field.id, field.initialValue);
         }
         for (const input of d.selectors.node.getInputs(d, nodeId))
@@ -58,8 +59,9 @@ export const nodeValueReducers: NodeValueReducers = {
     },
     // Plain field/input defaults are NOT persisted — they're derived on read from the
     // blueprint's `initialValue` everywhere it matters (render, worker, validation). We only
-    // materialize (a) explicit `overrides` (paste/duplicate) and (b) UniqueString fields, whose
-    // value is generated per-node and can't be re-derived from the blueprint.
+    // materialize (a) explicit `overrides` (paste/duplicate), (b) UniqueString fields, whose
+    // value is generated per-node and can't be re-derived from the blueprint, and (c) dependency
+    // pointers, which must resolve without the node's blueprint.
     populateInitialValues: (d, nodeId, fields, inputs, overrides?) => {
         const next: Record<Foundations.Field.Id | Foundations.Port.Input.Id, any> = { ...(d.data.staticValues[nodeId] ?? {}) };
 
@@ -68,6 +70,8 @@ export const nodeValueReducers: NodeValueReducers = {
                 next[field.id] = overrides[field.id];
             else if (!(field.id in next) && field.variant === "UniqueString")
                 next[field.id] = generateUniqueString(field);
+            else if (!(field.id in next) && field.variant === "WorkflowDependency" && field.initialValue)
+                next[field.id] = field.initialValue;
         }
 
         for (const input of inputs) {

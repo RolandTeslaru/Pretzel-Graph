@@ -2,7 +2,7 @@
  * PretzelGraph — https://github.com/RolandTeslaru/Pretzel-Graph
  * Elastic License 2.0. See LICENSE.
  */
-import { Airlock, Execution, Foundations, Realtime, Vault } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Foundations, Realtime, Vault, Workbench } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { CatalogueService, HTTP, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
@@ -56,7 +56,7 @@ export class TurboGraph {
         await CatalogueService.warmBlueprintCache(workflowData);
 
         const blueprints    = await this.loadAllBlueprints(workflowData);
-        const workflowCache = Workflow.createCache(workflowData, blueprints);
+        const workflowCache = Workbench.Document.createCache(workflowData, blueprints);
 
         const graph = new S2Graph();
         const nodes = workflowData.nodes;

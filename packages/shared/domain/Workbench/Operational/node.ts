@@ -109,7 +109,7 @@ export class NodeOperations {
             if (!node)
                 throw new Error(`Node ${nodeId} not found`)
 
-            if (node.dependencyRef)
+            if (d.selectors.node.getShapeDependencyRef(d, nodeId))
                 throw new Error(`Node ${nodeId} runs a sub-workflow; its ports are the sub-workflow's`)
 
             if (Port.isUnresolvedLike(spec.variant))

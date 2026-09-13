@@ -70,13 +70,13 @@ export namespace Data {
         // Getters defer the Dependency <-> Data cycle; the z.ZodType anchors
         // are required because TS can't infer through mutual recursion.
         dependencies: z.object({
-            get published(): z.ZodType<Record<WorkflowId, Dependency.Publication>> {
+            get publishedWorkflows(): z.ZodType<Record<WorkflowId, Dependency.Publication>> {
                 return z.record(WorkflowId, Dependency.Publication.Schema).default({});
             },
-            get draft(): z.ZodType<Record<WorkflowId, Dependency.Draft>> {
+            get draftWorkflows(): z.ZodType<Record<WorkflowId, Dependency.Draft>> {
                 return z.record(WorkflowId, Dependency.Draft.Schema).default({});
             },
-        }).default({ published: {}, draft: {} }),
+        }).default({ publishedWorkflows: {}, draftWorkflows: {} }),
     })
 
     // Migrate legacy (fat-node) blobs to the latest slim shape before validation. The migrate

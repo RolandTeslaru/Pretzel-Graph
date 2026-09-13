@@ -1,4 +1,5 @@
-import { defineBlueprint } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField } from "@pretzel-graph/node-sdk";
+import { Workflow } from "@pretzel-graph/shared/domain";
 
 export const Blueprint = defineBlueprint({
     id: "Core.SubWorkflow.Execute",
@@ -6,14 +7,15 @@ export const Blueprint = defineBlueprint({
     description: "Executes a saved sub-workflow and returns its output.",
     icon: "Graph",
     accent: "utility",
-    fields: [],
+    fields: [
+        defineField.WorkflowDependency(Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID, "Workflow", {
+            required: true,
+        }),
+    ],
     inputs: [
 
 
     ],
     outputs: [
     ],
-    flags: {
-        SHOW_DEPENDENCY_SELECTOR: true,
-    },
 });

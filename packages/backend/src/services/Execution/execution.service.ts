@@ -5,7 +5,7 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
-import { Activity, Chat, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Activity, Chat, Execution, Validation, Vault, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
@@ -149,10 +149,13 @@ export class ExecutionService {
             // path-convention import. Its blueprint is the Core.SubWorkflow.Execute container's —
             // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
             // Mirrors the compiler's resolveDependencyNode.
-            if (node.dependencyRef) {
+            const shapeDepRef = Workbench.Document.selectors.node.getShapeDependencyRef({ data: workflowData }, node.id)
+
+            if (shapeDepRef) {
                 const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
 
-                if (executeBp) blueprints[node.blueprintId] = executeBp;
+                if (executeBp) 
+                    blueprints[node.blueprintId] = executeBp;
 
                 continue;
             }
@@ -194,9 +197,9 @@ export class ExecutionService {
         const chatId = igniter.chat_id;
 
         const blueprints = await this.resolveBlueprints(workflowData);
-        const wfCache = Workflow.createCache(workflowData, blueprints);
+        const wfCache = Workbench.Document.createCache(workflowData, blueprints);
         // Validation
-        const arcsMap = Workflow.deriveArcs(wfCache);
+        const arcsMap = Workbench.Document.deriveArcs(wfCache);
         const sccs    = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
         const cycles  = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
         
@@ -548,9 +551,9 @@ function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Cr
     for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
         for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
             ids.add(instanceId);
-    for (const dep of Object.values(workflowData.dependencies.published))
+    for (const dep of Object.values(workflowData.dependencies.publishedWorkflows))
         collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
-    for (const dep of Object.values(workflowData.dependencies.draft))
+    for (const dep of Object.values(workflowData.dependencies.draftWorkflows))
         collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
     return ids;
 }

@@ -22,9 +22,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         compilationCtx: TurboGraph.Compilation.Context,
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
-        const workflowNode = this.context.workflowQueryAPI.getNode(this.nodeId);
-        const subWorkflowId  = workflowNode?.dependencyRef?.workflowId as Workflow.Id;
-        const dependencyMode = workflowNode?.dependencyRef?.mode ?? "publication";
+        const staticValues   = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
+        const dependencyRef  = staticValues[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID] as unknown as Workflow.Dependency.WorkflowRef | undefined;
+        const subWorkflowId  = dependencyRef?.workflowId as Workflow.Id;
+        const dependencyMode = dependencyRef?.mode ?? "publication";
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];

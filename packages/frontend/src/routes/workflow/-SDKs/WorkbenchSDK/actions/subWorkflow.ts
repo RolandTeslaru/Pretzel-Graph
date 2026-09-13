@@ -144,8 +144,8 @@ export function createSubWorkflowActions(sdk: WorkbenchSDKImpl) {
             }))
 
             // The node is in place either way; a failed attach leaves it unresolved, which the
-            // toast from attachDependency already reports.
-            await sdk.actions.node.attachDependency(newNodeId!, workflowId, "draft")
+            // toast from the select action already reports.
+            await sdk.actions.field.workflowDependency.select(newNodeId!, Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID, workflowId, "draft")
 
         })
     } satisfies SubWorkflowActions;

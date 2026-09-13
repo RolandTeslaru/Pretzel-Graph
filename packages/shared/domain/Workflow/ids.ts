@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { Field } from "../Foundations/Field";
 
 export const WorkflowId = z.uuid().brand("WorkflowId");
 export type WorkflowId = z.infer<typeof WorkflowId>;
@@ -24,3 +25,6 @@ export type PublicationId = z.infer<typeof PublicationId>;
 
 export const FolderId = z.uuid().brand("FolderId");
 export type FolderId = z.infer<typeof FolderId>;
+
+// Reserved field id of the workflow dependency that shapes a node and decides what it runs.
+export const SHAPE_DEPENDENCY_FIELD_ID = "__shape_dependency__" as Field.Id;

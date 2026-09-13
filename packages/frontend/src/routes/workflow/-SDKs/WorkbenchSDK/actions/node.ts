@@ -1,6 +1,6 @@
 import type { DropFirstArg } from "@/SDKs/types";
 import type { WorkbenchSDKImpl, WorkbenchSDK } from "../sdk"
-import { withAsyncCommit, withCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
+import { withAsyncCommit, withCommit, withCyclesRecompute } from "../utils/actions"
 import { ShelfSDK } from "../../ShelfSDK/sdk";
 import { Foundations, SystemError, Vault, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
@@ -70,7 +70,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
             // that dependency, not a static blueprint, so they can't be blindly recreated — skip them.
-            const recreatable = nodes.filter(n => !n.dependencyRef);
+            const recreatable = nodes.filter(n => !sdk.selectors.node.getShapeDependencyRef(s, n.id));
 
             // Hydrate each distinct blueprint once (parallel), so we recreate from fresh blueprints.
             const blueprintIds = [...new Set(recreatable.map(n => n.blueprintId))];
@@ -93,75 +93,44 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         create:        withAsyncCommit( async (...props) => { 
             const blueprint = props[0];
 
-            let nodeId: Workflow.Node.Id | null = null;
-            
-            // If the blueprint is pre-wired to a dependency not yet in the store, fetch it lazily.
-            // On failure, remove the node — it can't function without its dependency data.
-            if (blueprint.dependencyRef) {
-                const { workflowId, mode } = blueprint.dependencyRef;
-                const depStore = mode === "publication"
-                    ? sdk.document.data.dependencies.published
-                    : sdk.document.data.dependencies.draft;
-
-                if (!depStore[workflowId]) {
-                    const fetchDepPromise = mode === "publication"
-                        ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                        : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId });
-
-                    fetchDepPromise.then(({ dependency }) => {
-                        sdk.actions.dependency.registerDependency(dependency as any);
-                    })
-                    fetchDepPromise.catch(err => {
-                        const error = SystemError.fromUnknown(err)
-                        console.error("Failed to load dependency for node", error)
-                        toast.error(`Failed to load dependency for node: ${error.message}`)
-                        if (nodeId) sdk.actions.node.remove(nodeId)
-                    })
-                }
-            }
-
             // Caller-supplied assignments win over the auto-attach defaults.
             const credentials = { ...resolveCredentialDefaults(blueprint), ...(props[3] ?? {}) };
 
-            setDocument(d => { 
-                nodeId = reducers.node.create(d, props[0], props[1], props[2], credentials) 
+            let createdId = null as Workflow.Node.Id | null;
+
+            setDocument(d => {
+                createdId = reducers.node.create(d, props[0], props[1], props[2], credentials)
+            })
+
+            const nodeId = createdId;
+            if (!nodeId)
+                return;
+
+            // A pre-wired node lands with its dependency pointer set; fetch the snapshot if the workflow
+            // lacks it. On failure, remove the node — it can't function without its dependency data.
+            const shapeDepRef = sdk.selectors.node.getShapeDependencyRef(sdk.document, nodeId);
+            if (!shapeDepRef)
+                return;
+
+            const { workflowId, mode } = shapeDepRef;
+
+            if (sdk.selectors.dependency.getWorkflow(sdk.document, workflowId, mode))
+                return;
+
+            const fetchDepPromise = mode === "publication"
+                ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
+                : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId });
+
+            fetchDepPromise.then(({ dependency }) => {
+                sdk.actions.dependency.registerDependency(dependency as any);
+            })
+            fetchDepPromise.catch(err => {
+                const error = SystemError.fromUnknown(err)
+                console.error("Failed to load dependency for node", error)
+                toast.error(`Failed to load dependency for node: ${error.message}`)
+                sdk.actions.node.remove(nodeId)
             })
 }),
-        attachDependency: withAsyncCommit(async (nodeId, workflowId, mode) => {
-            // Reuse the snapshot when the workflow already embeds this dependency.
-            const existing = sdk.selectors.dependency.get(sdk.document, workflowId, mode)
-
-            if (existing) {
-                setDocument(withCyclesRecompute(d => {
-                    reducers.node.attachDependency(d, nodeId, mode, existing)
-                }))
-                return true
-            }
-
-            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
-                mode === "publication"
-                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
-                {
-                    loading: "Loading workflow…",
-                    success: "Workflow attached",
-                    error:   (err: unknown) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
-                }
-            )
-
-            try {
-                const { dependency } = await promise
-
-                setDocument(withCyclesRecompute(d => {
-                    reducers.node.attachDependency(d, nodeId, mode, dependency)
-                }))
-            } catch (err) {
-                console.error("Failed to attach dependency", err)
-                return false
-            }
-
-            return true
-        }),
     } satisfies NodeActions;
 }
 
@@ -179,5 +148,4 @@ export type NodeActions = {
     clearIssues         : DropFirstArg<WorkbenchSDK.Reducers['node']['clearIssues']>;
     recreate            : (nodeId: Workflow.Node.Id) => void;
     recreateAll         : () => void;
-    attachDependency    : (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => Promise<boolean>;
 };

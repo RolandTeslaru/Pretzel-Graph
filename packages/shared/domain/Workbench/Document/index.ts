@@ -3,6 +3,7 @@ import type { Validation } from "../../Validation"
 import { Workflow } from "../../Workflow"
 import { documentReducers } from "./reducers"
 import { documentSelectors, type DocumentSelectors } from "./selectors"
+import { createCache as _createCache, resolveShape as _resolveShape, deriveArcs as _deriveArcs, deriveReversedArcs as _deriveReversedArcs } from "./cache"
 
 export type { NodeUI, LegacyExpressionContext } from "./selectors/node"
 export type { Selection } from "./reducers/selection"
@@ -26,8 +27,8 @@ export interface Document {
     stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>
     cyclesDirty: boolean
     dependencyUpdates: {
-        published: Workflow.Dependency.Publication.UpdateMap
-        draft:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
+        publishedWorkflows: Workflow.Dependency.Publication.UpdateMap
+        draftWorkflows:     Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo>
     }
 
     /** The document differs from what was last persisted. */
@@ -44,6 +45,12 @@ export namespace Document {
 
     export const reducers  = documentReducers
     export const selectors = documentSelectors
+
+    // Builds the derived cache from plain workflow data; also used outside the editor (worker, backend).
+    export const createCache        = _createCache
+    export const resolveShape       = _resolveShape
+    export const deriveArcs         = _deriveArcs
+    export const deriveReversedArcs = _deriveReversedArcs
 
     /**
      * Wraps a mutation so the document is settled when it returns: edges that moved mark cycles
@@ -81,12 +88,12 @@ export namespace Document {
             workflowId,
             data,
             blueprints,
-            cache:  Workflow.createCache(data, blueprints),
+            cache:  createCache(data, blueprints),
             issues: { nodes: {}, cycles: [] },
             cycles: [],
             stronglyConnectedComponents: [],
             cyclesDirty: true,
-            dependencyUpdates: { published: {}, draft: {} },
+            dependencyUpdates: { publishedWorkflows: {}, draftWorkflows: {} },
             isDirty: false,
             reducers:  documentReducers,
             selectors: documentSelectors,

@@ -7,7 +7,9 @@
 // and are reconstructed at load instead (see the load action): `reconciledBlueprintId` (needs the
 // base blueprint + values) and `polymorphicResolutions` (replayed from edges).
 
-export const WORKFLOW_DATA_VERSION = 4;
+import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
+
+export const WORKFLOW_DATA_VERSION = 5;
 
 export function migrateWorkflowDataToLatest(raw: any): any {
     if (!raw || typeof raw !== "object") return raw;
@@ -22,10 +24,18 @@ export function migrateWorkflowDataToLatest(raw: any): any {
     // Field-level renames, applied condition-by-condition (feature-detected, not version-gated)
     // so they run on both freshly-migrated and already-v2 blobs, and stay idempotent.
     for (const [id, node] of Object.entries<any>(data.nodes ?? {})) {
-        if ("dependency" in node) {
-            const { dependency, ...rest } = node;
-            data.nodes[id] = { ...rest, dependencyRef: dependency };
-        }
+        const dependencyRef = node.dependencyRef ?? node.dependency;
+        if (!dependencyRef)
+            continue;
+
+        const rest = { ...node };
+        delete rest.dependency;
+        delete rest.dependencyRef;
+        data.nodes[id] = rest;
+
+        // v5: a sub-workflow node's pointer is a reserved static value, not a node property.
+        data.staticValues = { ...data.staticValues };
+        data.staticValues[id] = { ...data.staticValues[id], [SHAPE_DEPENDENCY_FIELD_ID]: dependencyRef };
     }
 
     // Edges: legacy record<id, {id, source, target}> -> id-only array (endpoints derive from the id).
@@ -34,6 +44,7 @@ export function migrateWorkflowDataToLatest(raw: any): any {
 
     liftAddedFieldExpressions(data);
     renameGlobalFields(data);
+    renameDependencyStores(data);
 
     if (from < 4)
         foldVariadicSlots(data);
@@ -60,6 +71,24 @@ function renameGlobalFields(data: any): void {
         data.staticValues["__workflow_global_fields__"] ??= data.staticValues[legacyKey];
         delete data.staticValues[legacyKey];
     }
+}
+
+// `published`/`draft` dependency stores became `publishedWorkflows`/`draftWorkflows`; feature-detected so it is idempotent.
+function renameDependencyStores(data: any): void {
+    const dependencies = data.dependencies;
+    if (!dependencies || typeof dependencies !== "object")
+        return;
+
+    if (!("published" in dependencies) && !("draft" in dependencies))
+        return;
+
+    const { published, draft, ...rest } = dependencies;
+
+    data.dependencies = {
+        ...rest,
+        publishedWorkflows: rest.publishedWorkflows ?? published ?? {},
+        draftWorkflows:     rest.draftWorkflows ?? draft ?? {},
+    };
 }
 
 // `isExpression` used to live on the Field itself. On a user-added field that made it persisted

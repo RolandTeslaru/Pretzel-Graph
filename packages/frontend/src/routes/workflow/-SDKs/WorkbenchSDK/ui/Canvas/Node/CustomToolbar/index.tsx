@@ -15,8 +15,8 @@ interface Props {
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
-    const depRef = hyNode.dependencyRef
-    const hasWorkflowDependency = !!depRef
+    const shapeDepRef = WorkbenchSDK.useDocument(d => d.selectors.node.getShapeDependencyRef(d, hyNode.id))
+    const hasWorkflowDependency = !!shapeDepRef
 
     const [dependencyUpdate, mode] = WorkbenchSDK.useDocument(d => d.selectors.node.getDependencyUpdate(d, hyNode.id) ?? [null, null])
 
@@ -24,9 +24,9 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
 
     const handleDependencyUpdate = () => {
         if(mode === "draft")
-            WorkbenchSDK.actions.dependency.draft.update(dependencyUpdate as Workflow.Dependency.Draft.UpdateInfo)
+            WorkbenchSDK.actions.dependency.draftWorkflows.update(dependencyUpdate as Workflow.Dependency.Draft.UpdateInfo)
         else if(mode === "publication")
-            WorkbenchSDK.actions.dependency.published.update(dependencyUpdate as Workflow.Dependency.Publication.UpdateInfo)
+            WorkbenchSDK.actions.dependency.publishedWorkflows.update(dependencyUpdate as Workflow.Dependency.Publication.UpdateInfo)
     }
 
     return (
@@ -70,7 +70,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                     {hasWorkflowDependency && (
                         <Tipped label="Open workflow">
                             <Button variant="ghost-primary" size="icon-xs" className='h-6!'
-                                onClick={() => WorkbenchSDK.openWorkflowWindow(depRef!.workflowId!)}
+                                onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDepRef!.workflowId!)}
                             >
                                 <SystemIcons.Graph />
                             </Button>
