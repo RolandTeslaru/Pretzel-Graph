@@ -13,9 +13,9 @@ import type { RendererProps } from './FieldLabel'
 const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => {
     LibrarySDK.dialogs.openDependencySelector({
         onLocalWorkflowSelected: (workflowId, kind) =>
-            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, workflowId, kind),
+            WorkbenchSDK.actions.field.dependency.setValue(nodeId, fieldId, { kind, id: workflowId }),
         onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, listingId, 'listing'),
+            WorkbenchSDK.actions.field.dependency.setValue(nodeId, fieldId, { kind: 'listing', id: listingId }),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
     }, {
