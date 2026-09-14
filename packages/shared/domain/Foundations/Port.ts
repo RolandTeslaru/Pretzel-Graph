@@ -14,6 +14,8 @@ export namespace Port {
         "Retriever",
         "Tool",
         "ToolList",
+        "Skill",
+        "SkillList",
         "DataFrame",
         "Unresolved",
         "UnresolvedScalar",
@@ -116,6 +118,16 @@ export namespace Port {
         })
         export type ToolList = z.infer<typeof ToolList>
 
+        export const Skill = Base.extend({
+            variant: portLiteral("Skill"),
+        })
+        export type Skill = z.infer<typeof Skill>
+
+        export const SkillList = Base.extend({
+            variant: portLiteral("SkillList"),
+        })
+        export type SkillList = z.infer<typeof SkillList>
+
         export const DataFrame = Base.extend({
             variant: portLiteral("DataFrame"),
         })
@@ -150,6 +162,8 @@ export namespace Port {
             VectorStore,
             Tool,
             ToolList,
+            Skill,
+            SkillList,
             DataFrame,
             Unresolved,
             UnresolvedScalar,
@@ -182,6 +196,8 @@ export namespace Port {
             Port.Variants.VectorStore.extend(inputFields),
             Port.Variants.Tool.extend(inputFields),
             Port.Variants.ToolList.extend(inputFields),
+            Port.Variants.Skill.extend(inputFields),
+            Port.Variants.SkillList.extend(inputFields),
             Port.Variants.DataFrame.extend(inputFields),
             Port.Variants.Unresolved.extend(inputFields),
             Port.Variants.UnresolvedScalar.extend(inputFields),
@@ -214,6 +230,8 @@ export namespace Port {
             Port.Variants.VectorStore.extend(outputFields),
             Port.Variants.Tool.extend(outputFields),
             Port.Variants.ToolList.extend(outputFields),
+            Port.Variants.Skill.extend(outputFields),
+            Port.Variants.SkillList.extend(outputFields),
             Port.Variants.DataFrame.extend(outputFields),
             Port.Variants.Unresolved.extend(outputFields),
             Port.Variants.UnresolvedScalar.extend(outputFields),
@@ -227,11 +245,11 @@ export namespace Port {
     );
 
     export const LIST_VARIANTS = new Set<Port.Variant>(
-        ["MessageList", "DataList", "ToolList"] satisfies Port.Variant[]
+        ["MessageList", "DataList", "ToolList", "SkillList"] satisfies Port.Variant[]
     );
 
     export const SCALAR_VARIANTS = new Set<Port.Variant>(
-        ["Message", "Data", "Tool"] satisfies Port.Variant[]
+        ["Message", "Data", "Tool", "Skill"] satisfies Port.Variant[]
     );
 
     export function isUnresolvedLike(variant: Port.Variant): variant is Port.UnresolvedVariant {
@@ -258,12 +276,14 @@ export namespace Port {
         Message: "MessageList",
         Data: "DataList",
         Tool: "ToolList",
+        Skill: "SkillList",
     } as const satisfies Partial<Record<Port.Variant, Port.Variant>>
 
     const _LIST_DEMOTION_MAP = {
         MessageList: "Message",
         DataList: "Data",
         ToolList: "Tool",
+        SkillList: "Skill",
     } as const satisfies Partial<Record<Port.Variant, Port.Variant>>
 
     export const LIST_PROMOTION_MAP: Partial<Record<Port.Variant, Port.Variant>> = _LIST_PROMOTION_MAP;

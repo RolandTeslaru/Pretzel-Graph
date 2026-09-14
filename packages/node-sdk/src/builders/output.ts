@@ -1,4 +1,5 @@
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import type { Skill as SkillD } from "@pretzel-graph/shared/domain/Skill";
 
 import { LC } from "../langchain";
 
@@ -146,6 +147,28 @@ export namespace defineOutput {
     return {
       ...buildBase(id, displayName, options),
       variant: "ToolList",
+    };
+  }
+
+  export function Skill<TId extends string>(
+    id: TId,
+    displayName: string,
+    options: Options = {},
+  ): LiteralOutput<TId, "Skill", Port.Variants.Skill, SkillD> {
+    return {
+      ...buildBase(id, displayName, options),
+      variant: "Skill",
+    };
+  }
+
+  export function SkillList<TId extends string>(
+    id: TId,
+    displayName: string,
+    options: Options = {},
+  ): LiteralOutput<TId, "SkillList", Port.Variants.SkillList, SkillD[]> {
+    return {
+      ...buildBase(id, displayName, options),
+      variant: "SkillList",
     };
   }
 

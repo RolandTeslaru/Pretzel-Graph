@@ -11,7 +11,7 @@ import type { Workflow } from '@pretzel-graph/shared/domain'
 const VARIANT_OPTIONS = [
     'Message', 'MessageList', 'Text', 'Data', 'DataList',
     'Document', 'LanguageModel', 'Embeddings', 'VectorStore',
-    'Retriever', 'Tool', 'ToolList', 'DataFrame',
+    'Retriever', 'Tool', 'ToolList', 'Skill', 'SkillList', 'DataFrame',
 ] as const satisfies readonly Port.Variant[]
 
 const schema = z.object({

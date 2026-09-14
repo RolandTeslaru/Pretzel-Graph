@@ -32,7 +32,7 @@ const globalFieldSpec = {
 };
 const globalFieldId = z.string().describe("Global field id: letters, digits, underscores.");
 
-const PORT_VARIANTS = ["Message", "MessageList", "Text", "Data", "DataList", "Document", "LanguageModel", "Embeddings", "VectorStore", "Retriever", "Tool", "ToolList", "DataFrame"] as const;
+const PORT_VARIANTS = ["Message", "MessageList", "Text", "Data", "DataList", "Document", "LanguageModel", "Embeddings", "VectorStore", "Retriever", "Tool", "ToolList", "Skill", "SkillList", "DataFrame"] as const;
 
 const inputPort = z.object({
     id:          z.string().describe("Port id: letters, digits, underscores. Must be new on the node."),
