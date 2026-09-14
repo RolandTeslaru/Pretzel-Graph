@@ -3,7 +3,7 @@ import { Field } from "../Foundations/Field";
 import { Node } from "./node";
 import { Edge } from "./edge";
 import { Port } from "../Foundations/Port";
-import { WorkflowId } from "./ids";
+import { ListingId, WorkflowId } from "./ids";
 import { Vault } from "../Vault";
 import { Dependency } from "../Dependency";
 import { Annotation } from "../Annotation";
@@ -67,10 +67,11 @@ export namespace Data {
             annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
         }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
-        // One store per ref kind, listings in `publishedWorkflow`; getters defer the Dependency <-> Data cycle.
+        // One store per ref kind, listings still written to `publishedWorkflow`; getters defer the Dependency <-> Data cycle.
         dependencies: z.object({
             get publishedWorkflow() { return z.record(WorkflowId, Dependency.Value.Publication.Schema) },
             get draftWorkflow()     { return z.record(WorkflowId, Dependency.Value.Draft.Schema) },
+            get listing()           { return z.record(ListingId, Dependency.Value.Publication.Schema) },
         }),
     })
 

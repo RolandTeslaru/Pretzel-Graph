@@ -104,6 +104,7 @@ function fillDependencyStores(data: any): void {
     data.dependencies = {
         publishedWorkflow: {},
         draftWorkflow:     {},
+        listing:           {},
         ...data.dependencies,
     };
 }

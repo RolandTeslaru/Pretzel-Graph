@@ -7,6 +7,7 @@ import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { createConditionActions, type ConditionActions } from "./condition";
 import { createCaseListActions, type CaseListActions } from "./caseList";
 import { createWorkflowDependencyActions, type WorkflowDependencyActions } from "./workflowDependency";
+import { createFieldDependencyActions, type FieldDependencyActions } from "./dependency";
 
 export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActions) {
     const setDocument = sdk.setDocument;
@@ -56,6 +57,7 @@ export function createFieldActions(sdk: WorkbenchSDKImpl, nodeActions: NodeActio
         condition: createConditionActions(sdk, validateFieldById),
         caseList:  createCaseListActions(sdk, validateFieldById),
         workflowDependency: createWorkflowDependencyActions(sdk),
+        dependency: createFieldDependencyActions(sdk),
     } satisfies FieldActions;
 }
 
@@ -67,4 +69,5 @@ export interface FieldActions {
     condition       : ConditionActions
     caseList        : CaseListActions
     workflowDependency : WorkflowDependencyActions
+    dependency      : FieldDependencyActions
 }

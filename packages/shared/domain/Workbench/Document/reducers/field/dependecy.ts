@@ -1,33 +1,28 @@
-import { Workbench } from "../../.."
-import { Dependency } from "../../../../Dependency"
-import { Foundations } from "../../../../Foundations"
+import type { Dependency } from "../../../../Dependency"
+import type { Foundations } from "../../../../Foundations"
 import { Workflow } from "../../../../Workflow"
+import type { Document } from "../../index"
 
 
 export const fieldDependencyReducers: FieldDependencyReducers = {
-    setValue: (
-        d, nodeId, fieldId, ref, value
-    ) => {
-        d.reducers.dependency.removeUnused(d)
-
-        d.data.dependencies[""]
-        d.reducers.dependency.register(d, ref.kind, ref.id)
-
-        const depRef: Dependency.Ref = { kind, id: value } 
-
-        d.reducers.field.setValue(d, nodeId, fieldId, depRef)
+    // Embeds the snapshot and points the field at it; the shape dependency field also reshapes the node.
+    setValue: (d, nodeId, fieldId, ref, value) => {
+        d.reducers.field.setValue(d, nodeId, fieldId, ref)
+        d.reducers.dependency.register(d, ref.kind, value)
 
         if (fieldId === Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID)
             d.reducers.cache.resolvedShape.recreate(d, nodeId)
+
+        d.reducers.node.validate(d, nodeId)
     }
 }
 
 export interface FieldDependencyReducers {
     setValue: (
-        d:        Workbench.Document, 
-        nodeId:   Workflow.Node.Id, 
-        fieldId:  Foundations.Field.Id, 
+        d:        Document,
+        nodeId:   Workflow.Node.Id,
+        fieldId:  Foundations.Field.Id,
         ref:      Dependency.Ref,
         value:    Dependency.Value
-    ) => void 
+    ) => void
 }

@@ -5,7 +5,7 @@ import type { Document } from "../../index";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
 import { fieldWorkflowDependencyReducers, type FieldWorkflowDependencyReducers } from "./workflowDependency";
-import { FieldDependencyReducers, fieldDependencyReducers } from './dependecy';
+import { fieldDependencyReducers, type FieldDependencyReducers } from "./dependecy";
 
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
