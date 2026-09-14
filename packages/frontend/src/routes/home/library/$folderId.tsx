@@ -7,6 +7,7 @@ import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { useState } from 'react'
 import { Button, DropdownMenu, SearchInput, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
+import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
@@ -51,6 +52,7 @@ function FolderNotFound() {
 
 function FolderRoute() {
     const navigate = useNavigate()
+    const openItem = useOpenLibraryItem()
     const { folderId: _folderId } = Route.useParams()
     const folderId = _folderId as Library.Folder.Id
 
@@ -106,6 +108,10 @@ function FolderRoute() {
                             <DropdownMenu.Item
                                 onClick={() => LibrarySDK.dialogs.openCreateWorkflow({ folder_id: folderId })}
                             ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
+
+                            <DropdownMenu.Item
+                                onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folderId })}
+                            ><SystemIcons.Brain />Create Skill</DropdownMenu.Item>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
                 </div>
@@ -115,7 +121,7 @@ function FolderRoute() {
                 scrollContainerClassName='h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]'
                 className='pt-[100px]'
                 setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
-                onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}
+                onItemClick={openItem}
                 searchQuery={searchQuery}
             />
         </div>

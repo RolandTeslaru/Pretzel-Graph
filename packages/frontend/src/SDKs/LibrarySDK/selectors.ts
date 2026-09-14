@@ -1,4 +1,4 @@
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Workflow, type Skill } from '@pretzel-graph/shared/domain';
 import type { LibrarySDK, LibrarySDKImpl } from './sdk';
 
 const isVisible = (item: { hidden?: boolean | null }, showHidden: boolean) => showHidden || !item.hidden
@@ -22,6 +22,11 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
         workflowsInFolder: (folderId: Library.Folder.Id): Library.WorkflowMeta[] => {
             const s = sdk.useStore.getState();
             return Object.values(s.workflowMetas).filter((w) => w.folder_id === folderId && isVisible(w, s.showHidden));
+        },
+
+        // Skills living directly inside a folder.
+        skillsInFolder: (folderId: Library.Folder.Id): Skill.Meta[] => {
+            return Object.values(sdk.useStore.getState().skillMetas).filter((k) => k.folder_id === folderId);
         },
 
         // Root folder first, current folder last.
@@ -51,7 +56,8 @@ export function _createLibrarySelectors_(sdk: LibrarySDKImpl) {
         getLibraryView: (s: LibrarySDK.State, cwd: Library.Folder.Id) => {
             return {
                 folders:   Object.values(s.folders).filter((f) => f.parent_folder_id === cwd && isVisible(f, s.showHidden)),
-                worfklows: Object.values(s.workflowMetas).filter((w) => w.folder_id === cwd && isVisible(w, s.showHidden))
+                worfklows: Object.values(s.workflowMetas).filter((w) => w.folder_id === cwd && isVisible(w, s.showHidden)),
+                skills:    Object.values(s.skillMetas).filter((k) => k.folder_id === cwd),
             }
         }
     }

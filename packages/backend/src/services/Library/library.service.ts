@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Skill, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryRepository } from './library.repository';
 import { ListingService } from '../Listing/listing.service';
 
@@ -112,6 +112,38 @@ export class LibraryService {
             id: Workflow.Id,
         ): Promise<Library.API.Workflow.Duplicate.Response> => {
             return this.libraryRepository.workflow.duplicate(principal, id);
+        },
+    };
+
+    public readonly skill = {
+        create: async (
+            principal: Principal.User,
+            payload: Library.API.Skill.Create.Request,
+        ): Promise<Library.API.Skill.Create.Response> => {
+            return this.libraryRepository.skill.create(principal, payload);
+        },
+
+        get: async (
+            principal: Principal.User,
+            id: Skill.Id,
+        ): Promise<Library.API.Skill.Get.Response> => {
+            return this.libraryRepository.skill.get(principal, id);
+        },
+
+        update: async (
+            principal: Principal.User,
+            payload: Library.API.Skill.Update.Request,
+        ): Promise<Library.API.Skill.Update.Response> => {
+            return this.libraryRepository.skill.update(principal, payload);
+        },
+
+        delete: async (
+            principal: Principal.User,
+            id: Skill.Id,
+        ): Promise<Library.API.Skill.Remove.Response> => {
+            await this.libraryRepository.skill.delete(principal, id);
+
+            return { ok: true };
         },
     };
 }

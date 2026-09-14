@@ -2,6 +2,7 @@ import { ScrollArea } from "@pretzel-graph/standard-ui/foundations"
 import { LibraryTree } from "./LibraryTree"
 import { FolderView } from "./FolderView"
 import type { Library, Workflow } from "@pretzel-graph/shared/domain"
+import type { LibrarySDK } from "@/SDKs/LibrarySDK/sdk"
 import type React from "react"
 
 export interface LibraryBrowserBaseProps {
@@ -9,7 +10,7 @@ export interface LibraryBrowserBaseProps {
     cwd: Library.Folder.Id,
     setCwd: (value: Library.Folder.Id) => void
     selectedWorkflowId?: Workflow.Id
-    onWorkflowClick?: (workflowId: Workflow.Id) => void
+    onItemClick?: (item: LibrarySDK.Item) => void
 }
 
 interface Props extends LibraryBrowserBaseProps {
@@ -24,22 +25,22 @@ interface Props extends LibraryBrowserBaseProps {
     }
 }
 
-export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, treeProps, cwd, setCwd, selectedWorkflowId, onWorkflowClick, size }) => {
+export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, treeProps, cwd, setCwd, selectedWorkflowId, onItemClick, size }) => {
     return (
         <div className={"flex flex-row w-full gap-2 " + className}>
-            <LibraryTree 
+            <LibraryTree
                 size={size}
                 cwd={cwd}
                 selectedWorkflowId={selectedWorkflowId}
                 setCwd={setCwd}
-                onWorkflowClick={onWorkflowClick}
+                onItemClick={onItemClick}
                 {...treeProps}
             />
             <FolderView
                 cwd={cwd}
                 setCwd={setCwd}
                 size={size}
-                onWorkflowClick={onWorkflowClick}
+                onItemClick={onItemClick}
                 {...folderViewProps}
             />
         </div>

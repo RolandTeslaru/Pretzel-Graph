@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, Patch } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { ListingService } from '../Listing/listing.service';
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Skill, Workflow } from '@pretzel-graph/shared/domain';
 import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
@@ -97,5 +97,32 @@ export class LibraryController {
     @HttpCode(200)
     async duplicateWorkflow(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Workflow.Id) {
         return await this.libraryService.workflow.duplicate(principal, id);
+    }
+
+
+    // ── Skills ────────────────────────────────────────────
+    @Post('skills')
+    @HttpCode(200)
+    async createSkill(
+        @AuthenticatedUser() principal: Principal.User,
+        @ZodBody(Library.API.Skill.Create.Request) body: Library.API.Skill.Create.Request,
+    ) {
+        return await this.libraryService.skill.create(principal, body);
+    }
+
+    @Get('skills/:id')
+    async getSkill(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Skill.Id) {
+        return await this.libraryService.skill.get(principal, id);
+    }
+
+    @Patch('skills/:id')
+    async updateSkill(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Skill.Id, @Body() body: Omit<Library.API.Skill.Update.Request, 'id'>) {
+        const payload = Library.API.Skill.Update.Request.parse({ ...body, id });
+        return await this.libraryService.skill.update(principal, payload);
+    }
+
+    @Delete('skills/:id')
+    async deleteSkill(@AuthenticatedUser() principal: Principal.User, @Param('id') id: Skill.Id) {
+        return await this.libraryService.skill.delete(principal, id);
     }
 }

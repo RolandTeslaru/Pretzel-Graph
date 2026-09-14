@@ -2,7 +2,7 @@ import { immer } from "zustand/middleware/immer";
 import { _createLibraryActions_, type _LibrarySDKActions } from "./actions";
 import { _createLibrarySelectors_, type _LibrarySDKSelectors } from "./selectors";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
-import { Workflow, Library } from "@pretzel-graph/shared/domain";
+import { Workflow, Library, Skill } from "@pretzel-graph/shared/domain";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
@@ -19,6 +19,7 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
         immer(() => ({
             folders: {},
             workflowMetas: {},
+            skillMetas: {},
             treeExpandedByFolderId: {},
             treeData: {},
             showHidden: readShowHidden(),
@@ -63,10 +64,16 @@ export namespace LibrarySDK {
         folders: Record<Library.Folder.Id, Library.Folder>;
         selectors: _LibrarySDKSelectors
         workflowMetas: Record<Workflow.Id, Library.WorkflowMeta>;
+        skillMetas: Record<Skill.Id, Skill.Meta>;
         treeExpandedByFolderId: Record<Library.Folder.Id, boolean>;
         treeData: TreeDomain.Dummy.Branch<FileSystemNodeData>;
         showHidden: boolean;
     }
+
+    // A library entry the browser opens or picks on click.
+    export type Item =
+        | { type: 'workflow'; id: Workflow.Id }
+        | { type: 'skill';    id: Skill.Id }
 
     export type Selectors = _LibrarySDKSelectors
     export type Actions = _LibrarySDKActions

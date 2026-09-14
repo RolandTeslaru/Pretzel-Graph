@@ -1,14 +1,16 @@
 import type { Tree as TreeDomain } from '@/components/Tree/domain'
 import { Tree } from '@/components/Tree'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
+import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { LibrarySDK } from '../../../sdk'
 import type { FileSystemNodeData } from '../../../actions'
-import type { Library, Workflow } from '@pretzel-graph/shared/domain'
+import { Skill, type Library, type Workflow } from '@pretzel-graph/shared/domain'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames'
 import { sizeStyles, type FileSystemTreeSize } from './sizes'
 import { FolderContextMenu } from '../context-menus/folder'
 import { WorkflowContextMenu } from '../context-menus/workflow'
+import { SkillContextMenu } from '../context-menus/skill'
 
 export function TreeItem({
     branch,
@@ -21,13 +23,13 @@ export function TreeItem({
     styles,
     size,
     onFolderClick,
-    onWorkflowClick,
+    onItemClick,
 }: TreeDomain.Branch.RenderProps<FileSystemNodeData> & {
     isSelected: boolean
     styles: (typeof sizeStyles)[FileSystemTreeSize]
     size: FileSystemTreeSize
     onFolderClick?: (folderId: Library.Folder.Id) => void
-    onWorkflowClick?: (workflowId: Workflow.Id) => void
+    onItemClick?: (item: LibrarySDK.Item) => void
 }) {
     const key = branch.key
     const isFolder = key.startsWith('folder:')
@@ -37,13 +39,18 @@ export function TreeItem({
     const workflowId = key.startsWith('workflow:')
         ? (key.slice('workflow:'.length) as Workflow.Id)
         : undefined
+    const skillId = key.startsWith('skill:')
+        ? (key.slice('skill:'.length) as Skill.Id)
+        : undefined
 
     const folder = LibrarySDK.useStore((s) => (folderId ? s.folders[folderId] : undefined))
     const workflow = LibrarySDK.useStore((s) => (workflowId ? s.workflowMetas[workflowId] : undefined))
+    const skill = LibrarySDK.useStore((s) => (skillId ? s.skillMetas[skillId] : undefined))
 
     const handleClick = () => {
         if (folderId) return onFolderClick?.(folderId)
-        if (workflowId) return onWorkflowClick?.(workflowId)
+        if (workflowId) return onItemClick?.({ type: 'workflow', id: workflowId })
+        if (skillId) return onItemClick?.({ type: 'skill', id: skillId })
     }
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => (
@@ -85,7 +92,15 @@ export function TreeItem({
             ) : (
                 <></>
             )}
-            <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
+            {skillId ? (
+                <IconRenderer
+                    name={skill?.icon ?? Skill.DEFAULT_ICON}
+                    className={classNames('mr-1 shrink-0', styles.icon)}
+                    style={{ color: `var(--${skill?.accent ?? Skill.DEFAULT_ACCENT})` }}
+                />
+            ) : (
+                <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
+            )}
             <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
             {hasActiveWorkflow ? (
                 <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />
@@ -95,9 +110,17 @@ export function TreeItem({
 
     if (workflow) {
         return (
-            <WorkflowContextMenu workflow={workflow} onOpen={() => onWorkflowClick?.(workflow.id)}>
+            <WorkflowContextMenu workflow={workflow} onOpen={() => onItemClick?.({ type: 'workflow', id: workflow.id })}>
                 {row}
             </WorkflowContextMenu>
+        )
+    }
+
+    if (skill) {
+        return (
+            <SkillContextMenu skill={skill}>
+                {row}
+            </SkillContextMenu>
         )
     }
 

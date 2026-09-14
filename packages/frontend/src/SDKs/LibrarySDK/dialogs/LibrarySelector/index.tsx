@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Dialog, SearchInput } from '@pretzel-graph/standard-ui/foundations'
-import { Library, Workflow } from '@pretzel-graph/shared/domain'
+import { Library } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
@@ -13,15 +13,17 @@ import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumb
 export const LIBRARY_SELECTOR_DIALOG_ID = 'library-selector'
 
 export namespace LibrarySelector {
-    export type Accept = 'workflow' | 'folder' | 'any'
+    export type Accept = 'workflow' | 'folder' | 'skill' | 'any'
 
-    export type WorkflowItem = { type: 'workflow'; id: Workflow.Id }
+    export type WorkflowItem = Extract<LibrarySDK.Item, { type: 'workflow' }>
+    export type SkillItem = Extract<LibrarySDK.Item, { type: 'skill' }>
     export type FolderItem = { type: 'folder'; id: Library.Folder.Id }
-    export type Item = WorkflowItem | FolderItem
+    export type Item = LibrarySDK.Item | FolderItem
 
     export type ItemFor<A extends Accept> =
         A extends 'workflow' ? WorkflowItem :
         A extends 'folder' ? FolderItem :
+        A extends 'skill' ? SkillItem :
         Item
 
     export interface Options<A extends Accept> {
@@ -35,6 +37,7 @@ export namespace LibrarySelector {
 const TITLES: Record<LibrarySelector.Accept, string> = {
     workflow: 'Select a Workflow',
     folder: 'Select a Folder',
+    skill: 'Select a Skill',
     any: 'Select an Item',
 }
 
@@ -59,8 +62,7 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
     const [viewSearchQuery, setViewSearchQuery] = useState('')
 
-    const acceptsWorkflows = accept !== 'folder'
-    const acceptsFolders = accept !== 'workflow'
+    const accepts = (type: LibrarySelector.Item['type']) => accept === type || accept === 'any'
 
     const cwdName = LibrarySDK.useStore((s) => s.folders[cwd]?.display_name ?? 'Library')
 
@@ -75,9 +77,10 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
         DialogSDK.actions.pop(LIBRARY_SELECTOR_DIALOG_ID)
     }
 
-    const handleWorkflowClick = acceptsWorkflows
-        ? (id: Workflow.Id) => commit({ type: 'workflow', id })
-        : undefined
+    const handleItemClick = (item: LibrarySDK.Item) => {
+        if (accepts(item.type))
+            commit(item)
+    }
 
     const handleSelectFolder = () => commit({ type: 'folder', id: cwd })
 
@@ -99,7 +102,7 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={treeSearchQuery}
-                            onWorkflowClick={handleWorkflowClick}
+                            onItemClick={handleItemClick}
                             className='pt-[70px] px-2'
                             scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_80px)]'
                         />
@@ -120,12 +123,12 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
                         cwd={cwd}
                         setCwd={setCwd}
                         searchQuery={viewSearchQuery}
-                        onWorkflowClick={handleWorkflowClick}
+                        onItemClick={handleItemClick}
                         className='pt-[40px] px-2'
                         scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                     />
                 </div>
-                {acceptsFolders && (
+                {accepts('folder') && (
                     <div className='absolute z-20 bottom-2 right-2'>
                         <Button size='sm' onClick={handleSelectFolder}>
                             <SystemIcons.FolderOpen className='size-4' />

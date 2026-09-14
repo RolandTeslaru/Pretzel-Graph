@@ -3,9 +3,13 @@ import { openCreateWorkflowDialog, openEditWorkflowDialog, openDeleteWorkflowDia
 import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from "./listing-dialogs"
 import { openDependencySelectorDialog } from './DependencySelector'
 import { openLibrarySelector } from './LibrarySelector'
+import { openCreateSkillDialog, openSkillEditorDialog, openDeleteSkillDialog } from './skill-dialogs'
 
 export function _createLibraryDialogs_() {
     return {
+        openCreateSkill:          openCreateSkillDialog,
+        openSkillEditor:          openSkillEditorDialog,
+        openDeleteSkill:          openDeleteSkillDialog,
         openCreateFolder:         openCreateFolderDialog,
         openEditFolder:           openEditFolderDialog,
         openDeleteFolder:         openDeleteFolderDialog,

@@ -7,6 +7,7 @@ import {
     Auth,
     ApiKey as ApiKeyD,
     Library,
+    Skill          as SkillD,
     SystemError,
     Vault,
     Chat           as ChatD,
@@ -120,6 +121,25 @@ export namespace DB {
         export type Row = z.infer<typeof Row>;
 
         export const toDomain = (row: Row) => Library.Folder.Schema.parse(row);
+    }
+
+    export namespace Skill {
+        export const Row = z.object({
+            id:           SkillD.Id,
+            created_by:   Auth.User.Id.nullable(),
+            folder_id:    Library.Folder.Id,
+            name:         z.string(),
+            description:  z.string(),
+            content:      z.string(),
+            content_hash: z.string(),
+            icon:         z.string().nullable(),
+            accent:       z.string().nullable(),
+            created_at:   z.string(),
+            updated_at:   z.string(),
+        });
+        export type Row = z.infer<typeof Row>;
+
+        export const toDomain = (row: Row) => SkillD.Schema.parse(row);
     }
 
     export namespace Execution {
@@ -276,6 +296,7 @@ export namespace DB {
         members:             Table<typeof Member.Row, Stamps>;
         deployment:          Table<typeof Deployment.Row, 'id'>;
         folders:             Table<typeof Folder.Row, 'id' | Stamps>;
+        skills:              Table<typeof Skill.Row, 'id' | 'description' | 'content' | 'content_hash' | Stamps>;
         workflows:           Table<typeof Workflow.Row, 'id' | Stamps>;
         executions:          Table<typeof Execution.Row, 'id' | Stamps>;
         chats:               Table<typeof Chat.Row, 'id' | Stamps>;

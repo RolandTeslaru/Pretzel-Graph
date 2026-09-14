@@ -1,6 +1,7 @@
 import { memo, useState } from 'react'
 import { Dialog, SearchInput, Tabs } from '@pretzel-graph/standard-ui/foundations'
-import { Library, type Dependency, type Workflow } from '@pretzel-graph/shared/domain'
+import { Library, type Dependency } from '@pretzel-graph/shared/domain'
+import type { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
@@ -78,11 +79,14 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId, localKinds }
     const [viewSearchQuery, setViewSearchQuery] = useState("")
 
     // Asks draft or published only when the field accepts both.
-    const selectLocal = async (workflowId: Workflow.Id) => {
-        if (localKinds.length > 1)
-            return openDependencyTypeDialog(workflowId, callbacks.onLocalWorkflowSelected)
+    const selectLocal = async (item: LibrarySDK.Item) => {
+        if (item.type !== 'workflow')
+            return
 
-        const success = await callbacks.onLocalWorkflowSelected(workflowId, localKinds[0])
+        if (localKinds.length > 1)
+            return openDependencyTypeDialog(item.id, callbacks.onLocalWorkflowSelected)
+
+        const success = await callbacks.onLocalWorkflowSelected(item.id, localKinds[0])
 
         if (success)
             DialogSDK.actions.pop(DEPENDENCY_SELECTOR_DIALOG_ID)
@@ -110,7 +114,7 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId, localKinds }
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={treeSearchQuery}
-                            onWorkflowClick={selectLocal}
+                            onItemClick={selectLocal}
                             className='pt-[70px]'
                             scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                         />
@@ -125,7 +129,7 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId, localKinds }
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={viewSearchQuery}
-                            onWorkflowClick={selectLocal}
+                            onItemClick={selectLocal}
                             className='pt-[50px] h-full '
                             scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                         />

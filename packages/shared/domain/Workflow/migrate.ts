@@ -3,9 +3,7 @@
 // v1 nodes carried the full derived shape (fields/inputs/outputs/icon/accent/… + view-state).
 // v2 nodes are slim: ids + overrides, with everything else derived from the blueprint on read.
 //
-// This handles the purely-structural relocations. Two node fields need blueprint/edge context
-// and are reconstructed at load instead (see the load action): `reconciledBlueprintId` (needs the
-// base blueprint + values) and `polymorphicResolutions` (replayed from edges).
+// Structural relocations only; blueprint-dependent fixes such as `reconciledBlueprintId` come from Workflow.Repair.
 
 import { SHAPE_DEPENDENCY_FIELD_ID, isListingId } from "./ids";
 

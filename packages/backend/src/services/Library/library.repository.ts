@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Skill, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
@@ -21,17 +21,32 @@ const WORKFLOW_META_COLUMNS = [
     'updated_at',
 ] as const;
 
+const SKILL_META_COLUMNS = [
+    'id',
+    'folder_id',
+    'name',
+    'description',
+    'content_hash',
+    'icon',
+    'accent',
+    'created_by',
+    'created_at',
+    'updated_at',
+] as const;
+
 const toWorkflowMeta = (row: unknown) => Library.WorkflowMeta.Schema.parse(row);
+const toSkillMeta    = (row: unknown) => Skill.Meta.Schema.parse(row);
 
 class BootstrapMethods extends Repository {
 
     @ZodReturn(z.object({
         folders: Library.Folder.Schema.array(),
         workflow_metas: Library.WorkflowMeta.Schema.array(),
+        skill_metas: Skill.Meta.Schema.array(),
     }))
     @Transactional('user')
     public async get(principal: Principal.User): Promise<Library.API.Bootstrap.Get.Response> {
-        const [folders, workflowMetas] = await Promise.all([
+        const [folders, workflowMetas, skillMetas] = await Promise.all([
             this.trx
                 .selectFrom('folders')
                 .selectAll()
@@ -42,11 +57,17 @@ class BootstrapMethods extends Repository {
                 .select(WORKFLOW_META_COLUMNS)
                 .orderBy('created_at', 'desc')
                 .execute(),
+            this.trx
+                .selectFrom('skills')
+                .select(SKILL_META_COLUMNS)
+                .orderBy('created_at', 'desc')
+                .execute(),
         ]);
 
         return {
             folders: folders.map(DB.Folder.toDomain),
             workflow_metas: workflowMetas.map(toWorkflowMeta),
+            skill_metas: skillMetas.map(toSkillMeta),
         };
     }
 }
@@ -128,13 +149,14 @@ class FolderMethods extends Repository {
         folder: Library.Folder.Schema,
         child_folders: Library.Folder.Schema.array(),
         workflows: Library.WorkflowMeta.Schema.array(),
+        skills: Skill.Meta.Schema.array(),
     }))
     @Transactional('user')
     public async getContents(
         principal: Principal.User,
         id: Library.Folder.Id,
     ): Promise<Library.API.Folder.GetContents.Response> {
-        const [folder, children, workflows] = await Promise.all([
+        const [folder, children, workflows, skills] = await Promise.all([
             this.trx
                 .selectFrom('folders')
                 .selectAll()
@@ -150,12 +172,18 @@ class FolderMethods extends Repository {
                 .select(WORKFLOW_META_COLUMNS)
                 .where('folder_id', '=', id)
                 .execute(),
+            this.trx
+                .selectFrom('skills')
+                .select(SKILL_META_COLUMNS)
+                .where('folder_id', '=', id)
+                .execute(),
         ]);
 
         return {
             folder: DB.Folder.toDomain(folder),
             child_folders: children.map(DB.Folder.toDomain),
             workflows: workflows.map(toWorkflowMeta),
+            skills: skills.map(toSkillMeta),
         };
     }
 }
@@ -270,9 +298,77 @@ class WorkflowMethods extends Repository {
     }
 }
 
+class SkillMethods extends Repository {
+
+    @Transactional('user')
+    @ZodReturn(Skill.Schema)
+    public async create(
+        principal: Principal.User,
+        payload: Library.API.Skill.Create.Request,
+    ): Promise<Skill> {
+        const row = await this.trx
+            .insertInto('skills')
+            .values({
+                ...payload,
+                created_by: principal.userId,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return DB.Skill.toDomain(row);
+    }
+
+    @Transactional('user')
+    @ZodReturn(Skill.Schema)
+    public async get(
+        principal: Principal.User,
+        id: Skill.Id,
+    ): Promise<Skill> {
+        const row = await this.trx
+            .selectFrom('skills')
+            .selectAll()
+            .where('id', '=', id)
+            .executeTakeFirstOrThrow();
+
+        return DB.Skill.toDomain(row);
+    }
+
+    @Transactional('user')
+    @ZodReturn(Skill.Schema)
+    public async update(
+        principal: Principal.User,
+        payload: Library.API.Skill.Update.Request,
+    ): Promise<Skill> {
+        const row = await this.trx
+            .updateTable('skills')
+            .set({
+                ...(payload.name !== undefined && { name: payload.name }),
+                ...(payload.description !== undefined && { description: payload.description }),
+                ...(payload.content !== undefined && { content: payload.content }),
+                ...(payload.icon !== undefined && { icon: payload.icon }),
+                ...(payload.accent !== undefined && { accent: payload.accent }),
+                ...(payload.folder_id !== undefined && { folder_id: payload.folder_id }),
+            })
+            .where('id', '=', payload.id)
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return DB.Skill.toDomain(row);
+    }
+
+    @Transactional('user')
+    public async delete(principal: Principal.User, id: Skill.Id): Promise<void> {
+        await this.trx
+            .deleteFrom('skills')
+            .where('id', '=', id)
+            .execute();
+    }
+}
+
 @Injectable()
 export class LibraryRepository {
     public readonly bootstrap = new BootstrapMethods();
     public readonly folder = new FolderMethods();
     public readonly workflow = new WorkflowMethods();
+    public readonly skill = new SkillMethods();
 }

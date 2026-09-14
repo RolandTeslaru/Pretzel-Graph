@@ -14,7 +14,8 @@ interface FolderCardProps {
 export function FolderItem({ folder, size = 'default', onClick }: FolderCardProps) {
     const itemCount = LibrarySDK.useStore((s) =>
         s.selectors.childFoldersOf(folder.id).length +
-        s.selectors.workflowsInFolder(folder.id).length,
+        s.selectors.workflowsInFolder(folder.id).length +
+        s.selectors.skillsInFolder(folder.id).length,
     )
 
     const styles = sizeStyles[size]
