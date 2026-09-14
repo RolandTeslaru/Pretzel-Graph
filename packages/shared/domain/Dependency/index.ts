@@ -87,10 +87,6 @@ export namespace Dependency {
         export type Listing     = z.infer<typeof Listing.Schema>
 
         export const Schema = z.discriminatedUnion("kind", [Draft.Schema, Publication.Schema, Listing.Schema])
-
-        // Updates to the published store: publications and listings.
-        export const PublicationMap = z.record(WorkflowId, z.discriminatedUnion("kind", [Publication.Schema, Listing.Schema]))
-        export type PublicationMap = z.infer<typeof PublicationMap>
     }
     export type Update = z.infer<typeof Update.Schema>
 

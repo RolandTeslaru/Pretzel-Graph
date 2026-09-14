@@ -6,13 +6,9 @@ import { WorkbenchSDK } from '../../sdk'
 import type { Dependency } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const dependencies      = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies))
-    const dependencyUpdates = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
+    const ids          = WorkbenchSDK.useDocument(d => Object.keys(d.data.dependencies) as Dependency.Id[])
+    const hasAnyUpdate = WorkbenchSDK.useDocument(d => Object.keys(d.dependencyUpdates).length > 0)
     const [updatingAll, setUpdatingAll] = useState(false)
-
-    const hasAnyUpdate =
-        Object.keys(dependencyUpdates.publishedWorkflow).length > 0 ||
-        Object.keys(dependencyUpdates.draftWorkflow).length > 0
 
     const updateAll = async () => {
         setUpdatingAll(true)
@@ -22,8 +18,6 @@ export const DependenciesSettings = () => {
             setUpdatingAll(false)
         }
     }
-
-    const isEmpty = dependencies.length === 0
 
     return (
         <>
@@ -36,29 +30,40 @@ export const DependenciesSettings = () => {
                 </div>
             )}
 
-            {isEmpty ? (
+            {ids.length === 0 ? (
                 <div className='absolute top-1/2 -translate-y-1/2 w-full text-center text-sm text-muted-foreground'>
                     No dependencies
                 </div>
             ) : (
                 <div className='flex flex-col gap-2'>
-                    {dependencies.map(dep => dep.kind === "draftWorkflow" ? (
-                        <DraftDependencyRow
-                            key={`${dep.kind}:${dep.id}`}
-                            dep={dep}
-                            updateInfo={dependencyUpdates.draftWorkflow[dep.id] ?? null}
-                        />
-                    ) : (
-                        <PublishedDependencyRow
-                            key={`${dep.kind}:${dep.workflow_id}`}
-                            dep={dep}
-                            updateInfo={dependencyUpdates.publishedWorkflow[dep.workflow_id] ?? null}
-                        />
+                    {ids.map(id => (
+                        <DependencyRow key={id} id={id} />
                     ))}
                 </div>
             )}
         </>
     )
+}
+
+// One embedded dependency with its pending update, rendered by kind.
+function DependencyRow({ id }: { id: Dependency.Id }) {
+    const [dep, updateInfo] = WorkbenchSDK.useDocument(d => [d.data.dependencies[id], d.dependencyUpdates[id] ?? null])
+
+    if (!dep)
+        return null
+
+    switch (dep.kind) {
+        case "draftWorkflow":
+            return <DraftDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Draft | null} />
+
+        case "publishedWorkflow":
+        case "listing":
+            return <PublishedDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Publication | Dependency.Update.Listing | null} />
+
+        default:
+            dep satisfies never
+            return null
+    }
 }
 
 function PublishedDependencyRow({ dep, updateInfo }: {

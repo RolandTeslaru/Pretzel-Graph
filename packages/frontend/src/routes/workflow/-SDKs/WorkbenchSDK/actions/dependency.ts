@@ -1,4 +1,4 @@
-import { SystemError, Workbench, type Dependency, type Workflow } from "@pretzel-graph/shared/domain"
+import { SystemError, Workbench, type Dependency } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
@@ -49,48 +49,26 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 reducers.dependency.register(d, ref, value)
             })
         }),
+        // Checks the saved workflow's dependencies against their sources.
         checkUpdates: async () => {
-            const values = Object.values(sdk.document.data.dependencies)
+            try {
+                const { updates } = await Workbench.API.Dependency.checkUpdates(api, { workflowId: sdk.document.workflowId })
 
-            const publishedEntries = values.flatMap(value => value.kind === "draftWorkflow" ? [] : [{
-                workflowId:    value.workflow_id,
-                publicationId: value.id,
-            }])
+                setDocument(d => {
+                    reducers.dependency.setUpdates(d, updates)
+                })
 
-            const draftEntries = values.flatMap(value => value.kind === "draftWorkflow" ? [{
-                workflowId: value.id,
-                updated_at: value.updated_at,
-            }] : [])
-
-            const [publishedResult, draftResult] = await Promise.allSettled([
-                publishedEntries.length > 0
-                    ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
-                    : Promise.resolve({ updates: {} as Dependency.Update.PublicationMap }),
-                draftEntries.length > 0
-                    ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Dependency.Update.Draft> }),
-            ])
-
-            setDocument(d => {
-                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.publishedWorkflow = publishedResult.value.updates
-                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draftWorkflow     = draftResult.value.updates
-            })
-
-            const count =
-                (publishedResult.status === 'fulfilled' ? Object.keys(publishedResult.value.updates).length : 0) +
-                (draftResult.status    === 'fulfilled' ? Object.keys(draftResult.value.updates).length    : 0)
-
-            if (count > 0)
-                toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
+                if (updates.length > 0)
+                    toast.info(`${updates.length} dependency update${updates.length === 1 ? '' : 's'} available`)
+            } catch (err) {
+                console.error("Failed to check dependency updates", err)
+            }
         },
 
         update: withAsyncCommit((update) => applyUpdate(update)),
 
         updateAll: withAsyncCommit(async () => {
-            const updates = [
-                ...Object.values(sdk.document.dependencyUpdates.publishedWorkflow),
-                ...Object.values(sdk.document.dependencyUpdates.draftWorkflow),
-            ]
+            const updates = Object.values(sdk.document.dependencyUpdates)
             const results = await Promise.all(updates.map(applyUpdate))
             return results.every(Boolean)
         }),

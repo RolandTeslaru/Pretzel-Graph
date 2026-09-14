@@ -3,7 +3,6 @@ import z from "zod"
 import { Workflow as WorkflowD } from "../Workflow"
 import { Foundations } from "../Foundations"
 import { Dependency as DependencyD } from "../Dependency"
-import { PublicationId } from "../Workflow/ids"
 import { Vault } from "../Vault"
 
 export namespace API {
@@ -83,26 +82,6 @@ export namespace API {
                 const { data } = await api.get<Published.Load.Response>(`/api/workbench/dependencies/workflows/${request.dependencyId}/published`)
                 return data
             }
-
-            export namespace CheckUpdates {
-                export const Request = z.object({
-                    dependencies: z.array(z.object({
-                        workflowId:    WorkflowD.Id,
-                        publicationId: PublicationId,
-                    })),
-                })
-                export type Request = z.infer<typeof Request>
-
-                export const Response = z.object({
-                    updates: DependencyD.Update.PublicationMap,
-                })
-                export type Response = z.infer<typeof Response>
-            }
-
-            export async function checkUpdates(api: AxiosInstance, request: Published.CheckUpdates.Request): Promise<Published.CheckUpdates.Response> {
-                const { data } = await api.post<Published.CheckUpdates.Response>(`/api/workbench/dependencies/check-updates`, request)
-                return data
-            }
         }
 
         export namespace Draft {
@@ -122,26 +101,24 @@ export namespace API {
                 const { data } = await api.get<Draft.Load.Response>(`/api/workbench/dependencies/workflows/${request.dependencyId}/draft`)
                 return data
             }
+        }
 
-            export namespace CheckUpdates {
-                export const Request = z.object({
-                    dependencies: z.array(z.object({
-                        workflowId: WorkflowD.Id,
-                        updated_at: z.coerce.date(),
-                    })),
-                })
-                export type Request = z.infer<typeof Request>
+        // Newer versions of a saved workflow's embedded dependencies.
+        export namespace CheckUpdates {
+            export const Request = z.object({
+                workflowId: WorkflowD.Id,
+            })
+            export type Request = z.infer<typeof Request>
 
-                export const Response = z.object({
-                    updates: z.record(WorkflowD.Id, DependencyD.Update.Draft.Schema),
-                })
-                export type Response = z.infer<typeof Response>
-            }
+            export const Response = z.object({
+                updates: z.array(DependencyD.Update.Schema),
+            })
+            export type Response = z.infer<typeof Response>
+        }
 
-            export async function checkUpdates(api: AxiosInstance, request: Draft.CheckUpdates.Request): Promise<Draft.CheckUpdates.Response> {
-                const { data } = await api.post<Draft.CheckUpdates.Response>(`/api/workbench/dependencies/check-draft-updates`, request)
-                return data
-            }
+        export async function checkUpdates(api: AxiosInstance, request: CheckUpdates.Request): Promise<CheckUpdates.Response> {
+            const { data } = await api.post<CheckUpdates.Response>(`/api/workbench/dependencies/check-updates`, request)
+            return data
         }
     }
 

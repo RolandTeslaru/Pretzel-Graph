@@ -44,7 +44,7 @@ const DependencyUpdaterContent = ({ dialogId, title, updates }: Props) => {
     // Applies the updates still pending; closes once they all land.
     const updateAll = async () => {
         const document = WorkbenchSDK.document
-        const pending  = updates.filter(update => document.selectors.dependency.hasUpdate(document, update.id, update.kind))
+        const pending  = updates.filter(update => document.selectors.dependency.hasUpdate(document, update))
 
         setIsUpdatingAll(true)
 
@@ -93,7 +93,7 @@ const UpdateRow = ({ update }: { update: Dependency.Update }) => {
 
     const [dependency, isPending] = WorkbenchSDK.useDocument(d => [
         d.selectors.dependency.get(d, update),
-        d.selectors.dependency.hasUpdate(d, update.id, update.kind),
+        d.selectors.dependency.hasUpdate(d, update),
     ])
 
     const iconColor       = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined

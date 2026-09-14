@@ -55,10 +55,11 @@ export const dependencyReducers: DependencyReducers = {
             }
         }
 
-        if (ref.kind === "draftWorkflow")
-            delete d.dependencyUpdates.draftWorkflow[ref.id]
-        else
-            delete d.dependencyUpdates.publishedWorkflow[ref.id]
+        delete d.dependencyUpdates[id]
+    },
+    // Replaces the pending updates with a check's results, keyed by the dependency each belongs to.
+    setUpdates: (d, updates) => {
+        d.dependencyUpdates = Object.fromEntries(updates.map(update => [Dependency.createId(update), update]))
     },
     removeUnused: (d) => {
         const used = collectUsedIds(d)
@@ -83,5 +84,6 @@ export interface DependencyReducers {
         ref:      Dependency.Ref,
         value:    Dependency.Value,
     ) => void
+    setUpdates: (document: Document, updates: Dependency.Update[]) => void
     removeUnused: (document: Document) => void
 }

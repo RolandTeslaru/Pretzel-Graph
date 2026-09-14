@@ -60,21 +60,11 @@ export class WorkbenchController {
     @Post('dependencies/check-updates')
     @UseGuards(MemberAuthGuard)
     @HttpCode(200)
-    async checkPublishedDependencyUpdates(
+    async checkDependencyUpdates(
         @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Workbench.API.Dependency.Published.CheckUpdates.Request) body: Workbench.API.Dependency.Published.CheckUpdates.Request,
+        @ZodBody(Workbench.API.Dependency.CheckUpdates.Request) body: Workbench.API.Dependency.CheckUpdates.Request,
     ) {
-        return await this.workbenchService.dependency.published.checkUpdates(principal, body);
-    }
-
-    @Post('dependencies/check-draft-updates')
-    @UseGuards(MemberAuthGuard)
-    @HttpCode(200)
-    async checkDraftDependencyUpdates(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Workbench.API.Dependency.Draft.CheckUpdates.Request) body: Workbench.API.Dependency.Draft.CheckUpdates.Request,
-    ) {
-        return await this.workbenchService.dependency.draft.checkUpdates(principal, body);
+        return await this.workbenchService.dependency.checkUpdates(principal, body);
     }
 
     @Post('field/resource-loader/load-options')

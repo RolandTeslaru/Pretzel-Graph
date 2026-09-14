@@ -27,10 +27,7 @@ export interface Document {
     cycles:     Workflow.Node.Id[][]
     stronglyConnectedComponents: Array<Set<Workflow.Node.Id>>
     cyclesDirty: boolean
-    dependencyUpdates: {
-        publishedWorkflow: Dependency.Update.PublicationMap
-        draftWorkflow:     Record<Workflow.Id, Dependency.Update.Draft>
-    }
+    dependencyUpdates: Record<Dependency.Id, Dependency.Update>
 
     /** The document differs from what was last persisted. */
     isDirty: boolean
@@ -94,7 +91,7 @@ export namespace Document {
             cycles: [],
             stronglyConnectedComponents: [],
             cyclesDirty: true,
-            dependencyUpdates: { publishedWorkflow: {}, draftWorkflow: {} },
+            dependencyUpdates: {},
             isDirty: false,
             reducers:  documentReducers,
             selectors: documentSelectors,

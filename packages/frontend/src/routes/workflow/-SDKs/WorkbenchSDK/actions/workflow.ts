@@ -107,6 +107,9 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
             (sdk.useDocument as any).temporal.getState().clear();
 
             toast.info("Workflow updated");
+
+            // Open cleared the pending updates; fire and forget a fresh check.
+            sdk.actions.dependency.checkUpdates();
         },
     } satisfies WorkflowActions;
 

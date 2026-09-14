@@ -56,29 +56,30 @@ export class ListingService {
         return entry ? Listing.toPublication(entry) : null;
     }
 
+    // Listings whose active publication moved on from the one each snapshot was taken at.
     public async checkUpdates(
-        dependencies: Array<{ workflowId: Workflow.Id; publicationId: VersionControl.Publication.Id }>,
-    ): Promise<Dependency.Update.PublicationMap> {
+        dependencies: Array<Pick<Dependency.Update.Listing, 'id' | 'publicationId'>>,
+    ): Promise<Dependency.Update.Listing[]> {
         if (!this.registry.canRead || dependencies.length === 0)
-            return {};
+            return [];
 
-        const current = await this.registry.getUpdates(dependencies.map((dependency) => dependency.workflowId));
-        const updates: Dependency.Update.PublicationMap = {};
+        const current = await this.registry.getUpdates(dependencies.map((dependency) => dependency.id));
+        const updates: Dependency.Update.Listing[] = [];
 
         for (const dependency of dependencies) {
-            const info = current[dependency.workflowId];
+            const info = current[dependency.id];
 
             if (!info || info.id === dependency.publicationId)
                 continue;
 
-            updates[dependency.workflowId] = {
+            updates.push({
                 kind:          "listing",
-                id:            dependency.workflowId as Listing.Id,
+                id:            dependency.id,
                 publicationId: info.id,
                 version:       info.version,
                 name:          info.name,
                 description:   info.description,
-            };
+            });
         }
 
         return updates;
