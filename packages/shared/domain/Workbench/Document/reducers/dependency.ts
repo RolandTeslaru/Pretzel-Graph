@@ -20,6 +20,9 @@ function withoutUi(data: Workflow.Data): Workflow.Data {
 
 export const dependencyReducers: DependencyReducers = {
     register: (d, ref, value) => {
+        if (ref.kind !== value.kind)
+            throw new Error(`Dependency ref kind "${ref.kind}" does not match its value's kind "${value.kind}"`)
+
         d.reducers.dependency.removeUnused(d)
 
         const id = Dependency.createId(ref)
