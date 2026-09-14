@@ -7,7 +7,7 @@ import { dependencySelectors } from "../dependency";
 export interface NodeDependencySelectors {
     // Read plain workflow data only, so callers outside the editor can pass `{ data }`.
     getShapeRef:   (document: { data: Pick<Workflow.Data, "staticValues"> }, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow | null
-    getShapeValue: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Dependency | null
+    getShapeValue: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Dependency.Value | null
     // Every Dependency field value on the node, the shape dependency included.
     getRefs:       (document: Document, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow[]
     // Pending updates for the dependencies the node's fields point at, one per dependency.

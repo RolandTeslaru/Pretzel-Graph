@@ -21,7 +21,7 @@ export function createFieldDependencyActions(sdk: WorkbenchSDKImpl) {
                 return true
             }
 
-            const promise = createToastPromise<{ dependency: Dependency }>(
+            const promise = createToastPromise<{ dependency: Dependency.Value }>(
                 loadResource(ref),
                 {
                     loading: "Loading workflow…",
