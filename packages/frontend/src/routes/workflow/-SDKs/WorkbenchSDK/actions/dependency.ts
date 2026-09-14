@@ -1,19 +1,12 @@
-import { SystemError, Workbench, type Dependency } from "@pretzel-graph/shared/domain"
+import { SystemError, Resource, type Dependency } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
 import { toast } from "sonner"
 
 // Fetches a resource's current state, shaped as the snapshot a dependency embeds.
-export function loadResource(ref: Dependency.Ref): Promise<{ dependency: Dependency.Value }> {
-    switch (ref.kind) {
-        case "draftWorkflow":
-            return Workbench.API.Dependency.Draft.load(api, { dependencyId: ref.id })
-
-        case "publishedWorkflow":
-        case "listing":
-            return Workbench.API.Dependency.Published.load(api, { dependencyId: ref.id })
-    }
+export function loadResource(ref: Dependency.Ref): Promise<Resource.API.Load.Response> {
+    return Resource.API.load(api, ref)
 }
 
 export function createDependencyActions(sdk: WorkbenchSDKImpl) {
@@ -52,7 +45,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
         // Checks the saved workflow's dependencies against their sources.
         checkUpdates: async () => {
             try {
-                const { updates } = await Workbench.API.Dependency.checkUpdates(api, { workflowId: sdk.document.workflowId })
+                const { updates } = await Resource.API.checkUpdates(api, { workflowId: sdk.document.workflowId })
 
                 setDocument(d => {
                     reducers.dependency.setUpdates(d, updates)

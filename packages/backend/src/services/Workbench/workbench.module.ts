@@ -13,6 +13,6 @@ import { RealtimeModule } from '../Realtime/realtime.module';
     imports: [VaultModule, ShelfModule, ListingModule, RealtimeModule],
     controllers: [WorkbenchController, InternalWorkbenchController],
     providers: [WorkbenchService, WorkbenchSessionService, WorkbenchRepository],
-    exports: [WorkbenchSessionService, WorkbenchRepository],
+    exports: [WorkbenchService, WorkbenchSessionService, WorkbenchRepository],
 })
 export class WorkbenchModule { }

@@ -37,36 +37,6 @@ export class WorkbenchController {
         return await this.workbenchService.workflow.commit(principal, body);
     }
 
-    @Get('dependencies/workflows/:dependencyId/published')
-    @UseGuards(MemberAuthGuard)
-    async loadPublishedDependency(
-        @AuthenticatedUser() principal: Principal.User,
-        @Param('dependencyId') dependencyId: Workflow.Id
-    ) {
-        const payload = Workbench.API.Dependency.Published.Load.Request.parse({ dependencyId });
-        return await this.workbenchService.dependency.published.load(principal, payload);
-    }
-
-    @Get('dependencies/workflows/:dependencyId/draft')
-    @UseGuards(MemberAuthGuard)
-    async loadDraftDependency(
-        @AuthenticatedUser() principal: Principal.User,
-        @Param('dependencyId') dependencyId: Workflow.Id
-    ) {
-        const payload = Workbench.API.Dependency.Draft.Load.Request.parse({ dependencyId });
-        return await this.workbenchService.dependency.draft.load(principal, payload);
-    }
-
-    @Post('dependencies/check-updates')
-    @UseGuards(MemberAuthGuard)
-    @HttpCode(200)
-    async checkDependencyUpdates(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodBody(Workbench.API.Dependency.CheckUpdates.Request) body: Workbench.API.Dependency.CheckUpdates.Request,
-    ) {
-        return await this.workbenchService.dependency.checkUpdates(principal, body);
-    }
-
     @Post('field/resource-loader/load-options')
     @UseGuards(MemberAuthGuard)
     @HttpCode(200)

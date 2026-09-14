@@ -8,6 +8,7 @@ import { ChatModule } from './services/Chat/chat.module';
 import { LibraryModule } from './services/Library/library.module';
 import { ShelfModule } from './services/Shelf/shelf.module';
 import { WorkbenchModule } from './services/Workbench/workbench.module';
+import { ResourceModule } from './services/Resource/resource.module';
 import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { UserModule } from './services/User/user.module';
@@ -47,6 +48,7 @@ import { WorkerModule } from './services/Worker/worker.module';
         LibraryModule,
         ShelfModule,
         WorkbenchModule,
+        ResourceModule,
         RealtimeModule,
         UserModule,
         VersionControlModule,

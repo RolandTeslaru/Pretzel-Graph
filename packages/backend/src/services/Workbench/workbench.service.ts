@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { Dependency, Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
+import { Workflow, Workbench, Vault } from '@pretzel-graph/shared/domain';
 import { WorkbenchRepository } from './workbench.repository';
 import { WorkbenchSessionService } from './session.service';
 import { VaultRepository } from '../Vault/vault.repository';
@@ -31,11 +31,27 @@ export class WorkbenchService {
             return { workflow_id };
         },
 
+        // The workflow row, or the listed workflow for a listing id.
+        find: async (
+            principal: Principal.User | Principal.Delegate,
+            workflowId: Workflow.Id,
+        ): Promise<Workflow> => {
+            if (!Listing.isListingId(workflowId))
+                return this.repository.workflow.get(principal, workflowId);
+
+            const shared = await this.listings.getWorkflow(workflowId);
+
+            if (!shared)
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found');
+
+            return shared;
+        },
+
         get: async (
             principal: Principal.User | Principal.Delegate,
             workflowId: Workflow.Id,
         ): Promise<Workbench.API.Workflow.Get.Response> => {
-            const workflow = await this.findWorkflow(principal, workflowId);
+            const workflow = await this.workflow.find(principal, workflowId);
 
             const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
 
@@ -51,47 +67,6 @@ export class WorkbenchService {
         ): Promise<Workbench.API.Workflow.Commit.Response> => {
             await this.repository.workflow.commit(principal, payload);
             return {};
-        },
-    };
-
-    public readonly dependency = {
-        published: {
-            load: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Published.Load.Request,
-            ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
-                if (Listing.isListingId(payload.dependencyId)) {
-                    const shared = await this.listings.getPublication(payload.dependencyId);
-
-                    if (!shared)
-                        throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found or no longer listed');
-
-                    return { dependency: shared };
-                }
-
-                const dependency = await this.repository.dependency.published.load(principal, payload.dependencyId);
-
-                return { dependency };
-            },
-        },
-
-        draft: {
-            load: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Draft.Load.Request,
-            ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-                const dependency = await this.repository.dependency.draft.load(principal, payload.dependencyId);
-                return { dependency };
-            },
-        },
-
-        checkUpdates: async (
-            principal: Principal.User,
-            payload: Workbench.API.Dependency.CheckUpdates.Request,
-        ): Promise<Workbench.API.Dependency.CheckUpdates.Response> => {
-            const workflow = await this.findWorkflow(principal, payload.workflowId);
-
-            return { updates: await this.collectUpdates(principal, workflow.data.dependencies) };
         },
     };
 
@@ -146,49 +121,4 @@ export class WorkbenchService {
             },
         },
     };
-
-    // The workflow row, or the listed workflow for a listing id.
-    private async findWorkflow(principal: Principal.User | Principal.Delegate, workflowId: Workflow.Id): Promise<Workflow> {
-        if (!Listing.isListingId(workflowId))
-            return this.repository.workflow.get(principal, workflowId);
-
-        const shared = await this.listings.getWorkflow(workflowId);
-
-        if (!shared)
-            throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found');
-
-        return shared;
-    }
-
-    // Checks each embedded snapshot against its source; listing checks are best-effort.
-    private async collectUpdates(principal: Principal.User, dependencies: Workflow.Data['dependencies']): Promise<Dependency.Update[]> {
-        const drafts:       Array<Pick<Dependency.Update.Draft, 'id' | 'updated_at'>>          = [];
-        const publications: Array<Pick<Dependency.Update.Publication, 'id' | 'publicationId'>> = [];
-        const listings:     Array<Pick<Dependency.Update.Listing, 'id' | 'publicationId'>>     = [];
-
-        for (const value of Object.values(dependencies)) {
-            switch (value.kind) {
-                case 'draftWorkflow':
-                    drafts.push({ id: value.id, updated_at: value.updated_at });
-                    break;
-
-                case 'publishedWorkflow':
-                    publications.push({ id: value.workflow_id, publicationId: value.id });
-                    break;
-
-                case 'listing':
-                    listings.push({ id: value.workflow_id as Listing.Id, publicationId: value.id });
-                    break;
-
-                default:
-                    value satisfies never;
-            }
-        }
-
-        return [
-            ...await this.repository.dependency.draft.checkUpdates(principal, drafts),
-            ...await this.repository.dependency.published.checkUpdates(principal, publications),
-            ...await this.listings.checkUpdates(listings).catch(() => []),
-        ];
-    }
 }
