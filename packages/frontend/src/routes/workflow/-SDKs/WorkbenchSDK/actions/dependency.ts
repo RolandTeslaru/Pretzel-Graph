@@ -8,9 +8,9 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setDocument = sdk.setDocument
     const reducers = sdk.reducers
 
-    const applyUpdate = async (mode: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
+    const applyUpdate = async (kind: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
         const promise = createToastPromise<{ dependency: Dependency }>(
-            mode === "publication"
+            kind === "publication"
                 ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
                 : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
             {
@@ -24,7 +24,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             const { dependency } = await promise
 
             setDocument(withCyclesRecompute(d => {
-                reducers.dependency.applyUpdate(d, mode, dependency)
+                reducers.dependency.applyUpdate(d, kind, dependency)
             }))
         } catch (err) {
             console.error("Failed to apply dependency update", err)

@@ -139,7 +139,7 @@ const adoptDependencies = (
     dependencies: Workflow.Data["dependencies"],
 ): void => {
     const referenced = new Set(
-        payload.nodes.flatMap(node => payloadDependencyRefs(d, payload, node).map(ref => ref.workflowId))
+        payload.nodes.flatMap(node => payloadDependencyRefs(d, payload, node).map(ref => ref.id))
     );
     if (referenced.size === 0) return;
 
@@ -163,8 +163,8 @@ const adoptDependencies = (
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id);
         if (!shapeDepRef) continue;
 
-        const registered = shapeDepRef.mode === "draft" ? registeredDrafts : registeredPublished;
-        if (!registered.has(shapeDepRef.workflowId)) continue;
+        const registered = shapeDepRef.kind === "draft" ? registeredDrafts : registeredPublished;
+        if (!registered.has(shapeDepRef.id)) continue;
 
         reducers.cache.resolvedShape.recreate(d, node.id);
         reducers.node.validate(d, node.id);

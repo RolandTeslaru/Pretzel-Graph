@@ -19,14 +19,14 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
     const shapeDepRef = WorkbenchSDK.useDocument(d => d.selectors.node.getShapeDependencyRef(d, hyNode.id))
     const hasWorkflowDependency = !!shapeDepRef
 
-    const [dependencyUpdate, mode] = WorkbenchSDK.useDocument(d => d.selectors.node.getDependencyUpdate(d, hyNode.id) ?? [null, null])
+    const [dependencyUpdate, kind] = WorkbenchSDK.useDocument(d => d.selectors.node.getDependencyUpdate(d, hyNode.id) ?? [null, null])
 
     const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || hyNode.blueprint.toolCompatible || hyNode.blueprint.proxyCompatible
 
     const handleDependencyUpdate = () => {
-        if(mode === "draft")
+        if(kind === "draft")
             WorkbenchSDK.actions.dependency.draftWorkflows.update(dependencyUpdate as Dependency.Update.Draft)
-        else if(mode === "publication")
+        else if(kind === "publication")
             WorkbenchSDK.actions.dependency.publishedWorkflows.update(dependencyUpdate as Dependency.Update.Publication)
     }
 
@@ -71,14 +71,14 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                     {hasWorkflowDependency && (
                         <Tipped label="Open workflow">
                             <Button variant="ghost-primary" size="icon-xs" className='h-6!'
-                                onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDepRef!.workflowId!)}
+                                onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDepRef!.id)}
                             >
                                 <SystemIcons.Graph />
                             </Button>
                         </Tipped>
                     )}
                     {dependencyUpdate && 
-                        <Tipped label={mode === "publication" ? "Update published workflow" : "Update draft workflow"}>
+                        <Tipped label={kind === "publication" ? "Update published workflow" : "Update draft workflow"}>
                             <Button variant="ghost-active" size="icon-xs" className='h-6!'
                                 onClick={handleDependencyUpdate}
                             >

@@ -147,17 +147,17 @@ export const nodeSelectors: NodeSelectors = {
         if (!shapeDepRef)
             return null;
 
-        return dependencySelectors.getWorkflow(d, shapeDepRef.workflowId, shapeDepRef.mode);
+        return dependencySelectors.getWorkflow(d, shapeDepRef.id, shapeDepRef.kind);
     },
     getShapeDependencyData: (d, nodeId) => {
         const shapeDepRef = nodeSelectors.getShapeDependencyRef(d, nodeId);
         if (!shapeDepRef)
             return null;
 
-        if (shapeDepRef.mode === "draft")
-            return d.data.dependencies.draftWorkflows[shapeDepRef.workflowId]?.data ?? null;
+        if (shapeDepRef.kind === "draft")
+            return d.data.dependencies.draftWorkflows[shapeDepRef.id]?.data ?? null;
 
-        return d.data.dependencies.publishedWorkflows[shapeDepRef.workflowId]?.workflow_data ?? null;
+        return d.data.dependencies.publishedWorkflows[shapeDepRef.id]?.workflow_data ?? null;
     },
     getWorkflowDependencyRefs: (d, nodeId) => {
         const values = d.data.staticValues[nodeId] ?? {};
@@ -173,31 +173,31 @@ export const nodeSelectors: NodeSelectors = {
     },
     hasDraftDependency: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
-        if (!shapeDepRef?.workflowId)
+        if (!shapeDepRef?.id)
             return false;
 
-        return shapeDepRef.mode === "draft" && shapeDepRef.workflowId in d.data.dependencies.draftWorkflows;
+        return shapeDepRef.kind === "draft" && shapeDepRef.id in d.data.dependencies.draftWorkflows;
     },
     hasPublishedDependency: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
-        if (!shapeDepRef?.workflowId)
+        if (!shapeDepRef?.id)
             return false;
 
-        return shapeDepRef.mode !== "draft" && shapeDepRef.workflowId in d.data.dependencies.publishedWorkflows;
+        return shapeDepRef.kind !== "draft" && shapeDepRef.id in d.data.dependencies.publishedWorkflows;
     },
     getDependencyUpdate: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
-        if (!shapeDepRef?.workflowId)
+        if (!shapeDepRef?.id)
             return null;
 
-        if (shapeDepRef.mode !== "draft") {
-            const update = d.dependencyUpdates.publishedWorkflows[shapeDepRef.workflowId] ?? null
+        if (shapeDepRef.kind !== "draft") {
+            const update = d.dependencyUpdates.publishedWorkflows[shapeDepRef.id] ?? null
             if (update)
                 return [update, "publication"]
         }
 
-        if (shapeDepRef.mode === "draft") {
-            const update = d.dependencyUpdates.draftWorkflows[shapeDepRef.workflowId] ?? null
+        if (shapeDepRef.kind === "draft") {
+            const update = d.dependencyUpdates.draftWorkflows[shapeDepRef.id] ?? null
             if (update)
                 return [update, "draft"]
         }

@@ -13,22 +13,22 @@ export interface DependencySelectors {
         getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Dependency.Update.Draft | null
     }
     // Reads plain workflow data only, so callers outside the editor can pass `{ data }`.
-    getWorkflow: (document: { data: Pick<Workflow.Data, "dependencies"> }, workflowId: Workflow.Id, mode: Dependency.Ref.Workflow["mode"]) => Dependency | null
-    hasUpdate: (document: Document, workflowId: Workflow.Id, mode: Dependency.Ref.Workflow["mode"]) => boolean
+    getWorkflow: (document: { data: Pick<Workflow.Data, "dependencies"> }, workflowId: Workflow.Id, kind: Dependency.Ref.Workflow["kind"]) => Dependency | null
+    hasUpdate: (document: Document, workflowId: Workflow.Id, kind: Dependency.Ref.Workflow["kind"]) => boolean
 }
 
 export const dependencySelectors: DependencySelectors = {
     doesNodeHaveUpdate: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
-        if (!shapeDepRef?.workflowId)
+        if (!shapeDepRef?.id)
             return false;
 
-        if (shapeDepRef.mode === "draft")
-            return shapeDepRef.workflowId in d.dependencyUpdates.draftWorkflows;
-        return shapeDepRef.workflowId in d.dependencyUpdates.publishedWorkflows;
+        if (shapeDepRef.kind === "draft")
+            return shapeDepRef.id in d.dependencyUpdates.draftWorkflows;
+        return shapeDepRef.id in d.dependencyUpdates.publishedWorkflows;
     },
-    hasUpdate: (d, workflowId, mode) => {
-        if (mode === "draft")
+    hasUpdate: (d, workflowId, kind) => {
+        if (kind === "draft")
             return workflowId in d.dependencyUpdates.draftWorkflows;
         return workflowId in d.dependencyUpdates.publishedWorkflows;
     },
@@ -40,8 +40,8 @@ export const dependencySelectors: DependencySelectors = {
         get:           (d, workflowId) => d.data.dependencies.draftWorkflows[workflowId] ?? null,
         getUpdateInfo: (d, workflowId) => d.dependencyUpdates.draftWorkflows[workflowId] ?? null,
     },
-    getWorkflow: (d, workflowId, mode) => {
-        const store = mode === "draft"
+    getWorkflow: (d, workflowId, kind) => {
+        const store = kind === "draft"
             ? d.data.dependencies.draftWorkflows
             : d.data.dependencies.publishedWorkflows;
 

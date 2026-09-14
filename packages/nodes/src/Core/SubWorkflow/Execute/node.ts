@@ -25,8 +25,8 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
         const staticValues   = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
         const dependencyRef  = staticValues[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID] as unknown as Dependency.Ref.Workflow | undefined;
-        const subWorkflowId  = dependencyRef?.workflowId as Workflow.Id;
-        const dependencyMode = dependencyRef?.mode ?? "publication";
+        const subWorkflowId  = dependencyRef?.id as Workflow.Id;
+        const dependencyKind = dependencyRef?.kind ?? "publication";
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];
@@ -36,7 +36,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         if (!subWorkflowId)
             throw new Error(`Missing dependency in Execute Sub-Workflow node ${this.nodeId}`);
 
-        const isDraft = dependencyMode === "draft";
+        const isDraft = dependencyKind === "draft";
 
         const childWorkflowData = isDraft
             ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).data)

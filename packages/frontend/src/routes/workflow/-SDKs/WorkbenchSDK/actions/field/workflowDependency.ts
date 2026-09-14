@@ -10,19 +10,19 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
     const sel         = sdk.selectors;
 
     return {
-        select: withAsyncCommit(async (nodeId, fieldId, workflowId, mode) => {
+        select: withAsyncCommit(async (nodeId, fieldId, workflowId, kind) => {
             // Reuse the snapshot when the workflow already embeds this dependency.
-            const existing = sel.dependency.getWorkflow(sdk.document, workflowId, mode)
+            const existing = sel.dependency.getWorkflow(sdk.document, workflowId, kind)
 
             if (existing) {
                 setDocument(withCyclesRecompute(d => {
-                    reducers.field.workflowDependency.set(d, nodeId, fieldId, mode, existing)
+                    reducers.field.workflowDependency.set(d, nodeId, fieldId, kind, existing)
                 }))
                 return true
             }
 
             const promise = createToastPromise<{ dependency: Dependency }>(
-                mode === "draft"
+                kind === "draft"
                     ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
                     : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId }),
                 {
@@ -36,7 +36,7 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
                 const { dependency } = await promise
 
                 setDocument(withCyclesRecompute(d => {
-                    reducers.field.workflowDependency.set(d, nodeId, fieldId, mode, dependency)
+                    reducers.field.workflowDependency.set(d, nodeId, fieldId, kind, dependency)
                 }))
             } catch (err) {
                 console.error("Failed to attach dependency", err)
@@ -49,5 +49,5 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export interface WorkflowDependencyActions {
-    select: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, workflowId: Workflow.Id, mode: Dependency.Ref.Workflow["mode"]) => Promise<boolean>
+    select: (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id, workflowId: Workflow.Id, kind: Dependency.Ref.Workflow["kind"]) => Promise<boolean>
 }

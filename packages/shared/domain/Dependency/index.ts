@@ -22,7 +22,6 @@ export namespace Dependency {
                 get data() { return Data.Schema },
             })
         }
-        export type Draft = z.infer<typeof Draft.Schema>
 
         // A published workflow: the publication, the workflow's display fields and graph.
         export namespace Publication {
@@ -38,8 +37,13 @@ export namespace Dependency {
                 get workflow_data() { return Data.Schema },
             })
         }
+
+        export type Draft = z.infer<typeof Draft.Schema>
         export type Publication = z.infer<typeof Publication.Schema>
+    
+        export const Schema = z.union([Draft.Schema, Publication.Schema])
     }
+    export type Value = z.infer<typeof Value.Schema>
 
 
     // What changed at the source since a snapshot was taken.
@@ -66,8 +70,5 @@ export namespace Dependency {
 
 
     export const Schema = z.union([Value.Publication.Schema, Value.Draft.Schema])
-
-    export const Variant = z.enum(["draft", "publication"])
-    export type Variant = z.infer<typeof Variant>
 }
 export type Dependency = z.infer<typeof Dependency.Schema>

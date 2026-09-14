@@ -1,4 +1,3 @@
-import type { Dependency } from '@pretzel-graph/shared/domain'
 import { useState } from 'react'
 import { Badge, Button, Dialog, Spinner, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
@@ -6,7 +5,7 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
-import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks } from './constants'
+import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks, type LocalWorkflowKind } from './constants'
 
 export const getDependencyTypeDialogId = (workflowId: Workflow.Id) => `dependency-type-${workflowId}`
 
@@ -24,7 +23,7 @@ export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelected: De
     ))
 }
 
-const variantDescriptions: Record<Dependency.Variant, string> = {
+const kindDescriptions: Record<LocalWorkflowKind, string> = {
     draft: "Follows the workflow's current working version. You'll be offered an update whenever it's saved with changes.",
     publication: "Pins to the workflow's active published version. You'll be offered an update only when a new version is published.",
 }
@@ -38,7 +37,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
 
     const dialogId = getDependencyTypeDialogId(workflowId)
 
-    const [variant, setVariant] = useState<Dependency.Variant>("draft")
+    const [kind, setKind] = useState<LocalWorkflowKind>("draft")
 
     const [isAttaching, setIsAttaching] = useState(false)
 
@@ -55,7 +54,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
     const handleAttach = async () => {
         setIsAttaching(true)
 
-        const success = await onSelected(workflowId, variant)
+        const success = await onSelected(workflowId, kind)
 
         setIsAttaching(false)
 
@@ -77,7 +76,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
                 </div>
             ) : (
                 <>
-                    <Tabs.Root value={variant} onValueChange={(val) => setVariant(val as Dependency.Variant)}>
+                    <Tabs.Root value={kind} onValueChange={(val) => setKind(val as LocalWorkflowKind)}>
                         <Tabs.List size="lg" className='w-full'>
                             <Tabs.Trigger value='draft' className='w-1/2 flex flex-col gap-2'>
                                 <SystemIcons.DraftingCompass className='size-10' />
@@ -97,7 +96,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
                         </Tabs.List>
                     </Tabs.Root>
                     <p className='px-1 text-xs text-muted-foreground'>
-                        {variantDescriptions[variant]}
+                        {kindDescriptions[kind]}
                     </p>
                     <Button className="mt-auto" onClick={handleAttach} disabled={isAttaching}>
                         Attach

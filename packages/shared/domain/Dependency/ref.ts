@@ -5,20 +5,20 @@ import { ListingId, WorkflowId } from "../Workflow/ids"
 export namespace Ref {
     export namespace DraftWorkflow {
         export const Schema = z.object({
-            mode:       z.literal("draft"),
-            workflowId: WorkflowId,
+            kind: z.literal("draft"),
+            id:   WorkflowId,
         })
     }
     export namespace PublishedWorkflow {
         export const Schema = z.object({
-            mode:       z.literal("publication"),
-            workflowId: WorkflowId,
+            kind: z.literal("publication"),
+            id:   WorkflowId,
         })
     }
     export namespace Listing {
         export const Schema = z.object({
-            mode:       z.literal("listing"),
-            workflowId: ListingId,
+            kind: z.literal("listing"),
+            id:   ListingId,
         })
     }
 
@@ -28,10 +28,10 @@ export namespace Ref {
 
     // Any pointer to an embedded workflow.
     export namespace Workflow {
-        export const Schema = z.discriminatedUnion("mode", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema])
+        export const Schema = z.discriminatedUnion("kind", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema])
     }
     export type Workflow = z.infer<typeof Workflow.Schema>
 
-    export const Schema = z.discriminatedUnion("mode", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema])
+    export const Schema = z.discriminatedUnion("kind", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema])
 }
 export type Ref = z.infer<typeof Ref.Schema>

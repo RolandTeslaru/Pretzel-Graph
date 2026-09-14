@@ -166,9 +166,9 @@ class CatalogueServiceImpl {
         if(!shapeDepRef)
             return null;
 
-        const { workflowId, mode } = shapeDepRef;
+        const { id: workflowId, kind } = shapeDepRef;
 
-        const store = mode === "draft"
+        const store = kind === "draft"
             ? wfData.dependencies?.draftWorkflows
             : wfData.dependencies?.publishedWorkflows;
 
@@ -204,7 +204,7 @@ class CatalogueServiceImpl {
         const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID) as Blueprint;
 
         if (!RuntimeNode || !dummyBlueprint)
-            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)?.workflowId}. Core.SubWorkflow.Execute node not found in the catalogue`)
+            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)?.id}. Core.SubWorkflow.Execute node not found in the catalogue`)
         
         return { RuntimeNode, blueprint: dummyBlueprint };
     }

@@ -9,7 +9,7 @@
 
 import { SHAPE_DEPENDENCY_FIELD_ID, isListingId } from "./ids";
 
-export const WORKFLOW_DATA_VERSION = 5;
+export const WORKFLOW_DATA_VERSION = 6;
 
 export function migrateWorkflowDataToLatest(raw: any): any {
     if (!raw || typeof raw !== "object") return raw;
@@ -52,6 +52,7 @@ export function migrateWorkflowDataToLatest(raw: any): any {
     renameDependencyStores(data);
     fillDependencyStores(data);
     reshapeWorkflowSnapshots(data);
+    reshapeRefs(data);
 
     if (from < 4)
         foldVariadicSlots(data);
@@ -136,6 +137,37 @@ function reshapeWorkflowSnapshots(data: any): void {
     }
 
     data.dependencies = { ...data.dependencies, draftWorkflows, publishedWorkflows };
+}
+
+const REF_KINDS = ["draft", "publication", "listing"];
+
+// v6: a dependency ref `{ mode, workflowId }` became `{ kind, id }`; feature-detected so it is idempotent.
+function reshapeRefs(data: any): void {
+    if (!data.staticValues || typeof data.staticValues !== "object")
+        return;
+
+    const staticValues = { ...data.staticValues };
+
+    for (const [nodeId, bucket] of Object.entries<any>(staticValues)) {
+        if (!bucket || typeof bucket !== "object")
+            continue;
+
+        for (const [fieldId, value] of Object.entries<any>(bucket)) {
+            const isLegacyRef = !!value
+                && typeof value === "object"
+                && typeof value.workflowId === "string"
+                && REF_KINDS.includes(value.kind ?? value.mode);
+
+            if (!isLegacyRef)
+                continue;
+
+            const { mode, kind, workflowId, ...rest } = value;
+
+            staticValues[nodeId] = { ...staticValues[nodeId], [fieldId]: { ...rest, kind: kind ?? mode, id: workflowId } };
+        }
+    }
+
+    data.staticValues = staticValues;
 }
 
 // `isExpression` used to live on the Field itself. On a user-added field that made it persisted

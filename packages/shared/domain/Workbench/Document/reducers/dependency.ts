@@ -6,8 +6,8 @@ import { isEqual } from "lodash"
 const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as const
 
 // Listings share the published store until they get their own.
-function storeKey(mode: Dependency.Ref.Workflow["mode"], workflowId: Workflow.Id): string {
-    const store = mode === "draft" ? "draft" : "publication"
+function storeKey(kind: Dependency.Ref.Workflow["kind"], workflowId: Workflow.Id): string {
+    const store = kind === "draft" ? "draft" : "publication"
     return `${store}:${workflowId}`
 }
 
@@ -17,8 +17,8 @@ function collectUsedDependencyKeys(d: Document): Set<string> {
     const used = new Set<string>()
     Object.values(d.data.nodes).forEach(node => {
         for (const ref of d.selectors.node.getWorkflowDependencyRefs(d, node.id))
-            if (ref.workflowId)
-                used.add(storeKey(ref.mode, ref.workflowId))
+            if (ref.id)
+                used.add(storeKey(ref.kind, ref.id))
     })
     return used
 }
@@ -78,10 +78,10 @@ function withoutUi(data: Workflow.Data): Workflow.Data {
 }
 
 export const dependencyReducers: DependencyReducers = {
-    register: (d, mode, dependency) => {
+    register: (d, kind, dependency) => {
         d.reducers.dependency.removeUnused(d)
 
-        if (mode === "draft") {
+        if (kind === "draft") {
             const draft = dependency as Dependency.Value.Draft
             d.data.dependencies.draftWorkflows[draft.id] = { ...draft, data: withoutUi(draft.data) }
         }
@@ -90,12 +90,12 @@ export const dependencyReducers: DependencyReducers = {
             d.data.dependencies.publishedWorkflows[publication.workflow_id] = { ...publication, workflow_data: withoutUi(publication.workflow_data) }
         }
     },
-    applyUpdate: (d, mode, dependency) => {
-        const workflowId = mode === "draft"
+    applyUpdate: (d, kind, dependency) => {
+        const workflowId = kind === "draft"
             ? (dependency as Dependency.Value.Draft).id
             : (dependency as Dependency.Value.Publication).workflow_id
 
-        d.reducers.dependency.register(d, mode, dependency)
+        d.reducers.dependency.register(d, kind, dependency)
         d.isDirty = true
 
         // Ports / ui / fields all derive from the registered record on read, so there's no node to
@@ -103,13 +103,13 @@ export const dependencyReducers: DependencyReducers = {
         for (const node of Object.values(d.data.nodes)) {
             const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id)
 
-            if (shapeDepRef && storeKey(shapeDepRef.mode, shapeDepRef.workflowId) === storeKey(mode, workflowId)) {
+            if (shapeDepRef && storeKey(shapeDepRef.kind, shapeDepRef.id) === storeKey(kind, workflowId)) {
                 d.reducers.cache.resolvedShape.recreate(d, node.id)
                 d.reducers.node.validate(d, node.id)
             }
         }
 
-        if (mode === "draft")
+        if (kind === "draft")
             delete d.dependencyUpdates.draftWorkflows[workflowId]
         else
             delete d.dependencyUpdates.publishedWorkflows[workflowId]
@@ -140,12 +140,12 @@ export const dependencyReducers: DependencyReducers = {
 export interface DependencyReducers {
     applyUpdate: (
         document:   Document,
-        mode:       Dependency.Ref.Workflow["mode"],
+        kind:       Dependency.Ref.Workflow["kind"],
         dependency: Dependency.Value.Publication | Dependency.Value.Draft,
     ) => void
     register: (
         document:   Document,
-        mode:       Dependency.Ref.Workflow["mode"],
+        kind:       Dependency.Ref.Workflow["kind"],
         dependency: Dependency.Value.Publication | Dependency.Value.Draft,
     ) => void
     pruneDefaults: (document: Document) => void

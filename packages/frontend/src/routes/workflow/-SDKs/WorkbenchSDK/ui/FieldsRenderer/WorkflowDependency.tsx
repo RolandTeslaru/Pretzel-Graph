@@ -12,8 +12,8 @@ import type { RendererProps } from './FieldLabel'
 
 const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => {
     LibrarySDK.dialogs.openDependencySelector({
-        onLocalWorkflowSelected: (workflowId, variant) =>
-            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, workflowId, variant),
+        onLocalWorkflowSelected: (workflowId, kind) =>
+            WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, workflowId, kind),
         onListingSelected: (listingId) =>
             WorkbenchSDK.actions.field.workflowDependency.select(nodeId, fieldId, listingId, 'listing'),
         onListingPreview: (listingId) =>
@@ -27,8 +27,8 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
 
     const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref.Workflow | null>(nodeId, field)
 
-    const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.getWorkflow(d, value.workflowId, value.mode) : null)
-    const mode = value?.mode ?? null
+    const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.getWorkflow(d, value.id, value.kind) : null)
+    const kind = value?.kind ?? null
 
     const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
     const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
@@ -65,8 +65,8 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
                         </span>
                     </span>
                 </span>
-                {(mode === "publication" || mode === "listing") && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
-                {mode === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
+                {(kind === "publication" || kind === "listing") && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
+                {kind === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
                 <SystemIcons.ChevronDown />
             </Button>
         </div>

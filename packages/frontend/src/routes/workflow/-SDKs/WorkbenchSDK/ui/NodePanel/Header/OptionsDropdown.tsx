@@ -54,7 +54,7 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
                     Recreate
                 </DropdownMenu.Item>
                 {shapeDepRef && (
-                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDepRef.workflowId)}>
+                    <DropdownMenu.Item onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDepRef.id)}>
                         <SystemIcons.Graph />
                         Open workflow
                     </DropdownMenu.Item>

@@ -5,6 +5,7 @@ import type { Document } from "../../index";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
 import { fieldWorkflowDependencyReducers, type FieldWorkflowDependencyReducers } from "./workflowDependency";
+import { FieldDependencyReducers, fieldDependencyReducers } from './dependecy';
 
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
@@ -116,6 +117,7 @@ export const fieldReducers: FieldReducers = {
     condition: fieldConditionReducers,
     caseList:  fieldCaseListReducers,
     workflowDependency: fieldWorkflowDependencyReducers,
+    dependency: fieldDependencyReducers
 }
 
 
@@ -145,4 +147,5 @@ export interface FieldReducers {
     condition : FieldConditionReducers
     caseList  : FieldCaseListReducers
     workflowDependency : FieldWorkflowDependencyReducers
+    dependency: FieldDependencyReducers
 }

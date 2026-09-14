@@ -112,12 +112,12 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             if (!shapeDepRef)
                 return;
 
-            const { workflowId, mode } = shapeDepRef;
+            const { id: workflowId, kind } = shapeDepRef;
 
-            if (sdk.selectors.dependency.getWorkflow(sdk.document, workflowId, mode))
+            if (sdk.selectors.dependency.getWorkflow(sdk.document, workflowId, kind))
                 return;
 
-            const fetchDepPromise = mode === "draft"
+            const fetchDepPromise = kind === "draft"
                 ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
                 : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId });
 
