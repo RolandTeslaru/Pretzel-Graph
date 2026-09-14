@@ -5,13 +5,13 @@ import { ListingId, WorkflowId } from "../Workflow/ids"
 export namespace Ref {
     export namespace DraftWorkflow {
         export const Schema = z.object({
-            kind: z.literal("draft"),
+            kind: z.literal("draftWorkflow"),
             id:   WorkflowId,
         })
     }
     export namespace PublishedWorkflow {
         export const Schema = z.object({
-            kind: z.literal("publication"),
+            kind: z.literal("publishedWorkflow"),
             id:   WorkflowId,
         })
     }

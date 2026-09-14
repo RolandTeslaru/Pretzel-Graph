@@ -65,8 +65,8 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
                         </span>
                     </span>
                 </span>
-                {(kind === "publication" || kind === "listing") && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
-                {kind === "draft" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
+                {(kind === "publishedWorkflow" || kind === "listing") && <SystemIcons.ShieldCheck className='size-3 text-muted-foreground' />}
+                {kind === "draftWorkflow" && <SystemIcons.DraftingCompass className='size-3 text-muted-foreground' />}
                 <SystemIcons.ChevronDown />
             </Button>
         </div>

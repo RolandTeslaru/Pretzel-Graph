@@ -146,15 +146,15 @@ const adoptDependencies = (
     const registeredPublished = new Set<string>();
     const registeredDrafts    = new Set<string>();
 
-    for (const dependency of Object.values(dependencies.publishedWorkflows))
+    for (const dependency of Object.values(dependencies.publishedWorkflow))
         if (referenced.has(dependency.workflow_id)) {
-            reducers.dependency.register(d, "publication", dependency);
+            reducers.dependency.register(d, "publishedWorkflow", dependency);
             registeredPublished.add(dependency.workflow_id);
         }
 
-    for (const dependency of Object.values(dependencies.draftWorkflows))
+    for (const dependency of Object.values(dependencies.draftWorkflow))
         if (referenced.has(dependency.id)) {
-            reducers.dependency.register(d, "draft", dependency);
+            reducers.dependency.register(d, "draftWorkflow", dependency);
             registeredDrafts.add(dependency.id);
         }
 
@@ -163,7 +163,7 @@ const adoptDependencies = (
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id);
         if (!shapeDepRef) continue;
 
-        const registered = shapeDepRef.kind === "draft" ? registeredDrafts : registeredPublished;
+        const registered = shapeDepRef.kind === "draftWorkflow" ? registeredDrafts : registeredPublished;
         if (!registered.has(shapeDepRef.id)) continue;
 
         reducers.cache.resolvedShape.recreate(d, node.id);

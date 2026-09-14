@@ -6,9 +6,12 @@ import { Workflow } from "../../../../Workflow"
 
 export const fieldDependencyReducers: FieldDependencyReducers = {
     setValue: (
-        d, nodeId, fieldId, kind, value
+        d, nodeId, fieldId, ref, value
     ) => {
-        d.reducers.dependency.register(d, kind, value)
+        d.reducers.dependency.removeUnused(d)
+
+        d.data.dependencies[""]
+        d.reducers.dependency.register(d, ref.kind, ref.id)
 
         const depRef: Dependency.Ref = { kind, id: value } 
 
@@ -24,7 +27,7 @@ export interface FieldDependencyReducers {
         d:        Workbench.Document, 
         nodeId:   Workflow.Node.Id, 
         fieldId:  Foundations.Field.Id, 
-        kind:     Dependency.Ref["kind"], 
-        refValue: Dependency.Ref["workflowId"]
+        ref:      Dependency.Ref,
+        value:    Dependency.Value
     ) => void 
 }

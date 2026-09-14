@@ -22,7 +22,7 @@ export function createWorkflowDependencyActions(sdk: WorkbenchSDKImpl) {
             }
 
             const promise = createToastPromise<{ dependency: Dependency }>(
-                kind === "draft"
+                kind === "draftWorkflow"
                     ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
                     : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId }),
                 {

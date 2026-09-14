@@ -24,10 +24,10 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
     const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || hyNode.blueprint.toolCompatible || hyNode.blueprint.proxyCompatible
 
     const handleDependencyUpdate = () => {
-        if(kind === "draft")
-            WorkbenchSDK.actions.dependency.draftWorkflows.update(dependencyUpdate as Dependency.Update.Draft)
-        else if(kind === "publication")
-            WorkbenchSDK.actions.dependency.publishedWorkflows.update(dependencyUpdate as Dependency.Update.Publication)
+        if(kind === "draftWorkflow")
+            WorkbenchSDK.actions.dependency.draftWorkflow.update(dependencyUpdate as Dependency.Update.Draft)
+        else if(kind === "publishedWorkflow")
+            WorkbenchSDK.actions.dependency.publishedWorkflow.update(dependencyUpdate as Dependency.Update.Publication)
     }
 
     return (
@@ -78,7 +78,7 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                         </Tipped>
                     )}
                     {dependencyUpdate && 
-                        <Tipped label={kind === "publication" ? "Update published workflow" : "Update draft workflow"}>
+                        <Tipped label={kind === "publishedWorkflow" ? "Update published workflow" : "Update draft workflow"}>
                             <Button variant="ghost-active" size="icon-xs" className='h-6!'
                                 onClick={handleDependencyUpdate}
                             >

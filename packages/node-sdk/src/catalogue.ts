@@ -138,10 +138,10 @@ class CatalogueServiceImpl {
             await this.resolveBlueprint(wfNode.blueprintId, wfData.staticValues[wfNode.id] ?? {});
         }
 
-        for (const dependency of Object.values(wfData.dependencies?.publishedWorkflows ?? {}))
+        for (const dependency of Object.values(wfData.dependencies?.publishedWorkflow ?? {}))
             await this.warmBlueprintCache(dependency.workflow_data);
 
-        for (const dependency of Object.values(wfData.dependencies?.draftWorkflows ?? {}))
+        for (const dependency of Object.values(wfData.dependencies?.draftWorkflow ?? {}))
             await this.warmBlueprintCache(dependency.data);
     }
 
@@ -168,9 +168,9 @@ class CatalogueServiceImpl {
 
         const { id: workflowId, kind } = shapeDepRef;
 
-        const store = kind === "draft"
-            ? wfData.dependencies?.draftWorkflows
-            : wfData.dependencies?.publishedWorkflows;
+        const store = kind === "draftWorkflow"
+            ? wfData.dependencies?.draftWorkflow
+            : wfData.dependencies?.publishedWorkflow;
 
         if(!store?.[workflowId])
             throw new Error(`Node ${wfNode.id} has a dependency (${workflowId}) but its not in the store`)

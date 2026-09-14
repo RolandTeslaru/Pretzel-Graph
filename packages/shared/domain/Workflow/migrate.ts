@@ -81,43 +81,43 @@ function renameGlobalFields(data: any): void {
     }
 }
 
-// `published`/`draft` dependency stores became `publishedWorkflows`/`draftWorkflows`; feature-detected so it is idempotent.
+// v6: dependency stores are named after their ref kind, folding in the `published`/`draft` and `publishedWorkflows`/`draftWorkflows` names; feature-detected so it is idempotent.
 function renameDependencyStores(data: any): void {
     const dependencies = data.dependencies;
     if (!dependencies || typeof dependencies !== "object")
         return;
 
-    if (!("published" in dependencies) && !("draft" in dependencies))
-        return;
+    const { published, draft, publishedWorkflows, draftWorkflows, ...rest } = dependencies;
 
-    const { published, draft, ...rest } = dependencies;
+    if (!published && !draft && !publishedWorkflows && !draftWorkflows)
+        return;
 
     data.dependencies = {
         ...rest,
-        publishedWorkflows: rest.publishedWorkflows ?? published ?? {},
-        draftWorkflows:     rest.draftWorkflows ?? draft ?? {},
+        publishedWorkflow: rest.publishedWorkflow ?? publishedWorkflows ?? published ?? {},
+        draftWorkflow:     rest.draftWorkflow ?? draftWorkflows ?? draft ?? {},
     };
 }
 
 // Every dependency store is present, including on blobs saved before the store existed.
 function fillDependencyStores(data: any): void {
     data.dependencies = {
-        publishedWorkflows: {},
-        draftWorkflows:     {},
+        publishedWorkflow: {},
+        draftWorkflow:     {},
         ...data.dependencies,
     };
 }
 
 // v5: a draft snapshot uses the workflow row's field names and a published one the publication row's; feature-detected so it is idempotent.
 function reshapeWorkflowSnapshots(data: any): void {
-    const draftWorkflows     = { ...data.dependencies.draftWorkflows };
-    const publishedWorkflows = { ...data.dependencies.publishedWorkflows };
+    const draftWorkflow     = { ...data.dependencies.draftWorkflow };
+    const publishedWorkflow = { ...data.dependencies.publishedWorkflow };
 
-    for (const [id, snapshot] of Object.entries<any>(draftWorkflows)) {
+    for (const [id, snapshot] of Object.entries<any>(draftWorkflow)) {
         if (!snapshot || !("workflow_data" in snapshot))
             continue;
 
-        draftWorkflows[id] = {
+        draftWorkflow[id] = {
             id:           snapshot.workflow_id,
             display_name: snapshot.display_name,
             icon:         snapshot.icon,
@@ -127,21 +127,26 @@ function reshapeWorkflowSnapshots(data: any): void {
         };
     }
 
-    for (const [id, snapshot] of Object.entries<any>(publishedWorkflows)) {
+    for (const [id, snapshot] of Object.entries<any>(publishedWorkflow)) {
         if (!snapshot || !("publication_name" in snapshot))
             continue;
 
         const { publication_name, ...rest } = snapshot;
 
-        publishedWorkflows[id] = { ...rest, name: publication_name };
+        publishedWorkflow[id] = { ...rest, name: publication_name };
     }
 
-    data.dependencies = { ...data.dependencies, draftWorkflows, publishedWorkflows };
+    data.dependencies = { ...data.dependencies, draftWorkflow, publishedWorkflow };
 }
 
-const REF_KINDS = ["draft", "publication", "listing"];
+// Every earlier ref kind, by its current name.
+const REF_KINDS = new Map([
+    ["draft",       "draftWorkflow"],
+    ["publication", "publishedWorkflow"],
+    ["listing",     "listing"],
+]);
 
-// v6: a dependency ref `{ mode, workflowId }` became `{ kind, id }`; feature-detected so it is idempotent.
+// v6: a dependency ref is `{ kind, id }`, its kind named after its store; feature-detected so it is idempotent.
 function reshapeRefs(data: any): void {
     if (!data.staticValues || typeof data.staticValues !== "object")
         return;
@@ -153,21 +158,28 @@ function reshapeRefs(data: any): void {
             continue;
 
         for (const [fieldId, value] of Object.entries<any>(bucket)) {
-            const isLegacyRef = !!value
-                && typeof value === "object"
-                && typeof value.workflowId === "string"
-                && REF_KINDS.includes(value.kind ?? value.mode);
+            const ref = upgradeRef(value);
 
-            if (!isLegacyRef)
-                continue;
-
-            const { mode, kind, workflowId, ...rest } = value;
-
-            staticValues[nodeId] = { ...staticValues[nodeId], [fieldId]: { ...rest, kind: kind ?? mode, id: workflowId } };
+            if (ref)
+                staticValues[nodeId] = { ...staticValues[nodeId], [fieldId]: ref };
         }
     }
 
     data.staticValues = staticValues;
+}
+
+// An earlier ref (`{ mode | kind, workflowId | id }`) as `{ kind, id }`; null for any other value.
+function upgradeRef(value: any): { kind: string, id: string } | null {
+    if (!value || typeof value !== "object" || Object.keys(value).length !== 2)
+        return null;
+
+    const kind = REF_KINDS.get(value.kind ?? value.mode);
+    const id   = value.id ?? value.workflowId;
+
+    if (!kind || typeof id !== "string")
+        return null;
+
+    return { kind, id };
 }
 
 // `isExpression` used to live on the Field itself. On a user-added field that made it persisted

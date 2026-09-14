@@ -11,7 +11,7 @@ export const fieldWorkflowDependencyReducers: FieldWorkflowDependencyReducers = 
     set: (d, nodeId, fieldId, kind, dependency) => {
         d.reducers.dependency.register(d, kind, dependency)
 
-        const workflowId = kind === "draft"
+        const workflowId = kind === "draftWorkflow"
             ? (dependency as Dependency.Value.Draft).id
             : (dependency as Dependency.Value.Publication).workflow_id
 

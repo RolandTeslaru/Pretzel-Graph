@@ -46,7 +46,7 @@ export interface NodeSelectors {
     hasPublishedDependency: (document: Document, nodeId: Workflow.Node.Id) => boolean
     getDependencyUpdate: (document: Document, nodeId: Workflow.Node.Id) => [ 
         Dependency.Update.Publication | Dependency.Update.Draft,
-        "draft" | "publication"
+        "draftWorkflow" | "publishedWorkflow"
     ] | null
 
     getInputs: (document: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
@@ -154,10 +154,10 @@ export const nodeSelectors: NodeSelectors = {
         if (!shapeDepRef)
             return null;
 
-        if (shapeDepRef.kind === "draft")
-            return d.data.dependencies.draftWorkflows[shapeDepRef.id]?.data ?? null;
+        if (shapeDepRef.kind === "draftWorkflow")
+            return d.data.dependencies.draftWorkflow[shapeDepRef.id]?.data ?? null;
 
-        return d.data.dependencies.publishedWorkflows[shapeDepRef.id]?.workflow_data ?? null;
+        return d.data.dependencies.publishedWorkflow[shapeDepRef.id]?.workflow_data ?? null;
     },
     getWorkflowDependencyRefs: (d, nodeId) => {
         const values = d.data.staticValues[nodeId] ?? {};
@@ -176,30 +176,30 @@ export const nodeSelectors: NodeSelectors = {
         if (!shapeDepRef?.id)
             return false;
 
-        return shapeDepRef.kind === "draft" && shapeDepRef.id in d.data.dependencies.draftWorkflows;
+        return shapeDepRef.kind === "draftWorkflow" && shapeDepRef.id in d.data.dependencies.draftWorkflow;
     },
     hasPublishedDependency: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
         if (!shapeDepRef?.id)
             return false;
 
-        return shapeDepRef.kind !== "draft" && shapeDepRef.id in d.data.dependencies.publishedWorkflows;
+        return shapeDepRef.kind !== "draftWorkflow" && shapeDepRef.id in d.data.dependencies.publishedWorkflow;
     },
     getDependencyUpdate: (d, nodeId) => {
         const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
         if (!shapeDepRef?.id)
             return null;
 
-        if (shapeDepRef.kind !== "draft") {
-            const update = d.dependencyUpdates.publishedWorkflows[shapeDepRef.id] ?? null
+        if (shapeDepRef.kind !== "draftWorkflow") {
+            const update = d.dependencyUpdates.publishedWorkflow[shapeDepRef.id] ?? null
             if (update)
-                return [update, "publication"]
+                return [update, "publishedWorkflow"]
         }
 
-        if (shapeDepRef.kind === "draft") {
-            const update = d.dependencyUpdates.draftWorkflows[shapeDepRef.id] ?? null
+        if (shapeDepRef.kind === "draftWorkflow") {
+            const update = d.dependencyUpdates.draftWorkflow[shapeDepRef.id] ?? null
             if (update)
-                return [update, "draft"]
+                return [update, "draftWorkflow"]
         }
 
         return null

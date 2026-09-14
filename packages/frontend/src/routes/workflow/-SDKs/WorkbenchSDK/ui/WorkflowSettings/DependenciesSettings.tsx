@@ -6,14 +6,14 @@ import { WorkbenchSDK } from '../../sdk'
 import type { Dependency, Workflow } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const publishedWorkflows = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.publishedWorkflows))
-    const draftWorkflows     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draftWorkflows))
+    const publishedWorkflows = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.publishedWorkflow))
+    const draftWorkflows     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draftWorkflow))
     const dependencyUpdates  = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
 
     const hasAnyUpdate =
-        Object.keys(dependencyUpdates.publishedWorkflows).length > 0 ||
-        Object.keys(dependencyUpdates.draftWorkflows).length > 0
+        Object.keys(dependencyUpdates.publishedWorkflow).length > 0 ||
+        Object.keys(dependencyUpdates.draftWorkflow).length > 0
 
     const updateAll = async () => {
         setUpdatingAll(true)
@@ -47,14 +47,14 @@ export const DependenciesSettings = () => {
                         <PublishedDependencyRow
                             key={dep.workflow_id}
                             dep={dep}
-                            updateInfo={dependencyUpdates.publishedWorkflows[dep.workflow_id as Workflow.Id] ?? null}
+                            updateInfo={dependencyUpdates.publishedWorkflow[dep.workflow_id as Workflow.Id] ?? null}
                         />
                     ))}
                     {draftWorkflows.map(dep => (
                         <DraftDependencyRow
                             key={dep.id}
                             dep={dep}
-                            updateInfo={dependencyUpdates.draftWorkflows[dep.id] ?? null}
+                            updateInfo={dependencyUpdates.draftWorkflow[dep.id] ?? null}
                         />
                     ))}
                 </div>
@@ -76,7 +76,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.publishedWorkflows.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.publishedWorkflow.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }
@@ -121,7 +121,7 @@ function DraftDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.draftWorkflows.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.draftWorkflow.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }

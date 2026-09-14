@@ -49,7 +49,7 @@ export const workflowReducers: WorkflowReducers = {
             nodes: {},
             cycles: []
         }
-        d.dependencyUpdates = { publishedWorkflows: {}, draftWorkflows: {} }
+        d.dependencyUpdates = { publishedWorkflow: {}, draftWorkflow: {} }
 
         d.reducers.dependency.removeUnused(d);
 

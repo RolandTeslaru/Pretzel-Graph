@@ -8,9 +8,9 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setDocument = sdk.setDocument
     const reducers = sdk.reducers
 
-    const applyUpdate = async (kind: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
+    const applyUpdate = async (kind: "publishedWorkflow" | "draftWorkflow", workflowId: Workflow.Id): Promise<boolean> => {
         const promise = createToastPromise<{ dependency: Dependency }>(
-            kind === "publication"
+            kind === "publishedWorkflow"
                 ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
                 : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
             {
@@ -36,12 +36,12 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const actions = {
         registerDependency: withCommit((dependency) => {
             setDocument(d => {
-                d.data.dependencies.publishedWorkflows[dependency.workflow_id] = dependency
+                d.data.dependencies.publishedWorkflow[dependency.workflow_id] = dependency
             })
         }),
         checkUpdates: async () => {
-            const publishedWorkflows = sdk.document.data.dependencies.publishedWorkflows
-            const draftWorkflows     = sdk.document.data.dependencies.draftWorkflows
+            const publishedWorkflows = sdk.document.data.dependencies.publishedWorkflow
+            const draftWorkflows     = sdk.document.data.dependencies.draftWorkflow
 
             const publishedEntries = Object.values(publishedWorkflows).map(dep => ({
                 workflowId:    dep.workflow_id as Workflow.Id,
@@ -63,8 +63,8 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             ])
 
             setDocument(d => {
-                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.publishedWorkflows = publishedResult.value.updates
-                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draftWorkflows     = draftResult.value.updates
+                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.publishedWorkflow = publishedResult.value.updates
+                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draftWorkflow     = draftResult.value.updates
             })
 
             const count =
@@ -75,20 +75,20 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
                 toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
         },
 
-        publishedWorkflows: {
-            update: withAsyncCommit((updateInfo) => applyUpdate("publication", updateInfo.workflowId)),
+        publishedWorkflow: {
+            update: withAsyncCommit((updateInfo) => applyUpdate("publishedWorkflow", updateInfo.workflowId)),
         },
 
-        draftWorkflows: {
-            update: withAsyncCommit((updateInfo) => applyUpdate("draft", updateInfo.workflowId)),
+        draftWorkflow: {
+            update: withAsyncCommit((updateInfo) => applyUpdate("draftWorkflow", updateInfo.workflowId)),
         },
 
         updateAll: withAsyncCommit(async () => {
-            const publishedUpdates = Object.values(sdk.document.dependencyUpdates.publishedWorkflows)
-            const draftUpdates     = Object.values(sdk.document.dependencyUpdates.draftWorkflows)
+            const publishedUpdates = Object.values(sdk.document.dependencyUpdates.publishedWorkflow)
+            const draftUpdates     = Object.values(sdk.document.dependencyUpdates.draftWorkflow)
             const results = await Promise.all([
-                ...publishedUpdates.map(u => applyUpdate("publication", u.workflowId)),
-                ...draftUpdates.map(u => applyUpdate("draft", u.workflowId)),
+                ...publishedUpdates.map(u => applyUpdate("publishedWorkflow", u.workflowId)),
+                ...draftUpdates.map(u => applyUpdate("draftWorkflow", u.workflowId)),
             ])
             return results.every(Boolean)
         }),
@@ -101,10 +101,10 @@ export type DependencyActions = {
     registerDependency: (dependency: Dependency.Value.Publication) => void
     checkUpdates:       () => Promise<void>
     updateAll:          () => Promise<boolean>
-    publishedWorkflows: {
+    publishedWorkflow: {
         update: (updateInfo: Dependency.Update.Publication) => Promise<boolean>
     }
-    draftWorkflows: {
+    draftWorkflow: {
         update: (updateInfo: Dependency.Update.Draft) => Promise<boolean>
     }
 }

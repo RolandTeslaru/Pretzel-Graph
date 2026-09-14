@@ -4,11 +4,11 @@ import type { Document } from "../index";
 
 export interface DependencySelectors {
     doesNodeHaveUpdate: (document: Document, nodeId: Workflow.Node.Id) => boolean
-    publishedWorkflows: {
+    publishedWorkflow: {
         get:           (document: Document, workflowId: Workflow.Id) => Dependency.Value.Publication | null
         getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Dependency.Update.Publication | null
     }
-    draftWorkflows: {
+    draftWorkflow: {
         get:           (document: Document, workflowId: Workflow.Id) => Dependency.Value.Draft | null
         getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Dependency.Update.Draft | null
     }
@@ -23,27 +23,27 @@ export const dependencySelectors: DependencySelectors = {
         if (!shapeDepRef?.id)
             return false;
 
-        if (shapeDepRef.kind === "draft")
-            return shapeDepRef.id in d.dependencyUpdates.draftWorkflows;
-        return shapeDepRef.id in d.dependencyUpdates.publishedWorkflows;
+        if (shapeDepRef.kind === "draftWorkflow")
+            return shapeDepRef.id in d.dependencyUpdates.draftWorkflow;
+        return shapeDepRef.id in d.dependencyUpdates.publishedWorkflow;
     },
     hasUpdate: (d, workflowId, kind) => {
-        if (kind === "draft")
-            return workflowId in d.dependencyUpdates.draftWorkflows;
-        return workflowId in d.dependencyUpdates.publishedWorkflows;
+        if (kind === "draftWorkflow")
+            return workflowId in d.dependencyUpdates.draftWorkflow;
+        return workflowId in d.dependencyUpdates.publishedWorkflow;
     },
-    publishedWorkflows: {
-        get:           (d, workflowId) => d.data.dependencies.publishedWorkflows[workflowId] ?? null,
-        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.publishedWorkflows[workflowId] ?? null,
+    publishedWorkflow: {
+        get:           (d, workflowId) => d.data.dependencies.publishedWorkflow[workflowId] ?? null,
+        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.publishedWorkflow[workflowId] ?? null,
     },
-    draftWorkflows: {
-        get:           (d, workflowId) => d.data.dependencies.draftWorkflows[workflowId] ?? null,
-        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.draftWorkflows[workflowId] ?? null,
+    draftWorkflow: {
+        get:           (d, workflowId) => d.data.dependencies.draftWorkflow[workflowId] ?? null,
+        getUpdateInfo: (d, workflowId) => d.dependencyUpdates.draftWorkflow[workflowId] ?? null,
     },
     getWorkflow: (d, workflowId, kind) => {
-        const store = kind === "draft"
-            ? d.data.dependencies.draftWorkflows
-            : d.data.dependencies.publishedWorkflows;
+        const store = kind === "draftWorkflow"
+            ? d.data.dependencies.draftWorkflow
+            : d.data.dependencies.publishedWorkflow;
 
         return store[workflowId] ?? null;
     },

@@ -24,8 +24,8 @@ export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelected: De
 }
 
 const kindDescriptions: Record<LocalWorkflowKind, string> = {
-    draft: "Follows the workflow's current working version. You'll be offered an update whenever it's saved with changes.",
-    publication: "Pins to the workflow's active published version. You'll be offered an update only when a new version is published.",
+    draftWorkflow: "Follows the workflow's current working version. You'll be offered an update whenever it's saved with changes.",
+    publishedWorkflow: "Pins to the workflow's active published version. You'll be offered an update only when a new version is published.",
 }
 
 interface DependencyTypeDialogProps {
@@ -37,7 +37,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
 
     const dialogId = getDependencyTypeDialogId(workflowId)
 
-    const [kind, setKind] = useState<LocalWorkflowKind>("draft")
+    const [kind, setKind] = useState<LocalWorkflowKind>("draftWorkflow")
 
     const [isAttaching, setIsAttaching] = useState(false)
 
@@ -78,11 +78,11 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
                 <>
                     <Tabs.Root value={kind} onValueChange={(val) => setKind(val as LocalWorkflowKind)}>
                         <Tabs.List size="lg" className='w-full'>
-                            <Tabs.Trigger value='draft' className='w-1/2 flex flex-col gap-2'>
+                            <Tabs.Trigger value='draftWorkflow' className='w-1/2 flex flex-col gap-2'>
                                 <SystemIcons.DraftingCompass className='size-10' />
                                 Draft
                             </Tabs.Trigger>
-                            <Tabs.Trigger value="publication" className='w-1/2 flex flex-col gap-2' disabled={!hasPublication}>
+                            <Tabs.Trigger value="publishedWorkflow" className='w-1/2 flex flex-col gap-2' disabled={!hasPublication}>
                                 <SystemIcons.ShieldCheck className='size-10' />
                                 <div className='flex flex-row gap-2'>
                                     Published

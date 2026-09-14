@@ -139,7 +139,7 @@ export function createExecutionAPIs(
 
     const dependencyAPI = {
         getPublished: (wfId) => {
-            const dep = workflowData.dependencies?.publishedWorkflows?.[wfId];
+            const dep = workflowData.dependencies?.publishedWorkflow?.[wfId];
 
             if (!dep) {
                 throw new Error(`Missing published dependency "${wfId}"`);
@@ -149,7 +149,7 @@ export function createExecutionAPIs(
         },
 
         getDraft: (wfId) => {
-            const draft = workflowData.dependencies?.draftWorkflows?.[wfId];
+            const draft = workflowData.dependencies?.draftWorkflow?.[wfId];
 
             if (!draft) {
                 throw new Error(`Missing draft dependency "${wfId}"`);

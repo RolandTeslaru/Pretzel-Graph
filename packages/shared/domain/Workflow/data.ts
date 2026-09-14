@@ -67,10 +67,10 @@ export namespace Data {
             annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
         }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
-        // Getters defer the Dependency <-> Data cycle; the migration fills in missing stores.
+        // One store per ref kind, listings in `publishedWorkflow`; getters defer the Dependency <-> Data cycle.
         dependencies: z.object({
-            get publishedWorkflows() { return z.record(WorkflowId, Dependency.Value.Publication.Schema) },
-            get draftWorkflows()     { return z.record(WorkflowId, Dependency.Value.Draft.Schema) },
+            get publishedWorkflow() { return z.record(WorkflowId, Dependency.Value.Publication.Schema) },
+            get draftWorkflow()     { return z.record(WorkflowId, Dependency.Value.Draft.Schema) },
         }),
     })
 

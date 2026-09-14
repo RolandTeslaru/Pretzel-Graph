@@ -7,7 +7,7 @@ const UI_KEYS = ["displayName", "description", "icon", "accent", "iconColor"] as
 
 // Listings share the published store until they get their own.
 function storeKey(kind: Dependency.Ref.Workflow["kind"], workflowId: Workflow.Id): string {
-    const store = kind === "draft" ? "draft" : "publication"
+    const store = kind === "draftWorkflow" ? "draftWorkflow" : "publishedWorkflow"
     return `${store}:${workflowId}`
 }
 
@@ -81,17 +81,17 @@ export const dependencyReducers: DependencyReducers = {
     register: (d, kind, dependency) => {
         d.reducers.dependency.removeUnused(d)
 
-        if (kind === "draft") {
+        if (kind === "draftWorkflow") {
             const draft = dependency as Dependency.Value.Draft
-            d.data.dependencies.draftWorkflows[draft.id] = { ...draft, data: withoutUi(draft.data) }
+            d.data.dependencies.draftWorkflow[draft.id] = { ...draft, data: withoutUi(draft.data) }
         }
         else {
             const publication = dependency as Dependency.Value.Publication
-            d.data.dependencies.publishedWorkflows[publication.workflow_id] = { ...publication, workflow_data: withoutUi(publication.workflow_data) }
+            d.data.dependencies.publishedWorkflow[publication.workflow_id] = { ...publication, workflow_data: withoutUi(publication.workflow_data) }
         }
     },
     applyUpdate: (d, kind, dependency) => {
-        const workflowId = kind === "draft"
+        const workflowId = kind === "draftWorkflow"
             ? (dependency as Dependency.Value.Draft).id
             : (dependency as Dependency.Value.Publication).workflow_id
 
@@ -109,28 +109,28 @@ export const dependencyReducers: DependencyReducers = {
             }
         }
 
-        if (kind === "draft")
-            delete d.dependencyUpdates.draftWorkflows[workflowId]
+        if (kind === "draftWorkflow")
+            delete d.dependencyUpdates.draftWorkflow[workflowId]
         else
-            delete d.dependencyUpdates.publishedWorkflows[workflowId]
+            delete d.dependencyUpdates.publishedWorkflow[workflowId]
     },
     // Retroactively slim already-persisted (remnant) dependency snapshots. New deps enter slim via
     // `register`, but load bypasses register, so this runs from the load action's normalize pass.
     pruneDefaults: (d) => {
-        for (const dep of Object.values(d.data.dependencies.publishedWorkflows))
+        for (const dep of Object.values(d.data.dependencies.publishedWorkflow))
             pruneWorkflowData(d, dep.workflow_data)
 
-        for (const dep of Object.values(d.data.dependencies.draftWorkflows))
+        for (const dep of Object.values(d.data.dependencies.draftWorkflow))
             pruneWorkflowData(d, dep.data)
     },
     removeUnused: (d) => {
         const used = collectUsedDependencyKeys(d)
 
-        for (const id of Object.keys(d.data.dependencies.publishedWorkflows) as Workflow.Id[])
-            if (!used.has(storeKey("publication", id))) delete d.data.dependencies.publishedWorkflows[id]
+        for (const id of Object.keys(d.data.dependencies.publishedWorkflow) as Workflow.Id[])
+            if (!used.has(storeKey("publishedWorkflow", id))) delete d.data.dependencies.publishedWorkflow[id]
 
-        for (const id of Object.keys(d.data.dependencies.draftWorkflows) as Workflow.Id[])
-            if (!used.has(storeKey("draft", id))) delete d.data.dependencies.draftWorkflows[id]
+        for (const id of Object.keys(d.data.dependencies.draftWorkflow) as Workflow.Id[])
+            if (!used.has(storeKey("draftWorkflow", id))) delete d.data.dependencies.draftWorkflow[id]
     },
 }
 
