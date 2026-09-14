@@ -109,13 +109,13 @@ export class NodeOperations {
             if (!node)
                 throw new Error(`Node ${nodeId} not found`)
 
-            if (d.selectors.node.getShapeDependencyRef(d, nodeId))
+            if (d.selectors.node.dependency.getShapeRef(d, nodeId))
                 throw new Error(`Node ${nodeId} runs a sub-workflow; its ports are the sub-workflow's`)
 
             if (Port.isUnresolvedLike(spec.variant))
                 throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
 
-            if (d.selectors.node.getInputs(d, nodeId).some(i => i.id === spec.id))
+            if (d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
                 throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)
 
             const port = Port.Input.Schema.parse({

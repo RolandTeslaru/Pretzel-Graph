@@ -125,7 +125,8 @@ class PublishedDependencyMethods extends Repository {
                 continue;
 
             updates[row.workflow_id] = {
-                workflowId: row.workflow_id,
+                kind: "publishedWorkflow",
+                id: row.workflow_id,
                 publicationId: row.id,
                 version: row.version,
                 name: row.name,
@@ -168,7 +169,7 @@ class DraftDependencyMethods extends Repository {
     }
 
     @Transactional('user')
-    @ZodReturn(z.record(Workflow.Id, Dependency.Update.Draft))
+    @ZodReturn(z.record(Workflow.Id, Dependency.Update.Draft.Schema))
     public async checkUpdates(
         principal: Principal.User,
         dependencies: Workbench.API.Dependency.Draft.CheckUpdates.Request['dependencies'],
@@ -198,7 +199,8 @@ class DraftDependencyMethods extends Repository {
 
             if (changed) {
                 updates[row.id] = {
-                    workflowId: row.id,
+                    kind: "draftWorkflow",
+                    id: row.id,
                     updated_at: row.updated_at,
                 };
             }

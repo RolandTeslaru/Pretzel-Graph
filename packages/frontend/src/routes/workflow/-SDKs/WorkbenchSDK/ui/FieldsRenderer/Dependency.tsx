@@ -10,20 +10,21 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
 
-const openSelector = (nodeId: Workflow.Node.Id, fieldId: Foundations.Field.Id) => {
+const openSelector = (nodeId: Workflow.Node.Id, field: Foundations.Field.Dependency) => {
     LibrarySDK.dialogs.openDependencySelector({
         onLocalWorkflowSelected: (workflowId, kind) =>
-            WorkbenchSDK.actions.field.dependency.setValue(nodeId, fieldId, { kind, id: workflowId }),
+            WorkbenchSDK.actions.field.dependency.setValue(nodeId, field.id, { kind, id: workflowId }),
         onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.field.dependency.setValue(nodeId, fieldId, { kind: 'listing', id: listingId }),
+            WorkbenchSDK.actions.field.dependency.setValue(nodeId, field.id, { kind: 'listing', id: listingId }),
         onListingPreview: (listingId) =>
             WorkbenchSDK.openWorkflowWindow(listingId),
     }, {
         initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
+        acceptsKind:     field.acceptsKind,
     })
 }
 
-export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>(({ field, nodeId, className }) => {
+export const DependencyField = memo<RendererProps<'Dependency'>>(({ field, nodeId, className }) => {
 
     const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref.Workflow | null>(nodeId, field)
 
@@ -43,7 +44,7 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
                 variant="outline"
                 size="sm"
                 className={cn("h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left", errorClass)}
-                onClick={() => openSelector(nodeId, field.id)}
+                onClick={() => openSelector(nodeId, field)}
             >
                 <span className="flex min-w-0 items-center gap-2 mr-auto">
                     <span
@@ -72,4 +73,4 @@ export const WorkflowDependencyField = memo<RendererProps<'WorkflowDependency'>>
         </div>
     )
 })
-WorkflowDependencyField.displayName = "WorkflowDependencyField"
+DependencyField.displayName = "DependencyField"

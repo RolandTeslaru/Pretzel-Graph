@@ -116,14 +116,14 @@ export const insertPayload = async (
     }));
 };
 
-// The dependency pointers a copied node carries: its shape dependency plus any other WorkflowDependency field.
+// The dependency pointers a copied node carries: its shape dependency plus any other Dependency field.
 const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Workflow.Node.Raw): Dependency.Ref.Workflow[] => {
     const values    = payload.staticValues[node.id] ?? {};
     const blueprint = d.selectors.blueprint.ofNode(d, node);
     const ids       = new Set<Foundations.Field.Id>([Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID]);
 
     for (const field of [...(blueprint?.fields ?? []), ...(node.addedFields ?? [])])
-        if (field.variant === "WorkflowDependency")
+        if (field.variant === "Dependency")
             ids.add(field.id);
 
     return [...ids]
@@ -160,7 +160,7 @@ const adoptDependencies = (
 
     // The nodes were created before their snapshot existed, so their shapes resolve to nothing.
     for (const node of Object.values(d.data.nodes)) {
-        const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id);
+        const shapeDepRef = d.selectors.node.dependency.getShapeRef(d, node.id);
         if (!shapeDepRef) continue;
 
         const registered = shapeDepRef.kind === "draftWorkflow" ? registeredDrafts : registeredPublished;

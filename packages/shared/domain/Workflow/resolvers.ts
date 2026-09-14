@@ -144,7 +144,7 @@ export function toBlueprint(
 // Presets the node's own dependency field to the workflow and hides it; other dependency fields stay as declared.
 function pinDependency(fields: readonly Foundations.Field[], dependencyRef: Dependency.Ref.Workflow): Foundations.Field[] {
     return fields.map(field => {
-        if (field.id !== SHAPE_DEPENDENCY_FIELD_ID || field.variant !== "WorkflowDependency")
+        if (field.id !== SHAPE_DEPENDENCY_FIELD_ID || field.variant !== "Dependency")
             return field;
 
         return { ...field, initialValue: dependencyRef, hidden: true };

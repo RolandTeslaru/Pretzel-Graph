@@ -133,7 +133,7 @@ export namespace API {
                 export type Request = z.infer<typeof Request>
 
                 export const Response = z.object({
-                    updates: z.record(WorkflowD.Id, DependencyD.Update.Draft),
+                    updates: z.record(WorkflowD.Id, DependencyD.Update.Draft.Schema),
                 })
                 export type Response = z.infer<typeof Response>
             }

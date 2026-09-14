@@ -5,7 +5,7 @@ import { SystemError, Workbench, type Foundations, type Workflow } from "@pretze
 import { api } from "@/SDKs/ApiInterceptorSDK";
 
 // Fetches the snapshot a ref points at from its source.
-function loadDependency(ref: Dependency.Ref) {
+export function loadDependency(ref: Dependency.Ref) {
     switch (ref.kind) {
         case "draftWorkflow":
             return Workbench.API.Dependency.Draft.load(api, { dependencyId: ref.id })

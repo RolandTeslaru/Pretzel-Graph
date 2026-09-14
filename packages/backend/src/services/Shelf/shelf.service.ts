@@ -221,7 +221,7 @@ export class ShelfService {
             for (const node of Object.values(data.nodes)) {
                 if (failure.code === "MISSING_BLUEPRINT") {
                     // Dependency nodes may use a cosmetic blueprint id absent from the catalogue by design.
-                    if (Workbench.Document.selectors.node.getShapeDependencyRef({ data }, node.id) || node.blueprintId !== failure.blueprintId)
+                    if (Workbench.Document.selectors.node.dependency.getShapeRef({ data }, node.id) || node.blueprintId !== failure.blueprintId)
                         continue;
 
                     repairs.push({

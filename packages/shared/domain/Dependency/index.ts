@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { PublicationId, WorkflowId } from "../Workflow/ids";
+import { ListingId, PublicationId, WorkflowId } from "../Workflow/ids";
 import * as RefMod from "./ref";
 import { Data } from "../Workflow/data";
 
@@ -46,27 +46,46 @@ export namespace Dependency {
     export type Value = z.infer<typeof Value.Schema>
 
 
-    // What changed at the source since a snapshot was taken.
+    // What changed at the source since a snapshot was taken, named by the ref's kind and id.
     export namespace Update {
 
-        export const Draft = z.object({
-            workflowId: WorkflowId,
-            updated_at: z.coerce.date(),
-        })
-        export type Draft = z.infer<typeof Draft>
+        export namespace Draft {
+            export const Schema = z.object({
+                kind:       z.literal("draftWorkflow"),
+                id:         WorkflowId,
+                updated_at: z.coerce.date(),
+            })
+        }
 
-        export const Publication = z.object({
-            workflowId:    WorkflowId,
-            publicationId: PublicationId,
-            version:       z.number(),
-            name:          z.string(),
-            description:   z.string().nullable(),
-        })
-        export type Publication = z.infer<typeof Publication>
+        export namespace Publication {
+            export const Schema = z.object({
+                kind:          z.literal("publishedWorkflow"),
+                id:            WorkflowId,
+                publicationId: PublicationId,
+                version:       z.number(),
+                name:          z.string(),
+                description:   z.string().nullable(),
+            })
+        }
 
-        export const PublicationMap = z.record(WorkflowId, Publication)
+        export namespace Listing {
+            export const Schema = Publication.Schema.extend({
+                kind: z.literal("listing"),
+                id:   ListingId,
+            })
+        }
+
+        export type Draft       = z.infer<typeof Draft.Schema>
+        export type Publication = z.infer<typeof Publication.Schema>
+        export type Listing     = z.infer<typeof Listing.Schema>
+
+        export const Schema = z.discriminatedUnion("kind", [Draft.Schema, Publication.Schema, Listing.Schema])
+
+        // Updates to the published store: publications and listings.
+        export const PublicationMap = z.record(WorkflowId, z.discriminatedUnion("kind", [Publication.Schema, Listing.Schema]))
         export type PublicationMap = z.infer<typeof PublicationMap>
     }
+    export type Update = z.infer<typeof Update.Schema>
 
 
     export const Schema = z.union([Value.Publication.Schema, Value.Draft.Schema])

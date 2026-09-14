@@ -22,6 +22,10 @@ export namespace Ref {
         })
     }
 
+    // Every kind a ref can point at.
+    export const Kind = z.enum(["draftWorkflow", "publishedWorkflow", "listing"])
+    export type Kind = z.infer<typeof Kind>
+
     export type DraftWorkflow     = z.infer<typeof DraftWorkflow.Schema>
     export type PublishedWorkflow = z.infer<typeof PublishedWorkflow.Schema>
     export type Listing           = z.infer<typeof Listing.Schema>

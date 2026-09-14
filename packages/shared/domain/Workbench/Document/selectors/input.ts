@@ -18,7 +18,7 @@ export const inputSelectors: InputSelectors = {
         const node = d.data.nodes[nodeId]
         if (!node) return null;
 
-        const inputs = nodeSelectors.getInputs(d, nodeId);
+        const inputs = nodeSelectors.ports.getInputs(d, nodeId);
 
         return inputs.find(i => i.id === inputId) ?? null;
     },

@@ -1,4 +1,4 @@
-import type { Dependency } from "@pretzel-graph/shared/domain";
+import type { Dependency as DependencyD } from "@pretzel-graph/shared/domain";
 import { Foundations } from "@pretzel-graph/shared/domain";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -446,15 +446,17 @@ export namespace defineField {
         };
     }
 
-    /** Points a sub-workflow node at one of the workflow's embedded dependency snapshots. */
-    export function WorkflowDependency<T_Id extends string, T_Required extends boolean = false>(
+    /** Points a node at one of the workflow's embedded dependency snapshots, of the kinds it accepts. */
+    export function Dependency<T_Id extends string, T_Required extends boolean = false>(
         id: T_Id, displayName: string, options: {
-        initialValue?: Dependency.Ref.Workflow | null;
-    } & BaseOptions<T_Required> = {},
-    ): T_Return<T_Id, "WorkflowDependency", Field.WorkflowDependency, T_Required> {
+        acceptsKind:   DependencyD.Ref.Kind[];
+        initialValue?: DependencyD.Ref | null;
+    } & BaseOptions<T_Required>,
+    ): T_Return<T_Id, "Dependency", Field.Dependency, T_Required> {
         return {
             ...buildBase(id, displayName, options),
-            variant:      "WorkflowDependency",
+            variant:      "Dependency",
+            acceptsKind:  options.acceptsKind,
             initialValue: options.initialValue ?? null,
         };
     }

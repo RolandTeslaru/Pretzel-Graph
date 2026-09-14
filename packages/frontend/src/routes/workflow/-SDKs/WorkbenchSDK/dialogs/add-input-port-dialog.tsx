@@ -65,7 +65,7 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
         
         const existingIds = new Set<string>(
             [
-                ...state.selectors.node.getInputs(state, nodeId).map(p => p.id) ?? [],
+                ...state.selectors.node.ports.getInputs(state, nodeId).map(p => p.id) ?? [],
                 ...state.selectors.node.get(state, nodeId)?.addedInputs?.map(p => p.id) ?? [],
             ]
         )

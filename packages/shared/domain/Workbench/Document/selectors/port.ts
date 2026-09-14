@@ -19,8 +19,8 @@ export const portSelectors: PortSelectors = {
             const node = d.data.nodes[nodeId];
             let triggerPort;
 
-            const inputs = nodeSelectors.getInputs(d, nodeId);
-            const outputs = nodeSelectors.getOutputs(d, nodeId);
+            const inputs = nodeSelectors.ports.getInputs(d, nodeId);
+            const outputs = nodeSelectors.ports.getOutputs(d, nodeId);
 
             if (inputs.find(port => port.id === portId))
                 triggerPort = inputs.find(port => port.id === portId);
@@ -52,8 +52,8 @@ export const portSelectors: PortSelectors = {
             const node = d.data.nodes[nodeId];
             if (!node) return null;
 
-            const inputs = nodeSelectors.getInputs(d, nodeId);
-            const outputs = nodeSelectors.getOutputs(d, nodeId);
+            const inputs = nodeSelectors.ports.getInputs(d, nodeId);
+            const outputs = nodeSelectors.ports.getOutputs(d, nodeId);
 
             const allPorts = [...inputs, ...outputs];
             const port = allPorts.find(port => port.polymorphicGroupId === polymorphicGroupId);
@@ -66,8 +66,8 @@ export const portSelectors: PortSelectors = {
             const inputEdges = d.cache.inputEdgesByPort[nodeId];
             const outputEdges = d.cache.outputEdgesByPort[nodeId];
 
-            const inputs = nodeSelectors.getInputs(d, nodeId);
-            const outputs = nodeSelectors.getOutputs(d, nodeId);
+            const inputs = nodeSelectors.ports.getInputs(d, nodeId);
+            const outputs = nodeSelectors.ports.getOutputs(d, nodeId);
 
             for (const input of inputs) {
                 if (Port.isPolymorphic(input) && input.polymorphicGroupId === polymorphicGroupId && inputEdges[input.id])

@@ -13,7 +13,7 @@ interface Props {
 
 export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
     const isTool = WorkbenchSDK.useDocument(d => d.selectors.node.isTool(d, hyNode.id))
-    const shapeDepRef = WorkbenchSDK.useDocument(d => d.selectors.node.getShapeDependencyRef(d, hyNode.id))
+    const shapeDepRef = WorkbenchSDK.useDocument(d => d.selectors.node.dependency.getShapeRef(d, hyNode.id))
 
     // Auto-appended to every proxyCompatible blueprint by defineBlueprint.
     const proxyTemplate = WorkbenchSDK.useDocument(d =>

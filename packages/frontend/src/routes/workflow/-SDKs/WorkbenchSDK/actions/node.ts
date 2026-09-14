@@ -70,7 +70,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
             // that dependency, not a static blueprint, so they can't be blindly recreated — skip them.
-            const recreatable = nodes.filter(n => !sdk.selectors.node.getShapeDependencyRef(s, n.id));
+            const recreatable = nodes.filter(n => !sdk.selectors.node.dependency.getShapeRef(s, n.id));
 
             // Hydrate each distinct blueprint once (parallel), so we recreate from fresh blueprints.
             const blueprintIds = [...new Set(recreatable.map(n => n.blueprintId))];
@@ -108,7 +108,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             // A pre-wired node lands with its dependency pointer set; fetch the snapshot if the workflow
             // lacks it. On failure, remove the node — it can't function without its dependency data.
-            const shapeDepRef = sdk.selectors.node.getShapeDependencyRef(sdk.document, nodeId);
+            const shapeDepRef = sdk.selectors.node.dependency.getShapeRef(sdk.document, nodeId);
             if (!shapeDepRef)
                 return;
 

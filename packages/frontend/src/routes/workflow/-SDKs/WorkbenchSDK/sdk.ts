@@ -105,8 +105,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
             return [
                 d.data.nodes[nodeId],
-                d.selectors.node.getConnectedPorts(d, nodeId),
-                d.selectors.node.getShapeDependency(d, nodeId),
+                d.selectors.node.ports.getConnected(d, nodeId),
+                d.selectors.node.dependency.getShapeValue(d, nodeId),
                 d.cache.resolvedShape[nodeId] ?? null,
                 d.selectors.blueprint.forNode(d, nodeId),
             ]

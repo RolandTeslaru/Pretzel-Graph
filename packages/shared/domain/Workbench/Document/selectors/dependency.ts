@@ -3,10 +3,9 @@ import type { Workflow } from "../../../Workflow";
 import type { Document } from "../index";
 
 export interface DependencySelectors {
-    doesNodeHaveUpdate: (document: Document, nodeId: Workflow.Node.Id) => boolean
     publishedWorkflow: {
         get:           (document: Document, workflowId: Workflow.Id) => Dependency.Value.Publication | null
-        getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Dependency.Update.Publication | null
+        getUpdateInfo: (document: Document, workflowId: Workflow.Id) => Dependency.Update.Publication | Dependency.Update.Listing | null
     }
     draftWorkflow: {
         get:           (document: Document, workflowId: Workflow.Id) => Dependency.Value.Draft | null
@@ -15,18 +14,12 @@ export interface DependencySelectors {
     // Reads plain workflow data only, so callers outside the editor can pass `{ data }`.
     getWorkflow: (document: { data: Pick<Workflow.Data, "dependencies"> }, workflowId: Workflow.Id, kind: Dependency.Ref.Workflow["kind"]) => Dependency | null
     hasUpdate: (document: Document, workflowId: Workflow.Id, kind: Dependency.Ref.Workflow["kind"]) => boolean
+    // Every pending update in the document.
+    getUpdates: (document: Document) => Dependency.Update[]
 }
 
 export const dependencySelectors: DependencySelectors = {
-    doesNodeHaveUpdate: (d, nodeId) => {
-        const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, nodeId);
-        if (!shapeDepRef?.id)
-            return false;
-
-        if (shapeDepRef.kind === "draftWorkflow")
-            return shapeDepRef.id in d.dependencyUpdates.draftWorkflow;
-        return shapeDepRef.id in d.dependencyUpdates.publishedWorkflow;
-    },
+    getUpdates: (d) => Object.values(d.dependencyUpdates).flatMap((updates): Dependency.Update[] => Object.values(updates)),
     hasUpdate: (d, workflowId, kind) => {
         if (kind === "draftWorkflow")
             return workflowId in d.dependencyUpdates.draftWorkflow;

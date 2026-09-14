@@ -72,7 +72,8 @@ export class ListingService {
                 continue;
 
             updates[dependency.workflowId] = {
-                workflowId:    dependency.workflowId,
+                kind:          "listing",
+                id:            dependency.workflowId as Listing.Id,
                 publicationId: info.id,
                 version:       info.version,
                 name:          info.name,

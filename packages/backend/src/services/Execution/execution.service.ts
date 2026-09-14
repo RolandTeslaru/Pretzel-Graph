@@ -149,7 +149,7 @@ export class ExecutionService {
             // path-convention import. Its blueprint is the Core.SubWorkflow.Execute container's —
             // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
             // Mirrors the compiler's resolveDependencyNode.
-            const shapeDepRef = Workbench.Document.selectors.node.getShapeDependencyRef({ data: workflowData }, node.id)
+            const shapeDepRef = Workbench.Document.selectors.node.dependency.getShapeRef({ data: workflowData }, node.id)
 
             if (shapeDepRef) {
                 const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);

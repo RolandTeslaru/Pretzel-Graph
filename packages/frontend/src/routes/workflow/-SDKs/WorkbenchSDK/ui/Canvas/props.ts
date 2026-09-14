@@ -277,7 +277,7 @@ export const createCanvasCallbacks = (
                 return;
             }
 
-            const sourceOutputs = WorkbenchSDK.selectors.node.getOutputs(WorkbenchSDK.document, edge.source as Workflow.Node.Id);
+            const sourceOutputs = WorkbenchSDK.selectors.node.ports.getOutputs(WorkbenchSDK.document, edge.source as Workflow.Node.Id);
             const output = sourceOutputs.find(o => o.id === edge.sourceHandle as Foundations.Port.Output.Id)
 
             if (!output) return;

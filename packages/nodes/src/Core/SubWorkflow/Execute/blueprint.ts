@@ -8,7 +8,8 @@ export const Blueprint = defineBlueprint({
     icon: "Graph",
     accent: "utility",
     fields: [
-        defineField.WorkflowDependency(Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID, "Workflow", {
+        defineField.Dependency(Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID, "Workflow", {
+            acceptsKind: ["draftWorkflow", "publishedWorkflow", "listing"],
             required: true,
         }),
     ],

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { Dialog, SearchInput, Tabs } from '@pretzel-graph/standard-ui/foundations'
-import { Library } from '@pretzel-graph/shared/domain'
+import { Library, type Dependency, type Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
@@ -8,23 +8,30 @@ import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
-import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks } from './constants'
+import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks, type LocalWorkflowKind } from './constants'
 import { ListingSelector } from './listing-selector'
 import { openDependencyTypeDialog } from './dependency-type-dialog'
 
 interface Props {
     callbacks: DependencySelectorCallbacks
     initialFolderId?: Library.Folder.Id
+    localKinds: LocalWorkflowKind[]
 }
 
 export interface DependencySelectorOptions {
     /** Folder the local library opens in. Defaults to the root. */
     initialFolderId?: Library.Folder.Id
+    /** Kinds the field accepts; each tab shows only when one of its kinds is accepted. */
+    acceptsKind: Dependency.Ref.Kind[]
 }
 
-export const openDependencySelectorDialog = (callbacks: DependencySelectorCallbacks, options: DependencySelectorOptions = {}) => {
+export const openDependencySelectorDialog = (callbacks: DependencySelectorCallbacks, options: DependencySelectorOptions) => {
+    const localKinds   = options.acceptsKind.filter((kind): kind is LocalWorkflowKind => kind !== "listing")
+    const showLocal    = localKinds.length > 0
+    const showListings = options.acceptsKind.includes("listing")
+
     DialogSDK.actions.push(DEPENDENCY_SELECTOR_DIALOG_ID, (props) => (
-        <Tabs.Root defaultValue={"local"}>
+        <Tabs.Root defaultValue={showLocal ? "local" : "publicListing"}>
             <DialogSDK.SplitTemplate {...props}
                 sidebarRenderer={() => (
                     <>
@@ -37,26 +44,28 @@ export const openDependencySelectorDialog = (callbacks: DependencySelectorCallba
                             Embeds a snapshot of a workflow in this node
                         </p>
 
-                        <Tabs.List size="xs" variant="accent" className='w-full mt-auto'>
-                            <Tabs.Trigger value='local' className='w-1/2'>
-                                Local Library
-                            </Tabs.Trigger>
-                            <Tabs.Trigger value='publicListing' className='w-1/2'>
-                                Public Listings
-                            </Tabs.Trigger>
-                        </Tabs.List>
+                        {showLocal && showListings && (
+                            <Tabs.List size="xs" variant="accent" className='w-full mt-auto'>
+                                <Tabs.Trigger value='local' className='w-1/2'>
+                                    Local Library
+                                </Tabs.Trigger>
+                                <Tabs.Trigger value='publicListing' className='w-1/2'>
+                                    Public Listings
+                                </Tabs.Trigger>
+                            </Tabs.List>
+                        )}
                     </>
                 )}
                 sidebarClassName='w-[260px] shrink-0'
                 contentClassName=' pr-0! pl-1! py-0! gap-0!'
             >
-                <WorkflowSelector callbacks={callbacks} initialFolderId={options.initialFolderId} />
+                <WorkflowSelector callbacks={callbacks} initialFolderId={options.initialFolderId} localKinds={localKinds} />
             </DialogSDK.SplitTemplate>
         </Tabs.Root>
     ))
 }
 
-const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId }) => {
+const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId, localKinds }) => {
     const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
 
     const query = QuerySDK.useQuery(
@@ -67,6 +76,17 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId }) => {
 
     const [treeSearchQuery, setTreeSearchQuery] = useState("");
     const [viewSearchQuery, setViewSearchQuery] = useState("")
+
+    // Asks draft or published only when the field accepts both.
+    const selectLocal = async (workflowId: Workflow.Id) => {
+        if (localKinds.length > 1)
+            return openDependencyTypeDialog(workflowId, callbacks.onLocalWorkflowSelected)
+
+        const success = await callbacks.onLocalWorkflowSelected(workflowId, localKinds[0])
+
+        if (success)
+            DialogSDK.actions.pop(DEPENDENCY_SELECTOR_DIALOG_ID)
+    }
 
 
     return (
@@ -90,7 +110,7 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId }) => {
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={treeSearchQuery}
-                            onWorkflowClick={(workflowId) => openDependencyTypeDialog(workflowId, callbacks.onLocalWorkflowSelected)}
+                            onWorkflowClick={selectLocal}
                             className='pt-[70px]'
                             scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                         />
@@ -105,7 +125,7 @@ const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId }) => {
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={viewSearchQuery}
-                            onWorkflowClick={(workflowId) => openDependencyTypeDialog(workflowId, callbacks.onLocalWorkflowSelected)}
+                            onWorkflowClick={selectLocal}
                             className='pt-[50px] h-full '
                             scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                         />

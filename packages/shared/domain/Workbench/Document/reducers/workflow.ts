@@ -62,8 +62,8 @@ export const workflowReducers: WorkflowReducers = {
     // migrated (v1) nodes whose resolutions weren't persisted. Requires blueprints hydrated.
     reconstructPolymorphism: (d) => {
         for (const edge of Object.values(d.cache.edges)) {
-            const sourcePort = d.selectors.node.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
-            const targetPort = d.selectors.node.getInputs(d, edge.target.nodeId).find(i => i.id === edge.target.portId);
+            const sourcePort = d.selectors.node.ports.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
+            const targetPort = d.selectors.node.ports.getInputs(d, edge.target.nodeId).find(i => i.id === edge.target.portId);
             if (!sourcePort || !targetPort) continue;
 
             if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))

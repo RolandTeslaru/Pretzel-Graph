@@ -25,7 +25,7 @@ function resolveFields(
 }
 
 export function resolveShape(data: Workflow.Data, node: Workflow.Node.Raw, blueprint: Blueprint): Workflow.Cache.ResolvedShape {
-    const shapeDepData = documentSelectors.node.getShapeDependencyData({ data }, node.id);
+    const shapeDepData = documentSelectors.node.dependency.getShapeData({ data }, node.id);
 
     return {
         fields:      resolveFields(blueprint.fields, node, shapeDepData),

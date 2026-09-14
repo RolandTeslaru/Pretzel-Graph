@@ -25,11 +25,11 @@ export const nodeValueReducers: NodeValueReducers = {
 
         const initialById = new Map<string, any>();
         for (const field of d.selectors.node.getFields(d, nodeId)) {
-            if (field.variant === "UniqueString" || field.variant === "WorkflowDependency") 
+            if (field.variant === "UniqueString" || field.variant === "Dependency") 
                 continue;
             if ("initialValue" in field) initialById.set(field.id, field.initialValue);
         }
-        for (const input of d.selectors.node.getInputs(d, nodeId))
+        for (const input of d.selectors.node.ports.getInputs(d, nodeId))
             if ("initialValue" in input && input.initialValue !== undefined)
                 initialById.set(input.id, input.initialValue);
 
@@ -70,7 +70,7 @@ export const nodeValueReducers: NodeValueReducers = {
                 next[field.id] = overrides[field.id];
             else if (!(field.id in next) && field.variant === "UniqueString")
                 next[field.id] = generateUniqueString(field);
-            else if (!(field.id in next) && field.variant === "WorkflowDependency" && field.initialValue)
+            else if (!(field.id in next) && field.variant === "Dependency" && field.initialValue)
                 next[field.id] = field.initialValue;
         }
 

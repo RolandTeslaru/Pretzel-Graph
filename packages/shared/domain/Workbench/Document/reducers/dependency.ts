@@ -16,7 +16,7 @@ function storeKey(kind: Dependency.Ref.Workflow["kind"], workflowId: Workflow.Id
 function collectUsedDependencyKeys(d: Document): Set<string> {
     const used = new Set<string>()
     Object.values(d.data.nodes).forEach(node => {
-        for (const ref of d.selectors.node.getWorkflowDependencyRefs(d, node.id))
+        for (const ref of d.selectors.node.dependency.getRefs(d, node.id))
             if (ref.id)
                 used.add(storeKey(ref.kind, ref.id))
     })
@@ -52,8 +52,10 @@ function pruneWorkflowData(d: Document, data: Workflow.Data) {
         const initialById = new Map<string, unknown>()
         const fields = node.addedFields?.length ? [...blueprint.fields, ...node.addedFields] : blueprint.fields
         for (const field of fields) {
-            if (field.variant === "UniqueString" || field.variant === "WorkflowDependency") continue
-            if ("initialValue" in field) initialById.set(field.id, field.initialValue)
+            if (field.variant === "UniqueString" || field.variant === "Dependency") 
+                continue
+            if ("initialValue" in field) 
+                initialById.set(field.id, field.initialValue)
         }
         for (const input of Workflow.Node.resolveInputs(blueprint.inputs, node, null))
             if ("initialValue" in input && input.initialValue !== undefined)
@@ -101,7 +103,7 @@ export const dependencyReducers: DependencyReducers = {
         // Ports / ui / fields all derive from the registered record on read, so there's no node to
         // recreate — just re-validate the nodes that reference it against their new shape.
         for (const node of Object.values(d.data.nodes)) {
-            const shapeDepRef = d.selectors.node.getShapeDependencyRef(d, node.id)
+            const shapeDepRef = d.selectors.node.dependency.getShapeRef(d, node.id)
 
             if (shapeDepRef && storeKey(shapeDepRef.kind, shapeDepRef.id) === storeKey(kind, workflowId)) {
                 d.reducers.cache.resolvedShape.recreate(d, node.id)

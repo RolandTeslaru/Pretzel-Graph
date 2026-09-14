@@ -14,7 +14,7 @@ export type NodeConstructor = {
     ): RuntimeNode<any, any>;
 }
 
-const documentSelectors = Workbench.Document.selectors
+const nodeSelectors = Workbench.Document.selectors.node
 
 @singleton()
 class CatalogueServiceImpl {
@@ -126,7 +126,7 @@ class CatalogueServiceImpl {
     // Dependency nodes cache the SubWorkflow Execute blueprint under their cosmetic id.
     public async warmBlueprintCache(wfData: Workflow.Data): Promise<void> {
         for (const wfNode of Object.values(wfData.nodes)) {
-            if (documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)) {
+            if (nodeSelectors.dependency.getShapeRef({ data: wfData }, wfNode.id)) {
                 const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID);
 
                 if (dummyBlueprint)
@@ -161,7 +161,7 @@ class CatalogueServiceImpl {
     }
 
     private getNodeShapeDependency(wfNode: Workflow.Node.Raw, wfData: Workflow.Data){
-        const shapeDepRef = documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id);
+        const shapeDepRef = nodeSelectors.dependency.getShapeRef({ data: wfData }, wfNode.id);
 
         if(!shapeDepRef)
             return null;
@@ -204,7 +204,7 @@ class CatalogueServiceImpl {
         const dummyBlueprint = await this.loadBaseBlueprint(SUBWORKFLOW_EXECUTE_BLUEPRINT_ID) as Blueprint;
 
         if (!RuntimeNode || !dummyBlueprint)
-            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${documentSelectors.node.getShapeDependencyRef({ data: wfData }, wfNode.id)?.id}. Core.SubWorkflow.Execute node not found in the catalogue`)
+            throw new Error(`Could not resolve node ${wfNode.id} with dependency ${nodeSelectors.dependency.getShapeRef({ data: wfData }, wfNode.id)?.id}. Core.SubWorkflow.Execute node not found in the catalogue`)
         
         return { RuntimeNode, blueprint: dummyBlueprint };
     }

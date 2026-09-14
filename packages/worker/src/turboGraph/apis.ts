@@ -94,7 +94,7 @@ export function createExecutionAPIs(
                         ctxRef.current.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
-        getNodeDependency: (nodeId) => Workbench.Document.selectors.node.getShapeDependency({ data: ctxRef.current.workflowData }, nodeId),
+        getNodeDependency: (nodeId) => Workbench.Document.selectors.node.dependency.getShapeValue({ data: ctxRef.current.workflowData }, nodeId),
     } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
 
