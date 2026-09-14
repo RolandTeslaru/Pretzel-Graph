@@ -26,5 +26,8 @@ export type PublicationId = z.infer<typeof PublicationId>;
 export const FolderId = z.uuid().brand("FolderId");
 export type FolderId = z.infer<typeof FolderId>;
 
+export const SkillId = z.uuid().brand("SkillId");
+export type SkillId = z.infer<typeof SkillId>;
+
 // Reserved field id of the workflow dependency that shapes a node and decides what it runs.
 export const SHAPE_DEPENDENCY_FIELD_ID = "__shape_dependency__" as Field.Id;
