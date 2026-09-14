@@ -93,7 +93,7 @@ export function WorkflowContextMenu({ workflow, onOpen, children }: Props) {
 }
 
 function openMoveWorkflow(workflow: Library.WorkflowMeta) {
-    LibrarySDK.dialogs.openResourceSelector({
+    LibrarySDK.dialogs.openLibrarySelector({
         accept: 'folder',
         onSelect: async ({ id }) => {
             if (id === workflow.folder_id) return

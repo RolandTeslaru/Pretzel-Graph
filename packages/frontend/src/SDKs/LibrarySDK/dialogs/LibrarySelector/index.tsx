@@ -10,50 +10,50 @@ import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
-export const RESOURCE_SELECTOR_DIALOG_ID = 'resource-selector'
+export const LIBRARY_SELECTOR_DIALOG_ID = 'library-selector'
 
-export namespace ResourceSelector {
+export namespace LibrarySelector {
     export type Accept = 'workflow' | 'folder' | 'any'
 
-    export type WorkflowResource = { type: 'workflow'; id: Workflow.Id }
-    export type FolderResource = { type: 'folder'; id: Library.Folder.Id }
-    export type Resource = WorkflowResource | FolderResource
+    export type WorkflowItem = { type: 'workflow'; id: Workflow.Id }
+    export type FolderItem = { type: 'folder'; id: Library.Folder.Id }
+    export type Item = WorkflowItem | FolderItem
 
-    export type ResourceFor<A extends Accept> =
-        A extends 'workflow' ? WorkflowResource :
-        A extends 'folder' ? FolderResource :
-        Resource
+    export type ItemFor<A extends Accept> =
+        A extends 'workflow' ? WorkflowItem :
+        A extends 'folder' ? FolderItem :
+        Item
 
     export interface Options<A extends Accept> {
         accept: A
         /** Folder the browser opens in. Defaults to the library root. */
         initialFolderId?: Library.Folder.Id
-        onSelect: (resource: ResourceFor<A>) => void
+        onSelect: (item: ItemFor<A>) => void
     }
 }
 
-const TITLES: Record<ResourceSelector.Accept, string> = {
+const TITLES: Record<LibrarySelector.Accept, string> = {
     workflow: 'Select a Workflow',
     folder: 'Select a Folder',
-    any: 'Select a Resource',
+    any: 'Select an Item',
 }
 
-export function openResourceSelector<A extends ResourceSelector.Accept>(options: ResourceSelector.Options<A>) {
-    const onSelect = options.onSelect as (resource: ResourceSelector.Resource) => void
+export function openLibrarySelector<A extends LibrarySelector.Accept>(options: LibrarySelector.Options<A>) {
+    const onSelect = options.onSelect as (item: LibrarySelector.Item) => void
 
-    DialogSDK.actions.push(RESOURCE_SELECTOR_DIALOG_ID, (props) => (
-        <ResourceSelectorDialog dialogProps={props} accept={options.accept} initialFolderId={options.initialFolderId} onSelect={onSelect} />
+    DialogSDK.actions.push(LIBRARY_SELECTOR_DIALOG_ID, (props) => (
+        <LibrarySelectorDialog dialogProps={props} accept={options.accept} initialFolderId={options.initialFolderId} onSelect={onSelect} />
     ))
 }
 
 interface Props {
     dialogProps: DialogSDK.TemplateProps
-    accept: ResourceSelector.Accept
+    accept: LibrarySelector.Accept
     initialFolderId?: Library.Folder.Id
-    onSelect: (resource: ResourceSelector.Resource) => void
+    onSelect: (item: LibrarySelector.Item) => void
 }
 
-const ResourceSelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect }: Props) => {
+const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect }: Props) => {
     const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
@@ -70,9 +70,9 @@ const ResourceSelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect
         { staleTime: 60_000 },
     )
 
-    const commit = (resource: ResourceSelector.Resource) => {
-        onSelect(resource)
-        DialogSDK.actions.pop(RESOURCE_SELECTOR_DIALOG_ID)
+    const commit = (item: LibrarySelector.Item) => {
+        onSelect(item)
+        DialogSDK.actions.pop(LIBRARY_SELECTOR_DIALOG_ID)
     }
 
     const handleWorkflowClick = acceptsWorkflows

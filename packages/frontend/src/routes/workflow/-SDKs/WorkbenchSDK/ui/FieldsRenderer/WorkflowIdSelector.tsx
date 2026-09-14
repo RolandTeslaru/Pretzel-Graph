@@ -52,7 +52,7 @@ export const WorkflowIdSelectorField = memo<RendererProps<'WorkflowIdSelector'>>
                     variant="outline"
                     size="sm"
                     className={cn('h-auto bg-card/80! min-h-7 w-full px-2 py-1 text-left', errorClass)}
-                    onClick={() => LibrarySDK.dialogs.openResourceSelector({
+                    onClick={() => LibrarySDK.dialogs.openLibrarySelector({
                         accept: 'workflow',
                         initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
                         onSelect: (r) => setValue(r.id),

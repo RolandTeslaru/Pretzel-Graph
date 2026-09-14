@@ -97,7 +97,7 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
 }
 
 function openMoveFolder(folder: Library.Folder) {
-    LibrarySDK.dialogs.openResourceSelector({
+    LibrarySDK.dialogs.openLibrarySelector({
         accept: 'folder',
         onSelect: async ({ id }) => {
             if (id === folder.parent_folder_id) return

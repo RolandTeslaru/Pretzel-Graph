@@ -52,7 +52,7 @@ const CreateSubWorkflowContent = ({ dialogId, nodeIds, edgeIds }: Props) => {
 
     // The name is taken here; the folder is picked in the library browser on top of this dialog.
     const onSubmit = (values: NameValues) => {
-        LibrarySDK.dialogs.openResourceSelector({
+        LibrarySDK.dialogs.openLibrarySelector({
             accept: 'folder',
             initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
             onSelect: (folder) => {

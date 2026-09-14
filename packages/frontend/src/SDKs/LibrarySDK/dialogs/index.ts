@@ -2,7 +2,7 @@ import { openCreateFolderDialog, openEditFolderDialog, openDeleteFolderDialog } 
 import { openCreateWorkflowDialog, openEditWorkflowDialog, openDeleteWorkflowDialog } from "./workflow-dialogs"
 import { openListPublicWorkflowDialog, openUnlistPublicWorkflowDialog, openListingManagerDialog } from "./listing-dialogs"
 import { openDependencySelectorDialog } from './DependencySelector'
-import { openResourceSelector } from './ResourceSelector'
+import { openLibrarySelector } from './LibrarySelector'
 
 export function _createLibraryDialogs_() {
     return {
@@ -16,7 +16,7 @@ export function _createLibraryDialogs_() {
         openUnlistPublicWorkflow: openUnlistPublicWorkflowDialog,
         openListingManager:       openListingManagerDialog,
         openDependencySelector:   openDependencySelectorDialog,
-        openResourceSelector:     openResourceSelector,
+        openLibrarySelector:     openLibrarySelector,
     }
 }
 
