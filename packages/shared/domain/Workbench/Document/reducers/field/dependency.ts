@@ -8,7 +8,7 @@ export const fieldDependencyReducers: FieldDependencyReducers = {
     // Embeds the snapshot and points the field at it; the shape dependency field also reshapes the node.
     setValue: (d, nodeId, fieldId, ref, value) => {
         d.reducers.field.setValue(d, nodeId, fieldId, ref)
-        d.reducers.dependency.register(d, ref.kind, value)
+        d.reducers.dependency.register(d, ref, value)
 
         if (fieldId === Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID)
             d.reducers.cache.resolvedShape.recreate(d, nodeId)

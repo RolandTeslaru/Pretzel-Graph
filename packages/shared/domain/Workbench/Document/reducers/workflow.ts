@@ -1,7 +1,6 @@
 import { Foundations } from "../../../Foundations";
 import { Validation } from "../../../Validation";
 import { Workflow } from "../../../Workflow";
-import { Port } from "../../../Foundations/Port";
 import type { Document } from "../index";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "../../../Algorithms";
@@ -57,27 +56,6 @@ export const workflowReducers: WorkflowReducers = {
 
         d.reducers.workflow.validate(d);
     },
-    // Derive polymorphicResolutions from the existing edges — replays the same resolution the
-    // edge reducer does on connect. No-op for already-resolved (v2) nodes; reconstructs it for
-    // migrated (v1) nodes whose resolutions weren't persisted. Requires blueprints hydrated.
-    reconstructPolymorphism: (d) => {
-        for (const edge of Object.values(d.cache.edges)) {
-            const sourcePort = d.selectors.node.ports.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
-            const targetPort = d.selectors.node.ports.getInputs(d, edge.target.nodeId).find(i => i.id === edge.target.portId);
-            if (!sourcePort || !targetPort) continue;
-
-            if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-                d.reducers
-                  .node
-                  .polymorphism
-                  .resolveGroup(d, edge.target.nodeId, targetPort, sourcePort.variant);
-            else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-                d.reducers
-                 .node
-                 .polymorphism
-                 .resolveGroup(d, edge.source.nodeId, sourcePort, targetPort.variant);
-        }
-    },
     close: (d) => {
         d.workflowId = '' as Workflow.Id;
         d.data = cloneDeep(Workflow.INITIAL.data);
@@ -113,5 +91,4 @@ type WorkflowReducers = {
     setGlobalFields: (document: Document, fields: Foundations.Field[]) => void
 
     recomputeAllCycles: (document: Document) => void
-    reconstructPolymorphism: (document: Document) => void
 }

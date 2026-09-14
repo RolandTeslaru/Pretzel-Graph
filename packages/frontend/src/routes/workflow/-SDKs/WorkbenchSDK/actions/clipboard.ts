@@ -1,5 +1,4 @@
-import type { Dependency } from "@pretzel-graph/shared/domain";
-import { Workflow, type Foundations } from "@pretzel-graph/shared/domain";
+import { Dependency, Workflow, type Foundations } from "@pretzel-graph/shared/domain";
 import { WorkbenchSDK } from "../sdk";
 import { Document } from "@pretzel-graph/shared/domain/Workbench/Document";
 import { ShelfSDK } from "../../ShelfSDK/sdk";
@@ -138,33 +137,24 @@ const adoptDependencies = (
     payload: ClipboardPayload,
     dependencies: Workflow.Data["dependencies"],
 ): void => {
-    const referenced = new Set(
-        payload.nodes.flatMap(node => payloadDependencyRefs(d, payload, node).map(ref => ref.id))
-    );
-    if (referenced.size === 0) return;
+    const refs       = payload.nodes.flatMap(node => payloadDependencyRefs(d, payload, node));
+    const registered = new Set<Dependency.Id>();
 
-    const registeredPublished = new Set<string>();
-    const registeredDrafts    = new Set<string>();
+    for (const ref of refs) {
+        const id    = Dependency.createId(ref);
+        const value = dependencies[id];
 
-    for (const dependency of Object.values(dependencies.publishedWorkflow))
-        if (referenced.has(dependency.workflow_id)) {
-            reducers.dependency.register(d, "publishedWorkflow", dependency);
-            registeredPublished.add(dependency.workflow_id);
-        }
+        if (!value || registered.has(id))
+            continue;
 
-    for (const dependency of Object.values(dependencies.draftWorkflow))
-        if (referenced.has(dependency.id)) {
-            reducers.dependency.register(d, "draftWorkflow", dependency);
-            registeredDrafts.add(dependency.id);
-        }
+        reducers.dependency.register(d, ref, value);
+        registered.add(id);
+    }
 
     // The nodes were created before their snapshot existed, so their shapes resolve to nothing.
     for (const node of Object.values(d.data.nodes)) {
         const shapeDepRef = d.selectors.node.dependency.getShapeRef(d, node.id);
-        if (!shapeDepRef) continue;
-
-        const registered = shapeDepRef.kind === "draftWorkflow" ? registeredDrafts : registeredPublished;
-        if (!registered.has(shapeDepRef.id)) continue;
+        if (!shapeDepRef || !registered.has(Dependency.createId(shapeDepRef))) continue;
 
         reducers.cache.resolvedShape.recreate(d, node.id);
         reducers.node.validate(d, node.id);

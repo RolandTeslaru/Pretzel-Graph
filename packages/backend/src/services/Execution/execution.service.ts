@@ -551,9 +551,8 @@ function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Cr
     for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
         for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
             ids.add(instanceId);
-    for (const dep of Object.values(workflowData.dependencies.publishedWorkflow))
+        
+    for (const dep of Object.values(workflowData.dependencies))
         collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
-    for (const dep of Object.values(workflowData.dependencies.draftWorkflow))
-        collectCredentialInstanceIds(dep.data).forEach(id => ids.add(id));
     return ids;
 }

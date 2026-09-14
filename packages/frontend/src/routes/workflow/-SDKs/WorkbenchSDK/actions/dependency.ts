@@ -3,15 +3,26 @@ import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
 import { toast } from "sonner"
-import { loadDependency } from "./field/dependency"
+
+// Fetches a resource's current state, shaped as the snapshot a dependency embeds.
+export function loadResource(ref: Dependency.Ref): Promise<{ dependency: Dependency.Value }> {
+    switch (ref.kind) {
+        case "draftWorkflow":
+            return Workbench.API.Dependency.Draft.load(api, { dependencyId: ref.id })
+
+        case "publishedWorkflow":
+        case "listing":
+            return Workbench.API.Dependency.Published.load(api, { dependencyId: ref.id })
+    }
+}
 
 export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setDocument = sdk.setDocument
     const reducers = sdk.reducers
 
     const applyUpdate = async (update: Dependency.Update): Promise<boolean> => {
-        const promise = createToastPromise<{ dependency: Dependency }>(
-            loadDependency(update),
+        const promise = createToastPromise<{ dependency: Dependency.Value }>(
+            loadResource(update),
             {
                 loading: "Updating dependency…",
                 success: "Dependency updated",
@@ -23,7 +34,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             const { dependency } = await promise
 
             setDocument(withCyclesRecompute(d => {
-                reducers.dependency.applyUpdate(d, update.kind, dependency)
+                reducers.dependency.applyUpdate(d, update, dependency)
             }))
         } catch (err) {
             console.error("Failed to apply dependency update", err)
@@ -33,24 +44,23 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     }
 
     const actions = {
-        registerDependency: withCommit((dependency) => {
+        registerDependency: withCommit((ref, value) => {
             setDocument(d => {
-                d.data.dependencies.publishedWorkflow[dependency.workflow_id] = dependency
+                reducers.dependency.register(d, ref, value)
             })
         }),
         checkUpdates: async () => {
-            const publishedWorkflows = sdk.document.data.dependencies.publishedWorkflow
-            const draftWorkflows     = sdk.document.data.dependencies.draftWorkflow
+            const values = Object.values(sdk.document.data.dependencies)
 
-            const publishedEntries = Object.values(publishedWorkflows).map(dep => ({
-                workflowId:    dep.workflow_id as Workflow.Id,
-                publicationId: dep.id,
-            }))
+            const publishedEntries = values.flatMap(value => value.kind === "draftWorkflow" ? [] : [{
+                workflowId:    value.workflow_id,
+                publicationId: value.id,
+            }])
 
-            const draftEntries = Object.values(draftWorkflows).map(dep => ({
-                workflowId: dep.id,
-                updated_at: dep.updated_at,
-            }))
+            const draftEntries = values.flatMap(value => value.kind === "draftWorkflow" ? [{
+                workflowId: value.id,
+                updated_at: value.updated_at,
+            }] : [])
 
             const [publishedResult, draftResult] = await Promise.allSettled([
                 publishedEntries.length > 0
@@ -90,7 +100,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export type DependencyActions = {
-    registerDependency: (dependency: Dependency.Value.Publication) => void
+    registerDependency: (ref: Dependency.Ref, value: Dependency.Value) => void
     checkUpdates:       () => Promise<void>
     update:             (update: Dependency.Update) => Promise<boolean>
     updateAll:          () => Promise<boolean>

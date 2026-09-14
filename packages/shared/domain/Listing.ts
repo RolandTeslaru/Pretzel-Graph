@@ -35,6 +35,7 @@ export namespace Listing {
 
         return Dependency.Value.Publication.Schema.parse({
             ...meta,
+            kind:          "listing",
             workflow_id:   listing.id,
             display_name:  meta.workflow_meta.display_name,
             icon:          meta.workflow_meta.icon,

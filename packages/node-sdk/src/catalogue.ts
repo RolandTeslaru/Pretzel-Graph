@@ -1,5 +1,5 @@
 import { container, singleton } from "tsyringe";
-import { Foundations, Workbench, Workflow } from "@pretzel-graph/shared/domain";
+import { Dependency, Foundations, Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { RuntimeNode } from "./node";
@@ -138,11 +138,8 @@ class CatalogueServiceImpl {
             await this.resolveBlueprint(wfNode.blueprintId, wfData.staticValues[wfNode.id] ?? {});
         }
 
-        for (const dependency of Object.values(wfData.dependencies?.publishedWorkflow ?? {}))
+        for (const dependency of Object.values(wfData.dependencies ?? {}))
             await this.warmBlueprintCache(dependency.workflow_data);
-
-        for (const dependency of Object.values(wfData.dependencies?.draftWorkflow ?? {}))
-            await this.warmBlueprintCache(dependency.data);
     }
 
     // Sync cache read for the hot path — warmBlueprintCache runs before compilation, so
@@ -166,16 +163,12 @@ class CatalogueServiceImpl {
         if(!shapeDepRef)
             return null;
 
-        const { id: workflowId, kind } = shapeDepRef;
+        const dependency = wfData.dependencies?.[Dependency.createId(shapeDepRef)];
 
-        const store = kind === "draftWorkflow"
-            ? wfData.dependencies?.draftWorkflow
-            : wfData.dependencies?.publishedWorkflow;
+        if(!dependency)
+            throw new Error(`Node ${wfNode.id} has a dependency (${shapeDepRef.id}) but its not in the store`)
 
-        if(!store?.[workflowId])
-            throw new Error(`Node ${wfNode.id} has a dependency (${workflowId}) but its not in the store`)
-
-        return store[workflowId]
+        return dependency
     }
 
     public async resolveWorkflowNode(

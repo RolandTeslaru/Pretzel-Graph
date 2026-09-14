@@ -176,10 +176,9 @@ export interface SubWorkflowAPI {
     }
 }
 
-// Reads another workflow's published or draft dependency snapshot (used to resolve sub-workflows).
+// Reads an embedded dependency snapshot by its ref (used to resolve sub-workflows).
 export interface DependencyAPI {
-    getPublished: (workflowId: Workflow.Id) => Dependency.Value.Publication,
-    getDraft:     (workflowId: Workflow.Id) => Dependency.Value.Draft,
+    get: (ref: Dependency.Ref) => Dependency.Value,
 }
 
 /**

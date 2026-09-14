@@ -86,7 +86,7 @@ export namespace Workflow {
             staticValues:          {},
             fieldExpressions:      {},
             credentialInstanceIds: {},
-            dependencies:          { publishedWorkflow: {}, draftWorkflow: {}, listing: {} },
+            dependencies:          {},
             ui: {
                 layout:         {},
                 viewport:       { x: 0, y: 0, zoom: 1 },

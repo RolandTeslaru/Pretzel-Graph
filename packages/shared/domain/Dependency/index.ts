@@ -4,8 +4,13 @@ import * as RefMod from "./ref";
 import { Data } from "../Workflow/data";
 
 export namespace Dependency {
-
+    
     export import Ref = RefMod.Ref
+
+    export const Id = z.string().brand("Dependency.Id")
+    export type Id = z.infer<typeof Dependency.Id>
+
+    export const createId = (ref: Ref) => `${ref.kind}:${ref.id}` as Dependency.Id
 
 
     // The snapshots a depending workflow embeds.
@@ -14,18 +19,20 @@ export namespace Dependency {
         // A draft workflow: its display fields and graph.
         export namespace Draft {
             export const Schema = z.object({
+                kind:         z.literal("draftWorkflow"),
                 id:           WorkflowId,
                 display_name: z.string(),
                 icon:         z.string().nullable().optional(),
                 accent:       z.string().nullable().optional(),
                 updated_at:   z.coerce.date(),
-                get data() { return Data.Schema },
+                get workflow_data() { return Data.Schema },
             })
         }
 
-        // A published workflow: the publication, the workflow's display fields and graph.
+        // A published workflow or listing: the publication, the workflow's display fields and graph.
         export namespace Publication {
             export const Schema = z.object({
+                kind:         z.enum(["publishedWorkflow", "listing"]),
                 id:           PublicationId,
                 workflow_id:  WorkflowId,
                 version:      z.number(),

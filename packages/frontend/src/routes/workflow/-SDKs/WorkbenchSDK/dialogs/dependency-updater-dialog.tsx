@@ -92,7 +92,7 @@ const UpdateRow = ({ update }: { update: Dependency.Update }) => {
     const [isUpdating, setIsUpdating] = useState(false)
 
     const [dependency, isPending] = WorkbenchSDK.useDocument(d => [
-        d.selectors.dependency.getWorkflow(d, update.id, update.kind),
+        d.selectors.dependency.get(d, update),
         d.selectors.dependency.hasUpdate(d, update.id, update.kind),
     ])
 

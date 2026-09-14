@@ -49,9 +49,7 @@ export function migrateWorkflowDataToLatest(raw: any): any {
 
     liftAddedFieldExpressions(data);
     renameGlobalFields(data);
-    renameDependencyStores(data);
-    fillDependencyStores(data);
-    reshapeWorkflowSnapshots(data);
+    foldDependencyStores(data);
     reshapeRefs(data);
 
     if (from < 4)
@@ -81,63 +79,64 @@ function renameGlobalFields(data: any): void {
     }
 }
 
-// v6: dependency stores are named after their ref kind, folding in the `published`/`draft` and `publishedWorkflows`/`draftWorkflows` names; feature-detected so it is idempotent.
-function renameDependencyStores(data: any): void {
-    const dependencies = data.dependencies;
-    if (!dependencies || typeof dependencies !== "object")
-        return;
+// Every earlier per-kind store name, by the kind of snapshot it held.
+const LEGACY_DEPENDENCY_STORES: Record<string, string> = {
+    draft:              "draftWorkflow",
+    draftWorkflows:     "draftWorkflow",
+    draftWorkflow:      "draftWorkflow",
+    published:          "publishedWorkflow",
+    publishedWorkflows: "publishedWorkflow",
+    publishedWorkflow:  "publishedWorkflow",
+    listing:            "listing",
+};
 
-    const { published, draft, publishedWorkflows, draftWorkflows, ...rest } = dependencies;
+// v6: snapshots live in one store keyed by `kind:id` and carry their kind; the per-kind stores are folded in. Feature-detected so it is idempotent.
+function foldDependencyStores(data: any): void {
+    const dependencies = data.dependencies && typeof data.dependencies === "object" ? data.dependencies : {};
+    const store: Record<string, any> = {};
 
-    if (!published && !draft && !publishedWorkflows && !draftWorkflows)
-        return;
+    for (const [key, entry] of Object.entries<any>(dependencies)) {
+        const legacyKind = LEGACY_DEPENDENCY_STORES[key];
 
-    data.dependencies = {
-        ...rest,
-        publishedWorkflow: rest.publishedWorkflow ?? publishedWorkflows ?? published ?? {},
-        draftWorkflow:     rest.draftWorkflow ?? draftWorkflows ?? draft ?? {},
-    };
-}
-
-// Every dependency store is present, including on blobs saved before the store existed.
-function fillDependencyStores(data: any): void {
-    data.dependencies = {
-        publishedWorkflow: {},
-        draftWorkflow:     {},
-        listing:           {},
-        ...data.dependencies,
-    };
-}
-
-// v5: a draft snapshot uses the workflow row's field names and a published one the publication row's; feature-detected so it is idempotent.
-function reshapeWorkflowSnapshots(data: any): void {
-    const draftWorkflow     = { ...data.dependencies.draftWorkflow };
-    const publishedWorkflow = { ...data.dependencies.publishedWorkflow };
-
-    for (const [id, snapshot] of Object.entries<any>(draftWorkflow)) {
-        if (!snapshot || !("workflow_data" in snapshot))
+        if (!legacyKind) {
+            store[key] = reshapeSnapshot(entry?.kind ?? key.split(":")[0], entry);
             continue;
+        }
 
-        draftWorkflow[id] = {
-            id:           snapshot.workflow_id,
-            display_name: snapshot.display_name,
-            icon:         snapshot.icon,
-            accent:       snapshot.accent,
-            updated_at:   snapshot.workflow_updated_at,
-            data:         snapshot.workflow_data,
+        for (const [id, snapshot] of Object.entries<any>(entry ?? {})) {
+            const kind = legacyKind === "publishedWorkflow" && isListingId(id) ? "listing" : legacyKind;
+
+            store[`${kind}:${id}`] = reshapeSnapshot(kind, snapshot);
+        }
+    }
+
+    data.dependencies = store;
+}
+
+// v5: a draft snapshot uses the workflow row's field names; v6: every workflow snapshot keeps its graph in `workflow_data`. Idempotent.
+function reshapeSnapshot(kind: string, snapshot: any): any {
+    if (!snapshot || typeof snapshot !== "object")
+        return snapshot;
+
+    if (kind === "draftWorkflow" && "workflow_updated_at" in snapshot)
+        return {
+            kind,
+            id:            snapshot.workflow_id,
+            display_name:  snapshot.display_name,
+            icon:          snapshot.icon,
+            accent:        snapshot.accent,
+            updated_at:    snapshot.workflow_updated_at,
+            workflow_data: snapshot.workflow_data,
         };
-    }
 
-    for (const [id, snapshot] of Object.entries<any>(publishedWorkflow)) {
-        if (!snapshot || !("publication_name" in snapshot))
-            continue;
+    const { publication_name, data, ...rest } = snapshot;
 
-        const { publication_name, ...rest } = snapshot;
-
-        publishedWorkflow[id] = { ...rest, name: publication_name };
-    }
-
-    data.dependencies = { ...data.dependencies, draftWorkflow, publishedWorkflow };
+    return {
+        ...rest,
+        kind,
+        ...(publication_name !== undefined ? { name: publication_name } : {}),
+        ...(data !== undefined ? { workflow_data: data } : {}),
+    };
 }
 
 // Every earlier ref kind, by its current name.

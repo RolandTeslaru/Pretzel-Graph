@@ -62,10 +62,7 @@ export function createWorkflowActions(sdk: WorkbenchSDKImpl) {
                     })
                 });
 
-                // All workflows are migrated (slim nodes, id-array edges, slim deps), so the
-                // one-time normalization passes (reconstructPolymorphism / pruneDefault* /
-                // dependency.pruneDefaults) are no-ops and were removed. `open` may still prune
-                // dangling edges, so persist only when it actually changed something.
+                // `open` may prune dangling edges; persist only when it changed something.
                 if (sdk.document.isDirty)
                     await sdk.actions.commit();
 

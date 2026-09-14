@@ -87,6 +87,7 @@ class PublishedDependencyMethods extends Repository {
 
         return {
             ...publication,
+            kind:         "publishedWorkflow",
             display_name: publication.workflow_meta.display_name,
             icon:         publication.workflow_meta.icon,
             accent:       publication.workflow_meta.accent,
@@ -159,12 +160,13 @@ class DraftDependencyMethods extends Repository {
             );
 
         return {
+            kind:         "draftWorkflow",
             id:           row.id,
             display_name: row.display_name,
             icon:         row.icon,
             accent:       row.accent,
             updated_at:   row.updated_at,
-            data:         Workflow.Data.Schema.parse(row.data),
+            workflow_data: Workflow.Data.Schema.parse(row.data),
         };
     }
 

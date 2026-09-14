@@ -28,7 +28,7 @@ export const DependencyField = memo<RendererProps<'Dependency'>>(({ field, nodeI
 
     const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref.Workflow | null>(nodeId, field)
 
-    const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.getWorkflow(d, value.id, value.kind) : null)
+    const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.get(d, value) : null)
     const kind = value?.kind ?? null
 
     const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined

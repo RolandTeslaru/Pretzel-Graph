@@ -8,6 +8,7 @@ import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
+import { loadResource } from "./dependency";
 
 // Policy, not document state: attach a credential automatically only when exactly one vault
 // instance matches the template. Optional templates are opt-in and never auto-attached.
@@ -112,17 +113,13 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             if (!shapeDepRef)
                 return;
 
-            const { id: workflowId, kind } = shapeDepRef;
-
-            if (sdk.selectors.dependency.getWorkflow(sdk.document, workflowId, kind))
+            if (sdk.selectors.dependency.get(sdk.document, shapeDepRef))
                 return;
 
-            const fetchDepPromise = kind === "draftWorkflow"
-                ? Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId })
-                : Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId });
+            const fetchDepPromise = loadResource(shapeDepRef);
 
             fetchDepPromise.then(({ dependency }) => {
-                sdk.actions.dependency.registerDependency(dependency as any);
+                sdk.actions.dependency.registerDependency(shapeDepRef, dependency);
             })
             fetchDepPromise.catch(err => {
                 const error = SystemError.fromUnknown(err)

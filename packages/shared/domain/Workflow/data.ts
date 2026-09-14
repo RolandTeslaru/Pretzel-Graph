@@ -3,7 +3,6 @@ import { Field } from "../Foundations/Field";
 import { Node } from "./node";
 import { Edge } from "./edge";
 import { Port } from "../Foundations/Port";
-import { ListingId, WorkflowId } from "./ids";
 import { Vault } from "../Vault";
 import { Dependency } from "../Dependency";
 import { Annotation } from "../Annotation";
@@ -67,12 +66,8 @@ export namespace Data {
             annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
         }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
-        // One store per ref kind, listings still written to `publishedWorkflow`; getters defer the Dependency <-> Data cycle.
-        dependencies: z.object({
-            get publishedWorkflow() { return z.record(WorkflowId, Dependency.Value.Publication.Schema) },
-            get draftWorkflow()     { return z.record(WorkflowId, Dependency.Value.Draft.Schema) },
-            get listing()           { return z.record(ListingId, Dependency.Value.Publication.Schema) },
-        }),
+        // Embedded dependency snapshots keyed by Dependency.Id; the getter defers the Dependency <-> Data cycle.
+        get dependencies() { return z.record(Dependency.Id, Dependency.Value.Schema) },
     })
 
     // Migrate legacy (fat-node) blobs to the latest slim shape before validation. The migrate

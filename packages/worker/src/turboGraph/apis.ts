@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Consultation, Execution, Vault, Workbench } from "@pretzel-graph/shared/domain";
+import { Consultation, Dependency, Execution, Vault, Workbench } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
@@ -138,24 +138,14 @@ export function createExecutionAPIs(
 
 
     const dependencyAPI = {
-        getPublished: (wfId) => {
-            const dep = workflowData.dependencies?.publishedWorkflow?.[wfId];
+        get: (ref) => {
+            const id    = Dependency.createId(ref);
+            const value = workflowData.dependencies?.[id];
 
-            if (!dep) {
-                throw new Error(`Missing published dependency "${wfId}"`);
-            }
+            if (!value)
+                throw new Error(`Missing dependency "${id}"`);
 
-            return dep;
-        },
-
-        getDraft: (wfId) => {
-            const draft = workflowData.dependencies?.draftWorkflow?.[wfId];
-
-            if (!draft) {
-                throw new Error(`Missing draft dependency "${wfId}"`);
-            }
-
-            return draft;
+            return value;
         },
     } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
 

@@ -3,12 +3,11 @@ import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkbenchSDK } from '../../sdk'
-import type { Dependency, Workflow } from '@pretzel-graph/shared/domain'
+import type { Dependency } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const publishedWorkflows = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.publishedWorkflow))
-    const draftWorkflows     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draftWorkflow))
-    const dependencyUpdates  = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
+    const dependencies      = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies))
+    const dependencyUpdates = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
     const [updatingAll, setUpdatingAll] = useState(false)
 
     const hasAnyUpdate =
@@ -24,7 +23,7 @@ export const DependenciesSettings = () => {
         }
     }
 
-    const isEmpty = publishedWorkflows.length === 0 && draftWorkflows.length === 0
+    const isEmpty = dependencies.length === 0
 
     return (
         <>
@@ -43,18 +42,17 @@ export const DependenciesSettings = () => {
                 </div>
             ) : (
                 <div className='flex flex-col gap-2'>
-                    {publishedWorkflows.map(dep => (
-                        <PublishedDependencyRow
-                            key={dep.workflow_id}
-                            dep={dep}
-                            updateInfo={dependencyUpdates.publishedWorkflow[dep.workflow_id as Workflow.Id] ?? null}
-                        />
-                    ))}
-                    {draftWorkflows.map(dep => (
+                    {dependencies.map(dep => dep.kind === "draftWorkflow" ? (
                         <DraftDependencyRow
-                            key={dep.id}
+                            key={`${dep.kind}:${dep.id}`}
                             dep={dep}
                             updateInfo={dependencyUpdates.draftWorkflow[dep.id] ?? null}
+                        />
+                    ) : (
+                        <PublishedDependencyRow
+                            key={`${dep.kind}:${dep.workflow_id}`}
+                            dep={dep}
+                            updateInfo={dependencyUpdates.publishedWorkflow[dep.workflow_id] ?? null}
                         />
                     ))}
                 </div>
