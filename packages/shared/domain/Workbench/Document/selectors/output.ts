@@ -13,7 +13,7 @@ export const outputSelectors: OutputSelectors = {
         const node = d.data.nodes[nodeId]
         if (!node) return null;
 
-        const outputs = nodeSelectors.getOutputs(d, nodeId);
+        const outputs = nodeSelectors.ports.getOutputs(d, nodeId);
 
         return outputs.find(o => o.id === outputId) ?? null;
     },

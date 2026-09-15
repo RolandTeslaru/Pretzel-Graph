@@ -10,9 +10,18 @@ export function createChatSDKReducers(_sdk: ChatSDKImpl) {
                 s.messages.push(message.id);
             }
             s.messagesRecord[message.id] = message;
+
+            if (message.role === "tool") {
+                s.toolCallStatus[message.data.tool_call_id] = message.data.status;
+            }
         },
         appendContent: (s, messageId, content) => {
             s.messagesRecord[messageId].content += content;
+        },
+        resetMessages: (s) => {
+            s.messages = [];
+            s.messagesRecord = {};
+            s.toolCallStatus = {};
         },
     } satisfies ChatSDKReducers;
 }
@@ -20,4 +29,5 @@ export function createChatSDKReducers(_sdk: ChatSDKImpl) {
 export interface ChatSDKReducers {
     upsertMessage: (state: State, message: Chat.Message) => void
     appendContent: (state: State, messageId: Chat.Message.Id, content: string) => void
+    resetMessages: (state: State) => void
 }

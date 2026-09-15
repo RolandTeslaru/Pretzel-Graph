@@ -1,4 +1,4 @@
-import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk"
+import { defineCredential, defineField } from "@pretzel-graph/node-sdk"
 
 const signatureTypes = [
     { value: "0", displayName: "EOA" },
@@ -17,20 +17,20 @@ export const PolymarketApiKey = defineCredential({
     displayName: "Polymarket API Key",
     icon:        "Polymarket",
     fields: [
-        FieldBuilder.String("signerAddress", "Signer Address", {
+        defineField.String("signerAddress", "Signer Address", {
             required:    true,
             placeholder: "0x…",
             tooltip:     "The wallet this key was issued to. On a proxy or Safe account this is the signing address, not the funding address."
         }),
-        FieldBuilder.Password("apiKey", "CLOB API Key", {
+        defineField.Password("apiKey", "CLOB API Key", {
             required: true,
             tooltip:  "L2 API key used to authenticate CLOB requests."
         }),
-        FieldBuilder.Password("apiSecret", "CLOB API Secret", {
+        defineField.Password("apiSecret", "CLOB API Secret", {
             required: true,
             tooltip:  "L2 secret used locally to create HMAC request signatures."
         }),
-        FieldBuilder.Password("passphrase", "CLOB Passphrase", {
+        defineField.Password("passphrase", "CLOB Passphrase", {
             required: true,
             tooltip:  "L2 API passphrase."
         }),
@@ -43,16 +43,16 @@ export const PolymarketWallet = defineCredential({
     displayName: "Polymarket Wallet",
     icon:        "Polymarket",
     fields: [
-        FieldBuilder.Password("privateKey", "Wallet Private Key", {
+        defineField.Password("privateKey", "Wallet Private Key", {
             required: true,
             tooltip:  "Private key used locally to sign Polymarket authentication messages and orders."
         }),
-        FieldBuilder.String("funderAddress", "Funder Address", {
+        defineField.String("funderAddress", "Funder Address", {
             required:    true,
             placeholder: "0x…",
             tooltip:     "The Polymarket proxy, Safe, or smart-contract wallet that holds the funds."
         }),
-        FieldBuilder.MultiOption("signatureType", "Wallet Type", {
+        defineField.MultiOption("signatureType", "Wallet Type", {
             options:      signatureTypes,
             initialValue: "3",
             tooltip:      "How Polymarket verifies order signatures. New Polymarket deposit wallets normally use EIP-1271."

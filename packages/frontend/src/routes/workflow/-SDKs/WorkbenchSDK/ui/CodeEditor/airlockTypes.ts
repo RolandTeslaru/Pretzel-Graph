@@ -107,7 +107,7 @@ function keyedByNodeIds(ids: Workflow.Node.Id[], valueType: string, extraKeys: s
     return keys.length ? `{ ${keys.join('; ')} }` : 'Record<string, never>'
 }
 
-// `itemScoped` is set when editing a field declared via FieldBuilder.itemScoped — only then are
+// `itemScoped` is set when editing a field declared via defineField.itemScoped — only then are
 // `$item` / `$itemIndex` in scope (the node binds them per-element at runtime), so they're
 // surfaced in autocomplete exclusively for those fields.
 export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped?: boolean }): string {

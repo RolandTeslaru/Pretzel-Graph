@@ -42,28 +42,6 @@ function branchToJsonValue(branch: TreeType.Branch): unknown {
     return Object.fromEntries(entries)
 }
 
-// One column of vertical tree lines per ancestor level. The innermost column draws the
-// corner/elbow into this row; outer columns draw a pass-through line only when the ancestor
-// at that depth still has siblings below it.
-function IndentGuides({ level, ancestorIsLast, isLastSibling }: { level: number; ancestorIsLast: boolean[]; isLastSibling: boolean }) {
-    const line = "absolute inset-y-0 left-[7px] border-l border-accent-foreground/20"
-
-    return Array.from({ length: level }).map((_, i) => {
-        const isInnermost = i === level - 1
-
-        let guide = null
-        if (isInnermost) {
-            guide = isLastSibling
-                ? <span className="absolute top-0 h-1/2 left-[7px] right-1.5 border-l border-b border-accent-foreground/20 rounded-bl-lg" />
-                : <span className={line} />
-        } else if (!ancestorIsLast[i + 1]) {
-            guide = <span className={line} />
-        }
-
-        return <span key={i} className="shrink-0 w-5 relative self-stretch">{guide}</span>
-    })
-}
-
 function openValueDialog(label: string, value: string, breadcrumbs: string[]) {
     const id = `port-value-${breadcrumbs.join('.')}`
     DialogSDK.actions.push(id, (props) => (
@@ -118,7 +96,7 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
             style={variant ? { backgroundColor: `color-mix(in srgb, var(--port-${variant}) 15%, transparent)` } : undefined}
             onClick={onToggle}
         >
-            <IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} />
+            <Tree.IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} elbow={!isLeaf} size="sm" />
 
             {!isLeaf && (
                 <>
@@ -138,7 +116,7 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
                     type="button"
                     size="icon-xs"
                     variant="ghost"
-                    className="ml-auto"
+                    className={value !== null ? "ml-1" : "ml-auto"}
                     aria-label={`Copy ${label} as JSON`}
                     title="Copy as JSON"
                     onClick={async (e) => {

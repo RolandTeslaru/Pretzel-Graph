@@ -13,11 +13,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         incoming: InferIncoming<typeof Blueprint>,
     ): Promise<InferOutputs<typeof Blueprint>> {
         
-        const toolList: LC.Tool[] = [];
+        // Slots are derived from the count field, so the incoming shape is only known at run time.
+        const slots = incoming as Record<string, LC.Tool[] | undefined>;
 
-        Object.entries(incoming).filter(([_, value]) => !!value).forEach(([key, value]) => {
-            toolList.push(...value);
-        });
+        const toolList: LC.Tool[] = Object.values(slots).flatMap(value => value ?? []);
 
         return {
             tool_list: toolList,

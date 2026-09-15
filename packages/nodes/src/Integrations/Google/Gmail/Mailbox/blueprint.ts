@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { GoogleGmailOAuth } from "@pretzel-graph/nodes/Credentials/GoogleOAuth";
 
@@ -20,7 +20,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "search", displayName: "Search", description: "Find messages with a Gmail search query."          },
                 { value: "get",    displayName: "Get",    description: "One message by id, with its body and attachments." },
@@ -36,39 +36,39 @@ export const Blueprint = defineBlueprint({
 
     "resource==search": {
         fields: [
-            FieldBuilder.String("query", "Query", {
+            defineField.String("query", "Query", {
                 placeholder: "from:someone@example.com newer_than:7d",
                 tooltip:     "Same syntax as the Gmail search box.",
             }),
-            FieldBuilder.ResourceLoader("searchLabel", "Label", {
+            defineField.ResourceLoader("searchLabel", "Label", {
                 loaderId:    "labels",
                 placeholder: "Any label",
             }),
-            FieldBuilder.Integer("maxResults", "Max Results", { initialValue: 20, min: 1, max: 100 }),
-            FieldBuilder.Boolean("includeSpamTrash", "Include Spam & Trash", { initialValue: false }),
+            defineField.Integer("maxResults", "Max Results", { initialValue: 20, min: 1, max: 100 }),
+            defineField.Boolean("includeSpamTrash", "Include Spam & Trash", { initialValue: false }),
         ],
-        outputs: [OutputBuilder.DataList("messages", "Messages")],
+        outputs: [defineOutput.DataList("messages", "Messages")],
     },
 
     "resource==get": {
         fields: [
-            FieldBuilder.String("messageId", "Message ID", { required: true }),
+            defineField.String("messageId", "Message ID", { required: true }),
         ],
-        outputs: [OutputBuilder.Data("message", "Message")],
+        outputs: [defineOutput.Data("message", "Message")],
     },
 
     "resource==modify": {
         fields: [
-            FieldBuilder.String("modifyMessageId", "Message ID", { required: true }),
-            FieldBuilder.ResourceLoader("addLabel", "Add Label", {
+            defineField.String("modifyMessageId", "Message ID", { required: true }),
+            defineField.ResourceLoader("addLabel", "Add Label", {
                 loaderId:    "labels",
                 placeholder: "None",
             }),
-            FieldBuilder.ResourceLoader("removeLabel", "Remove Label", {
+            defineField.ResourceLoader("removeLabel", "Remove Label", {
                 loaderId:    "labels",
                 placeholder: "None",
             }),
-            FieldBuilder.MultiOption("readState", "Read State", {
+            defineField.MultiOption("readState", "Read State", {
                 options: [
                     { value: "keep",   displayName: "Keep"        },
                     { value: "read",   displayName: "Mark Read"   },
@@ -76,25 +76,25 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "keep",
             }),
-            FieldBuilder.Boolean("archive", "Archive", {
+            defineField.Boolean("archive", "Archive", {
                 initialValue: false,
                 tooltip:      "Removes the message from the inbox.",
             }),
         ],
-        outputs: [OutputBuilder.Data("message", "Message")],
+        outputs: [defineOutput.Data("message", "Message")],
     },
 
     "resource==trash": {
         fields: [
-            FieldBuilder.String("trashMessageId", "Message ID", { required: true }),
+            defineField.String("trashMessageId", "Message ID", { required: true }),
         ],
-        outputs: [OutputBuilder.Data("message", "Message")],
+        outputs: [defineOutput.Data("message", "Message")],
     },
 
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Gmail Mailbox Tools")],
+        outputs: [defineOutput.ToolList("tools", "Gmail Mailbox Tools")],
     }),
 });

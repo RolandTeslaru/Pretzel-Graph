@@ -8,6 +8,7 @@ import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
+import { loadResource } from "./dependency";
 
 // Policy, not document state: attach a credential automatically only when exactly one vault
 // instance matches the template. Optional templates are opt-in and never auto-attached.
@@ -70,7 +71,7 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
 
             // Nodes with a dependency (e.g. an attached subworkflow) derive their shape from
             // that dependency, not a static blueprint, so they can't be blindly recreated — skip them.
-            const recreatable = nodes.filter(n => !n.dependencyRef);
+            const recreatable = nodes.filter(n => !sdk.selectors.node.dependency.getShapeRef(s, n.id));
 
             // Hydrate each distinct blueprint once (parallel), so we recreate from fresh blueprints.
             const blueprintIds = [...new Set(recreatable.map(n => n.blueprintId))];
@@ -93,38 +94,38 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
         create:        withAsyncCommit( async (...props) => { 
             const blueprint = props[0];
 
-            let nodeId: Workflow.Node.Id | null = null;
-            
-            // If the blueprint is pre-wired to a dependency not yet in the store, fetch it lazily.
-            // On failure, remove the node — it can't function without its dependency data.
-            if (blueprint.dependencyRef) {
-                const { workflowId, mode } = blueprint.dependencyRef;
-                const depStore = mode === "publication"
-                    ? sdk.document.data.dependencies.published
-                    : sdk.document.data.dependencies.draft;
-
-                if (!depStore[workflowId]) {
-                    const fetchDepPromise = mode === "publication"
-                        ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                        : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId });
-
-                    fetchDepPromise.then(({ dependency }) => {
-                        sdk.actions.dependency.registerDependency(dependency as any);
-                    })
-                    fetchDepPromise.catch(err => {
-                        const error = SystemError.fromUnknown(err)
-                        console.error("Failed to load dependency for node", error)
-                        toast.error(`Failed to load dependency for node: ${error.message}`)
-                        if (nodeId) sdk.actions.node.remove(nodeId)
-                    })
-                }
-            }
-
             // Caller-supplied assignments win over the auto-attach defaults.
             const credentials = { ...resolveCredentialDefaults(blueprint), ...(props[3] ?? {}) };
 
-            setDocument(d => { 
-                nodeId = reducers.node.create(d, props[0], props[1], props[2], credentials) 
+            let createdId = null as Workflow.Node.Id | null;
+
+            setDocument(d => {
+                createdId = reducers.node.create(d, props[0], props[1], props[2], credentials)
+            })
+
+            const nodeId = createdId;
+            if (!nodeId)
+                return;
+
+            // A pre-wired node lands with its dependency pointer set; fetch the snapshot if the workflow
+            // lacks it. On failure, remove the node — it can't function without its dependency data.
+            const shapeDepRef = sdk.selectors.node.dependency.getShapeRef(sdk.document, nodeId);
+            if (!shapeDepRef)
+                return;
+
+            if (sdk.selectors.dependency.get(sdk.document, shapeDepRef))
+                return;
+
+            const fetchDepPromise = loadResource(shapeDepRef);
+
+            fetchDepPromise.then(({ dependency }) => {
+                sdk.actions.dependency.registerDependency(shapeDepRef, dependency);
+            })
+            fetchDepPromise.catch(err => {
+                const error = SystemError.fromUnknown(err)
+                console.error("Failed to load dependency for node", error)
+                toast.error(`Failed to load dependency for node: ${error.message}`)
+                sdk.actions.node.remove(nodeId)
             })
 }),
     } satisfies NodeActions;

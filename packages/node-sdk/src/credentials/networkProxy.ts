@@ -1,5 +1,5 @@
 import { defineCredential } from "../builders/credential";
-import { FieldBuilder } from "../builders/field";
+import { defineField } from "../builders/field";
 import { NetworkProxy } from "../domain/networkProxy";
 
 // Auto-attached to every blueprint declaring `proxyCompatible`, the same way
@@ -11,7 +11,7 @@ export const NetworkProxyCredential = defineCredential({
     icon: "NetworkProxy",
     optional: true,
     fields: [
-        FieldBuilder.MultiOption(
+        defineField.MultiOption(
             "protocol",
             "Protocol",
             {
@@ -23,9 +23,9 @@ export const NetworkProxyCredential = defineCredential({
             ],
             },
         ),
-        FieldBuilder.String  ("host",     "Host",     { required: true, placeholder: "proxy.provider.com" }),
-        FieldBuilder.Integer ("port",     "Port",     { required: true, initialValue: 8080, min: 1, max: 65535 }),
-        FieldBuilder.String  ("username", "Username"),
-        FieldBuilder.Password("password", "Password"),
+        defineField.String  ("host",     "Host",     { required: true, placeholder: "proxy.provider.com" }),
+        defineField.Integer ("port",     "Port",     { required: true, initialValue: 8080, min: 1, max: 65535 }),
+        defineField.String  ("username", "Username"),
+        defineField.Password("password", "Password"),
     ],
 })

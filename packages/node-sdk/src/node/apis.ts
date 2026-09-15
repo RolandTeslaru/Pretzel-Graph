@@ -1,3 +1,4 @@
+import type { Dependency } from "@pretzel-graph/shared/domain";
 import type { z } from "zod";
 import { Consultation, Execution, Foundations, Vault, Workflow } from "@pretzel-graph/shared/domain";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
@@ -130,7 +131,7 @@ export interface WorkflowQueryAPI {
     getInputs:     (nodeId: Workflow.Node.Id) => Port.Input[],
     getOutputs:    (nodeId: Workflow.Node.Id) => Port.Output[],
     getFields:     (nodeId: Workflow.Node.Id) => readonly Foundations.Field[],
-    getNodeDependency: (nodeId: Workflow.Node.Id) => Workflow.Dependency | null,
+    getNodeDependency: (nodeId: Workflow.Node.Id) => Dependency.ValueFor<Dependency.Ref.Workflow> | null,
     getOutputPort: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => Port.Output | undefined,
     getInputPort:  (nodeId: Workflow.Node.Id, portId: Port.Input.Id) => Port.Input | undefined,
     getStaticValues: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, Foundations.Field.Value>,
@@ -175,10 +176,9 @@ export interface SubWorkflowAPI {
     }
 }
 
-// Reads another workflow's published or draft dependency snapshot (used to resolve sub-workflows).
+// Reads an embedded dependency snapshot by its ref (used to resolve sub-workflows).
 export interface DependencyAPI {
-    getPublished: (workflowId: Workflow.Id) => Workflow.Dependency.Publication,
-    getDraft:     (workflowId: Workflow.Id) => Workflow.Dependency.Draft,
+    get: <R extends Dependency.Ref>(ref: R) => Dependency.ValueFor<R>,
 }
 
 /**

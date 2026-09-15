@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk"
 
 
@@ -53,7 +53,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("action", "Action", {
+        defineField.MultiOption("action", "Action", {
             options: [
                 { value: "list", displayName: "List", description: "Browse markets, events, series or public trades." },
                 { value: "get",  displayName: "Get",  description: "Fetch one resource or exchange reading." },
@@ -68,7 +68,7 @@ export const Blueprint = defineBlueprint({
 
     "action==list": {
         fields: [
-            FieldBuilder.MultiOption("listResource", "Resource", {
+            defineField.MultiOption("listResource", "Resource", {
                 options: [
                     { value: "markets", displayName: "Markets" },
                     { value: "events",  displayName: "Events"  },
@@ -81,96 +81,96 @@ export const Blueprint = defineBlueprint({
 
         "listResource==markets": {
             fields: [
-                FieldBuilder.MultiOption("listMarketsStatus", "Status", {
+                defineField.MultiOption("listMarketsStatus", "Status", {
                     options:      marketStatusOptions,
                     initialValue: "open",
                 }),
-                FieldBuilder.String("listMarketsEventTicker", "Event Ticker", {
+                defineField.String("listMarketsEventTicker", "Event Ticker", {
                     placeholder: "KXPRES-28",
                     tooltip:     "Optional. Limit results to one event.",
                 }),
-                FieldBuilder.String("listMarketsSeriesTicker", "Series Ticker", {
+                defineField.String("listMarketsSeriesTicker", "Series Ticker", {
                     placeholder: "KXPRES",
                     tooltip:     "Optional. Limit results to one recurring series.",
                 }),
-                FieldBuilder.Integer("listMarketsMaxResults", "Max Results", {
+                defineField.Integer("listMarketsMaxResults", "Max Results", {
                     initialValue: 20,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("markets", "Markets")],
+            outputs: [defineOutput.DataList("markets", "Markets")],
         },
 
         "listResource==events": {
             fields: [
-                FieldBuilder.MultiOption("listEventsStatus", "Status", {
+                defineField.MultiOption("listEventsStatus", "Status", {
                     options:      eventStatusOptions,
                     initialValue: "open",
                 }),
-                FieldBuilder.String("listEventsSeriesTicker", "Series Ticker", {
+                defineField.String("listEventsSeriesTicker", "Series Ticker", {
                     placeholder: "KXPRES",
                 }),
-                FieldBuilder.Boolean("listEventsIncludeMarkets", "Include Markets", {
+                defineField.Boolean("listEventsIncludeMarkets", "Include Markets", {
                     initialValue: false,
                     tooltip:     "Embeds compact markets in each event. Leave off when browsing.",
                 }),
-                FieldBuilder.Integer("listEventsMaxResults", "Max Results", {
+                defineField.Integer("listEventsMaxResults", "Max Results", {
                     initialValue: 20,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("events", "Events")],
+            outputs: [defineOutput.DataList("events", "Events")],
         },
 
         "listResource==series": {
             fields: [
-                FieldBuilder.String("listSeriesCategory", "Category", {
+                defineField.String("listSeriesCategory", "Category", {
                     placeholder: "Politics",
                 }),
-                FieldBuilder.String("listSeriesTags", "Tags", {
+                defineField.String("listSeriesTags", "Tags", {
                     tooltip: "Optional comma-separated tags.",
                 }),
-                FieldBuilder.Boolean("listSeriesIncludeVolume", "Include Volume", {
+                defineField.Boolean("listSeriesIncludeVolume", "Include Volume", {
                     initialValue: true,
                 }),
-                FieldBuilder.Integer("listSeriesMaxResults", "Max Results", {
+                defineField.Integer("listSeriesMaxResults", "Max Results", {
                     initialValue: 20,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("series", "Series")],
+            outputs: [defineOutput.DataList("series", "Series")],
         },
 
         "listResource==trades": {
             fields: [
-                FieldBuilder.String("listTradesTicker", "Market Ticker", {
+                defineField.String("listTradesTicker", "Market Ticker", {
                     placeholder: "KXPRES-28-CANDIDATE",
                     tooltip:     "Optional. Leave empty for trades across markets.",
                 }),
-                FieldBuilder.Boolean("listTradesIncludeHistorical", "Include Historical", {
+                defineField.Boolean("listTradesIncludeHistorical", "Include Historical", {
                     initialValue: false,
                     tooltip:     "Also reads Kalshi's archived trade partition.",
                 }),
-                FieldBuilder.Boolean("listTradesBlockOnly", "Block Trades Only", {
+                defineField.Boolean("listTradesBlockOnly", "Block Trades Only", {
                     initialValue: false,
                 }),
-                FieldBuilder.Integer("listTradesMaxResults", "Max Results", {
+                defineField.Integer("listTradesMaxResults", "Max Results", {
                     initialValue: 100,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("trades", "Trades")],
+            outputs: [defineOutput.DataList("trades", "Trades")],
         },
     },
 
 
     "action==get": {
         fields: [
-            FieldBuilder.MultiOption("getResource", "Resource", {
+            defineField.MultiOption("getResource", "Resource", {
                 options: [
                     { value: "market",         displayName: "Market"         },
                     { value: "event",          displayName: "Event"          },
@@ -185,74 +185,74 @@ export const Blueprint = defineBlueprint({
 
         "getResource==market": {
             fields: [
-                FieldBuilder.String("getMarketTicker", "Market Ticker", {
+                defineField.String("getMarketTicker", "Market Ticker", {
                     required:    true,
                     placeholder: "KXPRES-28-CANDIDATE",
                 }),
             ],
-            outputs: [OutputBuilder.Data("market", "Market")],
+            outputs: [defineOutput.Data("market", "Market")],
         },
 
         "getResource==event": {
             fields: [
-                FieldBuilder.String("getEventTicker", "Event Ticker", {
+                defineField.String("getEventTicker", "Event Ticker", {
                     required:    true,
                     placeholder: "KXPRES-28",
                 }),
             ],
-            outputs: [OutputBuilder.Data("event", "Event")],
+            outputs: [defineOutput.Data("event", "Event")],
         },
 
         "getResource==series": {
             fields: [
-                FieldBuilder.String("getSeriesTicker", "Series Ticker", {
+                defineField.String("getSeriesTicker", "Series Ticker", {
                     required:    true,
                     placeholder: "KXPRES",
                 }),
             ],
-            outputs: [OutputBuilder.Data("series", "Series")],
+            outputs: [defineOutput.Data("series", "Series")],
         },
 
         "getResource==orderBook": {
             fields: [
-                FieldBuilder.String("getOrderBookTicker", "Market Ticker", {
+                defineField.String("getOrderBookTicker", "Market Ticker", {
                     required: true,
                 }),
-                FieldBuilder.Integer("getOrderBookDepth", "Depth", {
+                defineField.Integer("getOrderBookDepth", "Depth", {
                     initialValue: 15,
                     min:          1,
                     max:          100,
                     tooltip:      "Price levels per outcome, best first.",
                 }),
             ],
-            outputs: [OutputBuilder.Data("orderBook", "Order Book")],
+            outputs: [defineOutput.Data("orderBook", "Order Book")],
         },
 
         "getResource==priceHistory": {
             fields: [
-                FieldBuilder.String("getPriceHistoryTicker", "Market Ticker", {
+                defineField.String("getPriceHistoryTicker", "Market Ticker", {
                     required: true,
                 }),
-                FieldBuilder.MultiOption("getPriceHistoryWindow", "Window", {
+                defineField.MultiOption("getPriceHistoryWindow", "Window", {
                     options:      windowOptions,
                     initialValue: "30d",
                 }),
-                FieldBuilder.MultiOption("getPriceHistoryInterval", "Candlestick", {
+                defineField.MultiOption("getPriceHistoryInterval", "Candlestick", {
                     options:      intervalOptions,
                     initialValue: "60",
                 }),
-                FieldBuilder.Integer("getPriceHistoryPoints", "Points to Return", {
+                defineField.Integer("getPriceHistoryPoints", "Points to Return", {
                     initialValue: 120,
                     min:          2,
                     max:          500,
                     tooltip:      "Longer responses are evenly sampled while preserving the newest point.",
                 }),
             ],
-            outputs: [OutputBuilder.Data("history", "Price History")],
+            outputs: [defineOutput.Data("history", "Price History")],
         },
 
         "getResource==exchangeStatus": {
-            outputs: [OutputBuilder.Data("status", "Exchange Status")],
+            outputs: [defineOutput.Data("status", "Exchange Status")],
         },
     },
 
@@ -260,6 +260,6 @@ export const Blueprint = defineBlueprint({
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Kalshi Tools")],
+        outputs: [defineOutput.ToolList("tools", "Kalshi Tools")],
     }),
 })

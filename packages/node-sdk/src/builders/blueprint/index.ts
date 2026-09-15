@@ -4,7 +4,7 @@ import type { Field }              from "@pretzel-graph/shared/domain/Foundation
 import { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { CredentialTemplate } from "../credential";
 import { NetworkProxyCredential }  from "../../credentials/networkProxy";
-import { FieldBuilder }            from "../field";
+import { StandardFields }          from "../standardFields";
 import type { DefineBlueprintReturn, ConditionKey, DerivativeBody, ToolContribution } from "./types";
 import { compileDerivatives, stampDiscriminants } from "./derivatives";
 
@@ -54,12 +54,12 @@ export function defineBlueprint<
 
     const baseFields = [
         ...definition.fields,
-        ...FieldBuilder.DEFAULTS.StandardNode,
+        ...StandardFields.StandardNode,
     ] as const;
 
     const withDefaults = (
         definition.toolCompatible
-        ? [...baseFields, FieldBuilder.DEFAULTS.toolConvertedField]
+        ? [...baseFields, StandardFields.toolConvertedField]
         : baseFields) as readonly Field[];
 
     // Framework defaults are in the pool before conditions are checked, so a blueprint can

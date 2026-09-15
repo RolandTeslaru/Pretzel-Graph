@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Select",
@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "Brackets",
     accent: "utility",
     fields: [
-        FieldBuilder.MultiOption("strategy", "Strategy", {
+        defineField.MultiOption("strategy", "Strategy", {
             options: [
                 { value: "first" },
                 { value: "last" },
@@ -17,19 +17,19 @@ export const Blueprint = defineBlueprint({
             initialValue: "first",
             variant: "tab"
         }),
-        FieldBuilder.Integer("index", "Index", {
+        defineField.Integer("index", "Index", {
             initialValue: 0,
             tooltip: "Index of the element to select. Negative values count from the end."
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList("list", "List", {
+        defineInput.UnresolvedList("list", "List", {
             required: true,
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedScalar("element", "Element", {
+        defineOutput.UnresolvedScalar("element", "Element", {
             polymorphicGroupId: "data"
         }),
     ],

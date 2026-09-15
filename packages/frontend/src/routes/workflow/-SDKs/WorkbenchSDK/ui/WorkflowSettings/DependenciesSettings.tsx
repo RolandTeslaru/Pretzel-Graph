@@ -3,17 +3,12 @@ import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkbenchSDK } from '../../sdk'
-import type { Workflow } from '@pretzel-graph/shared/domain'
+import { Skill, type Dependency } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
-    const publishedDependencies = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.published))
-    const draftDependencies     = WorkbenchSDK.useDocument(d => Object.values(d.data.dependencies.draft))
-    const dependencyUpdates     = WorkbenchSDK.useDocument(d => d.dependencyUpdates)
+    const ids          = WorkbenchSDK.useDocument(d => Object.keys(d.data.dependencies) as Dependency.Id[])
+    const hasAnyUpdate = WorkbenchSDK.useDocument(d => Object.keys(d.dependencyUpdates).length > 0)
     const [updatingAll, setUpdatingAll] = useState(false)
-
-    const hasAnyUpdate =
-        Object.keys(dependencyUpdates.published).length > 0 ||
-        Object.keys(dependencyUpdates.draft).length > 0
 
     const updateAll = async () => {
         setUpdatingAll(true)
@@ -23,8 +18,6 @@ export const DependenciesSettings = () => {
             setUpdatingAll(false)
         }
     }
-
-    const isEmpty = publishedDependencies.length === 0 && draftDependencies.length === 0
 
     return (
         <>
@@ -37,25 +30,14 @@ export const DependenciesSettings = () => {
                 </div>
             )}
 
-            {isEmpty ? (
+            {ids.length === 0 ? (
                 <div className='absolute top-1/2 -translate-y-1/2 w-full text-center text-sm text-muted-foreground'>
                     No dependencies
                 </div>
             ) : (
                 <div className='flex flex-col gap-2'>
-                    {publishedDependencies.map(dep => (
-                        <PublishedDependencyRow
-                            key={dep.workflow_id}
-                            dep={dep}
-                            updateInfo={dependencyUpdates.published[dep.workflow_id as Workflow.Id] ?? null}
-                        />
-                    ))}
-                    {draftDependencies.map(dep => (
-                        <DraftDependencyRow
-                            key={dep.workflow_id}
-                            dep={dep}
-                            updateInfo={dependencyUpdates.draft[dep.workflow_id as Workflow.Id] ?? null}
-                        />
+                    {ids.map(id => (
+                        <DependencyRow key={id} id={id} />
                     ))}
                 </div>
             )}
@@ -63,9 +45,33 @@ export const DependenciesSettings = () => {
     )
 }
 
+// One embedded dependency with its pending update, rendered by kind.
+function DependencyRow({ id }: { id: Dependency.Id }) {
+    const [dep, updateInfo] = WorkbenchSDK.useDocument(d => [d.data.dependencies[id], d.dependencyUpdates[id] ?? null])
+
+    if (!dep)
+        return null
+
+    switch (dep.kind) {
+        case "draftWorkflow":
+            return <DraftDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Draft | null} />
+
+        case "publishedWorkflow":
+        case "listing":
+            return <PublishedDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Publication | Dependency.Update.Listing | null} />
+
+        case "skill":
+            return <SkillDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Skill | null} />
+
+        default:
+            dep satisfies never
+            return null
+    }
+}
+
 function PublishedDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.Dependency.Publication
-    updateInfo: Workflow.Dependency.Publication.UpdateInfo | null
+    dep: Dependency.Value.Publication
+    updateInfo: Dependency.Update.Publication | Dependency.Update.Listing | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 
@@ -76,7 +82,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.published.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }
@@ -93,7 +99,7 @@ function PublishedDependencyRow({ dep, updateInfo }: {
 
             <div className='flex-1 min-w-0'>
                 <p className='text-sm font-medium truncate'>{dep.display_name}</p>
-                <p className='text-xs text-muted-foreground'>{dep.publication_name} · v{dep.version}</p>
+                <p className='text-xs text-muted-foreground'>{dep.name} · v{dep.version}</p>
             </div>
 
             {updateInfo ? (
@@ -109,8 +115,8 @@ function PublishedDependencyRow({ dep, updateInfo }: {
 }
 
 function DraftDependencyRow({ dep, updateInfo }: {
-    dep: Workflow.Dependency.Draft
-    updateInfo: Workflow.Dependency.Draft.UpdateInfo | null
+    dep: Dependency.Value.Draft
+    updateInfo: Dependency.Update.Draft | null
 }) {
     const [isUpdating, setIsUpdating] = useState(false)
 
@@ -121,7 +127,7 @@ function DraftDependencyRow({ dep, updateInfo }: {
         if (!updateInfo) return
         setIsUpdating(true)
         try {
-            await WorkbenchSDK.actions.dependency.draft.update(updateInfo)
+            await WorkbenchSDK.actions.dependency.update(updateInfo)
         } finally {
             setIsUpdating(false)
         }
@@ -139,6 +145,52 @@ function DraftDependencyRow({ dep, updateInfo }: {
             <div className='flex-1 min-w-0'>
                 <p className='text-sm font-medium truncate'>{dep.display_name}</p>
                 <p className='text-xs text-muted-foreground'>draft</p>
+            </div>
+
+            {updateInfo ? (
+                <Button variant='outline' size='sm' className='shrink-0 gap-1.5' onClick={handleUpdate} disabled={isUpdating}>
+                    {isUpdating ? <Spinner className='size-3.5' /> : <SystemIcons.RefreshCcw className='size-3.5' />}
+                    Update
+                </Button>
+            ) : (
+                <span className='text-xs text-muted-foreground shrink-0'>Up to date</span>
+            )}
+        </div>
+    )
+}
+
+function SkillDependencyRow({ dep, updateInfo }: {
+    dep: Dependency.Value.Skill
+    updateInfo: Dependency.Update.Skill | null
+}) {
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    const accent = dep.accent ?? Skill.DEFAULT_ACCENT
+    const iconColor = `var(--${accent}-foreground)`
+    const backgroundColor = `color-mix(in srgb, var(--${accent}) 25%, transparent)`
+
+    const handleUpdate = async () => {
+        if (!updateInfo) return
+        setIsUpdating(true)
+        try {
+            await WorkbenchSDK.actions.dependency.update(updateInfo)
+        } finally {
+            setIsUpdating(false)
+        }
+    }
+
+    return (
+        <div className='rounded-md border border-border/50 bg-card/50 p-2.5 flex items-center gap-3'>
+            <span
+                className='flex size-7 shrink-0 items-center justify-center rounded-full'
+                style={{ backgroundColor }}
+            >
+                <IconRenderer name={dep.icon ?? Skill.DEFAULT_ICON} className='size-3.5' style={{ color: iconColor }} />
+            </span>
+
+            <div className='flex-1 min-w-0'>
+                <p className='text-sm font-medium truncate'>{dep.name}</p>
+                <p className='text-xs text-muted-foreground'>skill</p>
             </div>
 
             {updateInfo ? (

@@ -1,4 +1,6 @@
 import { z } from "zod"
+import { Port } from "../Port"
+import { Ref } from "../../Dependency/ref"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
@@ -46,6 +48,7 @@ export namespace Field {
         "CalendarRange",
         "CalendarDateTimeRange",
         "WorkflowIdSelector",
+        "Dependency",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -157,10 +160,18 @@ export namespace Field {
         only: z.enum(["static", "expression"]).optional(),
     })
 
+    // A slot count. The template ports are repeated that many times at derive time, `{n}` in
+    // an id, display name, or polymorphic group filled per slot; they are never live ports.
     export const Variadic = Field.Base.extend({
         variant: configLiteral("Variadic"),
-        initialValue: z.array(z.string()),
-        groupId: z.string().brand("GroupId"),
+        initialValue: z.int(),
+        min: z.int().optional(),
+        max: z.int().optional(),
+        startIndex: z.int().optional(),
+        template: z.object({
+            inputs:  z.array(Port.Input.Schema).optional(),
+            outputs: z.array(Port.Output.Schema).optional(),
+        }),
     })
 
     export namespace Condition {
@@ -421,7 +432,20 @@ export namespace Field {
         variant:      configLiteral("WorkflowIdSelector"),
         initialValue: z.string(),
         placeholder:  z.string().optional(),
+        isExpressionInitially: z.boolean().optional(),
+        only: z.enum(["static", "expression"]).optional(),
     })
+
+    // A node's pointer into the workflow's embedded dependency snapshots, limited to the kinds it accepts.
+    export namespace Dependency {
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("Dependency"),
+            acceptsKind:  z.array(Ref.Kind),
+            initialValue: Ref.Schema.nullable(),
+        })
+    }
+
+    export interface Dependency extends z.infer<typeof Dependency.Schema> { }
 
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
@@ -460,6 +484,7 @@ export namespace Field {
         CalendarRange.Schema,
         CalendarDateTimeRange.Schema,
         WorkflowIdSelector,
+        Dependency.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

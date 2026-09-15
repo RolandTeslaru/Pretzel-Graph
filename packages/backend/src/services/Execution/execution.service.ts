@@ -5,7 +5,7 @@ import { Principal } from '@/domain/Principal';
 import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
-import { Activity, Chat, Execution, Validation, Vault, Workflow } from '@pretzel-graph/shared/domain';
+import { Activity, Chat, Execution, Validation, Vault, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
@@ -14,6 +14,7 @@ import { PermissionService } from '../Permission/permission.service';
 import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
 import { VaultRepository } from '../Vault/vault.repository';
+import { WorkbenchRepository } from '../Workbench/workbench.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
@@ -35,6 +36,7 @@ export class ExecutionService {
         private readonly executionRepository: ExecutionRepository,
         private readonly chatDatabase:   ChatDatabase,
         private readonly vaultRepository: VaultRepository,
+        private readonly workbenchRepository: WorkbenchRepository,
         @Inject(forwardRef(() => WorkerLifecycleService))
         private readonly workerLifecycle: WorkerLifecycleService,
     ) {
@@ -70,15 +72,53 @@ export class ExecutionService {
 
 
 
-    // Attributed to whoever triggered it.
+    // Attributed to whoever triggered it. Runs the saved graph when the caller sends none.
     public async runFromUser(
         principal:  Principal.User,
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        return this.runCore(principal, workflowId, payload, payload.igniter);
+        const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, workflowId)).data;
+        const started      = await this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
+
+        if (!payload.await)
+            return started;
+
+        const { execution, settled } = await this.waitForSettled(principal, started.execution.id, payload.await.timeoutMs);
+
+        return { ...started, execution, settled };
     }
 
+
+
+
+    /**
+     * The waiter is registered before the row is read: the worker writes the final status before
+     * it emits the terminal event, so a run that settles in between is seen by the read, and one
+     * that settles after is caught by the waiter.
+     */
+    public async waitForSettled(
+        principal:   Principal.User,
+        executionId: Execution.Id,
+        timeoutMs:   number = Execution.API.Wait.DEFAULT_TIMEOUT_MS,
+    ): Promise<Execution.API.Wait.Response> {
+        const settled = this.realtime.awaitEvent(
+            Execution.Event.getChannel(executionId),
+            'lifecycle:completed',
+            timeoutMs,
+            event => Execution.Event.TERMINAL.has(event.type),
+        );
+
+        const current = await this.executionRepository.get(principal, executionId);
+
+        if (Execution.isSettled(current))
+            return { execution: current, settled: true };
+
+        const arrived   = await settled;
+        const execution = arrived ? await this.executionRepository.get(principal, executionId) : current;
+
+        return { execution, settled: arrived };
+    }
 
 
 
@@ -89,7 +129,10 @@ export class ExecutionService {
         service: string,
     ): Promise<Execution.API.Run.Response> {
         // No human behind this run; `igniter` records what triggered it.
-        return this.runCore({ type: 'service', service }, payload.workflowId, payload, payload.igniter);
+        const principal    = { type: 'service', service } as const;
+        const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, payload.workflowId)).data;
+
+        return this.runCore(principal, payload.workflowId, workflowData, payload.igniter, payload.executionId);
     }
 
 
@@ -106,10 +149,13 @@ export class ExecutionService {
             // path-convention import. Its blueprint is the Core.SubWorkflow.Execute container's —
             // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
             // Mirrors the compiler's resolveDependencyNode.
-            if (node.dependencyRef) {
+            const shapeDepRef = Workbench.Document.selectors.node.dependency.getShapeRef({ data: workflowData }, node.id)
+
+            if (shapeDepRef) {
                 const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
 
-                if (executeBp) blueprints[node.blueprintId] = executeBp;
+                if (executeBp) 
+                    blueprints[node.blueprintId] = executeBp;
 
                 continue;
             }
@@ -142,18 +188,18 @@ export class ExecutionService {
     }
 
     private async runCore(
-        principal:  Principal.User | Principal.Service,
-        workflowId: Workflow.Id,
-        payload:    Execution.API.Run.Request,
-        igniter:    Execution.Igniter,
+        principal:    Principal.User | Principal.Service,
+        workflowId:   Workflow.Id,
+        workflowData: Workflow.Data,
+        igniter:      Execution.Igniter,
+        proposedId?:  Execution.Id,
     ): Promise<Execution.API.Run.Response> {
         const chatId = igniter.chat_id;
-        const workflowData = payload.workflowData;
 
         const blueprints = await this.resolveBlueprints(workflowData);
-        const wfCache = Workflow.createCache(workflowData, blueprints);
+        const wfCache = Workbench.Document.createCache(workflowData, blueprints);
         // Validation
-        const arcsMap = Workflow.deriveArcs(wfCache);
+        const arcsMap = Workbench.Document.deriveArcs(wfCache);
         const sccs    = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
         const cycles  = Algorithms.Johnson.getAllCycles(arcsMap, sccs);
         
@@ -170,7 +216,7 @@ export class ExecutionService {
             await this.ensureChat(principal, chatId, workflowId);
 
         const session = Execution.Session.createInitial();
-        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: payload.executionId, chatId });
+        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: proposedId, chatId });
         const executionId = created.id;
 
         this.announce(created);
@@ -240,7 +286,7 @@ export class ExecutionService {
                 created_at: now,
                 updated_at: now,
             },
-            isRecording: payload.igniter.record ?? false,
+            isRecording: igniter.record ?? false,
         };
     }
 
@@ -505,9 +551,21 @@ function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Cr
     for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
         for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
             ids.add(instanceId);
-    for (const dep of Object.values(workflowData.dependencies.published))
-        collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
-    for (const dep of Object.values(workflowData.dependencies.draft))
-        collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
+        
+    for (const dep of Object.values(workflowData.dependencies)) {
+        switch (dep.kind) {
+            case "draftWorkflow":
+            case "publishedWorkflow":
+            case "listing":
+                collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
+                break;
+
+            case "skill":
+                break;
+
+            default:
+                dep satisfies never;
+        }
+    }
     return ids;
 }

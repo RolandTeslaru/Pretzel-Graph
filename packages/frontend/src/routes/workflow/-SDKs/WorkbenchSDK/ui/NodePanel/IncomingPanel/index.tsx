@@ -3,8 +3,6 @@ import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import { WorkbenchSDK } from '../../../sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button } from '@pretzel-graph/standard-ui/foundations'
-import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { AddInputPortDialog } from './AddInputPortDialog'
 import { Content } from './content'
 import type { Workflow } from '@pretzel-graph/shared/domain'
 
@@ -25,16 +23,6 @@ const IncomingPanel = ({ nodeId }: Props) => {
 
   const nodeOutputProjections = ExecutionSDK.useStore(s => s.currentExecution?.session.node_output_projections)
 
-  const openAddInputPortDialog = () => {
-    if (!nodeId) return
-    const dialogId = `add-input-port-${nodeId}`
-    DialogSDK.actions.push(dialogId, props => (
-      <DialogSDK.Template {...props} className='sm:max-w-[520px] w-full'>
-        <AddInputPortDialog nodeId={nodeId} dialogId={dialogId} />
-      </DialogSDK.Template>
-    ))
-  }
-
   return (
     <div className='p-1 h-full overflow-auto relative flex flex-col gap-2'>
       
@@ -48,7 +36,7 @@ const IncomingPanel = ({ nodeId }: Props) => {
       }
 
 
-      <Button variant="ghost" className="absolute bottom-2 left-2 right-2" onClick={openAddInputPortDialog} disabled={isIgniter}>
+      <Button variant="ghost" className="absolute bottom-2 left-2 right-2" onClick={() => WorkbenchSDK.dialogs.openAddInputPort(nodeId)} disabled={isIgniter}>
         <p>+ Add Input Port</p>
       </Button>
     </div>

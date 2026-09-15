@@ -13,7 +13,7 @@ export const inputReducers: InputReducers = {
         const node = d.data.nodes[nodeId];
         const staticValues = d.data.staticValues[nodeId];
 
-        const edgeId = d.cache.inputEdgesByPort[nodeId][inputId];
+        const edgeId = d.cache.inputEdgesByPort[nodeId]?.[inputId];
         if (edgeId)
             d.reducers.edge.remove(d, edgeId);
 
@@ -21,7 +21,8 @@ export const inputReducers: InputReducers = {
         if (inputIndex !== undefined && inputIndex !== -1) {
             node.addedInputs?.splice(inputIndex, 1);
         }
-        delete staticValues[inputId];
+        if (staticValues)
+            delete staticValues[inputId];
         d.reducers.cache.resolvedShape.recreate(d, nodeId);
     },
     disconnectIfConnected: (d, nodeId, inputId) => {

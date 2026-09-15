@@ -17,8 +17,8 @@ export const edgeReducers: EdgeReducers = {
         if (!sourcePortId || !targetPortId || !sourceNodeId || !targetNodeId) 
             throw new Error(`Invalid edge connection. Source: ${sourceNodeId}:${sourcePortId}, Target: ${targetNodeId}:${targetPortId}`);
         
-        const sourceOutputs = d.selectors.node.getOutputs(d, sourceNodeId);
-        const targetInputs = d.selectors.node.getInputs(d, targetNodeId);
+        const sourceOutputs = d.selectors.node.ports.getOutputs(d, sourceNodeId);
+        const targetInputs = d.selectors.node.ports.getInputs(d, targetNodeId);
 
         const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
         const targetPort = targetInputs.find(i => i.id === targetPortId);
@@ -95,8 +95,8 @@ export const edgeReducers: EdgeReducers = {
         const sourceNode = d.data.nodes[sourceNodeId]!;
         const targetNode = d.data.nodes[targetNodeId]!;
 
-        const sourceOutputs = d.selectors.node.getOutputs(d, sourceNodeId);
-        const targetInputs = d.selectors.node.getInputs(d, targetNodeId);
+        const sourceOutputs = d.selectors.node.ports.getOutputs(d, sourceNodeId);
+        const targetInputs = d.selectors.node.ports.getInputs(d, targetNodeId);
 
         const sourcePort = sourceOutputs.find(o => o.id === sourcePortId);
         const targetPort = targetInputs.find(i => i.id === targetPortId);

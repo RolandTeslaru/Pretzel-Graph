@@ -1,4 +1,4 @@
-import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk"
+import { defineCredential, defineField } from "@pretzel-graph/node-sdk"
 
 /**
  * Secrets only. How to reach the server (transport, url, command, args) lives on the
@@ -10,10 +10,10 @@ export const MCPAuth = defineCredential({
     icon: "MCP",
     optional: true,
     fields: [
-        FieldBuilder.Password("token", "Bearer Token", {
+        defineField.Password("token", "Bearer Token", {
             tooltip: "HTTP transport. Sent as `Authorization: Bearer …`."
         }),
-        FieldBuilder.Json("env", "Environment", {
+        defineField.Json("env", "Environment", {
             initialValue: {},
             tooltip: "Stdio transport. Environment variables for the spawned process — a server's own API keys go here."
         }),

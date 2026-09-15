@@ -14,7 +14,7 @@ interface Props extends LibraryBrowserBaseProps {
     searchQuery?: string
 }
 
-export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 'default', cwd, selectedWorkflowId, setCwd, onWorkflowClick, className, searchQuery }) => {
+export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 'default', cwd, selectedWorkflowId, setCwd, onItemClick, isItemDisabled, className, searchQuery }) => {
     const styles = sizeStyles[size]
 
     const treeData = LibrarySDK.useStore((s) => s.treeData)
@@ -48,8 +48,10 @@ export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 
                             {...props}
                             isSelected={props.branch.key === selectedFolderKey || props.branch.key === selectedWorkflowKey}
                             styles={styles}
+                            size={size}
                             onFolderClick={(id) => setCwd(id)}
-                            onWorkflowClick={onWorkflowClick}
+                            onItemClick={onItemClick}
+                            isItemDisabled={isItemDisabled}
                         />
                     )}
                 />

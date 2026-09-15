@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
@@ -15,7 +15,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     iconColor: "color-blue-400",
     fields: [
-        FieldBuilder.MultiOption("method", "Method", {
+        defineField.MultiOption("method", "Method", {
             options: [
                 { value: "GET" },
                 { value: "POST" },
@@ -27,20 +27,20 @@ export const Blueprint = defineBlueprint({
             initialValue: "GET",
             variant: "select"
         }),
-        FieldBuilder.String("url", "URL", {
+        defineField.String("url", "URL", {
             initialValue: "https://api.example.com",
             placeholder: "https://api.example.com"
         }),
-        FieldBuilder.Json("headers", "Headers", {
+        defineField.Json("headers", "Headers", {
             initialValue: {}
         }),
-        FieldBuilder.Json("body", "Body", {
+        defineField.Json("body", "Body", {
             initialValue: {}
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data("result", "Result", {
+        defineOutput.Data("result", "Result", {
             tooltip: "{ status, data } — the response status code and parsed body."
         }),
     ],
@@ -49,7 +49,7 @@ export const Blueprint = defineBlueprint({
         fields: [],
         inputs: [],
         outputs: [
-            OutputBuilder.ToolList("tools", "HTTP Request Tools"),
+            defineOutput.ToolList("tools", "HTTP Request Tools"),
         ],
     }),
 });

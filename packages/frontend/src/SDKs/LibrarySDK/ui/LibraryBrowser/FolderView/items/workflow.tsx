@@ -10,6 +10,7 @@ import { WorkflowContextMenu } from '../../context-menus/workflow'
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
     size?: ItemSize
+    disabled?: boolean
     onClick?: () => void
 }
 
@@ -19,17 +20,24 @@ function iconColor(workflow: Library.WorkflowMeta) {
     return token ? `var(--${token})` : "var(--primary)"
 }
 
-export function WorkflowItem({ workflow, size = 'default', onClick }: WorkflowCardProps) {
+export function WorkflowItem({ workflow, size = 'default', disabled = false, onClick }: WorkflowCardProps) {
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => Boolean(s.activeWorkflows[workflow.id]))
 
     const styles = sizeStyles[size]
 
+    const handleClick = disabled ? undefined : onClick
+
     return (
-        <WorkflowContextMenu workflow={workflow} onOpen={onClick}>
+        <WorkflowContextMenu workflow={workflow} onOpen={handleClick}>
             <div
-                onClick={onClick}
-                className={classNames('group flex gap-1 relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card, workflow.hidden && 'opacity-50')}
+                onClick={handleClick}
+                className={classNames(
+                    'group flex gap-1 relative m-auto select-none rounded-md',
+                    styles.card,
+                    workflow.hidden && 'opacity-50',
+                    disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-accent/30',
+                )}
             >
                 <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
                     {workflow.icon ? (

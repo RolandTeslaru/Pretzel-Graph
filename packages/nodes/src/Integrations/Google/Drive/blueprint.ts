@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { GoogleDriveOAuth } from "@pretzel-graph/nodes/Credentials/GoogleOAuth";
 
@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "search",       displayName: "Search",        description: "Find files by name, type or folder."                    },
                 { value: "get",          displayName: "Get",           description: "Metadata of one file."                                   },
@@ -37,56 +37,56 @@ export const Blueprint = defineBlueprint({
 
     "resource==search": {
         fields: [
-            FieldBuilder.String("nameContains", "Name Contains"),
-            FieldBuilder.ResourceLoader("folder", "In Folder", { loaderId: "folders", placeholder: "Anywhere" }),
-            FieldBuilder.String("mimeType", "MIME Type", {
+            defineField.String("nameContains", "Name Contains"),
+            defineField.ResourceLoader("folder", "In Folder", { loaderId: "folders", placeholder: "Anywhere" }),
+            defineField.String("mimeType", "MIME Type", {
                 placeholder: "application/pdf",
                 tooltip:     "Exact type. Google Docs are application/vnd.google-apps.document, Sheets …spreadsheet.",
             }),
-            FieldBuilder.Boolean("includeTrashed", "Include Trashed", { initialValue: false }),
-            FieldBuilder.Integer("limit", "Limit", { initialValue: 50, min: 1, max: 1000 }),
+            defineField.Boolean("includeTrashed", "Include Trashed", { initialValue: false }),
+            defineField.Integer("limit", "Limit", { initialValue: 50, min: 1, max: 1000 }),
         ],
-        outputs: [OutputBuilder.DataList("files", "Files")],
+        outputs: [defineOutput.DataList("files", "Files")],
     },
 
     "resource==get": {
         fields: [
-            FieldBuilder.String("fileId", "File ID", { required: true }),
+            defineField.String("fileId", "File ID", { required: true }),
         ],
-        outputs: [OutputBuilder.Data("file", "File")],
+        outputs: [defineOutput.Data("file", "File")],
     },
 
     "resource==readText": {
         fields: [
-            FieldBuilder.String("readFileId", "File ID", { required: true }),
-            FieldBuilder.String("exportMimeType", "Export As", {
+            defineField.String("readFileId", "File ID", { required: true }),
+            defineField.String("exportMimeType", "Export As", {
                 placeholder: "text/markdown",
                 tooltip:     "Only for Google Docs, Sheets and Slides. Docs default to Markdown, Sheets to CSV, Slides to plain text.",
             }),
         ],
-        outputs: [OutputBuilder.Data("content", "Content")],
+        outputs: [defineOutput.Data("content", "Content")],
     },
 
     "resource==createFolder": {
         fields: [
-            FieldBuilder.String("folderName", "Folder Name", { required: true }),
-            FieldBuilder.ResourceLoader("parentFolder", "Parent Folder", { loaderId: "folders", placeholder: "My Drive root" }),
+            defineField.String("folderName", "Folder Name", { required: true }),
+            defineField.ResourceLoader("parentFolder", "Parent Folder", { loaderId: "folders", placeholder: "My Drive root" }),
         ],
-        outputs: [OutputBuilder.Data("folder", "Folder")],
+        outputs: [defineOutput.Data("folder", "Folder")],
     },
 
     "resource==move": {
         fields: [
-            FieldBuilder.String("moveFileId", "File ID", { required: true }),
-            FieldBuilder.ResourceLoader("destinationFolder", "Destination Folder", { loaderId: "folders", placeholder: "Pick a folder", required: true }),
+            defineField.String("moveFileId", "File ID", { required: true }),
+            defineField.ResourceLoader("destinationFolder", "Destination Folder", { loaderId: "folders", placeholder: "Pick a folder", required: true }),
         ],
-        outputs: [OutputBuilder.Data("file", "File")],
+        outputs: [defineOutput.Data("file", "File")],
     },
 
     "resource==share": {
         fields: [
-            FieldBuilder.String("shareFileId", "File ID", { required: true }),
-            FieldBuilder.MultiOption("shareType", "Share With", {
+            defineField.String("shareFileId", "File ID", { required: true }),
+            defineField.MultiOption("shareType", "Share With", {
                 options: [
                     { value: "user",   displayName: "Person",  description: "One Google account."       },
                     { value: "group",  displayName: "Group",   description: "A Google Group address."   },
@@ -95,10 +95,10 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "user",
             }),
-            FieldBuilder.String("shareWith", "Email or Domain", {
+            defineField.String("shareWith", "Email or Domain", {
                 tooltip: "Not needed when sharing with anyone.",
             }),
-            FieldBuilder.MultiOption("shareRole", "Role", {
+            defineField.MultiOption("shareRole", "Role", {
                 options: [
                     { value: "reader",    displayName: "Viewer"    },
                     { value: "commenter", displayName: "Commenter" },
@@ -106,22 +106,22 @@ export const Blueprint = defineBlueprint({
                 ],
                 initialValue: "reader",
             }),
-            FieldBuilder.Boolean("notify", "Send Notification Email", { initialValue: false }),
+            defineField.Boolean("notify", "Send Notification Email", { initialValue: false }),
         ],
-        outputs: [OutputBuilder.Data("permission", "Permission")],
+        outputs: [defineOutput.Data("permission", "Permission")],
     },
 
     "resource==trash": {
         fields: [
-            FieldBuilder.String("trashFileId", "File ID", { required: true }),
+            defineField.String("trashFileId", "File ID", { required: true }),
         ],
-        outputs: [OutputBuilder.Data("file", "File")],
+        outputs: [defineOutput.Data("file", "File")],
     },
 
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Google Drive Tools")],
+        outputs: [defineOutput.ToolList("tools", "Google Drive Tools")],
     }),
 });

@@ -45,12 +45,15 @@ export default CanvasNode
 const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
-  const hasUpdate     = WorkbenchSDK.useDocument(d => d.selectors.dependency.doesNodeHaveUpdate(d, hyNode.id))
+  const hasUpdate     = WorkbenchSDK.useDocument(d => d.selectors.node.dependency.hasUpdates(d, hyNode.id))
 
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled
   const isIgniter   = hyNode.blueprint.igniter ?? false
   const isPassive   = hyNode.blueprint.passive ?? false
+
+  // Igniters and passive nodes never take inputs, so they get no offer to add one.
+  const showAddInputPortBtn = !isIgniter && !isPassive && hyNode.outputs.length == 0 && hyNode.inputs.length == 0
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
@@ -116,7 +119,7 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'
 
           >
-            <NodeInputs nodeId={hyNode.id} inputs={hyNode.inputs} isFlipped={hyNode.ui.isFlipped} />
+            <NodeInputs nodeId={hyNode.id} inputs={hyNode.inputs} isFlipped={hyNode.ui.isFlipped} showAddInputPortBtn={showAddInputPortBtn} />
             <NodeOutputs nodeId={hyNode.id} outputs={hyNode.outputs} isFlipped={hyNode.ui.isFlipped} />
           </div>
         }

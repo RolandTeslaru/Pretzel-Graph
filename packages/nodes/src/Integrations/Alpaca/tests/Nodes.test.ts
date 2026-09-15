@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url"
 
 import {
     CatalogueService,
-    FieldBuilder,
+    StandardFields,
 } from "@pretzel-graph/node-sdk"
 import { Foundations } from "@pretzel-graph/shared/domain"
 
@@ -22,7 +22,7 @@ const nodesRoot = fileURLToPath(new URL("../../..", import.meta.url))
 
 const customFields = (blueprint: Foundations.Blueprint) =>
     blueprint.fields
-        .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+        .filter(field => !StandardFields.IDS.has(String(field.id)))
         .map(field => String(field.id))
 
 const credentialIds = (blueprint: Foundations.Blueprint) =>

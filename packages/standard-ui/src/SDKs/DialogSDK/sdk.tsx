@@ -80,9 +80,11 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                             surfaceStyle: {
                                 filter: `brightness(${1 / (dialogsSize - index)})`,
                                 transition: "filter 400ms ease-in-out",
-                                animation: entry.isOpen
-                                    ? "dialog-fade-in 150ms ease-in-out 300ms both"
-                                    : "dialog-fade-out 150ms ease-in-out both",
+                                animationName: entry.isOpen ? "dialog-fade-in" : "dialog-fade-out",
+                                animationDuration: "150ms",
+                                animationTimingFunction: "ease-in-out",
+                                animationDelay: entry.isOpen ? "300ms" : "0ms",
+                                animationFillMode: "both",
                                 // Buried under another dialog: solid card, no blur worth paying for.
                                 ...(blockTransparency && {
                                     backgroundColor: "var(--card)",

@@ -68,6 +68,7 @@ const SQLSTATE: Record<string, SystemError.Code> = {
     '23503': SystemError.Code.NOT_FOUND,   // FK — referenced row missing
     '23502': SystemError.Code.BAD_REQUEST, // not-null violation
     '22P02': SystemError.Code.BAD_REQUEST, // malformed input (bad uuid, etc.)
+    '23514': SystemError.Code.BAD_REQUEST, // check violation
 };
 
 export function catchDatabaseErrors(fn: (...args: unknown[]) => unknown, operation: string) {

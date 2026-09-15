@@ -15,18 +15,26 @@ interface Props {
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
-    const depRef = hyNode.dependencyRef
-    const hasWorkflowDependency = !!depRef
 
-    const [dependencyUpdate, mode] = WorkbenchSDK.useDocument(d => d.selectors.node.getDependencyUpdate(d, hyNode.id) ?? [null, null])
+    const nodeId = hyNode.id
 
-    const showExtrasPanel = dependencyUpdate || hasWorkflowDependency || hyNode.blueprint.toolCompatible || hyNode.blueprint.proxyCompatible
+    const [shapeDependencyRef, updateCount] = WorkbenchSDK.useDocument(d => {
+        const shapeDependencyRef = d.selectors.node.dependency.getShapeRef(d, nodeId)
+        const updateCount = d.selectors.node.dependency.getUpdates(d, nodeId).length
 
-    const handleDependencyUpdate = () => {
-        if(mode === "draft")
-            WorkbenchSDK.actions.dependency.draft.update(dependencyUpdate as Workflow.Dependency.Draft.UpdateInfo)
-        else if(mode === "publication")
-            WorkbenchSDK.actions.dependency.published.update(dependencyUpdate as Workflow.Dependency.Publication.UpdateInfo)
+        return [shapeDependencyRef, updateCount]
+    })
+
+
+    const showExtrasPanel = updateCount || shapeDependencyRef  || hyNode.blueprint.toolCompatible || hyNode.blueprint.proxyCompatible
+
+    const openDependencyUpdater = () => {
+        const document = WorkbenchSDK.document
+
+        WorkbenchSDK.dialogs.openDependencyUpdater(
+            WorkbenchSDK.selectors.node.dependency.getUpdates(document, nodeId),
+            "Update dependencies for this node",
+        )
     }
 
     return (
@@ -67,19 +75,19 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                     {hyNode.blueprint.toolCompatible && (
                         <ToolButton nodeId={hyNode.id} />
                     )}
-                    {hasWorkflowDependency && (
+                    {shapeDependencyRef && (
                         <Tipped label="Open workflow">
                             <Button variant="ghost-primary" size="icon-xs" className='h-6!'
-                                onClick={() => WorkbenchSDK.openWorkflowWindow(depRef!.workflowId!)}
+                                onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDependencyRef.id)}
                             >
                                 <SystemIcons.Graph />
                             </Button>
                         </Tipped>
                     )}
-                    {dependencyUpdate && 
-                        <Tipped label={mode === "publication" ? "Update published workflow" : "Update draft workflow"}>
+                    {updateCount > 0 &&
+                        <Tipped label={updateCount === 1 ? "Update dependency" : `Update ${updateCount} dependencies`}>
                             <Button variant="ghost-active" size="icon-xs" className='h-6!'
-                                onClick={handleDependencyUpdate}
+                                onClick={openDependencyUpdater}
                             >
                                 <SystemIcons.ArrowBigUpDash />
                             </Button>

@@ -7,7 +7,7 @@ import ErrorViewer from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ErrorViewer'
 import IssuesViewer from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/IssuesViewer'
 import { GlowingAlertTriangle, GlowingAlertTriangleRed } from '@/routes/workflow/-SDKs/WorkbenchSDK/ui/Canvas/Node/Header/icons'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
-import { Popover, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Popover, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { Validation } from '@pretzel-graph/shared/domain'
 import { AnimatePresence, motion } from 'motion/react'
 import { DrawerSDK } from '../-SDKs/DrawerSDK/sdk'
@@ -16,6 +16,14 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
 export const BottomPanel = () => {
     const hasIssues = WorkbenchSDK.useDocument(d => Validation.workflowHasIssues(d.issues));
+    const updateCount = WorkbenchSDK.useDocument(d => d.selectors.dependency.getUpdates(d).length);
+
+    const openDependencyUpdater = () => {
+        WorkbenchSDK.dialogs.openDependencyUpdater(
+            WorkbenchSDK.selectors.dependency.getUpdates(WorkbenchSDK.document),
+            'Update all dependencies',
+        );
+    };
 
     const executionHasError = ExecutionSDK.useStore(s => {
         const exec = s.currentExecution;
@@ -80,6 +88,23 @@ export const BottomPanel = () => {
                     <AssistantButton />
                     <ExecutionControls canRun={!hasIssues} />
                 </motion.div>
+
+                {updateCount > 0 && (
+                    <motion.div
+                        key="dependency-updates"
+                        className='p-1 w-auto bg-card/90 backdrop-blur-sm border border-border rounded-full flex shadow-md shadow-black/10'
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    >
+                        <Tipped label={updateCount === 1 ? '1 dependency update' : `${updateCount} dependency updates`}>
+                            <Button variant='ghost-active' size='icon-sm' className='rounded-full gap-1.5 my-auto' onClick={openDependencyUpdater}>
+                                <SystemIcons.ArrowBigUpDash className='size-4' />
+                            </Button>
+                        </Tipped>
+                    </motion.div>
+                )}
 
 
                 {showIgniterAttributesPanel && (

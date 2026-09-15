@@ -58,6 +58,8 @@ export class Synthesizer {
                 // Opaque handles — no useful inspectable properties
                 return {};
 
+            case "Skill":
+            case "SkillList":
             case "Text":
             case "Data":
             case "DataList":
@@ -217,6 +219,8 @@ export class Synthesizer {
             case "Retriever":
             case "Tool":
             case "ToolList":
+            case "Skill":
+            case "SkillList":
                 throw new Error(
                     `AGGEX Synthesizer: Cannot synthesize variant "${input.variant}" ` +
                     `from a static value — it requires an incoming edge connection.`
@@ -363,6 +367,15 @@ export class Synthesizer {
                     `Cannot coerce value into variant "${variant}" — expected an array of BaseMessage`,
                     { data: { variant, rawReference } }
                 );
+
+            case "Skill":
+                // Pass through — a skill is its plain snapshot object
+                return rawReference;
+
+            case "SkillList":
+                if (Array.isArray(rawReference))
+                    return rawReference;
+                return [rawReference];
 
             case "DataList":
                 // Pass through — no canonical LC class for arbitrary data lists

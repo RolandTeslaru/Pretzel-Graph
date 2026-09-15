@@ -48,6 +48,12 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
                         >
                             Workflow
                         </ContextMenu.Item>
+                        <ContextMenu.Item
+                            icon={<SystemIcons.Sparkles2 className='size-4' />}
+                            onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folder.id })}
+                        >
+                            Skill
+                        </ContextMenu.Item>
                     </ContextMenu.SubContent>
                 </ContextMenu.Sub>
                 <ContextMenu.Separator />
@@ -97,7 +103,7 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
 }
 
 function openMoveFolder(folder: Library.Folder) {
-    LibrarySDK.dialogs.openResourceSelector({
+    LibrarySDK.dialogs.openLibrarySelector({
         accept: 'folder',
         onSelect: async ({ id }) => {
             if (id === folder.parent_folder_id) return

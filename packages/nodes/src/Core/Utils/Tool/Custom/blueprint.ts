@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 
 const DEFAULT_SCHEMA = {
     type: "object",
@@ -21,28 +21,28 @@ export const Blueprint = defineBlueprint({
     icon: "Hammer",
     accent: "port-Tool",
     fields: [
-        FieldBuilder.String("toolName", "Tool Name", {
+        defineField.String("toolName", "Tool Name", {
             initialValue: "custom_tool",
             placeholder: "snake_case name the model calls",
             tooltip: "The function name exposed to the model. Use snake_case, no spaces."
         }),
-        FieldBuilder.String("toolDescription", "Description", {
+        defineField.String("toolDescription", "Description", {
             initialValue: "",
             multiline: true,
             placeholder: "Describe to the model what this tool does and when to use it.",
             tooltip: "Shown to the model — the clearer this is, the better the model calls the tool."
         }),
-        FieldBuilder.Json("argsSchema", "Argument Schema", {
+        defineField.Json("argsSchema", "Argument Schema", {
             initialValue: DEFAULT_SCHEMA,
             tooltip: "JSON Schema describing the arguments the model must supply. Converted to a Zod schema for validation."
         }),
-        FieldBuilder.Script("code", "Code", {
+        defineField.Script("code", "Code", {
             initialValue: DEFAULT_CODE
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Tool("tool", "Tool", {
+        defineOutput.Tool("tool", "Tool", {
             tooltip: "A tool the agent can call; each call runs your code with the model's arguments."
         }),
     ],

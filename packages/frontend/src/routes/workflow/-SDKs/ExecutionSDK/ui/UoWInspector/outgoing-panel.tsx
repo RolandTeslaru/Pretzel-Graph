@@ -62,7 +62,7 @@ const Content = ({
 
     return (
         <PortProjectionsView
-            ports={WorkbenchSDK.document.selectors.node.getOutputs(WorkbenchSDK.document, node.id)}
+            ports={WorkbenchSDK.document.selectors.node.ports.getOutputs(WorkbenchSDK.document, node.id)}
             projections={projections as Execution.Session["node_output_projections"]}
             emptyMessage="No outgoing data recorded."
         />

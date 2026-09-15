@@ -1,3 +1,4 @@
+import type { Dependency } from '@pretzel-graph/shared/domain';
 import { Injectable, Logger } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
@@ -46,7 +47,7 @@ export class ListingService {
         });
     }
 
-    public async getPublication(listingId: Listing.Id): Promise<Workflow.Dependency.Publication | null> {
+    public async getPublication(listingId: Listing.Id): Promise<Dependency.Value.Publication | null> {
         if (!this.registry.canRead)
             return null;
 
@@ -55,28 +56,30 @@ export class ListingService {
         return entry ? Listing.toPublication(entry) : null;
     }
 
+    // Listings whose active publication moved on from the one each snapshot was taken at.
     public async checkUpdates(
-        dependencies: Array<{ workflowId: Workflow.Id; publicationId: VersionControl.Publication.Id }>,
-    ): Promise<Workflow.Dependency.Publication.UpdateMap> {
+        dependencies: Array<Pick<Dependency.Update.Listing, 'id' | 'publicationId'>>,
+    ): Promise<Dependency.Update.Listing[]> {
         if (!this.registry.canRead || dependencies.length === 0)
-            return {};
+            return [];
 
-        const current = await this.registry.getUpdates(dependencies.map((dependency) => dependency.workflowId));
-        const updates: Workflow.Dependency.Publication.UpdateMap = {};
+        const current = await this.registry.getUpdates(dependencies.map((dependency) => dependency.id));
+        const updates: Dependency.Update.Listing[] = [];
 
         for (const dependency of dependencies) {
-            const info = current[dependency.workflowId];
+            const info = current[dependency.id];
 
             if (!info || info.id === dependency.publicationId)
                 continue;
 
-            updates[dependency.workflowId] = {
-                workflowId:    dependency.workflowId,
+            updates.push({
+                kind:          "listing",
+                id:            dependency.id,
                 publicationId: info.id,
                 version:       info.version,
                 name:          info.name,
                 description:   info.description,
-            };
+            });
         }
 
         return updates;

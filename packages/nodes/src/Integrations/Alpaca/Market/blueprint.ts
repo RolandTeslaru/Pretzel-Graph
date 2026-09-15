@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk"
 
 import { Alpaca } from "@pretzel-graph/nodes/Credentials/Alpaca"
@@ -41,7 +41,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "assets",          displayName: "Assets"          },
                 { value: "clock",           displayName: "Market Clock"    },
@@ -63,7 +63,7 @@ export const Blueprint = defineBlueprint({
 
     "resource==assets": {
         fields: [
-            FieldBuilder.MultiOption("assetsAction", "Action", {
+            defineField.MultiOption("assetsAction", "Action", {
                 options: [
                     { value: "list", displayName: "List" },
                     { value: "get",  displayName: "Get"  },
@@ -75,18 +75,18 @@ export const Blueprint = defineBlueprint({
 
         "assetsAction==list": {
             fields: [
-                FieldBuilder.String("assetsQuery", "Search", {
+                defineField.String("assetsQuery", "Search", {
                     placeholder: "Apple or AAPL",
                     tooltip:     "Optional local symbol/name filter over Alpaca's asset catalogue.",
                 }),
-                FieldBuilder.MultiOption("assetsStatus", "Status", {
+                defineField.MultiOption("assetsStatus", "Status", {
                     options: [
                         { value: "active",   displayName: "Active"   },
                         { value: "inactive", displayName: "Inactive" },
                     ],
                     initialValue: "active",
                 }),
-                FieldBuilder.MultiOption("assetsClass", "Asset Class", {
+                defineField.MultiOption("assetsClass", "Asset Class", {
                     options: [
                         { value: "all",       displayName: "All"        },
                         { value: "us_equity", displayName: "US Equity"  },
@@ -95,128 +95,128 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "us_equity",
                 }),
-                FieldBuilder.String("assetsExchange", "Exchange", {
+                defineField.String("assetsExchange", "Exchange", {
                     placeholder: "NASDAQ",
                     advanced:    true,
                 }),
-                FieldBuilder.Integer("assetsLimit", "Max Results", {
+                defineField.Integer("assetsLimit", "Max Results", {
                     initialValue: 20,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("assets", "Assets")],
+            outputs: [defineOutput.DataList("assets", "Assets")],
         },
 
         "assetsAction==get": {
             fields: [
-                FieldBuilder.String("assetSymbolOrId", "Symbol or Asset ID", {
+                defineField.String("assetSymbolOrId", "Symbol or Asset ID", {
                     required:    true,
                     placeholder: "AAPL",
                 }),
             ],
-            outputs: [OutputBuilder.Data("asset", "Asset")],
+            outputs: [defineOutput.Data("asset", "Asset")],
         },
     },
 
 
     "resource==clock": {
-        outputs: [OutputBuilder.Data("clock", "Market Clock")],
+        outputs: [defineOutput.Data("clock", "Market Clock")],
     },
 
 
     "resource==calendar": {
         fields: [
-            FieldBuilder.CalendarRange("calendarRange", "Date Range", {
+            defineField.CalendarRange("calendarRange", "Date Range", {
                 placeholder: "Choose trading days",
             }),
-            FieldBuilder.Integer("calendarLimit", "Max Days", {
+            defineField.Integer("calendarLimit", "Max Days", {
                 initialValue: 30,
                 min:          1,
                 max:          1_000,
             }),
         ],
-        outputs: [OutputBuilder.DataList("calendar", "Calendar")],
+        outputs: [defineOutput.DataList("calendar", "Calendar")],
     },
 
 
     "resource==bars": {
         fields: [
-            FieldBuilder.MultiOption("barsAssetClass", "Asset Class", {
+            defineField.MultiOption("barsAssetClass", "Asset Class", {
                 options:      assetClassOptions,
                 initialValue: "stock",
                 variant:      "tab",
             }),
-            FieldBuilder.String("barsSymbol", "Symbol", {
+            defineField.String("barsSymbol", "Symbol", {
                 required:    true,
                 placeholder: "AAPL, BTC/USD, or AAPL260116C00200000",
             }),
-            FieldBuilder.MultiOption("barsUnit", "Timeframe", {
+            defineField.MultiOption("barsUnit", "Timeframe", {
                 options:      timeframeOptions,
                 initialValue: "hour",
             }),
-            FieldBuilder.Integer("barsMultiplier", "Multiplier", {
+            defineField.Integer("barsMultiplier", "Multiplier", {
                 initialValue: 1,
                 min:          1,
                 max:          59,
             }),
-            FieldBuilder.String("barsStart", "Start", {
+            defineField.String("barsStart", "Start", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("barsEnd", "End", {
+            defineField.String("barsEnd", "End", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Integer("barsLimit", "Max Bars", {
+            defineField.Integer("barsLimit", "Max Bars", {
                 initialValue: 200,
                 min:          1,
                 max:          5_000,
             }),
-            FieldBuilder.MultiOption("barsFeed", "Stock Feed", {
+            defineField.MultiOption("barsFeed", "Stock Feed", {
                 options:      stockFeedOptions,
                 initialValue: "iex",
                 advanced:     true,
                 tooltip:      "Used only for stocks.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("bars", "Bars")],
+        outputs: [defineOutput.DataList("bars", "Bars")],
     },
 
 
     "resource==trades": {
         fields: [
-            FieldBuilder.MultiOption("tradesAssetClass", "Asset Class", {
+            defineField.MultiOption("tradesAssetClass", "Asset Class", {
                 options:      assetClassOptions,
                 initialValue: "stock",
                 variant:      "tab",
             }),
-            FieldBuilder.String("tradesSymbol", "Symbol", {
+            defineField.String("tradesSymbol", "Symbol", {
                 required: true,
             }),
-            FieldBuilder.String("tradesStart", "Start", {
+            defineField.String("tradesStart", "Start", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("tradesEnd", "End", {
+            defineField.String("tradesEnd", "End", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Integer("tradesLimit", "Max Trades", {
+            defineField.Integer("tradesLimit", "Max Trades", {
                 initialValue: 100,
                 min:          1,
                 max:          1_000,
             }),
-            FieldBuilder.MultiOption("tradesFeed", "Stock Feed", {
+            defineField.MultiOption("tradesFeed", "Stock Feed", {
                 options:      stockFeedOptions,
                 initialValue: "iex",
                 advanced:     true,
                 tooltip:      "Used only for stocks.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("trades", "Trades")],
+        outputs: [defineOutput.DataList("trades", "Trades")],
     },
 
 
     "resource==quotes": {
         fields: [
-            FieldBuilder.MultiOption("quotesAssetClass", "Asset Class", {
+            defineField.MultiOption("quotesAssetClass", "Asset Class", {
                 options: [
                     { value: "stock",  displayName: "Stock"  },
                     { value: "crypto", displayName: "Crypto" },
@@ -224,32 +224,32 @@ export const Blueprint = defineBlueprint({
                 initialValue: "stock",
                 variant:      "tab",
             }),
-            FieldBuilder.String("quotesSymbol", "Symbol", { required: true }),
-            FieldBuilder.String("quotesStart", "Start", {
+            defineField.String("quotesSymbol", "Symbol", { required: true }),
+            defineField.String("quotesStart", "Start", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("quotesEnd", "End", {
+            defineField.String("quotesEnd", "End", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Integer("quotesLimit", "Max Quotes", {
+            defineField.Integer("quotesLimit", "Max Quotes", {
                 initialValue: 100,
                 min:          1,
                 max:          1_000,
             }),
-            FieldBuilder.MultiOption("quotesFeed", "Stock Feed", {
+            defineField.MultiOption("quotesFeed", "Stock Feed", {
                 options:      stockFeedOptions,
                 initialValue: "iex",
                 advanced:     true,
                 tooltip:      "Used only for stocks.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("quotes", "Quotes")],
+        outputs: [defineOutput.DataList("quotes", "Quotes")],
     },
 
 
     "resource==snapshot": {
         fields: [
-            FieldBuilder.MultiOption("snapshotAssetClass", "Asset Class", {
+            defineField.MultiOption("snapshotAssetClass", "Asset Class", {
                 options: [
                     { value: "stock",  displayName: "Stock"  },
                     { value: "crypto", displayName: "Crypto" },
@@ -257,42 +257,42 @@ export const Blueprint = defineBlueprint({
                 initialValue: "stock",
                 variant:      "tab",
             }),
-            FieldBuilder.String("snapshotSymbol", "Symbol", { required: true }),
-            FieldBuilder.MultiOption("snapshotFeed", "Stock Feed", {
+            defineField.String("snapshotSymbol", "Symbol", { required: true }),
+            defineField.MultiOption("snapshotFeed", "Stock Feed", {
                 options:      stockFeedOptions,
                 initialValue: "iex",
                 advanced:     true,
                 tooltip:      "Used only for stocks.",
             }),
         ],
-        outputs: [OutputBuilder.Data("snapshot", "Snapshot")],
+        outputs: [defineOutput.Data("snapshot", "Snapshot")],
     },
 
 
     "resource==news": {
         fields: [
-            FieldBuilder.List("newsSymbols", "Symbols", {
+            defineField.List("newsSymbols", "Symbols", {
                 tooltip: "Optional. Leave empty for recent market-wide news.",
             }),
-            FieldBuilder.String("newsStart", "Start", {
+            defineField.String("newsStart", "Start", {
                 placeholder: "2026-07-01T00:00:00Z",
             }),
-            FieldBuilder.String("newsEnd", "End", {
+            defineField.String("newsEnd", "End", {
                 placeholder: "2026-08-01T00:00:00Z",
             }),
-            FieldBuilder.Integer("newsLimit", "Max Articles", {
+            defineField.Integer("newsLimit", "Max Articles", {
                 initialValue: 10,
                 min:          1,
                 max:          100,
             }),
         ],
-        outputs: [OutputBuilder.DataList("news", "News")],
+        outputs: [defineOutput.DataList("news", "News")],
     },
 
 
     "resource==options": {
         fields: [
-            FieldBuilder.MultiOption("optionsAction", "Action", {
+            defineField.MultiOption("optionsAction", "Action", {
                 options: [
                     { value: "listContracts", displayName: "List Contracts" },
                     { value: "getContract",   displayName: "Get Contract"   },
@@ -304,17 +304,17 @@ export const Blueprint = defineBlueprint({
 
         "optionsAction==listContracts": {
             fields: [
-                FieldBuilder.List("contractsUnderlyings", "Underlying Symbols", {
+                defineField.List("contractsUnderlyings", "Underlying Symbols", {
                     tooltip: "Optional symbols such as AAPL or SPY.",
                 }),
-                FieldBuilder.MultiOption("contractsStatus", "Status", {
+                defineField.MultiOption("contractsStatus", "Status", {
                     options: [
                         { value: "active",   displayName: "Active"   },
                         { value: "inactive", displayName: "Inactive" },
                     ],
                     initialValue: "active",
                 }),
-                FieldBuilder.MultiOption("contractsType", "Type", {
+                defineField.MultiOption("contractsType", "Type", {
                     options: [
                         { value: "all",  displayName: "Calls & Puts" },
                         { value: "call", displayName: "Calls"        },
@@ -322,34 +322,34 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "all",
                 }),
-                FieldBuilder.String("contractsExpiration", "Expiration Date", {
+                defineField.String("contractsExpiration", "Expiration Date", {
                     placeholder: "2026-12-18",
                 }),
-                FieldBuilder.Integer("contractsLimit", "Max Contracts", {
+                defineField.Integer("contractsLimit", "Max Contracts", {
                     initialValue: 50,
                     min:          1,
                     max:          1_000,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("contracts", "Option Contracts")],
+            outputs: [defineOutput.DataList("contracts", "Option Contracts")],
         },
 
         "optionsAction==getContract": {
             fields: [
-                FieldBuilder.String("contractSymbolOrId", "Contract Symbol or ID", {
+                defineField.String("contractSymbolOrId", "Contract Symbol or ID", {
                     required: true,
                 }),
             ],
-            outputs: [OutputBuilder.Data("contract", "Option Contract")],
+            outputs: [defineOutput.Data("contract", "Option Contract")],
         },
 
         "optionsAction==chain": {
             fields: [
-                FieldBuilder.String("chainUnderlying", "Underlying Symbol", {
+                defineField.String("chainUnderlying", "Underlying Symbol", {
                     required:    true,
                     placeholder: "AAPL",
                 }),
-                FieldBuilder.MultiOption("chainType", "Type", {
+                defineField.MultiOption("chainType", "Type", {
                     options: [
                         { value: "all",  displayName: "Calls & Puts" },
                         { value: "call", displayName: "Calls"        },
@@ -357,31 +357,31 @@ export const Blueprint = defineBlueprint({
                     ],
                     initialValue: "all",
                 }),
-                FieldBuilder.String("chainExpiration", "Expiration Date", {
+                defineField.String("chainExpiration", "Expiration Date", {
                     placeholder: "2026-12-18",
                 }),
-                FieldBuilder.Float("chainStrikeFrom", "Minimum Strike", {
+                defineField.Float("chainStrikeFrom", "Minimum Strike", {
                     min:      0,
                     advanced: true,
                 }),
-                FieldBuilder.Float("chainStrikeTo", "Maximum Strike", {
+                defineField.Float("chainStrikeTo", "Maximum Strike", {
                     min:      0,
                     advanced: true,
                 }),
-                FieldBuilder.Integer("chainLimit", "Max Contracts", {
+                defineField.Integer("chainLimit", "Max Contracts", {
                     initialValue: 50,
                     min:          1,
                     max:          500,
                 }),
             ],
-            outputs: [OutputBuilder.DataList("chain", "Option Chain")],
+            outputs: [defineOutput.DataList("chain", "Option Chain")],
         },
     },
 
 
     "resource==screener": {
         fields: [
-            FieldBuilder.MultiOption("screenerView", "View", {
+            defineField.MultiOption("screenerView", "View", {
                 options: [
                     { value: "mostActive", displayName: "Most Active" },
                     { value: "movers",     displayName: "Movers"      },
@@ -393,38 +393,38 @@ export const Blueprint = defineBlueprint({
 
         "screenerView==mostActive": {
             fields: [
-                FieldBuilder.MultiOption("activeBy", "Rank By", {
+                defineField.MultiOption("activeBy", "Rank By", {
                     options: [
                         { value: "volume", displayName: "Volume" },
                         { value: "trades", displayName: "Trades" },
                     ],
                     initialValue: "volume",
                 }),
-                FieldBuilder.Integer("activeLimit", "Max Results", {
+                defineField.Integer("activeLimit", "Max Results", {
                     initialValue: 10,
                     min:          1,
                     max:          100,
                 }),
             ],
-            outputs: [OutputBuilder.Data("active", "Most Active")],
+            outputs: [defineOutput.Data("active", "Most Active")],
         },
 
         "screenerView==movers": {
             fields: [
-                FieldBuilder.MultiOption("moversMarket", "Market", {
+                defineField.MultiOption("moversMarket", "Market", {
                     options: [
                         { value: "stocks", displayName: "Stocks" },
                         { value: "crypto", displayName: "Crypto" },
                     ],
                     initialValue: "stocks",
                 }),
-                FieldBuilder.Integer("moversLimit", "Max Per Side", {
+                defineField.Integer("moversLimit", "Max Per Side", {
                     initialValue: 10,
                     min:          1,
                     max:          100,
                 }),
             ],
-            outputs: [OutputBuilder.Data("movers", "Movers")],
+            outputs: [defineOutput.Data("movers", "Movers")],
         },
     },
 
@@ -432,6 +432,6 @@ export const Blueprint = defineBlueprint({
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Alpaca Market Tools")],
+        outputs: [defineOutput.ToolList("tools", "Alpaca Market Tools")],
     }),
 })

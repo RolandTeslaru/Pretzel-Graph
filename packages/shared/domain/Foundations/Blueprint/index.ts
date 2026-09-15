@@ -45,6 +45,10 @@ export namespace Blueprint {
     export const derive       = DerivativeMod.derive
     export const deriveByPath = DerivativeMod.deriveByPath
 
+    /** Whether field values can change this blueprint's shape: branches, or a slot count. */
+    export const isDerivable = (blueprint: Blueprint): boolean =>
+        (blueprint._derivatives?.length ?? 0) > 0 || blueprint.fields.some(f => f.variant === "Variadic")
+
     /**
      * Identity for a node's resolved derivative. Static blueprints keep their base id; derivative
      * blueprints key on the matched path (`Blueprint.Id:shape==number/rounding!=none`).
@@ -53,7 +57,7 @@ export namespace Blueprint {
         blueprint   : Blueprint,
         fieldValues : Record<Field.Id, Field.Value>,
     ): Blueprint.ReconciledId => {
-        if (!blueprint._derivatives?.length)
+        if (!isDerivable(blueprint))
             return blueprint.id as Blueprint.ReconciledId;
 
         const { derivativeId } = derive(blueprint, fieldValues);
@@ -69,14 +73,6 @@ export namespace Blueprint {
 
     export namespace Meta {
 
-        export namespace DependencyRef {
-            export const Schema = z.object({
-                workflowId: z.uuid().brand("WorkflowId"),
-                mode:       z.enum(["publication", "draft"]),
-            })
-        }
-        export type DependencyRef = z.infer<typeof DependencyRef.Schema>
-
         export const Schema = z.object({
             id:                   Blueprint.Id,
             toolCompatible:       z.boolean().optional(),
@@ -89,7 +85,6 @@ export namespace Blueprint {
             // Node never self-starts and is never electable either — it only fires when
             // another node triggers it mid-run via schedulerAPI/propagationAPI.
             passive:              z.boolean().optional(),
-            dependencyRef:        DependencyRef.Schema.optional(),
             flags:                z.record(z.string(), z.unknown()).optional(),
             credentials:          z.array(Vault.Credential.Template.Schema).readonly().optional(),
             

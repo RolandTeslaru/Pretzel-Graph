@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Slice",
@@ -7,23 +7,23 @@ export const Blueprint = defineBlueprint({
     icon: "Scissors",
     accent: "utility",
     fields: [
-        FieldBuilder.Integer("start", "Start", {
+        defineField.Integer("start", "Start", {
             initialValue: 0,
             tooltip: "Start index (inclusive). Negative values count from the end."
         }),
-        FieldBuilder.Integer("end", "End", {
+        defineField.Integer("end", "End", {
             required: false,
             tooltip: "End index (exclusive). Leave empty to slice to the end of the list. Negative values count from the end."
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList("list", "List", {
+        defineInput.UnresolvedList("list", "List", {
             required: true,
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList("slice", "Slice", {
+        defineOutput.UnresolvedList("slice", "Slice", {
             polymorphicGroupId: "data"
         }),
     ],

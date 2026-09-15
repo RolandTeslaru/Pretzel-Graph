@@ -13,7 +13,7 @@ type NodeId = Workflow.Node.Id
  * both cases the base already is the answer.
  */
 function resolveOnCreate(d: Document, blueprint: Foundations.Blueprint) {
-    if (!blueprint._derivatives?.length)
+    if (!Foundations.Blueprint.isDerivable(blueprint))
         return null;
 
     const { blueprint: derived, derivativeId } = Foundations.Blueprint.derive(blueprint, {});
@@ -134,7 +134,7 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
         const nodes = d.data.nodes
         const staticValues = d.data.staticValues
 
-        const depRef = nodes[deletedNodeId]?.dependencyRef;
+        const shapeDepRef = d.selectors.node.dependency.getShapeRef(d, deletedNodeId);
 
         // Delete all edges
         d.reducers.node.disconnect(d, deletedNodeId);
@@ -150,7 +150,7 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
         d.reducers.layout.node.remove(d, deletedNodeId);
         d.reducers.node.clearIssues(d, deletedNodeId);
 
-        if(depRef)
+        if(shapeDepRef)
             d.reducers.dependency.removeUnused(d);
     },
     create: (d, blueprint, position, staticValues, credentialInstanceIds) => {
@@ -168,7 +168,6 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
             id          : nodeId,
             blueprintId : blueprint.id,
             ui: {},
-            dependencyRef : blueprint.dependencyRef,
             ...(derived && { reconciledBlueprintId: derived.id }),
         }
 
@@ -241,32 +240,31 @@ export const nodeLifecycleReducers: NodeLifecycleReducers = {
         d.reducers.blueprint.register(d, blueprint);
 
         // Save connected edges so we can reattch them after recreate, which wipes them
-        const incomingEdges = d.selectors.node.getIncomingEdges(d, nodeId);
-        const outgoingEdges = d.selectors.node.getOutgoingEdges(d, nodeId);
+        const incomingEdges = d.selectors.node.edges.getIncoming(d, nodeId);
+        const outgoingEdges = d.selectors.node.edges.getOutgoing(d, nodeId);
 
         // Capture before `remove` wipes them, so we can carry the user's values/credentials
         // across the recreate instead of losing them.
-        const staticValues = d.data.staticValues[nodeId] ?? {};
+        const staticValues = { ...d.data.staticValues[nodeId] };
         const credentialInstances = d.data.credentialInstanceIds[nodeId];
 
         const nodeLayout   = cloneDeep(d.selectors.layout.node.get(d, nodeId));
-        const hadDependency = !!node.dependencyRef;
+        const hadDependency = !!d.selectors.node.dependency.getShapeRef(d, nodeId);
 
         const newNode: Workflow.Node.Raw = {
             id          : nodeId,
             blueprintId : blueprint.id,
             isDisabled  : node.isDisabled,
             ui          : node.ui,
-            dependencyRef : node.dependencyRef ?? blueprint.dependencyRef,
         }
 
         const result = Workflow.Node.Raw.Schema.safeParse(newNode)
         if (!result.success)
             throw new Error(`Node schema validation failed. Could not recreate node from blueprint id ${blueprint.id}`)
 
-        // Clear dependency before remove so it doesn't trigger dependencyReducers.removeUnused while the node
-        // is temporarily absent — the dependency is already captured in newNode above.
-        d.data.nodes[nodeId].dependencyRef = undefined
+        // Drop the pointer before remove so its GC keeps the snapshot while the node is temporarily
+        // absent — the pointer is carried over in the captured values above.
+        delete d.data.staticValues[nodeId]?.[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID]
         d.reducers.node.remove(d, nodeId)
 
         d.data.nodes[nodeId] = newNode;

@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.ResourceLoaderTest",
@@ -7,13 +7,13 @@ export const Blueprint = defineBlueprint({
     icon: "FlaskConical",
     accent: "utility",
     fields: [
-        // Placeholder for credential — will be replaced by FieldBuilder.Credential once that exists
-        FieldBuilder.ResourceLoader("schema", "Schema", {
+        // Placeholder for credential — will be replaced by defineField.Credential once that exists
+        defineField.ResourceLoader("schema", "Schema", {
             loaderId:"schemaSearch",
             placeholder: "Select a schema",
             required: true
         }),
-        FieldBuilder.ResourceLoader("table", "Table", {
+        defineField.ResourceLoader("table", "Table", {
             loaderId:"tableSearch",
             dependsOn: ["schema"],
             placeholder: "Select a table",
@@ -21,12 +21,12 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.Message("input", "Input", {
+        defineInput.Message("input", "Input", {
             required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message("output", "Output", {
+        defineOutput.Message("output", "Output", {
             tooltip: "Passes input through with selected schema/table logged."
         }),
     ],

@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { Massive } from "@pretzel-graph/nodes/Credentials/Massive";
 
@@ -13,24 +13,24 @@ const timespanOptions = [
 ] as const;
 
 const candleFields = () => [
-    FieldBuilder.MultiOption("timespan", "Timespan", {
+    defineField.MultiOption("timespan", "Timespan", {
         options:      timespanOptions,
         initialValue: "minute",
         tooltip:     "Candle granularity.",
     }),
-    FieldBuilder.Integer("multiplier", "Multiplier", {
+    defineField.Integer("multiplier", "Multiplier", {
         initialValue: 1,
         min:          1,
         max:          60,
         tooltip:     "Candle multiplier (e.g. 5 + minute = 5-minute candles).",
     }),
-    FieldBuilder.Integer("lookbackHours", "Lookback (hours)", {
+    defineField.Integer("lookbackHours", "Lookback (hours)", {
         initialValue: 24,
         min:          1,
         max:          24 * 365,
         tooltip:     "How far back to fetch candles, in hours. The end time is always 'now'.",
     }),
-    FieldBuilder.Boolean("adjusted", "Adjusted", {
+    defineField.Boolean("adjusted", "Adjusted", {
         initialValue: true,
         advanced:     true,
         tooltip:      "Whether to request adjusted data for aggregates when supported by the API.",
@@ -47,12 +47,12 @@ export const Blueprint = defineBlueprint({
     accent:          "port-DataList",
     toolCompatible:  true,
     fields: [
-        FieldBuilder.String("ticker", "Ticker", {
+        defineField.String("ticker", "Ticker", {
             required:    true,
             placeholder: "AAPL",
             tooltip:     "US stock ticker symbol (e.g. AAPL, MSFT, TSLA). Unused by the Market Status action.",
         }),
-        FieldBuilder.MultiOption("action", "Action", {
+        defineField.MultiOption("action", "Action", {
             options: [
                 { value: "candles",      displayName: "Candles — OHLCV history" },
                 { value: "snapshot",     displayName: "Snapshot — live price & day metrics" },
@@ -70,10 +70,10 @@ export const Blueprint = defineBlueprint({
     "action==candles": {
         fields: candleFields(),
         outputs: [
-            OutputBuilder.DataList("candles", "Candles", {
+            defineOutput.DataList("candles", "Candles", {
                 tooltip: "Array of OHLCV aggregates (bars) returned by Massive.",
             }),
-            OutputBuilder.Data("summary", "Summary", {
+            defineOutput.Data("summary", "Summary", {
                 tooltip: "Convenience summary: { ticker, timespan, multiplier, count, firstClose, lastClose, change, changePct }.",
             }),
         ],
@@ -81,7 +81,7 @@ export const Blueprint = defineBlueprint({
 
     "action==snapshot": {
         outputs: [
-            OutputBuilder.Data("data", "Snapshot", {
+            defineOutput.Data("data", "Snapshot", {
                 tooltip: "Live state: today's OHLC and volume, change, the previous day's bar, last trade and last quote.",
             }),
         ],
@@ -89,7 +89,7 @@ export const Blueprint = defineBlueprint({
 
     "action==details": {
         outputs: [
-            OutputBuilder.Data("data", "Details", {
+            defineOutput.Data("data", "Details", {
                 tooltip: "Company reference data: name, description, market cap, shares outstanding, exchange, branding.",
             }),
         ],
@@ -97,7 +97,7 @@ export const Blueprint = defineBlueprint({
 
     "action==financials": {
         fields: [
-            FieldBuilder.MultiOption("timeframe", "Timeframe", {
+            defineField.MultiOption("timeframe", "Timeframe", {
                 options: [
                     { value: "annual",    displayName: "Annual" },
                     { value: "quarterly", displayName: "Quarterly" },
@@ -105,7 +105,7 @@ export const Blueprint = defineBlueprint({
                 initialValue: "quarterly",
                 tooltip:     "Reporting period for the financial statements.",
             }),
-            FieldBuilder.Integer("limit", "Limit", {
+            defineField.Integer("limit", "Limit", {
                 initialValue: 4,
                 min:          1,
                 max:          100,
@@ -113,7 +113,7 @@ export const Blueprint = defineBlueprint({
             }),
         ],
         outputs: [
-            OutputBuilder.DataList("data", "Financials", {
+            defineOutput.DataList("data", "Financials", {
                 tooltip: "One item per reporting period: income statement, balance sheet and cash flow.",
             }),
         ],
@@ -121,7 +121,7 @@ export const Blueprint = defineBlueprint({
 
     "action==marketStatus": {
         outputs: [
-            OutputBuilder.Data("data", "Market Status", {
+            defineOutput.Data("data", "Market Status", {
                 tooltip: "Whether US markets are currently open, plus after-hours and per-exchange status.",
             }),
         ],
@@ -129,24 +129,24 @@ export const Blueprint = defineBlueprint({
 
     "isConvertedToTool==true": defineTool({
         fields: [
-            FieldBuilder.MultiOption("timespan", "Default Timespan", {
+            defineField.MultiOption("timespan", "Default Timespan", {
                 options:      timespanOptions,
                 initialValue: "minute",
                 tooltip:     "Default timespan used by getCandles when the agent doesn't specify one.",
             }),
-            FieldBuilder.Integer("multiplier", "Default Multiplier", {
+            defineField.Integer("multiplier", "Default Multiplier", {
                 initialValue: 1,
                 min:          1,
                 max:          60,
                 tooltip:     "Default multiplier used by getCandles when the agent doesn't specify one.",
             }),
-            FieldBuilder.Integer("lookbackHours", "Default Lookback (hours)", {
+            defineField.Integer("lookbackHours", "Default Lookback (hours)", {
                 initialValue: 24,
                 min:          1,
                 max:          24 * 365,
                 tooltip:     "Default lookback used by getCandles when the agent doesn't specify one.",
             }),
-            FieldBuilder.Boolean("adjusted", "Adjusted", {
+            defineField.Boolean("adjusted", "Adjusted", {
                 initialValue: true,
                 tooltip:      "Whether to request adjusted data for aggregates when supported by the API.",
                 advanced:     true,
@@ -154,7 +154,7 @@ export const Blueprint = defineBlueprint({
         ],
         inputs:  [],
         outputs: [
-            OutputBuilder.ToolList("tools", "Massive Tools", {
+            defineOutput.ToolList("tools", "Massive Tools", {
                 tooltip: "Toolkit: massive_get_candles, massive_get_news, massive_get_snapshot, massive_get_last_trade, massive_get_last_quote, massive_get_ticker_details, massive_search_tickers, massive_get_financials, massive_get_market_status.",
             }),
         ],

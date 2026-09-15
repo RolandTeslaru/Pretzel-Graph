@@ -4,7 +4,7 @@ import type { Field }              from "@pretzel-graph/shared/domain/Foundation
 import type { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { Derivative }         from "@pretzel-graph/shared/domain/Foundations/Blueprint/derivative";
 import type { CredentialTemplate } from "../credential";
-import { FieldBuilder }            from "../field";
+import { StandardFields }          from "../standardFields";
 
 
 export type ReservedDefinitionKey =
@@ -41,8 +41,8 @@ export type DefineBlueprintReturn<
         readonly iconColor?:  string;
     };
     readonly fields: TToolCompatible extends true
-        ? readonly [...TFields, ...typeof FieldBuilder.DEFAULTS.StandardNode, typeof FieldBuilder.DEFAULTS.toolConvertedField]
-        : readonly [...TFields, ...typeof FieldBuilder.DEFAULTS.StandardNode];
+        ? readonly [...TFields, ...typeof StandardFields.StandardNode, typeof StandardFields.toolConvertedField]
+        : readonly [...TFields, ...typeof StandardFields.StandardNode];
     readonly inputs:           TInputs;
     readonly outputs:          TOutputs;
     readonly webhooks?:        TWebhooks;
@@ -52,7 +52,7 @@ export type DefineBlueprintReturn<
     readonly passive?:         boolean;
     readonly credentials:      TCredentials;
     readonly flags?:           TFlags;
-    // Input port id whose array is iterated for this node's item-scoped fields (FieldBuilder.itemScoped).
+    // Input port id whose array is iterated for this node's item-scoped fields (defineField.itemScoped).
     readonly itemScope?:       string;
     // Serialized form — erased of literals, which is why narrowing reads __definition instead.
     readonly _derivatives?:    readonly Derivative[];

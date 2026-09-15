@@ -273,6 +273,11 @@ export const Sparkles: React.FC<BaseIconProps> = (props) => (
 )
 Sparkles.displayName = "Sparkles"
 
+export const Sparkles2: React.FC<BaseIconProps> = (props) => (
+    <BaseIcon viewBox="0 0 512 512" fill="currentColor" stroke="none" {...props}><path d="m208 512-52.38-139.62L16 320l139.62-52.38L208 128l52.38 139.62L400 320l-139.62 52.38ZM88 176l-23.57-64.43L0 88l64.43-23.57L88 0l23.57 64.43L176 88l-64.43 23.57ZM400 256l-31.11-80.89L288 144l80.89-31.11L400 32l31.11 80.89L512 144l-80.89 31.11Z" /></BaseIcon>
+)
+Sparkles2.displayName = "Sparkles2"
+
 
 export const EyeOff: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></BaseIcon>

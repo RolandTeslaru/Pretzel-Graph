@@ -3,6 +3,7 @@ import { shallow } from "zustand/shallow"
 import { immer } from "zustand/middleware/immer";
 import type { OnSelectionChangeParams, Edge as RF_Edge, Node as RF_Node, ReactFlowInstance } from "@xyflow/react";
 import { _createWorkbenchActions_, type _WorkbenchSDKActions } from "./actions";
+import { _createWorkbenchDialogs_, type _WorkbenchSDKDialogs } from "./dialogs";
 import { useState, useRef, useEffect, useCallback, useMemo, createRef } from "react";
 import { Foundations, Validation, Vault, Workflow, Workbench } from "@pretzel-graph/shared/domain"
 import { temporal } from 'zundo';
@@ -11,6 +12,8 @@ import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { editorReducers } from "./reducers";
+import { handleWorkbenchEvent } from "./handle-events";
+import { AsyncEventQueueHandler } from "@/SDKs/Realtime/EventQueue";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
 import { sameUndoableData } from "./utils/temporal";
 import { Document, type NodeUI } from "@pretzel-graph/shared/domain/Workbench/Document";
@@ -31,12 +34,14 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly runtime = {
         isReconnectionSuccessful: true,
         canvasDriver: null as ReactFlowInstance<WorkbenchSDK.NodeDriver | WorkbenchSDK.CycleSelectionNodeDriver, WorkbenchSDK.EdgeDriver> | null,
-        lastMousePosition: { x: 0, y: 0 }
+        lastMousePosition: { x: 0, y: 0 },
+        // The open workflow's channel; see handle-events.
+        channel: {
+            unsubscribe: null as (() => void) | null,
+            events:      new AsyncEventQueueHandler<Workbench.Event>(event => handleWorkbenchEvent(this, event)),
+        },
     }
 
-    // Two stores. The document is what reducers operate on and what undo tracks; the
-    // editor store is pointer and gesture state the document has no notion of. Keeping
-    // them apart means replacing the document wholesale never touches the cursor.
     public readonly useDocument: BaseSDK.Store<Document> = createWithEqualityFn(
         temporal(
             immer<Document>(() => ({
@@ -50,10 +55,10 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
                 data: d.data,
                 cyclesDirty: d.cyclesDirty,
             }),
-            // Skip recording history when only the camera (ui.viewport) or field/input
-            // values (staticValues) changed — neither should consume undo slots. Field
-            // values are preserved across undo/redo in actions.temporal. Cheap thanks to
-            // immer's structural sharing.
+            // Skip recording history when only the camera (ui.viewport), field/input values
+            // (staticValues) or embedded snapshots (dependencies) changed — none should consume
+            // undo slots. Values and snapshots are preserved across undo/redo in actions.temporal.
+            // Cheap thanks to immer's structural sharing.
             equality: (a, b) =>
                 a.workflowId === b.workflowId &&
                 a.cyclesDirty === b.cyclesDirty &&
@@ -84,6 +89,7 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
     public readonly reducers: WorkbenchSDK.Reducers = Document.reducers;
     public readonly editorReducers: WorkbenchSDK.EditorReducers = editorReducers;
     public readonly actions: WorkbenchSDK.Actions = _createWorkbenchActions_(this)
+    public readonly dialogs: WorkbenchSDK.Dialogs = _createWorkbenchDialogs_()
 
 
     public get isLocked(): boolean {
@@ -99,8 +105,8 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
 
             return [
                 d.data.nodes[nodeId],
-                d.selectors.node.getConnectedPorts(d, nodeId),
-                d.selectors.node.getDependency(d, nodeId),
+                d.selectors.node.ports.getConnected(d, nodeId),
+                d.selectors.node.dependency.getShapeValue(d, nodeId),
                 d.cache.resolvedShape[nodeId] ?? null,
                 d.selectors.blueprint.forNode(d, nodeId),
             ]
@@ -334,6 +340,7 @@ export namespace WorkbenchSDK {
 
     export type Selectors      = Document.Selectors
     export type Actions        = _WorkbenchSDKActions
+    export type Dialogs        = _WorkbenchSDKDialogs
     export type Reducers       = Document.Reducers
     export type EditorReducers = typeof editorReducers
 

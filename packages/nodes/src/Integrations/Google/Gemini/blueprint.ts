@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineOutput } from "@pretzel-graph/node-sdk";
 import { OpenAI } from "@pretzel-graph/nodes/Credentials";
 import { GoogleGemini } from "@pretzel-graph/nodes/Credentials/GoogleGemini";
 
@@ -10,7 +10,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [GoogleGemini],
     fields: [
-        FieldBuilder.MultiOption("model", "Model", {
+        defineField.MultiOption("model", "Model", {
             options: [
                 { value: "gemini-3.1-pro-preview", displayName: "Gemini 3.1 Pro Preview" },
                 { value: "gemini-3.7-flash", displayName: "Gemini 3.7 Flash" },
@@ -22,7 +22,7 @@ export const Blueprint = defineBlueprint({
 
             initialValue: "gemini-3.1-pro-preview"
         }),
-        FieldBuilder.Float("temperature", "Temperature", {
+        defineField.Float("temperature", "Temperature", {
             required: false,
             initialValue: 0.7,
             min: 0,
@@ -31,13 +31,13 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Controls randomness in the output. Higher values are more creative."
         }),
-        FieldBuilder.Integer("maxOutputTokens", "Max Output Tokens", {
+        defineField.Integer("maxOutputTokens", "Max Output Tokens", {
             required: false,
             min: 1,
             step: 1,
             tooltip: "Maximum tokens to generate. For reasoning models (Gemini 3, 2.5) thinking tokens count against this budget — set it high enough to fit both reasoning and the final answer, or responses get truncated (finishReason: MAX_TOKENS)."
         }),
-        FieldBuilder.Float("topP", "Top P", {
+        defineField.Float("topP", "Top P", {
             required: false,
             initialValue: 0.95,
             min: 0,
@@ -46,7 +46,7 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Nucleus sampling probability."
         }),
-        FieldBuilder.Integer("topK", "Top K", {
+        defineField.Integer("topK", "Top K", {
             required: false,
             initialValue: 64,
             min: 1,
@@ -54,7 +54,7 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Top-K sampling parameter."
         }),
-        FieldBuilder.Integer("thinkingBudget", "Thinking Budget", {
+        defineField.Integer("thinkingBudget", "Thinking Budget", {
             required: false,
             advanced: true,
             initialValue: -1,
@@ -65,7 +65,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.LanguageModel("languageModel", "Language Model", {
+        defineOutput.LanguageModel("languageModel", "Language Model", {
             tooltip: "The language model instance used for this response, useful for chaining calls with the same model and settings."
         })
     ]

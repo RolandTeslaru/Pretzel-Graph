@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 import { Postgres } from "@pretzel-graph/nodes/Credentials/Postgres";
 
 export const Blueprint = defineBlueprint({
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     credentials: [Postgres],
     fields: [
-        FieldBuilder.String("query", "Query", {
+        defineField.String("query", "Query", {
             multiline: true,
             initialValue: "SELECT * FROM ",
             placeholder: "SELECT * FROM ...",
@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.DataList("rows", "Rows", {
+        defineOutput.DataList("rows", "Rows", {
             tooltip: "Result rows returned by the query — one item per row."
         }),
     ],

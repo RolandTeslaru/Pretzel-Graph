@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 import { GoogleGmailOAuth } from "@pretzel-graph/nodes/Credentials/GoogleOAuth";
 
@@ -19,7 +19,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("deliver", "Deliver", {
+        defineField.MultiOption("deliver", "Deliver", {
             options: [
                 { value: "send",  displayName: "Send",       description: "Send immediately."               },
                 { value: "draft", displayName: "Save Draft", description: "Leave it in Drafts for review."  },
@@ -27,16 +27,16 @@ export const Blueprint = defineBlueprint({
             initialValue: "send",
             variant:      "tab",
         }),
-        FieldBuilder.String("to",      "To",      { required: true, placeholder: "a@example.com, b@example.com" }),
-        FieldBuilder.String("cc",      "Cc"),
-        FieldBuilder.String("bcc",     "Bcc"),
-        FieldBuilder.String("subject", "Subject"),
-        FieldBuilder.String("body",    "Body"),
-        FieldBuilder.Boolean("bodyIsHtml", "Body is HTML", { initialValue: false }),
-        FieldBuilder.String("threadId", "Thread ID", {
+        defineField.String("to",      "To",      { required: true, placeholder: "a@example.com, b@example.com" }),
+        defineField.String("cc",      "Cc"),
+        defineField.String("bcc",     "Bcc"),
+        defineField.String("subject", "Subject"),
+        defineField.String("body",    "Body"),
+        defineField.Boolean("bodyIsHtml", "Body is HTML", { initialValue: false }),
+        defineField.String("threadId", "Thread ID", {
             tooltip: "Reply inside an existing conversation.",
         }),
-        FieldBuilder.String("inReplyTo", "In Reply To", {
+        defineField.String("inReplyTo", "In Reply To", {
             tooltip: "The Message-ID header of the message being answered.",
         }),
     ],
@@ -45,17 +45,17 @@ export const Blueprint = defineBlueprint({
 
 
     "deliver==send": {
-        outputs: [OutputBuilder.Data("result", "Result")],
+        outputs: [defineOutput.Data("result", "Result")],
     },
 
     "deliver==draft": {
-        outputs: [OutputBuilder.Data("result", "Draft")],
+        outputs: [defineOutput.Data("result", "Draft")],
     },
 
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Gmail Compose Tools")],
+        outputs: [defineOutput.ToolList("tools", "Gmail Compose Tools")],
     }),
 });

@@ -190,7 +190,7 @@ export abstract class RuntimeNode<
      * block: stable globals set once, only `$item` rebound per iteration.
      *
      * `fn` receives an `evalField` that resolves any item-scoped field (declared via
-     * `FieldBuilder.itemScoped`) against the currently-bound element — so multiple item fields can
+     * `defineField.itemScoped`) against the currently-bound element — so multiple item fields can
      * be evaluated in the same iteration without re-looping. Non-expression item fields return
      * their static value. Returns `fn`'s result per element, in order.
      */

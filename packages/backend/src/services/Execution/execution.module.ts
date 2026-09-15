@@ -10,6 +10,7 @@ import { Execution } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
 import { CloudModule } from '../Cloud/cloud.module';
 import { WorkerModule } from '../Worker/worker.module';
+import { WorkbenchModule } from '../Workbench/workbench.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { WorkerModule } from '../Worker/worker.module';
         RealtimeModule,
         CloudModule,
         forwardRef(() => WorkerModule),
+        WorkbenchModule,
     ],
     controllers: [ExecutionController],
     providers: [ExecutionService, ExecutionReconciler, ExecutionRepository, ChatDatabase, VaultRepository],

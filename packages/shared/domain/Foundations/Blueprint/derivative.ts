@@ -190,6 +190,47 @@ const resolveFields = (blueprint: Blueprint, accumulator: Accumulator) => {
     return [...accumulator.replacing.fields, ...framework]
 }
 
+// A Variadic field is a slot count: its template ports are repeated once per slot, with `{n}`
+// filled in and the field's id as the group, into whichever bucket the member resolves from.
+const VARIADIC_TOKEN = /^([A-Za-z_][A-Za-z0-9_]*)==(\d+)$/
+
+const fill = (text: string, n: number) => text.replace(/\{n\}/g, String(n))
+
+const stamp = <P extends Port.Input | Port.Output>(port: P, n: number, groupId: string): P => ({
+    ...port,
+    id:                 fill(port.id, n),
+    displayName:        port.displayName === undefined ? undefined : fill(port.displayName, n),
+    polymorphicGroupId: port.polymorphicGroupId === undefined ? undefined : fill(port.polymorphicGroupId, n),
+    groupId,
+})
+
+const slotCount = (field: Field.Variadic, value: unknown): number => {
+    const asked = Number(value)
+    const count = Number.isFinite(asked) ? Math.trunc(asked) : field.initialValue
+
+    return Math.min(field.max ?? Infinity, Math.max(field.min ?? 0, count))
+}
+
+const generate = (accumulator: Accumulator, field: Field.Variadic, count: number) => {
+    const start = field.startIndex ?? 1
+
+    const bucketFor = (member: "inputs" | "outputs") =>
+        accumulator.replaced.has(member) ? accumulator.replacing[member] : accumulator.appended[member]
+
+    for (let i = 0; i < count; i++) {
+        const n = start + i
+
+        for (const port of field.template.inputs ?? [])
+            bucketFor("inputs").push(stamp(port, n, field.id))
+
+        for (const port of field.template.outputs ?? [])
+            bucketFor("outputs").push(stamp(port, n, field.id))
+    }
+}
+
+const variadicFields = (blueprint: Blueprint, accumulator: Accumulator): Field.Variadic[] =>
+    (resolveFields(blueprint, accumulator) as Field[]).filter((f): f is Field.Variadic => f.variant === "Variadic")
+
 const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => {
     const { _derivatives, ...rest } = blueprint as Blueprint & { _derivatives?: unknown }
 
@@ -276,6 +317,14 @@ export function derive(
 
     walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
 
+    // Slot counts fold after the branches, over whatever Variadic fields those left in place.
+    for (const field of variadicFields(blueprint, accumulator)) {
+        const count = slotCount(field, fieldValues[field.id])
+
+        generate(accumulator, field, count)
+        path.push(`${field.id}==${count}`)
+    }
+
     return {
         blueprint:    memoizedAssemble(blueprint, path, accumulator),
         derivativeId: path.length ? path.join(Derivative.SEPARATOR) as Derivative.Id : null,
@@ -310,6 +359,23 @@ export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id |
     }
 
     walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
+
+    // Whatever the branches did not claim may be a slot count on a Variadic field.
+    const fields = variadicFields(blueprint, accumulator)
+
+    for (const token of wanted) {
+        if (seen.has(token))
+            continue
+
+        const match = VARIADIC_TOKEN.exec(token)
+        const field = match && fields.find(f => f.id === match[1])
+
+        if (!field)
+            continue
+
+        seen.add(token)
+        generate(accumulator, field, slotCount(field, Number(match![2])))
+    }
 
     const missing = [...wanted].filter(token => !seen.has(token))
     if (missing.length)

@@ -4,6 +4,7 @@ import { Workflow, Foundations } from '@pretzel-graph/shared/domain';
 import { Port } from '../Port'
 import { INPUT_RENDERER_MAP } from '../../../InputsRenderer';
 import { InputLabel, type InputLabelSize, type InputLabelVariant } from '../../../InputsRenderer/label';
+import { Button } from '@pretzel-graph/standard-ui/foundations';
 
 const Item: React.FC<{
     input: Foundations.Port.Input
@@ -47,12 +48,31 @@ interface Props {
     nodeId: Workflow.Node.Id
     inputs: Foundations.Port.Input[]
     isFlipped?: boolean
+    showAddInputPortBtn?: boolean
 }
 
-const NodeInputs: React.FC<Props> = memo(({ nodeId, inputs, isFlipped }) => {
+// A node with no inputs offers to add one in place.
+const AddInputPort: React.FC<{ nodeId: Workflow.Node.Id }> = memo(({ nodeId }) => {
+    return (
+        <div className="w-full px-2">
+            <Button
+                variant="ghost"
+                size="sm"
+                className="nodrag rounded-full! w-full justify-start text-muted-foreground"
+                disabled={WorkbenchSDK.isLocked}
+                onClick={() => WorkbenchSDK.dialogs.openAddInputPort(nodeId)}
+            >
+                + Add input port
+            </Button>
+        </div>
+    )
+})
+
+const NodeInputs: React.FC<Props> = memo(({ nodeId, inputs, isFlipped, showAddInputPortBtn = false }) => {
 
     return (
         <div className="flex flex-col relative gap-2">
+            {showAddInputPortBtn && inputs.length === 0 && <AddInputPort nodeId={nodeId} />}
             {inputs.map(input => (
                 <Item
                     key={input.id}

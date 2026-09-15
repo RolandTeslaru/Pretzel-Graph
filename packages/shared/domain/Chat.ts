@@ -37,6 +37,8 @@ export namespace Chat {
 
     export namespace ToolCall {
         export const Id = z.string().brand("ToolCallId")
+        export type Id = z.infer<typeof ToolCall.Id>
+
         export const Schema = z.object({
             id: ToolCall.Id,
             name: z.string(),

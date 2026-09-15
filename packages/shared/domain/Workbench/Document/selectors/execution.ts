@@ -16,7 +16,7 @@ export const executionSelectors: ExecutionSelectors = {
 
         const incoming: Record<Port.Id, any> = {};
 
-        const inputs = nodeSelectors.getInputs(d, nodeId);
+        const inputs = nodeSelectors.ports.getInputs(d, nodeId);
 
         for (const input of inputs) {
             const projection = d.cache.inputEdgesByPort[nodeId]?.[input.id]

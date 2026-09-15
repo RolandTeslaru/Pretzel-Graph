@@ -1,4 +1,5 @@
 import { Workflow } from "../../../Workflow";
+import { resolveShape } from "../cache";
 import type { Document } from "../index";
 
 export const cacheReducers: INTERNAL_CacheReducers = {
@@ -16,7 +17,7 @@ export const cacheReducers: INTERNAL_CacheReducers = {
                 return;
             }
 
-            d.cache.resolvedShape[nodeId] = Workflow.resolveShape(d.data, node, blueprint);
+            d.cache.resolvedShape[nodeId] = resolveShape(d.data, node, blueprint);
         },
         recreateAll: (d) => {
             d.cache.resolvedShape = {};

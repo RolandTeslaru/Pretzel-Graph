@@ -3,6 +3,7 @@ import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
+import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
 import { ScrollArea, SearchInput } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { useState } from 'react'
@@ -31,6 +32,7 @@ export const Route = createFileRoute('/home/library')({
 
 function LibraryLayout() {
     const navigate = useNavigate()
+    const openItem = useOpenLibraryItem()
     const { folderId } = useParams({ strict: false })
     const cwd = folderId as Library.Folder.Id
 
@@ -65,7 +67,7 @@ function LibraryLayout() {
                     className={"pt-[95px] pr-2"}
                     searchQuery={treeSearchQuery}
                     setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
-                    onWorkflowClick={(workflowid) => navigate({ to: '/workflow/$workflowid', params: { workflowid } })}
+                    onItemClick={openItem}
                 />
             </div>
 

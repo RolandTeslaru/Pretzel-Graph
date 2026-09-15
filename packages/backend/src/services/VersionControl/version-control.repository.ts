@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Dependency, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
@@ -105,6 +105,49 @@ export class VersionControlRepository extends Repository {
             .executeTakeFirst();
 
         return row ? DB.VersionControl.toDomain(row) : null;
+    }
+
+    @Transactional('user')
+    @ZodReturn(z.array(Dependency.Update.Publication.Schema))
+    public async checkUpdates(
+        principal: Principal.User,
+        dependencies: Array<Pick<Dependency.Update.Publication, 'id' | 'publicationId'>>,
+    ): Promise<Dependency.Update.Publication[]> {
+        if (!dependencies.length)
+            return [];
+
+        const snapshotPublicationId = new Map(
+            dependencies.map((dependency) => [
+                dependency.id,
+                dependency.publicationId,
+            ]),
+        );
+        const workflowIds = dependencies.map((dependency) => dependency.id);
+
+        const rows = await this.trx
+            .selectFrom('version_control')
+            .select(['id', 'workflow_id', 'version', 'name', 'description'])
+            .where('workflow_id', 'in', workflowIds)
+            .where('is_active', '=', true)
+            .execute();
+
+        const updates: Dependency.Update.Publication[] = [];
+
+        for (const row of rows) {
+            if (snapshotPublicationId.get(row.workflow_id) === row.id)
+                continue;
+
+            updates.push({
+                kind: "publishedWorkflow",
+                id: row.workflow_id,
+                publicationId: row.id,
+                version: row.version,
+                name: row.name,
+                description: row.description,
+            });
+        }
+
+        return updates;
     }
 
     @Transactional('user')

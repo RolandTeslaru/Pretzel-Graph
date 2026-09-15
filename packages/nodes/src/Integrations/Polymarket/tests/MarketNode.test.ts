@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
     CatalogueService,
-    FieldBuilder,
+    StandardFields,
 } from "@pretzel-graph/node-sdk";
 import { Foundations } from "@pretzel-graph/shared/domain";
 
@@ -83,7 +83,7 @@ describe("Polymarket Market derivatives", () => {
         assert.equal(derivativeId, "action==search/searchKind==markets");
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [
                 "action",
@@ -144,7 +144,7 @@ describe("Polymarket Market derivatives", () => {
         // be toggled back out of tool mode.
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [],
         );

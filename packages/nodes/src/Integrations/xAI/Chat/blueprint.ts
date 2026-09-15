@@ -1,4 +1,4 @@
-import { FieldBuilder, defineBlueprint, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineField, defineBlueprint, defineOutput } from "@pretzel-graph/node-sdk";
 import { xAI } from "@pretzel-graph/nodes/Credentials/xAI";
 
 export const Blueprint = defineBlueprint({
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "port-LanguageModel",
     credentials: [xAI],
     fields: [
-        FieldBuilder.MultiOption("model", "Model", {
+        defineField.MultiOption("model", "Model", {
             options: [
                 { value: "grok-4.6", displayName: "Grok 4.6" },
                 { value: "grok-4.5", displayName: "Grok 4.5" },
@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
 
             initialValue: "grok-4.6"
         }),
-        FieldBuilder.Float("temperature", "Temperature", {
+        defineField.Float("temperature", "Temperature", {
             initialValue: 0.7,
             min: 0,
             max: 2.0,
@@ -29,7 +29,7 @@ export const Blueprint = defineBlueprint({
             slider: true,
             tooltip: "Controls randomness in the output. Higher values make output more random, lower values make it more focused and deterministic."
         }),
-        FieldBuilder.Integer("maxTokens", "Max Tokens", {
+        defineField.Integer("maxTokens", "Max Tokens", {
             min: 1,
             step: 1,
             tooltip: "The maximum number of tokens to generate in the chat completion."
@@ -37,7 +37,7 @@ export const Blueprint = defineBlueprint({
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.LanguageModel("languageModel", "Language Model", {
+        defineOutput.LanguageModel("languageModel", "Language Model", {
             tooltip: "The language model instance, useful for chaining calls with the same model and settings."
         })
     ]

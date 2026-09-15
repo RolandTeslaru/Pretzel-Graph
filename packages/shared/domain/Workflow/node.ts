@@ -3,18 +3,15 @@ import { Blueprint } from "../Foundations/Blueprint";
 import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import { Webhook } from "../Webhook";
-import { NodeId, EdgeId } from "./ids";
-import { Dependency } from "./dependency";
+import { NodeId, EdgeId, SHAPE_DEPENDENCY_FIELD_ID as _SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
 import { resolveInputs as _resolveInputs, resolveOutputs as _resolveOutputs } from "./resolvers";
 
 export namespace Node {
     export const Id = NodeId;
     export type Id = NodeId;
 
-    export namespace DependencyRef {
-        export const Schema = Blueprint.Meta.DependencyRef.Schema
-    }
-    export type DependencyRef = z.infer<typeof DependencyRef.Schema>
+    // Reserved field id of the workflow dependency that shapes the node and decides what it runs.
+    export const SHAPE_DEPENDENCY_FIELD_ID = _SHAPE_DEPENDENCY_FIELD_ID;
 
     // The slim, persisted node — what lives in `data.nodes` and the store.
     export namespace Raw {
@@ -22,7 +19,6 @@ export namespace Node {
             id:          Node.Id,
             blueprintId: z.string().brand("BlueprintId"),
             isDisabled:  z.boolean().optional(),
-            dependencyRef: Blueprint.Meta.DependencyRef.Schema.optional(),
 
             // Per-node presentation: view-state (minimized/flipped) + optional overrides of the
             // blueprint's ui (icon/accent/iconColor). All derived-on-read via node.getUI.
@@ -49,7 +45,7 @@ export namespace Node {
 
     // The read-time rich view — raw node + blueprint + resolved ports/fields. Never persisted.
     // Blueprint-level properties are NOT flattened in: read them off `.blueprint`, which is the
-    // whole thing. (`dependencyRef`, `id` and `ui` live on Raw, so they stay on the node.)
+    // whole thing. (`id` and `ui` live on Raw, so they stay on the node.)
     export namespace Hydrated {
         export const Schema = Raw.Schema
             .omit({ addedInputs: true, addedOutputs: true, addedFields: true })

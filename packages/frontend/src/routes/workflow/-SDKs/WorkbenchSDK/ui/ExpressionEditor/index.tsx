@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties } from 'react'
 import { debounce } from 'lodash'
 import type { BeforeMount } from '@monaco-editor/react'
 import type { Airlock, Workflow } from '@pretzel-graph/shared/domain';
@@ -9,8 +8,6 @@ import FloatContainer from '@/components/FloatContainer';
 import { MonacoEditor } from '@/components/MonacoEditor';
 import { AirlockSDK } from '@/routes/workflow/-SDKs/AirlockSDK';
 import { buildAirlockDts } from '../CodeEditor/airlockTypes';
-import IncomingPanel from '../NodePanel/IncomingPanel';
-import OutgoingPanel from '../NodePanel/OutgoingPanel';
 import JsonView from 'react18-json-view';
 import { WorkbenchSDK } from '../../sdk';
 
@@ -28,11 +25,9 @@ interface Props {
     initialValue: string,
     // editing an item-scoped field → expose $item / $itemIndex in autocomplete
     itemScoped?: boolean,
-    blockTransparency: boolean,
-    surfaceStyle: CSSProperties,
 }
 
-export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue, itemScoped, blockTransparency, surfaceStyle }: Props) => {
+export const ExpressionEditor = ({ node, displayName, onChange, onClose, initialValue, itemScoped }: Props) => {
     const [result, setResult] = useState<AirlockSDK.Result>({ ok: true, value: undefined })
     const extraLibRef = useRef<{ dispose(): void } | null>(null)
 
@@ -69,67 +64,34 @@ export const ExpressionEditor = ({ node, displayName, onChange, onClose, initial
         preview(val)
     }, [onChange, preview])
 
-    // In the background render solid; on top, frosted glass. `surfaceStyle` carries the stack
-    // brightness — applied per card so each card's backdrop-blur isn't trapped by a filtered ancestor.
-    const surface = blockTransparency ? 'bg-card' : 'bg-card/80 backdrop-blur-lg'
-
     const hyNode = WorkbenchSDK.useNode(node.id)
 
     if (!hyNode){
         return null;
     }
-    
+
     return (
-        <div className="flex flex-row gap-5 h-[85vh] w-[90vw]">
-
-            <div style={surfaceStyle} className={`${surface} w-[30%] overflow-hidden min-w-0 h-full top-0 border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <IncomingPanel nodeId={node.id} />
+        <div className="flex flex-col flex-1 min-h-0 h-full">
+            <div className="flex-col relative gap-2 h-full flex-1 overflow-hidden">
+                <MonacoEditor
+                    defaultLanguage="typescript"
+                    height="100%"
+                    defaultValue={initialValue}
+                    onChange={handleChange}
+                    beforeMount={beforeMount}
+                />
             </div>
 
-            <div style={surfaceStyle} className={`${surface} flex flex-col w-[70%] border-border border rounded-2xl shadow-xl shadow-black/10`}>
-                <div className={`
-                    flex-col relative gap-2 h-full flex-1 overflow-hidden
-                    
-                `}>
-                    <div className="flex flex-row gap-2 pt-3 px-5">
-                        <SystemIcons.MathFunction className=" size-4 my-auto" />
-                        <Dialog.Title className="font-mono text-sm">Expression Editor</Dialog.Title>
-                    </div>
-                    
-                    <div className="absolute flex gap-1 flex-row top-2.5 right-1/2 translate-x-1/2 p-1 px-2 text-sm font-medium">
-                        <p>
-                            {node.ui.displayName}
-                        </p>
-                        <SystemIcons.ChevronRight className="size-5 mx-auto" />
-                        <p>
-                            {displayName}
-                        </p>
-                    </div>
-
-                    <MonacoEditor
-                        defaultLanguage="typescript"
-                        height="100%"
-                        defaultValue={initialValue}
-                        onChange={handleChange}
-                        beforeMount={beforeMount}
+            <div className='relative border-t border-border w-full h-[30%] text-[11px]  overflow-hidden'>
+                <ScrollArea.Root className='h-full'>
+                    <JsonView
+                        src={result.ok ? formatResult(result.value) : result.error}
+                        collapsed={3}
+                        theme="default"
+                        className={"px-4 py-2 " + (result.ok ? "text-foreground" : "text-destructive")}
                     />
-                </div>
-
-                <div className='relative border-t border-border w-full h-[30%] text-[11px]  overflow-hidden'>
-                    <ScrollArea.Root className='h-full'>    
-                        <JsonView
-                            src={result.ok ? formatResult(result.value) : result.error}
-                            collapsed={3}
-                            theme="default"
-                            className={"px-4 py-2 " + (result.ok ? "text-foreground" : "text-destructive")}
-                        />
-                        {/* <pre className={"pt-2 px-4  inset-0 overflow-auto font-mono text-xs whitespace-pre-wrap break-words " + (result.ok ? "text-foreground" : "text-destructive")}>
-                            {result.ok ? formatResult(result.value) : result.error}
-                        </pre> */}
-                    </ScrollArea.Root>
-                </div>
+                </ScrollArea.Root>
             </div>
-
         </div>
     )
 }

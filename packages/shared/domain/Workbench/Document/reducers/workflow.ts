@@ -1,10 +1,10 @@
 import { Foundations } from "../../../Foundations";
 import { Validation } from "../../../Validation";
 import { Workflow } from "../../../Workflow";
-import { Port } from "../../../Foundations/Port";
 import type { Document } from "../index";
 import { cloneDeep } from 'lodash';
 import { Algorithms } from "../../../Algorithms";
+import { createCache, deriveArcs } from "../cache";
 
 export const workflowReducers: WorkflowReducers = {
     open: (d, workflow, options = {}) => {
@@ -12,7 +12,7 @@ export const workflowReducers: WorkflowReducers = {
 
         d.workflowId = workflow.id;
         d.data = data;
-        d.cache = Workflow.createCache(data, d.blueprints);
+        d.cache = createCache(data, d.blueprints);
 
         // Drop edges whose endpoint no longer exists — either the node itself (orphaned by a
         // deletion that didn't clean up its edges) or the port (blueprint changed shape).
@@ -40,7 +40,7 @@ export const workflowReducers: WorkflowReducers = {
 
         if (prunedCount > 0) {
             data.edges = keptEdges;
-            d.cache = Workflow.createCache(data, d.blueprints);
+            d.cache = createCache(data, d.blueprints);
         }
         d.cycles = [];
         d.stronglyConnectedComponents = [];
@@ -48,7 +48,7 @@ export const workflowReducers: WorkflowReducers = {
             nodes: {},
             cycles: []
         }
-        d.dependencyUpdates = { published: {}, draft: {} }
+        d.dependencyUpdates = {}
 
         d.reducers.dependency.removeUnused(d);
 
@@ -56,31 +56,10 @@ export const workflowReducers: WorkflowReducers = {
 
         d.reducers.workflow.validate(d);
     },
-    // Derive polymorphicResolutions from the existing edges — replays the same resolution the
-    // edge reducer does on connect. No-op for already-resolved (v2) nodes; reconstructs it for
-    // migrated (v1) nodes whose resolutions weren't persisted. Requires blueprints hydrated.
-    reconstructPolymorphism: (d) => {
-        for (const edge of Object.values(d.cache.edges)) {
-            const sourcePort = d.selectors.node.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
-            const targetPort = d.selectors.node.getInputs(d, edge.target.nodeId).find(i => i.id === edge.target.portId);
-            if (!sourcePort || !targetPort) continue;
-
-            if (Port.isPolymorphic(targetPort) && !Port.isUnresolvedLike(sourcePort.variant))
-                d.reducers
-                  .node
-                  .polymorphism
-                  .resolveGroup(d, edge.target.nodeId, targetPort, sourcePort.variant);
-            else if (Port.isPolymorphic(sourcePort) && !Port.isUnresolvedLike(targetPort.variant))
-                d.reducers
-                 .node
-                 .polymorphism
-                 .resolveGroup(d, edge.source.nodeId, sourcePort, targetPort.variant);
-        }
-    },
     close: (d) => {
         d.workflowId = '' as Workflow.Id;
         d.data = cloneDeep(Workflow.INITIAL.data);
-        d.cache = Workflow.createCache(cloneDeep(Workflow.INITIAL.data), {});
+        d.cache = createCache(cloneDeep(Workflow.INITIAL.data), {});
         d.isDirty = false;
     },
     validate: (d) => {
@@ -92,7 +71,7 @@ export const workflowReducers: WorkflowReducers = {
         d.data.globalFields = [...fields];
     },
     recomputeAllCycles: (d) => {
-        const arcsMap = Workflow.deriveArcs(d.cache);
+        const arcsMap = deriveArcs(d.cache);
         const sccs = Algorithms.Tarjan.deriveSCCs(d.data.nodes, arcsMap)[3]
 
         d.stronglyConnectedComponents = sccs;
@@ -112,5 +91,4 @@ type WorkflowReducers = {
     setGlobalFields: (document: Document, fields: Foundations.Field[]) => void
 
     recomputeAllCycles: (document: Document) => void
-    reconstructPolymorphism: (document: Document) => void
 }

@@ -1,3 +1,4 @@
+import type { Dependency } from "@pretzel-graph/shared/domain";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
@@ -22,23 +23,19 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         compilationCtx: TurboGraph.Compilation.Context,
     ): Promise<void> {
         const { compilePath, parentWorkflowIgniter } = compilationCtx;
-        const workflowNode = this.context.workflowQueryAPI.getNode(this.nodeId);
-        const subWorkflowId  = workflowNode?.dependencyRef?.workflowId as Workflow.Id;
-        const dependencyMode = workflowNode?.dependencyRef?.mode ?? "publication";
+        const staticValues   = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
+        const dependencyRef = staticValues[Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID] as unknown as Dependency.Ref.Workflow | undefined;
+        const subWorkflowId = dependencyRef?.id as Workflow.Id;
 
         if (compilePath.includes(subWorkflowId)) {
             const cyclePath = [...compilePath, subWorkflowId];
             throw new Error(`Recursive sub-workflow: ${cyclePath.join(" -> ")}`);
         }
 
-        if (!subWorkflowId)
+        if (!dependencyRef)
             throw new Error(`Missing dependency in Execute Sub-Workflow node ${this.nodeId}`);
 
-        const isDraft = dependencyMode === "draft";
-
-        const childWorkflowData = isDraft
-            ? structuredClone(this.context.dependencyAPI.getDraft(subWorkflowId).workflow_data)
-            : structuredClone(this.context.dependencyAPI.getPublished(subWorkflowId).workflow_data);
+        const childWorkflowData = structuredClone(this.context.dependencyAPI.get(dependencyRef).workflow_data);
 
         const igniter = {
             variant:         "sub_workflow",

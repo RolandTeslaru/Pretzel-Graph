@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Utils.List.Filter",
@@ -10,7 +10,7 @@ export const Blueprint = defineBlueprint({
     fields: [
         // Expression-only: a static condition can't reference $item, so the filter
         // would keep or drop the whole list.
-        FieldBuilder.Boolean("condition", "Condition", {
+        defineField.Boolean("condition", "Condition", {
             initialValue: true,
             only: "expression",
             itemScoped: true,
@@ -18,16 +18,16 @@ export const Blueprint = defineBlueprint({
         }),
     ],
     inputs: [
-        InputBuilder.UnresolvedList("list", "List", {
+        defineInput.UnresolvedList("list", "List", {
             required: true,
             polymorphicGroupId: "data"
         }),
     ],
     outputs: [
-        OutputBuilder.UnresolvedList("filtered", "Kept", {
+        defineOutput.UnresolvedList("filtered", "Kept", {
             polymorphicGroupId: "data"
         }),
-        OutputBuilder.UnresolvedList("discarded", "Discarded", {
+        defineOutput.UnresolvedList("discarded", "Discarded", {
             polymorphicGroupId: "data"
         }),
     ],

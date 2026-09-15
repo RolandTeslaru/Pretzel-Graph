@@ -1,4 +1,5 @@
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
+import type { Dependency } from "@pretzel-graph/shared/domain/Dependency";
 
 import { LC } from "../langchain";
 
@@ -14,7 +15,7 @@ export type LiteralOutput<
   readonly __reference?: T_Reference;
 } & Omit<T_Output, "id">;
 
-export namespace OutputBuilder {
+export namespace defineOutput {
   export type Options = {
     tooltip?: string;
     internal?: boolean;
@@ -146,6 +147,28 @@ export namespace OutputBuilder {
     return {
       ...buildBase(id, displayName, options),
       variant: "ToolList",
+    };
+  }
+
+  export function Skill<TId extends string>(
+    id: TId,
+    displayName: string,
+    options: Options = {},
+  ): LiteralOutput<TId, "Skill", Port.Variants.Skill, Dependency.Ref.Skill> {
+    return {
+      ...buildBase(id, displayName, options),
+      variant: "Skill",
+    };
+  }
+
+  export function SkillList<TId extends string>(
+    id: TId,
+    displayName: string,
+    options: Options = {},
+  ): LiteralOutput<TId, "SkillList", Port.Variants.SkillList, Dependency.Ref.Skill[]> {
+    return {
+      ...buildBase(id, displayName, options),
+      variant: "SkillList",
     };
   }
 

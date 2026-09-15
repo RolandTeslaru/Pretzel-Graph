@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-    FieldBuilder,
+    StandardFields,
     type HTTP,
 } from "@pretzel-graph/node-sdk";
 import { Foundations } from "@pretzel-graph/shared/domain";
@@ -32,7 +32,7 @@ describe("HTTP Request", () => {
         assert.deepEqual(blueprint.outputs.map(output => output.id), ["tools"]);
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             [],
         );
@@ -47,7 +47,7 @@ describe("HTTP Request", () => {
 
         assert.deepEqual(
             blueprint.fields
-                .filter(field => !FieldBuilder.DEFAULTS.IDS.has(String(field.id)))
+                .filter(field => !StandardFields.IDS.has(String(field.id)))
                 .map(field => String(field.id)),
             ["method", "url", "headers", "body"],
         );

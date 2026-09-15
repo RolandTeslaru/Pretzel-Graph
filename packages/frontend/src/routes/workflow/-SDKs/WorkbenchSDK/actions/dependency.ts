@@ -1,18 +1,21 @@
-import { SystemError, Workbench, type Workflow } from "@pretzel-graph/shared/domain"
+import { SystemError, Resource, type Dependency } from "@pretzel-graph/shared/domain"
 import type { WorkbenchSDKImpl } from "../sdk"
 import { withCommit, withAsyncCommit, withCyclesRecompute, createToastPromise } from "../utils/actions"
 import { api } from "@/SDKs/ApiInterceptorSDK"
 import { toast } from "sonner"
 
+// Fetches a resource's current state, shaped as the snapshot a dependency embeds.
+export function loadResource(ref: Dependency.Ref): Promise<Resource.API.Load.Response> {
+    return Resource.API.load(api, ref)
+}
+
 export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     const setDocument = sdk.setDocument
     const reducers = sdk.reducers
 
-    const applyUpdate = async (mode: "publication" | "draft", workflowId: Workflow.Id): Promise<boolean> => {
-        const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
-            mode === "publication"
-                ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
+    const applyUpdate = async (update: Dependency.Update): Promise<boolean> => {
+        const promise = createToastPromise<{ dependency: Dependency.Value }>(
+            loadResource(update),
             {
                 loading: "Updating dependency…",
                 success: "Dependency updated",
@@ -24,7 +27,7 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
             const { dependency } = await promise
 
             setDocument(withCyclesRecompute(d => {
-                reducers.dependency.applyUpdate(d, mode, dependency)
+                reducers.dependency.applyUpdate(d, update, dependency)
             }))
         } catch (err) {
             console.error("Failed to apply dependency update", err)
@@ -34,98 +37,32 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
     }
 
     const actions = {
-        registerDependency: withCommit((dependency) => {
+        registerDependency: withCommit((ref, value) => {
             setDocument(d => {
-                d.data.dependencies.published[dependency.workflow_id] = dependency
+                reducers.dependency.register(d, ref, value)
             })
         }),
+        // Checks the saved workflow's dependencies against their sources.
         checkUpdates: async () => {
-            const dependencies      = sdk.document.data.dependencies.published
-            const draftDependencies = sdk.document.data.dependencies.draft
-
-            const publishedEntries = Object.values(dependencies).map(dep => ({
-                workflowId:    dep.workflow_id as Workflow.Id,
-                publicationId: dep.id,
-            }))
-
-            const draftEntries = Object.values(draftDependencies).map(dep => ({
-                workflowId:          dep.workflow_id as Workflow.Id,
-                workflow_updated_at: dep.workflow_updated_at,
-            }))
-
-            const [publishedResult, draftResult] = await Promise.allSettled([
-                publishedEntries.length > 0
-                    ? Workbench.API.Dependency.Published.checkUpdates(api, { dependencies: publishedEntries })
-                    : Promise.resolve({ updates: {} as Workflow.Dependency.Publication.UpdateMap }),
-                draftEntries.length > 0
-                    ? Workbench.API.Dependency.Draft.checkUpdates(api, { dependencies: draftEntries })
-                    : Promise.resolve({ updates: {} as Record<Workflow.Id, Workflow.Dependency.Draft.UpdateInfo> }),
-            ])
-
-            setDocument(d => {
-                if (publishedResult.status === 'fulfilled') d.dependencyUpdates.published = publishedResult.value.updates
-                if (draftResult.status    === 'fulfilled') d.dependencyUpdates.draft    = draftResult.value.updates
-            })
-
-            const count =
-                (publishedResult.status === 'fulfilled' ? Object.keys(publishedResult.value.updates).length : 0) +
-                (draftResult.status    === 'fulfilled' ? Object.keys(draftResult.value.updates).length    : 0)
-
-            if (count > 0)
-                toast.info(`${count} dependency update${count === 1 ? '' : 's'} available`)
-        },
-
-        attachToNode: withAsyncCommit(async (nodeId, workflowId, mode) => {
-            // Chheck if the workflow already uses the dependency
-            let dependency = sdk.selectors.dependency.get(sdk.document, workflowId, mode)
-
-            if(dependency){
-                setDocument(withCyclesRecompute(d => {
-                    reducers.dependency.attachToNode(d, nodeId, mode, dependency)
-                }))
-                return true
-            }
-
-            // Make the API call
-
-            const promise = createToastPromise<{ dependency: Workflow.Dependency }>(
-                mode === "publication"
-                    ? Workbench.API.Dependency.Published.load(api, { dependencyId: workflowId })
-                    : Workbench.API.Dependency.Draft.load(api, { dependencyId: workflowId }),
-                {
-                    loading: "Loading workflow…",
-                    success: "Workflow attached",
-                    error:   (err: unknown) => `Failed to attach dependency: ${SystemError.fromUnknown(err).message}`,
-                }
-            )
-
             try {
-                const { dependency } = await promise
+                const { updates } = await Resource.API.checkUpdates(api, { workflowId: sdk.document.workflowId })
 
-                setDocument(withCyclesRecompute(d => {
-                    reducers.dependency.attachToNode(d, nodeId, mode, dependency)
-                }))
+                setDocument(d => {
+                    reducers.dependency.setUpdates(d, updates)
+                })
+
+                if (updates.length > 0)
+                    toast.info(`${updates.length} dependency update${updates.length === 1 ? '' : 's'} available`)
             } catch (err) {
-                console.error("Failed to attach dependency", err)
-                return false
+                console.error("Failed to check dependency updates", err)
             }
-            return true
-        }),
-        published: {
-            update: withAsyncCommit((updateInfo) => applyUpdate("publication", updateInfo.workflowId)),
         },
 
-        draft: {
-            update: withAsyncCommit((updateInfo) => applyUpdate("draft", updateInfo.workflowId)),
-        },
+        update: withAsyncCommit((update) => applyUpdate(update)),
 
         updateAll: withAsyncCommit(async () => {
-            const publishedUpdates = Object.values(sdk.document.dependencyUpdates.published)
-            const draftUpdates     = Object.values(sdk.document.dependencyUpdates.draft)
-            const results = await Promise.all([
-                ...publishedUpdates.map(u => applyUpdate("publication", u.workflowId)),
-                ...draftUpdates.map(u => applyUpdate("draft", u.workflowId)),
-            ])
+            const updates = Object.values(sdk.document.dependencyUpdates)
+            const results = await Promise.all(updates.map(applyUpdate))
             return results.every(Boolean)
         }),
     } satisfies DependencyActions
@@ -134,14 +71,8 @@ export function createDependencyActions(sdk: WorkbenchSDKImpl) {
 }
 
 export type DependencyActions = {
-    registerDependency: (dependency: Workflow.Dependency.Publication) => void
+    registerDependency: (ref: Dependency.Ref, value: Dependency.Value) => void
     checkUpdates:       () => Promise<void>
+    update:             (update: Dependency.Update) => Promise<boolean>
     updateAll:          () => Promise<boolean>
-    attachToNode:       (nodeId: Workflow.Node.Id, workflowId: Workflow.Id, mode: "publication" | "draft") => Promise<boolean>
-    published: {
-        update: (updateInfo: Workflow.Dependency.Publication.UpdateInfo) => Promise<boolean>
-    }
-    draft: {
-        update: (updateInfo: Workflow.Dependency.Draft.UpdateInfo) => Promise<boolean>
-    }
 }

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { Library, Workflow } from '@pretzel-graph/shared/domain';
-import { LibraryRepository } from './library.repository';
+import { Library, Skill, SystemError, Workflow } from '@pretzel-graph/shared/domain';
+import { LibraryRepository } from './repository';
 import { ListingService } from '../Listing/listing.service';
 
 @Injectable()
@@ -114,4 +114,49 @@ export class LibraryService {
             return this.libraryRepository.workflow.duplicate(principal, id);
         },
     };
+
+    public readonly skill = {
+        create: async (
+            principal: Principal.User,
+            payload: Library.API.Skill.Create.Request,
+        ): Promise<Library.API.Skill.Create.Response> => {
+            return rethrowNameConflict(payload.name, this.libraryRepository.skill.create(principal, payload));
+        },
+
+        get: async (
+            principal: Principal.User,
+            id: Skill.Id,
+        ): Promise<Library.API.Skill.Get.Response> => {
+            return this.libraryRepository.skill.get(principal, id);
+        },
+
+        update: async (
+            principal: Principal.User,
+            payload: Library.API.Skill.Update.Request,
+        ): Promise<Library.API.Skill.Update.Response> => {
+            return rethrowNameConflict(payload.name, this.libraryRepository.skill.update(principal, payload));
+        },
+
+        delete: async (
+            principal: Principal.User,
+            id: Skill.Id,
+        ): Promise<Library.API.Skill.Remove.Response> => {
+            await this.libraryRepository.skill.delete(principal, id);
+
+            return { ok: true };
+        },
+    };
+}
+
+// A skill's name is its only unique column, so a conflict on a write means the name is taken.
+async function rethrowNameConflict<T>(name: string | undefined, write: Promise<T>): Promise<T> {
+    try {
+        return await write;
+    }
+    catch (err) {
+        if (name && err instanceof SystemError && err.code === SystemError.Code.CONFLICT)
+            throw new SystemError(SystemError.Code.CONFLICT, `A skill named "${name}" already exists`);
+
+        throw err;
+    }
 }

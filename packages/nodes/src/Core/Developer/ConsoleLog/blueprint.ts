@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.ConsoleLog",
@@ -7,7 +7,7 @@ export const Blueprint = defineBlueprint({
     icon: "SquareTerminal",
     accent: "utility",
     fields: [
-        FieldBuilder.MultiOption("level", "Level", {
+        defineField.MultiOption("level", "Level", {
             options: [
                 { value: "log", displayName: "Log" },
                 { value: "info", displayName: "Info" },
@@ -18,19 +18,19 @@ export const Blueprint = defineBlueprint({
             initialValue: "log",
             variant: "select"
         }),
-        FieldBuilder.String("prefix", "Prefix", {
+        defineField.String("prefix", "Prefix", {
             initialValue: "",
             placeholder: "Optional prefix for the log message",
             required: false
         })
     ],
     inputs: [
-        InputBuilder.Message("message", "Message", {
+        defineInput.Message("message", "Message", {
             required: true
         }),
     ],
     outputs: [
-        OutputBuilder.Message("output", "Output", {
+        defineOutput.Message("output", "Output", {
             tooltip: "Passes the input message through unchanged."
         }),
     ],

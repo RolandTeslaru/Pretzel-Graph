@@ -1,4 +1,4 @@
-import { defineBlueprint, FieldBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineOutput } from "@pretzel-graph/node-sdk";
 import { Redis } from "@pretzel-graph/nodes/Credentials/Redis";
 
 export const Blueprint = defineBlueprint({
@@ -9,7 +9,7 @@ export const Blueprint = defineBlueprint({
     accent: "utility",
     credentials: [Redis],
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "string", displayName: "String" },
                 { value: "key", displayName: "Key" },
@@ -18,21 +18,21 @@ export const Blueprint = defineBlueprint({
             initialValue: "string",
             tooltip: "The Redis data structure to work with."
         }),
-        FieldBuilder.String("key", "Key", {
+        defineField.String("key", "Key", {
             required: true,
             placeholder: "my:key"
         }),
     ],
     inputs: [],
     outputs: [
-        OutputBuilder.Data("result", "Result", {
+        defineOutput.Data("result", "Result", {
             tooltip: "The scalar, object, or command summary returned by Redis."
         }),
     ],
 
     "resource==string": {
         fields: [
-            FieldBuilder.MultiOption("stringOperation", "Operation", {
+            defineField.MultiOption("stringOperation", "Operation", {
                 options: [
                     { value: "GET", displayName: "Get" },
                     { value: "SET", displayName: "Set" },
@@ -47,11 +47,11 @@ export const Blueprint = defineBlueprint({
 
         "stringOperation==SET": {
             fields: [
-                FieldBuilder.String("stringValue", "Value", {
+                defineField.String("stringValue", "Value", {
                     multiline: true,
                     initialValue: ""
                 }),
-                FieldBuilder.Integer("stringTtl", "TTL (seconds)", {
+                defineField.Integer("stringTtl", "TTL (seconds)", {
                     initialValue: 0,
                     min: 0,
                     tooltip: "0 = no expiry."
@@ -61,7 +61,7 @@ export const Blueprint = defineBlueprint({
 
         "stringOperation==INCREMENT": {
             fields: [
-                FieldBuilder.Integer("incrementAmount", "Amount", {
+                defineField.Integer("incrementAmount", "Amount", {
                     initialValue: 1,
                     min: 1,
                 }),
@@ -70,7 +70,7 @@ export const Blueprint = defineBlueprint({
 
         "stringOperation==DECREMENT": {
             fields: [
-                FieldBuilder.Integer("decrementAmount", "Amount", {
+                defineField.Integer("decrementAmount", "Amount", {
                     initialValue: 1,
                     min: 1,
                 }),
@@ -80,7 +80,7 @@ export const Blueprint = defineBlueprint({
 
     "resource==key": {
         fields: [
-            FieldBuilder.MultiOption("keyOperation", "Operation", {
+            defineField.MultiOption("keyOperation", "Operation", {
                 options: [
                     { value: "EXISTS", displayName: "Exists" },
                     { value: "DELETE", displayName: "Delete" },
@@ -96,7 +96,7 @@ export const Blueprint = defineBlueprint({
 
         "keyOperation==EXPIRE": {
             fields: [
-                FieldBuilder.Integer("expirySeconds", "TTL (seconds)", {
+                defineField.Integer("expirySeconds", "TTL (seconds)", {
                     initialValue: 3600,
                     min: 1,
                 }),
@@ -108,7 +108,7 @@ export const Blueprint = defineBlueprint({
 
     "resource==hash": {
         fields: [
-            FieldBuilder.MultiOption("hashOperation", "Operation", {
+            defineField.MultiOption("hashOperation", "Operation", {
                 options: [
                     { value: "HGET", displayName: "Get Field" },
                     { value: "HSET", displayName: "Set Field" },
@@ -121,7 +121,7 @@ export const Blueprint = defineBlueprint({
 
         "hashOperation==HGET": {
             fields: [
-                FieldBuilder.String("hashGetField", "Field", {
+                defineField.String("hashGetField", "Field", {
                     required: true,
                 }),
             ],
@@ -129,10 +129,10 @@ export const Blueprint = defineBlueprint({
 
         "hashOperation==HSET": {
             fields: [
-                FieldBuilder.String("hashSetField", "Field", {
+                defineField.String("hashSetField", "Field", {
                     required: true,
                 }),
-                FieldBuilder.String("hashSetValue", "Value", {
+                defineField.String("hashSetValue", "Value", {
                     multiline: true,
                     initialValue: "",
                 }),
@@ -143,7 +143,7 @@ export const Blueprint = defineBlueprint({
 
         "hashOperation==HDELETE": {
             fields: [
-                FieldBuilder.String("hashDeleteField", "Field", {
+                defineField.String("hashDeleteField", "Field", {
                     required: true,
                 }),
             ],

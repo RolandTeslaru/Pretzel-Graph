@@ -6,7 +6,7 @@ export namespace Algorithms {
     export namespace Tarjan {
         export function deriveSCCs(
             nodes: Workflow["data"]["nodes"],
-            arcsMap: ReturnType<typeof Workflow.deriveArcs>,
+            arcsMap: Workflow.Cache.Arcs,
         ) {
             const n = Object.keys(nodes).length
 
@@ -90,7 +90,7 @@ export namespace Algorithms {
     //      provably cannot lead to a new cycle, giving the O((V+E)(C+1)) bound.
     export namespace Johnson {
         export function getAllCycles(
-            arcsMap: ReturnType<typeof Workflow.deriveArcs>,
+            arcsMap: Workflow.Cache.Arcs,
             sccs_id: Array<Set<Workflow.Node.Id>>
         ): Workflow.Node.Id[][] {
             const cycles: Workflow.Node.Id[][] = [];

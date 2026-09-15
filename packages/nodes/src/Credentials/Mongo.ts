@@ -1,27 +1,27 @@
-import { defineCredential, FieldBuilder } from "@pretzel-graph/node-sdk"
+import { defineCredential, defineField } from "@pretzel-graph/node-sdk"
 
 export const Mongo = defineCredential({
     id: "mongoDb",
     displayName: "MongoDB",
     icon: "MongoDB",
     fields: [
-        FieldBuilder.String("host", "Host", {
+        defineField.String("host", "Host", {
             required: true,
             initialValue: "localhost"
         }),
-        FieldBuilder.Integer("port", "Port", {
+        defineField.Integer("port", "Port", {
             tooltip: "Leave blank for Atlas (mongodb+srv); enter a port only for a direct mongodb connection."
         }),
-        FieldBuilder.String("database", "Database", {
+        defineField.String("database", "Database", {
             required: true
         }),
-        FieldBuilder.String("user", "User", {
+        defineField.String("user", "User", {
             required: true
         }),
-        FieldBuilder.Password("password", "Password", {
+        defineField.Password("password", "Password", {
             required: true
         }),
-        FieldBuilder.Boolean("tls", "Use TLS", {
+        defineField.Boolean("tls", "Use TLS", {
             initialValue: false
         }),
     ],

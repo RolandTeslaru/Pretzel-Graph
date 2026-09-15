@@ -1,8 +1,8 @@
 import {
     defineBlueprint,
     defineTool,
-    FieldBuilder,
-    OutputBuilder,
+    defineField,
+    defineOutput,
 } from "@pretzel-graph/node-sdk";
 
 
@@ -34,7 +34,7 @@ export const Blueprint = defineBlueprint({
     toolCompatible:  true,
 
     fields: [
-        FieldBuilder.MultiOption("resource", "Resource", {
+        defineField.MultiOption("resource", "Resource", {
             options: [
                 { value: "markets",   displayName: "Markets"    },
                 { value: "mids",      displayName: "Mid Prices" },
@@ -50,7 +50,7 @@ export const Blueprint = defineBlueprint({
 
     "resource==markets": {
         fields: [
-            FieldBuilder.MultiOption("marketKind", "Market Type", {
+            defineField.MultiOption("marketKind", "Market Type", {
                 options: [
                     { value: "perpetual", displayName: "Perpetuals" },
                     { value: "spot",      displayName: "Spot"       },
@@ -58,83 +58,83 @@ export const Blueprint = defineBlueprint({
                 initialValue: "perpetual",
                 variant:      "tab",
             }),
-            FieldBuilder.String("marketsDex", "Perpetual DEX", {
+            defineField.String("marketsDex", "Perpetual DEX", {
                 placeholder: "xyz",
                 tooltip:     "Optional HIP-3 DEX name. Empty selects Hyperliquid's original perpetual DEX. Ignored for Spot.",
             }),
-            FieldBuilder.Integer("marketsLimit", "Max Results", {
+            defineField.Integer("marketsLimit", "Max Results", {
                 initialValue: 50,
                 min:          1,
                 max:          500,
             }),
         ],
-        outputs: [OutputBuilder.DataList("markets", "Markets")],
+        outputs: [defineOutput.DataList("markets", "Markets")],
     },
 
 
     "resource==mids": {
         fields: [
-            FieldBuilder.String("midsDex", "Perpetual DEX", {
+            defineField.String("midsDex", "Perpetual DEX", {
                 placeholder: "xyz",
                 tooltip:     "Optional HIP-3 DEX name. Empty selects the original DEX and includes Spot mids.",
             }),
-            FieldBuilder.String("midsCoin", "Coin", {
+            defineField.String("midsCoin", "Coin", {
                 placeholder: "BTC",
                 tooltip:     "Optional exact symbol or pair. Leave empty to browse prices.",
             }),
-            FieldBuilder.Integer("midsLimit", "Max Results", {
+            defineField.Integer("midsLimit", "Max Results", {
                 initialValue: 100,
                 min:          1,
                 max:          1_000,
             }),
         ],
-        outputs: [OutputBuilder.DataList("mids", "Mid Prices")],
+        outputs: [defineOutput.DataList("mids", "Mid Prices")],
     },
 
 
     "resource==candles": {
         fields: [
-            FieldBuilder.String("candlesCoin", "Coin", {
+            defineField.String("candlesCoin", "Coin", {
                 required:    true,
                 placeholder: "BTC",
                 tooltip:     "Perpetual symbol (BTC), Spot pair (PURR/USDC or @107), or HIP-3 name (dex:coin).",
             }),
-            FieldBuilder.MultiOption("candlesInterval", "Interval", {
+            defineField.MultiOption("candlesInterval", "Interval", {
                 options:      intervalOptions,
                 initialValue: "1h",
             }),
-            FieldBuilder.Integer("candlesLookbackHours", "Lookback (hours)", {
+            defineField.Integer("candlesLookbackHours", "Lookback (hours)", {
                 initialValue: 24,
                 min:          1,
                 max:          24 * 365,
                 tooltip:      "Requested window ending now. Hyperliquid may return only its bounded recent candle history.",
             }),
         ],
-        outputs: [OutputBuilder.DataList("candles", "Candles")],
+        outputs: [defineOutput.DataList("candles", "Candles")],
     },
 
 
     "resource==orderBook": {
         fields: [
-            FieldBuilder.String("orderBookCoin", "Coin", {
+            defineField.String("orderBookCoin", "Coin", {
                 required:    true,
                 placeholder: "BTC",
                 tooltip:     "Perpetual symbol (BTC), Spot pair (PURR/USDC or @107), or HIP-3 name (dex:coin).",
             }),
-            FieldBuilder.Integer("orderBookDepth", "Depth", {
+            defineField.Integer("orderBookDepth", "Depth", {
                 initialValue: 15,
                 min:          1,
                 max:          20,
                 tooltip:      "Price levels per side, best first. Hyperliquid returns at most 20.",
             }),
         ],
-        outputs: [OutputBuilder.Data("orderBook", "Order Book")],
+        outputs: [defineOutput.Data("orderBook", "Order Book")],
     },
 
 
     "isConvertedToTool==true": defineTool({
         fields:  [],
         inputs:  [],
-        outputs: [OutputBuilder.ToolList("tools", "Hyperliquid Market Tools")],
+        outputs: [defineOutput.ToolList("tools", "Hyperliquid Market Tools")],
     }),
 });

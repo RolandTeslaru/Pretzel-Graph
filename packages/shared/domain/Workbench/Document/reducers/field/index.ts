@@ -2,9 +2,9 @@ import { Validation } from "../../../../Validation";
 import { Foundations } from "../../../../Foundations";
 import type { Workflow } from "../../../../Workflow";
 import type { Document } from "../../index";
-import { fieldVariadicReducers, type FieldVariadicReducers } from "./variadic";
 import { fieldConditionReducers, type FieldConditionReducers } from "./condition";
 import { fieldCaseListReducers, type FieldCaseListReducers } from "./caseList";
+import { fieldDependencyReducers, type FieldDependencyReducers } from "./dependency";
 
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
@@ -13,7 +13,7 @@ type FieldId = Foundations.Field.Id
 // i.e. the ones that have both a static and an expression mode to toggle between. The Expression
 // variant is deliberately absent: it has no static mode, so there is nothing to toggle.
 const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
-    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List",
+    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List", "WorkflowIdSelector",
 ])
 
 export const fieldReducers: FieldReducers = {
@@ -113,9 +113,9 @@ export const fieldReducers: FieldReducers = {
         expressionOverrides[fieldId] = value
         d.isDirty = true;
     },
-    variadic:  fieldVariadicReducers,
     condition: fieldConditionReducers,
     caseList:  fieldCaseListReducers,
+    dependency: fieldDependencyReducers,
 }
 
 
@@ -142,7 +142,7 @@ export interface FieldReducers {
         fieldId: FieldId,
         value: boolean
     ) => void
-    variadic  : FieldVariadicReducers
     condition : FieldConditionReducers
     caseList  : FieldCaseListReducers
+    dependency: FieldDependencyReducers
 }

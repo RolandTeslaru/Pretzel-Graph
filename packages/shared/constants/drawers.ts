@@ -1,5 +1,9 @@
 import { Shelf } from "../domain/Shelf"
 
+// Vite replaces process.env.NODE_ENV in client builds; the backend leaves it unset outside production.
+declare const process: { env: { NODE_ENV?: string } }
+const IS_DEVELOPMENT = process.env.NODE_ENV !== "production"
+
 export const CORE_DRAWERS = {
   input_output: {
     displayName: "Input & Output",
@@ -37,18 +41,23 @@ export const CORE_DRAWERS = {
       "Core.Routing.Sleep",
     ],
   },
-  // developer: {
-  //   displayName: "DEVELOPER",
-  //   id: "developer",
-  //   icon: "Terminal",
-  //   blueprintIds: [
-  //     "Core.Developer.AllBuilders",
-  //     "Core.Developer.ConsoleLog",
-  //     "Core.Developer.ErrorThrower",
-  //     "Core.Developer.ResourceLoaderTest",
-  //     "Core.Developer.DerivativeTest"
-  //   ],
-  // },
+  // Test nodes for building and debugging; mounted only in development.
+  ...(IS_DEVELOPMENT ? {
+    developer: {
+      displayName: "DEVELOPER",
+      id: "developer",
+      icon: "Terminal",
+      blueprintIds: [
+        "Core.Developer.AllBuilders",
+        "Core.Developer.ConsoleLog",
+        "Core.Developer.ErrorThrower",
+        "Core.Developer.ResourceLoaderTest",
+        "Core.Developer.DerivativeTest",
+        "Core.Developer.DependencyFieldTest",
+        "Core.Developer.DependencyReader",
+      ],
+    },
+  } : {}),
   data_source: {
     displayName: "Data Sources",
     id: "data_source",
@@ -125,6 +134,15 @@ export const CORE_DRAWERS = {
       "Core.Utils.Tool.Catalog",
       "Core.Utils.Tool.Custom",
       "Core.Utils.Tool.MCP",
+    ],
+  },
+  skills: {
+    displayName: "Skills",
+    id: "skills",
+    icon: "Sparkles2",
+    blueprintIds: [
+      "Core.Utils.Skill.Source",
+      "Core.Utils.Skill.Load",
     ],
   },
   human_review: {
@@ -219,8 +237,8 @@ export const BUNDLE_DRAWERS = {
   pretzelgraph: {
     displayName: "PretzelGraph",
     id: "pretzelgraph",
-    icon: "Pretzel",
-    blueprintIds: ["Integrations.PretzelGraph.Workbench", "Integrations.PretzelGraph.Shelf"]
+    icon: "PretzelGraphAppIcon",
+    blueprintIds: ["Integrations.PretzelGraph.WorkbenchSDK", "Integrations.PretzelGraph.ShelfSDK", "Integrations.PretzelGraph.ExecutionSDK"]
   },
   polymarket: {
     displayName: "Polymarket",

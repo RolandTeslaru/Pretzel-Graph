@@ -31,28 +31,32 @@ export class WorkbenchService {
             return { workflow_id };
         },
 
+        // The workflow row, or the listed workflow for a listing id.
+        find: async (
+            principal: Principal.User | Principal.Delegate,
+            workflowId: Workflow.Id,
+        ): Promise<Workflow> => {
+            if (!Listing.isListingId(workflowId))
+                return this.repository.workflow.get(principal, workflowId);
+
+            const shared = await this.listings.getWorkflow(workflowId);
+
+            if (!shared)
+                throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found');
+
+            return shared;
+        },
+
         get: async (
             principal: Principal.User | Principal.Delegate,
             workflowId: Workflow.Id,
         ): Promise<Workbench.API.Workflow.Get.Response> => {
-            let workflow: Workflow;
-
-            if (Listing.isListingId(workflowId)) {
-                const shared = await this.listings.getWorkflow(workflowId);
-
-                if (!shared)
-                    throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found');
-
-                workflow = shared;
-            }
-            else {
-                workflow = await this.repository.workflow.get(principal, workflowId);
-            }
+            const workflow = await this.workflow.find(principal, workflowId);
 
             const { blueprints, repairs } = await this.shelfService.collectWorkflowBlueprints(workflow.data);
 
             workflow.locked = this.sessions.isLocked(workflowId)
-            
+
             // Held by a session or not — the registry is the truth, not a column.
             return { workflow, blueprints, repairs };
         },
@@ -63,59 +67,6 @@ export class WorkbenchService {
         ): Promise<Workbench.API.Workflow.Commit.Response> => {
             await this.repository.workflow.commit(principal, payload);
             return {};
-        },
-    };
-
-    public readonly dependency = {
-        published: {
-            load: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Published.Load.Request,
-            ): Promise<Workbench.API.Dependency.Published.Load.Response> => {
-                if (Listing.isListingId(payload.dependencyId)) {
-                    const shared = await this.listings.getPublication(payload.dependencyId);
-
-                    if (!shared)
-                        throw new SystemError(SystemError.Code.NOT_FOUND, 'Listing not found or no longer listed');
-
-                    return { dependency: shared };
-                }
-
-                const dependency = await this.repository.dependency.published.load(principal, payload.dependencyId);
-
-                return { dependency };
-            },
-
-            checkUpdates: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Published.CheckUpdates.Request,
-            ): Promise<Workbench.API.Dependency.Published.CheckUpdates.Response> => {
-                const local  = payload.dependencies.filter((dependency) => !Listing.isListingId(dependency.workflowId));
-                const listed = payload.dependencies.filter((dependency) => Listing.isListingId(dependency.workflowId));
-
-                const own    = await this.repository.dependency.published.checkUpdates(principal, local);
-                const shared = await this.listings.checkUpdates(listed);
-
-                return { updates: { ...own, ...shared } };
-            },
-        },
-
-        draft: {
-            load: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Draft.Load.Request,
-            ): Promise<Workbench.API.Dependency.Draft.Load.Response> => {
-                const dependency = await this.repository.dependency.draft.load(principal, payload.dependencyId);
-                return { dependency };
-            },
-
-            checkUpdates: async (
-                principal: Principal.User,
-                payload: Workbench.API.Dependency.Draft.CheckUpdates.Request,
-            ): Promise<Workbench.API.Dependency.Draft.CheckUpdates.Response> => {
-                const updates = await this.repository.dependency.draft.checkUpdates(principal, payload.dependencies);
-                return { updates };
-            },
         },
     };
 
@@ -170,5 +121,4 @@ export class WorkbenchService {
             },
         },
     };
-
 }

@@ -1,5 +1,5 @@
 import { Foundations } from "@pretzel-graph/shared/domain";
-import { defineBlueprint, FieldBuilder, InputBuilder, OutputBuilder } from "@pretzel-graph/node-sdk";
+import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretzel-graph/node-sdk";
 
 export const Blueprint = defineBlueprint({
     id: "Core.Routing.Switch",
@@ -8,7 +8,7 @@ export const Blueprint = defineBlueprint({
     icon: "Option",
     accent: "group-routing",
     fields: [
-        FieldBuilder.CaseList("cases", "Cases", {
+        defineField.CaseList("cases", "Cases", {
             tooltip: "List of cases to evaluate for routing. The first case that evaluates to true will determine the output port to route to.",
 
             initialValue: [
@@ -19,18 +19,18 @@ export const Blueprint = defineBlueprint({
         })
     ],
     inputs: [
-        InputBuilder.Unresolved("input", "Input", {
+        defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "condition"
         }),
     ],
     outputs: [
-        OutputBuilder.Unresolved("case-1", "Case 1", {
+        defineOutput.Unresolved("case-1", "Case 1", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved("case-2", "Case 1", {
+        defineOutput.Unresolved("case-2", "Case 1", {
             polymorphicGroupId: "condition"
         }),
-        OutputBuilder.Unresolved("case-3", "Case 1", {
+        defineOutput.Unresolved("case-3", "Case 1", {
             polymorphicGroupId: "condition"
         }),
     ],

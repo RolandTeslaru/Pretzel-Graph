@@ -1,8 +1,11 @@
 import { Foundations } from "../Foundations";
+import { Blueprint } from "../Foundations/Blueprint";
 import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import type { Node } from "./node";
 import type { Workflow } from "./index";
+import type { Dependency } from "../Dependency";
+import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
 
@@ -86,7 +89,7 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
 
 
 /**
- * Derive a slim node's live input ports. When the node is a subworkflow (a `dependency` record is
+ * Derive a slim node's live input ports. When the node is a subworkflow (its dependency's graph is
  * passed), its ports ARE the subworkflow's exposed inputs — the `base` (blueprint's own inputs) is
  * only a drawer-preview snapshot and would double the ports if concatenated, so it's dropped.
  * Otherwise it's the blueprint base plus the node's own `addedInputs`.
@@ -94,31 +97,34 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
 export function resolveInputs(
     base: readonly Port.Input[],
     node: Node.Raw,
-    dependency: Workflow.Dependency | null,
+    shapeDepData: Workflow.Data | null,
 ): Port.Input[] {
-    if (dependency)
-        return resolve([], extractExposedInputs(dependency.workflow_data), node.polymorphicResolutions);
+    if (shapeDepData)
+        return resolve([], extractExposedInputs(shapeDepData), node.polymorphicResolutions);
     return resolve(base, node.addedInputs, node.polymorphicResolutions);
 }
 
-/** Derive a slim node's live output ports. See {@link resolveInputs} for the `dependency` behavior. */
+/** Derive a slim node's live output ports. See {@link resolveInputs} for the `shapeDepData` behavior. */
 export function resolveOutputs(
     base: readonly Port.Output[],
     node: Node.Raw,
-    dependency: Workflow.Dependency | null,
+    shapeDepData: Workflow.Data | null,
 ): Port.Output[] {
-    if (dependency)
-        return resolve([], extractExposedOutputs(dependency.workflow_data), node.polymorphicResolutions);
+    if (shapeDepData)
+        return resolve([], extractExposedOutputs(shapeDepData), node.polymorphicResolutions);
     return resolve(base, node.addedOutputs, node.polymorphicResolutions);
 }
 
 // A workflow served as a node: the base blueprint skinned with the workflow's display meta, exposed ports, and fields.
-export function toBlueprint(base: Foundations.Blueprint, args: {
-    id: Foundations.Blueprint.Id;
-    meta: Workflow.Meta;
-    data: Workflow.Data;
-    dependencyRef: NonNullable<Foundations.Blueprint["dependencyRef"]>;
-}): Foundations.Blueprint {
+export function toBlueprint(
+    base: Blueprint, 
+    args: {
+        id: Blueprint.Id;
+        meta: Workflow.Meta;
+        data: Workflow.Data;
+        dependencyRef: Dependency.Ref.Workflow;
+    }
+): Blueprint {
     return {
         ...base,
         id: args.id,
@@ -129,14 +135,20 @@ export function toBlueprint(base: Foundations.Blueprint, args: {
             accent:      args.meta.accent ?? base.ui.accent,
             iconColor:   base.ui.iconColor,
         },
-        fields:  mergeFieldsById(base.fields, args.data.globalFields ?? []),
+        fields:  mergeFieldsById(pinDependency(base.fields, args.dependencyRef), args.data.globalFields ?? []),
         inputs:  extractExposedInputs(args.data),
         outputs: extractExposedOutputs(args.data),
-        flags: {
-            SHOW_DEPENDENCY_SELECTOR: false,
-        },
-        dependencyRef: args.dependencyRef,
     };
+}
+
+// Presets the node's own dependency field to the workflow and hides it; other dependency fields stay as declared.
+function pinDependency(fields: readonly Foundations.Field[], dependencyRef: Dependency.Ref.Workflow): Foundations.Field[] {
+    return fields.map(field => {
+        if (field.id !== SHAPE_DEPENDENCY_FIELD_ID || field.variant !== "Dependency")
+            return field;
+
+        return { ...field, initialValue: dependencyRef, hidden: true };
+    });
 }
 
 // Base fields win; the workflow's own fields fill in behind them.

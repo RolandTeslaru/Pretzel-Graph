@@ -7,8 +7,8 @@ import type { ToolBody } from "./types";
  * layering onto it:
  *
  *     "isConvertedToTool==true": defineTool({
- *         fields:  [FieldBuilder.Integer("maxResults", "Default Max Results", { initialValue: 20 })],
- *         outputs: [OutputBuilder.ToolList("tools", "Tools")],
+ *         fields:  [defineField.Integer("maxResults", "Default Max Results", { initialValue: 20 })],
+ *         outputs: [defineOutput.ToolList("tools", "Tools")],
  *     })
  *
  * Terminal by construction — it opens no scope, so nothing nests inside it and no condition below

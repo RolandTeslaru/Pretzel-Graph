@@ -3,9 +3,8 @@ import { Field } from "../Foundations/Field";
 import { Node } from "./node";
 import { Edge } from "./edge";
 import { Port } from "../Foundations/Port";
-import { WorkflowId } from "./ids";
 import { Vault } from "../Vault";
-import { Dependency } from "./dependency";
+import { Dependency } from "../Dependency";
 import { Annotation } from "../Annotation";
 import { migrateWorkflowDataToLatest, WORKFLOW_DATA_VERSION } from "./migrate";
 
@@ -67,16 +66,8 @@ export namespace Data {
             annotations: z.record(Annotation.Id, Annotation.Schema).default({}),
         }).default({ layout: {}, viewport: { x: 0, y: 0, zoom: 1 }, annotations: {} }),
 
-        // Getters defer the Dependency <-> Data cycle; the z.ZodType anchors
-        // are required because TS can't infer through mutual recursion.
-        dependencies: z.object({
-            get published(): z.ZodType<Record<WorkflowId, Dependency.Publication>> {
-                return z.record(WorkflowId, Dependency.Publication.Schema).default({});
-            },
-            get draft(): z.ZodType<Record<WorkflowId, Dependency.Draft>> {
-                return z.record(WorkflowId, Dependency.Draft.Schema).default({});
-            },
-        }).default({ published: {}, draft: {} }),
+        // Embedded dependency snapshots keyed by Dependency.Id; the getter defers the Dependency <-> Data cycle.
+        get dependencies() { return z.record(Dependency.Id, Dependency.Value.Schema) },
     })
 
     // Migrate legacy (fat-node) blobs to the latest slim shape before validation. The migrate
