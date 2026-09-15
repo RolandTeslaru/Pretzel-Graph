@@ -33,7 +33,7 @@ const EditSchema = CreateSchema.extend({
 type EditValues = z.infer<typeof EditSchema>
 
 const SkillTitleIcon = () => (
-    <SystemIcons.Brain className="size-6 shrink-0" style={{ color: `var(--${Skill.DEFAULT_ACCENT})` }} />
+    <SystemIcons.Sparkles2 className="size-6 shrink-0" style={{ color: `var(--${Skill.DEFAULT_ACCENT})` }} />
 )
 
 

@@ -136,6 +136,15 @@ export const CORE_DRAWERS = {
       "Core.Utils.Tool.MCP",
     ],
   },
+  skills: {
+    displayName: "Skills",
+    id: "skills",
+    icon: "Sparkles2",
+    blueprintIds: [
+      "Core.Utils.Skill.Source",
+      "Core.Utils.Skill.Load",
+    ],
+  },
   human_review: {
     displayName: "Human Review",
     id: "human_review",

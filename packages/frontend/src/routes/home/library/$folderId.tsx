@@ -111,7 +111,7 @@ function FolderRoute() {
 
                             <DropdownMenu.Item
                                 onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folderId })}
-                            ><SystemIcons.Brain />Create Skill</DropdownMenu.Item>
+                            ><SystemIcons.Sparkles2 />Create Skill</DropdownMenu.Item>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
                 </div>

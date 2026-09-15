@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { Library, Skill, Workflow } from '@pretzel-graph/shared/domain';
+import { Library, Skill, SystemError, Workflow } from '@pretzel-graph/shared/domain';
 import { LibraryRepository } from './repository';
 import { ListingService } from '../Listing/listing.service';
 
@@ -120,7 +120,7 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Skill.Create.Request,
         ): Promise<Library.API.Skill.Create.Response> => {
-            return this.libraryRepository.skill.create(principal, payload);
+            return rethrowNameConflict(payload.name, this.libraryRepository.skill.create(principal, payload));
         },
 
         get: async (
@@ -134,7 +134,7 @@ export class LibraryService {
             principal: Principal.User,
             payload: Library.API.Skill.Update.Request,
         ): Promise<Library.API.Skill.Update.Response> => {
-            return this.libraryRepository.skill.update(principal, payload);
+            return rethrowNameConflict(payload.name, this.libraryRepository.skill.update(principal, payload));
         },
 
         delete: async (
@@ -146,4 +146,17 @@ export class LibraryService {
             return { ok: true };
         },
     };
+}
+
+// A skill's name is its only unique column, so a conflict on a write means the name is taken.
+async function rethrowNameConflict<T>(name: string | undefined, write: Promise<T>): Promise<T> {
+    try {
+        return await write;
+    }
+    catch (err) {
+        if (name && err instanceof SystemError && err.code === SystemError.Code.CONFLICT)
+            throw new SystemError(SystemError.Code.CONFLICT, `A skill named "${name}" already exists`);
+
+        throw err;
+    }
 }

@@ -5,7 +5,7 @@ export namespace Skill {
     export const Id = SkillId
     export type Id = SkillId
 
-    export const DEFAULT_ICON = "Brain"
+    export const DEFAULT_ICON = "Sparkles2"
     export const DEFAULT_ACCENT = "port-Skill"
 
     // Lowercase letters, digits and hyphens; the name the model calls the skill by.

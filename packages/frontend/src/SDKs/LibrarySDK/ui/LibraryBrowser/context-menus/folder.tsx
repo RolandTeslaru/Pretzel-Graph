@@ -49,7 +49,7 @@ export function FolderContextMenu({ folder, onOpen, children }: Props) {
                             Workflow
                         </ContextMenu.Item>
                         <ContextMenu.Item
-                            icon={<SystemIcons.Brain className='size-4' />}
+                            icon={<SystemIcons.Sparkles2 className='size-4' />}
                             onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folder.id })}
                         >
                             Skill
