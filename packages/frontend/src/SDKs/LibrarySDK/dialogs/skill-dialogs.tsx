@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 
 const DIALOG_CLASSNAME = 'sm:max-w-[480px] w-full'
 
-const EDITOR_OPTIONS = { wordWrap: 'on', lineNumbers: 'off' } as const
+const EDITOR_OPTIONS = { wordWrap: 'on', lineNumbers: 'off', padding: { top: 64, bottom: 64 } } as const
 
 const NameSchema = z.string().trim()
     .min(1, 'Name is required')
@@ -68,7 +68,7 @@ function CreateSkillContent({ dialogId, folder_id }: { dialogId: string; folder_
     }
 
     return (
-        <div className=" flex flex-col gap-4">
+        <div className="p-3 flex flex-col gap-4">
             <Dialog.Header className="my-1">
                 <Dialog.Title className="flex items-center gap-2">
                     <SkillTitleIcon />
@@ -188,7 +188,7 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
             contentClassName='p-0!'
             sidebarRenderer={() => (
                 <Form.Root {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col gap-4 p-1" autoComplete="off">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col gap-4" autoComplete="off">
                         <Dialog.Title className="flex items-center gap-2 text-base">
                             <SkillTitleIcon />
                             Edit skill
@@ -207,7 +207,7 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
                                 <Form.Message />
                             </Form.Item>
                         )} />
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* <div className="grid grid-cols-2 gap-3">
                             <Form.Field control={form.control} name="icon" render={({ field }) => (
                                 <Form.Item>
                                     <Form.Label>Icon</Form.Label>
@@ -222,26 +222,40 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
                                     <Form.Message />
                                 </Form.Item>
                             )} />
-                        </div>
-                        <div className="mt-auto flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                            <Button type="submit" disabled={form.formState.isSubmitting}>
-                                {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
-                                Save
-                            </Button>
-                        </div>
+                        </div> */}
                     </form>
                 </Form.Root>
             )}
         >
             <div className="relative h-[600px] w-[680px] shrink-0">
-                <MonacoEditor
-                    height="100%"
-                    defaultLanguage="markdown"
-                    defaultValue={skill.content}
-                    onChange={setContent}
-                    options={EDITOR_OPTIONS}
-                />
+                {/* Header */}
+                <div className='pointer-events-none absolute top-0 w-full left-0 z-90 flex flex-row gap-2 items-center px-4 pt-5 pb-4'>
+                    <p className='text-sm font-medium text-foreground'>Edit Content</p>
+                </div>
+
+                {/* Content */}
+                <div className='h-full [mask-image:linear-gradient(to_bottom,transparent_0,black_80px,black_calc(100%_-_80px),transparent_100%)]'>
+                    <MonacoEditor
+                        height="100%"
+                        defaultLanguage="markdown"
+                        defaultValue={skill.content}
+                        onChange={setContent}
+                        options={EDITOR_OPTIONS}
+                    />
+                </div>
+
+                {/* Footer */}
+                <div className='pointer-events-none absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 w-full flex'>
+                    <div className='ml-auto gap-2 flex'>
+                        <Button type='button' variant='outline' className='pointer-events-auto rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                            Cancel
+                        </Button>
+                        <Button type='button' className='pointer-events-auto rounded-full' onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting}>
+                            {form.formState.isSubmitting && <Spinner className='size-3.5' />}
+                            Save
+                        </Button>
+                    </div>
+                </div>
             </div>
         </DialogSDK.SplitTemplate>
     )
