@@ -4,6 +4,7 @@ import { Tooltip } from '@pretzel-graph/standard-ui/foundations';
 import type { Foundations } from '@pretzel-graph/shared/domain';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
+import Tipped from '@/components/Tipped';
 
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
@@ -40,6 +41,14 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
           <p className='text-sm my-auto truncate flex-1 min-w-0 select-none'>
             {blueprint.ui.displayName}
           </p>
+          {blueprint.toolCompatible && (
+            <Tipped label="This node is tool compatible">
+              {/* <div className='p-2 h-auto my-auto -mr-2'>
+                <div className='content-[" "] bg-(--port-Tool) rounded-full h-1 w-1'/>
+              </div> */}
+              <SystemIcons.Hammer className='text-(--port-Tool)/50 fill-current size-3 h-auto my-auto -mr-1'/>
+            </Tipped>
+          )}
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
         </div>
       </Tooltip.Trigger>
