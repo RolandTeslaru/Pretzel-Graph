@@ -1,39 +1,79 @@
-import { memo, useState } from 'react'
+import { useState } from 'react'
 import { Dialog, SearchInput, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { Library, type Dependency } from '@pretzel-graph/shared/domain'
 import type { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
+import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
-import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks, type LocalWorkflowKind } from './constants'
+import { DEPENDENCY_SELECTOR_DIALOG_ID, getAcceptedNoun, groupAcceptedKinds, type DependencySelectorOptions } from './constants'
 import { ListingSelector } from './listing-selector'
 import { openDependencyTypeDialog } from './dependency-type-dialog'
 
-interface Props {
-    callbacks: DependencySelectorCallbacks
-    initialFolderId?: Library.Folder.Id
-    localKinds: LocalWorkflowKind[]
-}
-
-export interface DependencySelectorOptions {
-    /** Folder the local library opens in. Defaults to the root. */
-    initialFolderId?: Library.Folder.Id
-    /** Kinds the field accepts; each tab shows only when one of its kinds is accepted. */
-    acceptsKind: Dependency.Ref.Kind[]
-}
-
-export const openDependencySelectorDialog = (callbacks: DependencySelectorCallbacks, options: DependencySelectorOptions) => {
-    const localKinds   = options.acceptsKind.filter((kind): kind is LocalWorkflowKind => kind !== "listing")
-    const showLocal    = localKinds.length > 0
-    const showListings = options.acceptsKind.includes("listing")
-
+export const openDependencySelectorDialog = (options: DependencySelectorOptions) => {
     DialogSDK.actions.push(DEPENDENCY_SELECTOR_DIALOG_ID, (props) => (
-        <Tabs.Root defaultValue={showLocal ? "local" : "publicListing"}>
-            <DialogSDK.SplitTemplate {...props}
+        <DependencySelectorDialog dialogProps={props} options={options} />
+    ))
+}
+
+interface Props {
+    dialogProps: DialogSDK.TemplateProps
+    options:     DependencySelectorOptions
+}
+
+const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
+    const accepted  = groupAcceptedKinds(options.acceptsKind)
+    const showLocal = accepted.localKinds.length > 0 || accepted.skill
+
+    const [cwd, setCwd] = useState<Library.Folder.Id>(options.initialCwd ?? Library.Folder.ROOT_ID)
+
+    const [treeSearchQuery, setTreeSearchQuery] = useState('')
+    const [viewSearchQuery, setViewSearchQuery] = useState('')
+
+    QuerySDK.useQuery(
+        ['version-control', 'active-workflows'],
+        () => VersionControlSDK.actions.listActiveWorkflows(),
+        { staleTime: 60_000 },
+    )
+
+    const attach = async (ref: Dependency.Ref) => {
+        const success = await options.onSelect(ref)
+
+        if (success)
+            DialogSDK.actions.pop(DEPENDENCY_SELECTOR_DIALOG_ID)
+    }
+
+    const isItemDisabled = (item: LibrarySDK.Item) => {
+        switch (item.type) {
+            case 'workflow':
+                return accepted.localKinds.length === 0
+
+            case 'skill':
+                return !accepted.skill
+        }
+    }
+
+    // A workflow asks draft or published only when the field accepts both; a skill attaches directly.
+    const selectLocal = async (item: LibrarySDK.Item) => {
+        switch (item.type) {
+            case 'workflow': {
+                if (accepted.localKinds.length > 1)
+                    return openDependencyTypeDialog(item.id, options.onSelect)
+
+                return attach({ kind: accepted.localKinds[0], id: item.id })
+            }
+
+            case 'skill':
+                return attach({ kind: 'skill', id: item.id })
+        }
+    }
+
+    return (
+        <Tabs.Root defaultValue={showLocal ? 'local' : 'publicListing'}>
+            <DialogSDK.SplitTemplate {...dialogProps}
                 sidebarRenderer={() => (
                     <>
                         <div className="flex flex-row items-center gap-2">
@@ -42,10 +82,10 @@ export const openDependencySelectorDialog = (callbacks: DependencySelectorCallba
                         </div>
 
                         <p className="text-xs text-muted-foreground">
-                            Embeds a snapshot of a workflow in this node
+                            Embeds a snapshot of the selection in this node
                         </p>
 
-                        {showLocal && showListings && (
+                        {showLocal && accepted.listing && (
                             <Tabs.List size="xs" variant="accent" className='w-full mt-auto'>
                                 <Tabs.Trigger value='local' className='w-1/2'>
                                     Local Library
@@ -60,88 +100,57 @@ export const openDependencySelectorDialog = (callbacks: DependencySelectorCallba
                 sidebarClassName='w-[260px] shrink-0'
                 contentClassName=' pr-0! pl-1! py-0! gap-0!'
             >
-                <WorkflowSelector callbacks={callbacks} initialFolderId={options.initialFolderId} localKinds={localKinds} />
-            </DialogSDK.SplitTemplate>
-        </Tabs.Root>
-    ))
-}
+                <div className='absolute top-0 pl-2 z-20 w-full flex flex-row gap-2 h-10 '>
+                    <Dialog.Title className='text-sm my-auto'>Select a {getAcceptedNoun(accepted)}</Dialog.Title>
+                </div>
 
-const WorkflowSelector = memo<Props>(({ callbacks, initialFolderId, localKinds }) => {
-    const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
-
-    const query = QuerySDK.useQuery(
-        ['version-control', 'active-workflows'],
-        () => VersionControlSDK.actions.listActiveWorkflows(),
-        { staleTime: 60_000 },
-    )
-
-    const [treeSearchQuery, setTreeSearchQuery] = useState("");
-    const [viewSearchQuery, setViewSearchQuery] = useState("")
-
-    // Asks draft or published only when the field accepts both.
-    const selectLocal = async (item: LibrarySDK.Item) => {
-        if (item.type !== 'workflow')
-            return
-
-        if (localKinds.length > 1)
-            return openDependencyTypeDialog(item.id, callbacks.onLocalWorkflowSelected)
-
-        const success = await callbacks.onLocalWorkflowSelected(item.id, localKinds[0])
-
-        if (success)
-            DialogSDK.actions.pop(DEPENDENCY_SELECTOR_DIALOG_ID)
-    }
-
-
-    return (
-        <>
-            <div className='absolute top-0 pl-2 z-20 w-full flex flex-row gap-2 h-10 '>
-                <Dialog.Title className='text-sm my-auto'>Select a Workflow</Dialog.Title>
-            </div>
-            <div className='flex flex-row h-[500px]  w-[700px] shrink-0 '>
-                <Tabs.Content value="local" className='flex mt-0! gap-2 flex-row w-full '>
-                    {/* Tree View */}
-                    <div className='relative w-[220px] shrink-0'>
-                        <div className='absolute z-10 top-10 w-full'>
-                            <SearchInput size='xs'
-                                className='rounded-full!'
-                                wrapperClassName='flex-1 mx-1'
-                                onSearch={(value) => setTreeSearchQuery(value)}
+                <div className='flex flex-row h-[500px]  w-[700px] shrink-0 '>
+                    <Tabs.Content value="local" className='flex mt-0! gap-2 flex-row w-full '>
+                        {/* Tree View */}
+                        <div className='relative w-[220px] shrink-0'>
+                            <div className='absolute z-10 top-10 w-full'>
+                                <SearchInput size='xs'
+                                    className='rounded-full!'
+                                    wrapperClassName='flex-1 mx-1'
+                                    onSearch={(value) => setTreeSearchQuery(value)}
+                                />
+                            </div>
+                            <LibraryTree
+                                size="sm"
+                                cwd={cwd}
+                                setCwd={setCwd}
+                                searchQuery={treeSearchQuery}
+                                onItemClick={selectLocal}
+                                isItemDisabled={isItemDisabled}
+                                className='pt-[70px]'
+                                scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                             />
                         </div>
-                        <LibraryTree
-                            size="sm"
-                            cwd={cwd}
-                            setCwd={setCwd}
-                            searchQuery={treeSearchQuery}
-                            onItemClick={selectLocal}
-                            className='pt-[70px]'
-                            scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
-                        />
-                    </div>
-                    <div className='relative flex-1 '>
-                        <div className='absolute z-10 flex flex-row pr-4 justify-between top-2 w-full'>
-                            <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
-                            <SearchInput className='rounded-full!' size="xs" onSearch={value => setViewSearchQuery(value)}/>
+                        <div className='relative flex-1 '>
+                            <div className='absolute z-10 flex flex-row pr-4 justify-between top-2 w-full'>
+                                <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
+                                <SearchInput className='rounded-full!' size="xs" onSearch={value => setViewSearchQuery(value)}/>
+                            </div>
+                            <FolderView
+                                size="sm"
+                                cwd={cwd}
+                                setCwd={setCwd}
+                                searchQuery={viewSearchQuery}
+                                onItemClick={selectLocal}
+                                isItemDisabled={isItemDisabled}
+                                className='pt-[50px] h-full '
+                                scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
+                            />
                         </div>
-                        <FolderView
-                            size="sm"
-                            cwd={cwd}
-                            setCwd={setCwd}
-                            searchQuery={viewSearchQuery}
-                            onItemClick={selectLocal}
-                            className='pt-[50px] h-full '
-                            scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
+                    </Tabs.Content>
+                    <Tabs.Content value="publicListing">
+                        <ListingSelector
+                            onSelect={options.onSelect}
+                            onListingPreview={options.onListingPreview}
                         />
-                    </div>
-                </Tabs.Content>
-                <Tabs.Content value="publicListing">
-                    <ListingSelector
-                        onListingSelected={callbacks.onListingSelected}
-                        onListingPreview={callbacks.onListingPreview}
-                    />
-                </Tabs.Content>
-            </div>
-        </>
+                    </Tabs.Content>
+                </div>
+            </DialogSDK.SplitTemplate>
+        </Tabs.Root>
     )
-})
+}

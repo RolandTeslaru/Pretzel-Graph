@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Library, Skill, Workflow } from '@pretzel-graph/shared/domain';
-import { LibraryRepository } from './library.repository';
+import { LibraryRepository } from './repository';
 import { ListingService } from '../Listing/listing.service';
 
 @Injectable()

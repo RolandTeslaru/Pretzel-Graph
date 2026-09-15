@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ListingId, WorkflowId } from "../Workflow/ids"
+import { ListingId, SkillId, WorkflowId } from "../Workflow/ids"
 
 // Pointers from a node's fields into the workflow's embedded dependency snapshots.
 export namespace Ref {
@@ -21,14 +21,21 @@ export namespace Ref {
             id:   ListingId,
         })
     }
+    export namespace Skill {
+        export const Schema = z.object({
+            kind: z.literal("skill"),
+            id:   SkillId,
+        })
+    }
 
     // Every kind a ref can point at.
-    export const Kind = z.enum(["draftWorkflow", "publishedWorkflow", "listing"])
+    export const Kind = z.enum(["draftWorkflow", "publishedWorkflow", "listing", "skill"])
     export type Kind = z.infer<typeof Kind>
 
     export type DraftWorkflow     = z.infer<typeof DraftWorkflow.Schema>
     export type PublishedWorkflow = z.infer<typeof PublishedWorkflow.Schema>
     export type Listing           = z.infer<typeof Listing.Schema>
+    export type Skill             = z.infer<typeof Skill.Schema>
 
     // Any pointer to an embedded workflow.
     export namespace Workflow {
@@ -36,6 +43,6 @@ export namespace Ref {
     }
     export type Workflow = z.infer<typeof Workflow.Schema>
 
-    export const Schema = z.discriminatedUnion("kind", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema])
+    export const Schema = z.discriminatedUnion("kind", [DraftWorkflow.Schema, PublishedWorkflow.Schema, Listing.Schema, Skill.Schema])
 }
 export type Ref = z.infer<typeof Ref.Schema>

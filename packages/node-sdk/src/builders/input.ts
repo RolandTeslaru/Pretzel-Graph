@@ -1,5 +1,5 @@
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
-import type { Skill as SkillD } from "@pretzel-graph/shared/domain/Skill";
+import type { Dependency } from "@pretzel-graph/shared/domain/Dependency";
 
 import { LC } from "../langchain";
 
@@ -175,7 +175,7 @@ export namespace defineInput {
     id: TId,
     displayName: string,
     options: BaseOptions<TReq> = {},
-  ): LiteralInput<TId, "Skill", Port.Variants.Skill, SkillD, TReq> {
+  ): LiteralInput<TId, "Skill", Port.Variants.Skill, Dependency.Value.Skill, TReq> {
     return {
       ...buildBase(id, displayName, options),
       variant: "Skill",
@@ -186,7 +186,7 @@ export namespace defineInput {
     id: TId,
     displayName: string,
     options: BaseOptions<TReq> = {},
-  ): LiteralInput<TId, "SkillList", Port.Variants.SkillList, SkillD[], TReq> {
+  ): LiteralInput<TId, "SkillList", Port.Variants.SkillList, Dependency.Value.Skill[], TReq> {
     return {
       ...buildBase(id, displayName, options),
       variant: "SkillList",

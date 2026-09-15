@@ -5,11 +5,11 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
-import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks, type LocalWorkflowKind } from './constants'
+import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorOptions, type LocalWorkflowKind } from './constants'
 
 export const getDependencyTypeDialogId = (workflowId: Workflow.Id) => `dependency-type-${workflowId}`
 
-export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelected: DependencySelectorCallbacks['onLocalWorkflowSelected']) => {
+export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelect: DependencySelectorOptions['onSelect']) => {
 
     const dialogId = getDependencyTypeDialogId(workflowId)
 
@@ -17,7 +17,7 @@ export const openDependencyTypeDialog = (workflowId: Workflow.Id, onSelected: De
         <DialogSDK.Template {...props} className='p-2'>
             <DependencyTypeDialog
                 workflowId={workflowId}
-                onSelected={onSelected}
+                onSelect={onSelect}
             />
         </DialogSDK.Template>
     ))
@@ -30,10 +30,10 @@ const kindDescriptions: Record<LocalWorkflowKind, string> = {
 
 interface DependencyTypeDialogProps {
     workflowId: Workflow.Id
-    onSelected: DependencySelectorCallbacks['onLocalWorkflowSelected']
+    onSelect: DependencySelectorOptions['onSelect']
 }
 
-const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogProps) => {
+const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProps) => {
 
     const dialogId = getDependencyTypeDialogId(workflowId)
 
@@ -54,7 +54,7 @@ const DependencyTypeDialog = ({ workflowId, onSelected }: DependencyTypeDialogPr
     const handleAttach = async () => {
         setIsAttaching(true)
 
-        const success = await onSelected(workflowId, kind)
+        const success = await onSelect({ kind, id: workflowId })
 
         setIsAttaching(false)
 

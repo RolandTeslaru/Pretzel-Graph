@@ -11,6 +11,7 @@ export interface LibraryBrowserBaseProps {
     setCwd: (value: Library.Folder.Id) => void
     selectedWorkflowId?: Workflow.Id
     onItemClick?: (item: LibrarySDK.Item) => void
+    isItemDisabled?: (item: LibrarySDK.Item) => boolean
 }
 
 interface Props extends LibraryBrowserBaseProps {
@@ -25,7 +26,7 @@ interface Props extends LibraryBrowserBaseProps {
     }
 }
 
-export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, treeProps, cwd, setCwd, selectedWorkflowId, onItemClick, size }) => {
+export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, treeProps, cwd, setCwd, selectedWorkflowId, onItemClick, isItemDisabled, size }) => {
     return (
         <div className={"flex flex-row w-full gap-2 " + className}>
             <LibraryTree
@@ -34,6 +35,7 @@ export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, tr
                 selectedWorkflowId={selectedWorkflowId}
                 setCwd={setCwd}
                 onItemClick={onItemClick}
+                isItemDisabled={isItemDisabled}
                 {...treeProps}
             />
             <FolderView
@@ -41,6 +43,7 @@ export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, tr
                 setCwd={setCwd}
                 size={size}
                 onItemClick={onItemClick}
+                isItemDisabled={isItemDisabled}
                 {...folderViewProps}
             />
         </div>

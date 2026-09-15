@@ -30,7 +30,7 @@ const sizeStyles = {
     },
 } as const
 
-export const FolderView: React.FC<Props> = ({ scrollContainerClassName, className, setCwd, cwd, size = 'default', onItemClick, headerRenderer, searchQuery }) => {
+export const FolderView: React.FC<Props> = ({ scrollContainerClassName, className, setCwd, cwd, size = 'default', onItemClick, isItemDisabled, headerRenderer, searchQuery }) => {
 
     const [view, breadCrumbs] = LibrarySDK.useStore(s => [
         s.selectors.getLibraryView(s, cwd),
@@ -44,6 +44,11 @@ export const FolderView: React.FC<Props> = ({ scrollContainerClassName, classNam
     const filteredSkills = useMemo(() => view.skills.filter(k => matchesSkill(k, query)).sort((a, b) => a.name.localeCompare(b.name)), [view.skills, query])
 
     const styles = sizeStyles[size]
+
+    const itemProps = (item: LibrarySDK.Item) => ({
+        disabled: isItemDisabled?.(item) ?? false,
+        onClick:  () => onItemClick?.(item),
+    })
 
     const isEmpty = filteredFolders.length === 0 && filteredWorkflows.length === 0 && filteredSkills.length === 0;
     const hasNoMatches = !isEmpty && filteredFolders.length === 0 && filteredWorkflows.length === 0
@@ -73,7 +78,7 @@ export const FolderView: React.FC<Props> = ({ scrollContainerClassName, classNam
                     }
                     <div className={classNames('grid', styles.grid)}>
                         {filteredWorkflows.map((w) => (
-                            <WorkflowItem key={w.id} workflow={w} size={size} onClick={() => onItemClick?.({ type: 'workflow', id: w.id })} />
+                            <WorkflowItem key={w.id} workflow={w} size={size} {...itemProps({ type: 'workflow', id: w.id })} />
                         ))}
                     </div>
                     {filteredSkills.length > 0 &&
@@ -84,7 +89,7 @@ export const FolderView: React.FC<Props> = ({ scrollContainerClassName, classNam
                     }
                     <div className={classNames('grid', styles.grid)}>
                         {filteredSkills.map((k) => (
-                            <SkillItem key={k.id} skill={k} size={size} onClick={() => onItemClick?.({ type: 'skill', id: k.id })} />
+                            <SkillItem key={k.id} skill={k} size={size} {...itemProps({ type: 'skill', id: k.id })} />
                         ))}
                     </div>
                 </div>

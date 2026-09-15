@@ -24,12 +24,14 @@ export function TreeItem({
     size,
     onFolderClick,
     onItemClick,
+    isItemDisabled,
 }: TreeDomain.Branch.RenderProps<FileSystemNodeData> & {
     isSelected: boolean
     styles: (typeof sizeStyles)[FileSystemTreeSize]
     size: FileSystemTreeSize
     onFolderClick?: (folderId: Library.Folder.Id) => void
     onItemClick?: (item: LibrarySDK.Item) => void
+    isItemDisabled?: (item: LibrarySDK.Item) => boolean
 }) {
     const key = branch.key
     const isFolder = key.startsWith('folder:')
@@ -47,10 +49,15 @@ export function TreeItem({
     const workflow = LibrarySDK.useStore((s) => (workflowId ? s.workflowMetas[workflowId] : undefined))
     const skill = LibrarySDK.useStore((s) => (skillId ? s.skillMetas[skillId] : undefined))
 
+    const item       = getItem(workflowId, skillId)
+    const isDisabled = item !== undefined && (isItemDisabled?.(item) ?? false)
+
     const handleClick = () => {
-        if (folderId) return onFolderClick?.(folderId)
-        if (workflowId) return onItemClick?.({ type: 'workflow', id: workflowId })
-        if (skillId) return onItemClick?.({ type: 'skill', id: skillId })
+        if (folderId)
+            return onFolderClick?.(folderId)
+
+        if (item && !isDisabled)
+            onItemClick?.(item)
     }
 
     const hasActiveWorkflow = VersionControlSDK.useStore((s) => (
@@ -74,10 +81,11 @@ export function TreeItem({
     const row = (
         <div
             className={classNames(
-                'flex items-center pr-1 pl-1 rounded-md cursor-pointer select-none',
+                'flex items-center pr-1 pl-1 rounded-md select-none',
                 styles.row,
                 isSelected ? 'bg-accent' : 'hover:bg-accent/50',
                 isHidden && 'opacity-50',
+                isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
             )}
             onClick={handleClick}
         >
@@ -110,7 +118,7 @@ export function TreeItem({
 
     if (workflow) {
         return (
-            <WorkflowContextMenu workflow={workflow} onOpen={() => onItemClick?.({ type: 'workflow', id: workflow.id })}>
+            <WorkflowContextMenu workflow={workflow} onOpen={handleClick}>
                 {row}
             </WorkflowContextMenu>
         )
@@ -133,4 +141,15 @@ export function TreeItem({
     }
 
     return row
+}
+
+// The library item a row stands for; folder rows have none.
+function getItem(workflowId?: Workflow.Id, skillId?: Skill.Id): LibrarySDK.Item | undefined {
+    if (workflowId)
+        return { type: 'workflow', id: workflowId }
+
+    if (skillId)
+        return { type: 'skill', id: skillId }
+
+    return undefined
 }

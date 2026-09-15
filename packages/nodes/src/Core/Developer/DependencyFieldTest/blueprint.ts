@@ -19,6 +19,12 @@ export const Blueprint = defineBlueprint({
         defineField.Dependency("listingOnly", "Listing Only", {
             acceptsKind: ["listing"],
         }),
+        defineField.Dependency("skillOnly", "Skill Only", {
+            acceptsKind: ["skill"],
+        }),
+        defineField.Dependency("anyKind", "Any Kind", {
+            acceptsKind: ["draftWorkflow", "publishedWorkflow", "listing", "skill"],
+        }),
     ],
     inputs: [
         defineInput.Unresolved("trigger", "Trigger", {

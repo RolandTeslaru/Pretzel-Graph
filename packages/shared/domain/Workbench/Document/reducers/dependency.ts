@@ -34,6 +34,10 @@ export const dependencyReducers: DependencyReducers = {
                 d.data.dependencies[id] = { ...value, workflow_data: withoutUi(value.workflow_data) }
                 break
 
+            case "skill":
+                d.data.dependencies[id] = value
+                break
+
             default:
                 value satisfies never
         }

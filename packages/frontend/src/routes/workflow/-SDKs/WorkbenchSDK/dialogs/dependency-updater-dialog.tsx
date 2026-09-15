@@ -5,6 +5,7 @@ import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../sdk'
 import type { Dependency } from '@pretzel-graph/shared/domain'
+import { getDependencyDisplay } from '../utils/dependency'
 
 const DIALOG_ID = 'dependency-updater'
 
@@ -113,7 +114,7 @@ const UpdateRow = ({ update }: { update: Dependency.Update }) => {
         <div className=' flex items-center gap-3'>
 
             <div className='flex-1 min-w-0'>
-                <p className='text-xs font-medium truncate'>{dependency?.display_name ?? 'Unknown workflow'}</p>
+                <p className='text-xs font-medium truncate'>{dependency ? getDependencyDisplay(dependency).name : 'Unknown dependency'}</p>
                 <p className='text-xs text-muted-foreground truncate'>{describeUpdate(update)}</p>
             </div>
 
@@ -138,5 +139,8 @@ function describeUpdate(update: Dependency.Update): string {
         case 'publishedWorkflow':
         case 'listing':
             return `${update.name} · v${update.version}`
+
+        case 'skill':
+            return 'Skill saved with changes'
     }
 }

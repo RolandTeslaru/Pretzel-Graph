@@ -20,8 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     // Reads the embedded snapshot the ref points at through the dependency API.
     private describe(ref: Dependency.Ref) {
-        const value     = this.context.dependencyAPI.get(ref);
-        const nodeCount = Object.keys(value.workflow_data.nodes).length;
+        const value = this.context.dependencyAPI.get(ref);
 
         switch (value.kind) {
             case "draftWorkflow":
@@ -30,7 +29,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     id:          ref.id,
                     displayName: value.display_name,
                     updatedAt:   value.updated_at,
-                    nodeCount,
+                    nodeCount:   Object.keys(value.workflow_data.nodes).length,
                 };
 
             case "publishedWorkflow":
@@ -41,7 +40,17 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                     displayName: value.display_name,
                     name:        value.name,
                     version:     value.version,
-                    nodeCount,
+                    nodeCount:   Object.keys(value.workflow_data.nodes).length,
+                };
+
+            case "skill":
+                return {
+                    kind:          ref.kind,
+                    id:            ref.id,
+                    name:          value.name,
+                    description:   value.description,
+                    contentLength: value.content.length,
+                    contentHash:   value.content_hash,
                 };
         }
     }

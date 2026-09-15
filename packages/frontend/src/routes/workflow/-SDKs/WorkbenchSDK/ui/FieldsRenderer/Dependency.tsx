@@ -9,30 +9,30 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
+import { getDependencyDisplay } from '../../utils/dependency'
+import { getAcceptedNoun, groupAcceptedKinds } from '@/SDKs/LibrarySDK/dialogs/DependencySelector/constants'
 
 const openSelector = (nodeId: Workflow.Node.Id, field: Foundations.Field.Dependency) => {
     LibrarySDK.dialogs.openDependencySelector({
-        onLocalWorkflowSelected: (workflowId, kind) =>
-            WorkbenchSDK.actions.field.dependency.setValue(nodeId, field.id, { kind, id: workflowId }),
-        onListingSelected: (listingId) =>
-            WorkbenchSDK.actions.field.dependency.setValue(nodeId, field.id, { kind: 'listing', id: listingId }),
-        onListingPreview: (listingId) =>
-            WorkbenchSDK.openWorkflowWindow(listingId),
-    }, {
-        initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
-        acceptsKind:     field.acceptsKind,
+        acceptsKind:      field.acceptsKind,
+        initialCwd:       LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
+        onSelect:         (ref) => WorkbenchSDK.actions.field.dependency.setValue(nodeId, field.id, ref),
+        onListingPreview: (listingId) => WorkbenchSDK.openWorkflowWindow(listingId),
     })
 }
 
 export const DependencyField = memo<RendererProps<'Dependency'>>(({ field, nodeId, className }) => {
 
-    const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref.Workflow | null>(nodeId, field)
+    const [value, , , issue] = WorkbenchSDK.useField<Dependency.Ref | null>(nodeId, field)
 
     const dependency = WorkbenchSDK.useDocument(d => value ? d.selectors.dependency.get(d, value) : null)
+    const display = dependency ? getDependencyDisplay(dependency) : null
     const kind = value?.kind ?? null
 
-    const iconColor = dependency?.accent ? `var(--${dependency.accent}-foreground)` : undefined
-    const backgroundColor = dependency?.accent ? `color-mix(in srgb, var(--${dependency.accent}) 25%, transparent)` : 'var(--muted)'
+    const accepted = groupAcceptedKinds(field.acceptsKind)
+
+    const iconColor = display?.accent ? `var(--${display.accent}-foreground)` : undefined
+    const backgroundColor = display?.accent ? `color-mix(in srgb, var(--${display.accent}) 25%, transparent)` : 'var(--muted)'
 
     const errorClass = issue ? 'border-2 border-destructive animate-border-ping focus-visible:ring-destructive/50' : ''
 
@@ -52,17 +52,17 @@ export const DependencyField = memo<RendererProps<'Dependency'>>(({ field, nodeI
                         style={{ backgroundColor }}
                     >
                         <IconRenderer
-                            name={"Graph"}
+                            name={display?.icon ?? "Graph"}
                             className="size-3"
                             style={{ color: iconColor }}
                         />
                     </span>
                     <span className="min-w-0 flex flex-col">
                         <span className="truncate text-xs font-medium">
-                            {dependency?.display_name ?? "Select workflow"}
+                            {display?.name ?? `Select ${getAcceptedNoun(accepted)}`}
                         </span>
                         <span className='flex text-[10px] font-normal text-muted-foreground'>
-                            {dependency && "name" in dependency ? dependency.name : null}
+                            {display?.detail}
                         </span>
                     </span>
                 </span>

@@ -138,14 +138,14 @@ export function createExecutionAPIs(
 
 
     const dependencyAPI = {
-        get: (ref) => {
+        get: <R extends Dependency.Ref>(ref: R) => {
             const id    = Dependency.createId(ref);
             const value = workflowData.dependencies?.[id];
 
             if (!value)
                 throw new Error(`Missing dependency "${id}"`);
 
-            return value;
+            return value as Dependency.ValueFor<R>;
         },
     } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
 

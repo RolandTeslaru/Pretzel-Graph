@@ -7,9 +7,9 @@ import { dependencySelectors } from "../dependency";
 export interface NodeDependencySelectors {
     // Read plain workflow data only, so callers outside the editor can pass `{ data }`.
     getShapeRef:   (document: { data: Pick<Workflow.Data, "staticValues"> }, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow | null
-    getShapeValue: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Dependency.Value | null
+    getShapeValue: (document: { data: Pick<Workflow.Data, "staticValues" | "dependencies"> }, nodeId: Workflow.Node.Id) => Dependency.ValueFor<Dependency.Ref.Workflow> | null
     // Every Dependency field value on the node, the shape dependency included.
-    getRefs:       (document: Document, nodeId: Workflow.Node.Id) => Dependency.Ref.Workflow[]
+    getRefs:       (document: Document, nodeId: Workflow.Node.Id) => Dependency.Ref[]
     // Pending updates for the dependencies the node's fields point at, one per dependency.
     getUpdates:    (document: Document, nodeId: Workflow.Node.Id) => Dependency.Update[]
     hasUpdates:    (document: Document, nodeId: Workflow.Node.Id) => boolean
@@ -37,8 +37,8 @@ export const nodeDependencySelectors: NodeDependencySelectors = {
                 ids.add(field.id);
 
         return [...ids]
-            .map(id => values[id] as unknown as Dependency.Ref.Workflow | undefined)
-            .filter((ref): ref is Dependency.Ref.Workflow => !!ref);
+            .map(id => values[id] as unknown as Dependency.Ref | undefined)
+            .filter((ref): ref is Dependency.Ref => !!ref);
     },
     getUpdates: (d, nodeId) => {
         const refs = new Set(d.selectors.node.dependency.getRefs(d, nodeId).map(ref => `${ref.kind}:${ref.id}`));

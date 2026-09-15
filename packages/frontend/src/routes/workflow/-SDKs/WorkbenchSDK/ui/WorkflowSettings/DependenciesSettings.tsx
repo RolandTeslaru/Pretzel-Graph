@@ -3,7 +3,7 @@ import { Button, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkbenchSDK } from '../../sdk'
-import type { Dependency } from '@pretzel-graph/shared/domain'
+import { Skill, type Dependency } from '@pretzel-graph/shared/domain'
 
 export const DependenciesSettings = () => {
     const ids          = WorkbenchSDK.useDocument(d => Object.keys(d.data.dependencies) as Dependency.Id[])
@@ -59,6 +59,9 @@ function DependencyRow({ id }: { id: Dependency.Id }) {
         case "publishedWorkflow":
         case "listing":
             return <PublishedDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Publication | Dependency.Update.Listing | null} />
+
+        case "skill":
+            return <SkillDependencyRow dep={dep} updateInfo={updateInfo as Dependency.Update.Skill | null} />
 
         default:
             dep satisfies never
@@ -142,6 +145,52 @@ function DraftDependencyRow({ dep, updateInfo }: {
             <div className='flex-1 min-w-0'>
                 <p className='text-sm font-medium truncate'>{dep.display_name}</p>
                 <p className='text-xs text-muted-foreground'>draft</p>
+            </div>
+
+            {updateInfo ? (
+                <Button variant='outline' size='sm' className='shrink-0 gap-1.5' onClick={handleUpdate} disabled={isUpdating}>
+                    {isUpdating ? <Spinner className='size-3.5' /> : <SystemIcons.RefreshCcw className='size-3.5' />}
+                    Update
+                </Button>
+            ) : (
+                <span className='text-xs text-muted-foreground shrink-0'>Up to date</span>
+            )}
+        </div>
+    )
+}
+
+function SkillDependencyRow({ dep, updateInfo }: {
+    dep: Dependency.Value.Skill
+    updateInfo: Dependency.Update.Skill | null
+}) {
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    const accent = dep.accent ?? Skill.DEFAULT_ACCENT
+    const iconColor = `var(--${accent}-foreground)`
+    const backgroundColor = `color-mix(in srgb, var(--${accent}) 25%, transparent)`
+
+    const handleUpdate = async () => {
+        if (!updateInfo) return
+        setIsUpdating(true)
+        try {
+            await WorkbenchSDK.actions.dependency.update(updateInfo)
+        } finally {
+            setIsUpdating(false)
+        }
+    }
+
+    return (
+        <div className='rounded-md border border-border/50 bg-card/50 p-2.5 flex items-center gap-3'>
+            <span
+                className='flex size-7 shrink-0 items-center justify-center rounded-full'
+                style={{ backgroundColor }}
+            >
+                <IconRenderer name={dep.icon ?? Skill.DEFAULT_ICON} className='size-3.5' style={{ color: iconColor }} />
+            </span>
+
+            <div className='flex-1 min-w-0'>
+                <p className='text-sm font-medium truncate'>{dep.name}</p>
+                <p className='text-xs text-muted-foreground'>skill</p>
             </div>
 
             {updateInfo ? (

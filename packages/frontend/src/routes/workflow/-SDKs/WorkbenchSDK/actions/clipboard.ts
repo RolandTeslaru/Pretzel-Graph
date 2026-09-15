@@ -116,7 +116,7 @@ export const insertPayload = async (
 };
 
 // The dependency pointers a copied node carries: its shape dependency plus any other Dependency field.
-const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Workflow.Node.Raw): Dependency.Ref.Workflow[] => {
+const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Workflow.Node.Raw): Dependency.Ref[] => {
     const values    = payload.staticValues[node.id] ?? {};
     const blueprint = d.selectors.blueprint.ofNode(d, node);
     const ids       = new Set<Foundations.Field.Id>([Workflow.Node.SHAPE_DEPENDENCY_FIELD_ID]);
@@ -126,8 +126,8 @@ const payloadDependencyRefs = (d: Document, payload: ClipboardPayload, node: Wor
             ids.add(field.id);
 
     return [...ids]
-        .map(id => values[id] as unknown as Dependency.Ref.Workflow | undefined)
-        .filter((ref): ref is Dependency.Ref.Workflow => !!ref);
+        .map(id => values[id] as unknown as Dependency.Ref | undefined)
+        .filter((ref): ref is Dependency.Ref => !!ref);
 };
 
 // Sub-workflow nodes carry their dependency snapshot inside the source document, so it is

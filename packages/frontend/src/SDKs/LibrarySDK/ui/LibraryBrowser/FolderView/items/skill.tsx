@@ -7,18 +7,23 @@ import { SkillContextMenu } from '../../context-menus/skill'
 interface SkillCardProps {
     skill: Skill.Meta
     size?: ItemSize
+    disabled?: boolean
     onClick?: () => void
 }
 
-export function SkillItem({ skill, size = 'default', onClick }: SkillCardProps) {
+export function SkillItem({ skill, size = 'default', disabled = false, onClick }: SkillCardProps) {
 
     const styles = sizeStyles[size]
 
     return (
         <SkillContextMenu skill={skill}>
             <div
-                onClick={onClick}
-                className={classNames('group flex gap-1 relative m-auto cursor-pointer select-none rounded-md hover:bg-accent/30', styles.card)}
+                onClick={disabled ? undefined : onClick}
+                className={classNames(
+                    'group flex gap-1 relative m-auto select-none rounded-md',
+                    styles.card,
+                    disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-accent/30',
+                )}
             >
                 <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
                     <IconRenderer

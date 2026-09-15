@@ -54,7 +54,7 @@ const CreateSubWorkflowContent = ({ dialogId, nodeIds, edgeIds }: Props) => {
     const onSubmit = (values: NameValues) => {
         LibrarySDK.dialogs.openLibrarySelector({
             accept: 'folder',
-            initialFolderId: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
+            initialCwd: LibrarySDK.selectors.folderOf(WorkbenchSDK.document.workflowId),
             onSelect: (folder) => {
                 WorkbenchSDK.actions.subWorkflow.create(nodeIds, edgeIds, values.display_name, folder.id)
                 DialogSDK.actions.pop(dialogId)

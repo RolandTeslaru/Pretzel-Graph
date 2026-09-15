@@ -3,12 +3,12 @@ import { defineBlueprint, defineField, defineInput, defineOutput } from "@pretze
 export const Blueprint = defineBlueprint({
     id: "Core.Developer.DependencyReader",
     displayName: "Dependency Reader",
-    description: "Reads the embedded workflow a dependency field points at and outputs what it contains.",
+    description: "Reads the embedded workflow or skill a dependency field points at and outputs what it contains.",
     icon: "Graph",
     accent: "utility",
     fields: [
-        defineField.Dependency("dependency", "Workflow", {
-            acceptsKind: ["draftWorkflow", "publishedWorkflow", "listing"],
+        defineField.Dependency("dependency", "Dependency", {
+            acceptsKind: ["draftWorkflow", "publishedWorkflow", "listing", "skill"],
             required: true,
         }),
     ],
@@ -21,7 +21,7 @@ export const Blueprint = defineBlueprint({
     ],
     outputs: [
         defineOutput.Data("snapshot", "Snapshot", {
-            tooltip: "The embedded workflow's kind, id, name, version and node count."
+            tooltip: "What the embedded dependency contains: a workflow's name, version and node count, or a skill's name and content size."
         }),
     ],
 });

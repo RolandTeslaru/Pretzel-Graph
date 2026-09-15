@@ -3,14 +3,14 @@ import { Button, Input } from '@pretzel-graph/standard-ui/foundations'
 import { Listing } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorCallbacks } from './constants'
+import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorOptions } from './constants'
 
 interface Props {
-    onListingSelected: DependencySelectorCallbacks['onListingSelected']
-    onListingPreview?: DependencySelectorCallbacks['onListingPreview']
+    onSelect: DependencySelectorOptions['onSelect']
+    onListingPreview?: DependencySelectorOptions['onListingPreview']
 }
 
-export const ListingSelector = ({ onListingSelected, onListingPreview }: Props) => {
+export const ListingSelector = ({ onSelect, onListingPreview }: Props) => {
     const [value, setValue] = useState('')
 
     const listingId = Listing.Id.safeParse(value.trim()).data
@@ -26,7 +26,7 @@ export const ListingSelector = ({ onListingSelected, onListingPreview }: Props) 
         if (!listingId)
             return
 
-        openAttachListingDialog(listingId, onListingSelected)
+        openAttachListingDialog(listingId, onSelect)
     }
 
     return (
@@ -55,7 +55,7 @@ export const ListingSelector = ({ onListingSelected, onListingPreview }: Props) 
     )
 }
 
-const openAttachListingDialog = (listingId: Listing.Id, onListingSelected: DependencySelectorCallbacks['onListingSelected']) => {
+const openAttachListingDialog = (listingId: Listing.Id, onSelect: DependencySelectorOptions['onSelect']) => {
 
     const dialogId = `attach-listing-${listingId}`
 
@@ -66,7 +66,7 @@ const openAttachListingDialog = (listingId: Listing.Id, onListingSelected: Depen
             onApprove={async () => {
                 DialogSDK.actions.pop(dialogId)
 
-                const success = await onListingSelected(listingId)
+                const success = await onSelect({ kind: 'listing', id: listingId })
 
                 if (success)
                     DialogSDK.actions.pop(DEPENDENCY_SELECTOR_DIALOG_ID)

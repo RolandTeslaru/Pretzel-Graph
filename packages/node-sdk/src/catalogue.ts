@@ -138,8 +138,21 @@ class CatalogueServiceImpl {
             await this.resolveBlueprint(wfNode.blueprintId, wfData.staticValues[wfNode.id] ?? {});
         }
 
-        for (const dependency of Object.values(wfData.dependencies ?? {}))
-            await this.warmBlueprintCache(dependency.workflow_data);
+        for (const dependency of Object.values(wfData.dependencies ?? {})) {
+            switch (dependency.kind) {
+                case "draftWorkflow":
+                case "publishedWorkflow":
+                case "listing":
+                    await this.warmBlueprintCache(dependency.workflow_data);
+                    break;
+
+                case "skill":
+                    break;
+
+                default:
+                    dependency satisfies never;
+            }
+        }
     }
 
     // Sync cache read for the hot path — warmBlueprintCache runs before compilation, so

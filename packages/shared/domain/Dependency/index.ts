@@ -1,6 +1,7 @@
 import { z } from "zod"
-import { ListingId, PublicationId, WorkflowId } from "../Workflow/ids";
+import { ListingId, PublicationId, SkillId, WorkflowId } from "../Workflow/ids";
 import * as RefMod from "./ref";
+import { Skill as SkillD } from "../Skill";
 import { Data } from "../Workflow/data";
 
 export namespace Dependency {
@@ -45,12 +46,37 @@ export namespace Dependency {
             })
         }
 
+        // A skill: its instructions, and the hash its updates are checked against.
+        export namespace Skill {
+            export const Schema = SkillD.Schema.pick({
+                id:           true,
+                name:         true,
+                description:  true,
+                content:      true,
+                content_hash: true,
+                icon:         true,
+                accent:       true,
+            }).extend({
+                kind: z.literal("skill"),
+            })
+        }
+
         export type Draft = z.infer<typeof Draft.Schema>
         export type Publication = z.infer<typeof Publication.Schema>
-    
-        export const Schema = z.union([Draft.Schema, Publication.Schema])
+        export type Skill = z.infer<typeof Skill.Schema>
+
+        export const Schema = z.union([Draft.Schema, Publication.Schema, Skill.Schema])
     }
     export type Value = z.infer<typeof Value.Schema>
+
+    // The snapshot a ref of each kind points at.
+    type ValueByKind = {
+        draftWorkflow:     Value.Draft
+        publishedWorkflow: Value.Publication
+        listing:           Value.Publication
+        skill:             Value.Skill
+    }
+    export type ValueFor<R extends Ref> = ValueByKind[R["kind"]]
 
 
     // What changed at the source since a snapshot was taken, named by the ref's kind and id.
@@ -82,11 +108,22 @@ export namespace Dependency {
             })
         }
 
+        export namespace Skill {
+            export const Schema = z.object({
+                kind:         z.literal("skill"),
+                id:           SkillId,
+                name:         z.string(),
+                content_hash: z.string(),
+                updated_at:   z.coerce.date(),
+            })
+        }
+
         export type Draft       = z.infer<typeof Draft.Schema>
         export type Publication = z.infer<typeof Publication.Schema>
         export type Listing     = z.infer<typeof Listing.Schema>
+        export type Skill       = z.infer<typeof Skill.Schema>
 
-        export const Schema = z.discriminatedUnion("kind", [Draft.Schema, Publication.Schema, Listing.Schema])
+        export const Schema = z.discriminatedUnion("kind", [Draft.Schema, Publication.Schema, Listing.Schema, Skill.Schema])
     }
     export type Update = z.infer<typeof Update.Schema>
 }

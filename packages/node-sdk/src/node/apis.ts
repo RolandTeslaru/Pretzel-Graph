@@ -131,7 +131,7 @@ export interface WorkflowQueryAPI {
     getInputs:     (nodeId: Workflow.Node.Id) => Port.Input[],
     getOutputs:    (nodeId: Workflow.Node.Id) => Port.Output[],
     getFields:     (nodeId: Workflow.Node.Id) => readonly Foundations.Field[],
-    getNodeDependency: (nodeId: Workflow.Node.Id) => Dependency.Value | null,
+    getNodeDependency: (nodeId: Workflow.Node.Id) => Dependency.ValueFor<Dependency.Ref.Workflow> | null,
     getOutputPort: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => Port.Output | undefined,
     getInputPort:  (nodeId: Workflow.Node.Id, portId: Port.Input.Id) => Port.Input | undefined,
     getStaticValues: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, Foundations.Field.Value>,
@@ -178,7 +178,7 @@ export interface SubWorkflowAPI {
 
 // Reads an embedded dependency snapshot by its ref (used to resolve sub-workflows).
 export interface DependencyAPI {
-    get: (ref: Dependency.Ref) => Dependency.Value,
+    get: <R extends Dependency.Ref>(ref: R) => Dependency.ValueFor<R>,
 }
 
 /**

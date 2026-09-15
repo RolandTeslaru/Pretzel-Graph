@@ -29,7 +29,7 @@ export namespace LibrarySelector {
     export interface Options<A extends Accept> {
         accept: A
         /** Folder the browser opens in. Defaults to the library root. */
-        initialFolderId?: Library.Folder.Id
+        initialCwd?: Library.Folder.Id
         onSelect: (item: ItemFor<A>) => void
     }
 }
@@ -45,19 +45,19 @@ export function openLibrarySelector<A extends LibrarySelector.Accept>(options: L
     const onSelect = options.onSelect as (item: LibrarySelector.Item) => void
 
     DialogSDK.actions.push(LIBRARY_SELECTOR_DIALOG_ID, (props) => (
-        <LibrarySelectorDialog dialogProps={props} accept={options.accept} initialFolderId={options.initialFolderId} onSelect={onSelect} />
+        <LibrarySelectorDialog dialogProps={props} accept={options.accept} initialCwd={options.initialCwd} onSelect={onSelect} />
     ))
 }
 
 interface Props {
     dialogProps: DialogSDK.TemplateProps
     accept: LibrarySelector.Accept
-    initialFolderId?: Library.Folder.Id
+    initialCwd?: Library.Folder.Id
     onSelect: (item: LibrarySelector.Item) => void
 }
 
-const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect }: Props) => {
-    const [cwd, setCwd] = useState<Library.Folder.Id>(initialFolderId ?? Library.Folder.ROOT_ID)
+const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Props) => {
+    const [cwd, setCwd] = useState<Library.Folder.Id>(initialCwd ?? Library.Folder.ROOT_ID)
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
     const [viewSearchQuery, setViewSearchQuery] = useState('')
@@ -77,10 +77,7 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
         DialogSDK.actions.pop(LIBRARY_SELECTOR_DIALOG_ID)
     }
 
-    const handleItemClick = (item: LibrarySDK.Item) => {
-        if (accepts(item.type))
-            commit(item)
-    }
+    const isItemDisabled = (item: LibrarySDK.Item) => !accepts(item.type)
 
     const handleSelectFolder = () => commit({ type: 'folder', id: cwd })
 
@@ -102,7 +99,8 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
                             cwd={cwd}
                             setCwd={setCwd}
                             searchQuery={treeSearchQuery}
-                            onItemClick={handleItemClick}
+                            onItemClick={commit}
+                            isItemDisabled={isItemDisabled}
                             className='pt-[70px] px-2'
                             scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_80px)]'
                         />
@@ -123,7 +121,8 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialFolderId, onSelect 
                         cwd={cwd}
                         setCwd={setCwd}
                         searchQuery={viewSearchQuery}
-                        onItemClick={handleItemClick}
+                        onItemClick={commit}
+                        isItemDisabled={isItemDisabled}
                         className='pt-[40px] px-2'
                         scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                     />
