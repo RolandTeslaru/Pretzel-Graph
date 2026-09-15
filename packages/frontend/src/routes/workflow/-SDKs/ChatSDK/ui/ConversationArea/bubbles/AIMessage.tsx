@@ -3,10 +3,18 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 
 const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
 
+  const statuses = ChatSDK.useStore(s => (message.data.tool_calls ?? []).map(tc => s.toolCallStatus[tc.id]))
+
+  const pendingToolCalls = (message.data.tool_calls ?? []).filter((_, i) => !statuses[i])
+
   const showSpinner = message.content === "" && message.data.isProcessing
+
+  if (!message.content && pendingToolCalls.length === 0)
+    return null
 
   return (
     <div className="flex flex-col items-start w-full gap-1">
@@ -26,12 +34,12 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
           </div>
         </div>
       }
-      {message.data.tool_calls && message.data.tool_calls.length > 0 && (
+      {pendingToolCalls.length > 0 && (
         <div className="flex flex-col gap-1.5 w-full">
-          {message.data.tool_calls.map((toolCall) => (
+          {pendingToolCalls.map((toolCall) => (
             <div key={toolCall.id} className="flex flex-row gap-2 text-muted-foregroun">
               <SystemIcons.Terminal className="w-3.5 h-3.5 animate-pulse text-(--port-Tool)" />
-              <span className="font-mono text-[12px] font-semibold text-muted-foreground truncate">Calling {toolCall.name}...</span>
+              <span className="font-mono text-[11px] font-semibold text-muted-foreground truncate">Calling {toolCall.name}</span>
             </div>
           ))}
         </div>

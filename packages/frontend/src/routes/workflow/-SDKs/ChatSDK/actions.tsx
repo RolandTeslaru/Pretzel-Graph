@@ -99,8 +99,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                         if (!s.chats[s.currentChatId]) {
                             s.currentChatId = Chat.createId();
-                            s.messages = [];
-                            s.messagesRecord = {};
+                            sdk.reducers.resetMessages(s);
                         }
                     });
 
@@ -113,8 +112,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             },
             load: async (chatId: Chat.Id) => {
                 sdk.useStore.setState(s => {
-                    s.messages = [];
-                    s.messagesRecord = {};
+                    sdk.reducers.resetMessages(s);
                     s.isLoading = true;
                 })
 
@@ -123,10 +121,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                     sdk.useStore.setState(s => {
                         s.currentChatId = chatId;
-                        messages.forEach(m => {
-                            s.messages.push(m.id);
-                            s.messagesRecord[m.id] = m;
-                        })
+                        messages.forEach(m => sdk.reducers.upsertMessage(s, m))
                         s.isLoading = false;
                     })
 
@@ -162,18 +157,14 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             new: () => {
                 sdk.setState(s => {
                     s.currentChatId = Chat.createId();
-                    s.messages = [];
-                    s.messagesRecord = {};
+                    sdk.reducers.resetMessages(s);
                 });
                 // ExecutionSessionSDK.setState(s => {
                 //     s.session.messages = [];
                 // });
             },
             clearMessages: async () => {
-                sdk.setState(s => {
-                    s.messages = [];
-                    s.messagesRecord = {};
-                })
+                sdk.setState(s => sdk.reducers.resetMessages(s))
             },
             erase: async (chatId: Chat.Id) => {
                 try {
@@ -183,8 +174,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         delete s.chats[chatId];
                         if (s.currentChatId === chatId) {
                             s.currentChatId = Chat.createId();
-                            s.messages = [];
-                            s.messagesRecord = {};
+                            sdk.reducers.resetMessages(s);
                         }
                     });
                 } catch (err) {
