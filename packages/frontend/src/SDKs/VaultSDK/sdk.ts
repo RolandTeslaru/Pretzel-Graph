@@ -7,6 +7,9 @@ import { Vault } from "@pretzel-graph/shared/domain";
 import { _createVaultActions_, type _VaultSDKActions } from "./actions";
 import { _vaultSelectors_, type _VaultSDKSelectors } from "./selectors";
 
+const INSTANCES_STALE_TIME = 30_000
+const TEMPLATES_STALE_TIME = Infinity
+
 @SDK("Vault")
 export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
     constructor() { super() }
@@ -20,9 +23,21 @@ export class VaultSDKImpl extends BaseSDK<VaultSDK.State> {
         shallow
     )
 
-    public readonly reducers: VaultSDK.Reducers = {}
-    public readonly selectors: VaultSDK.Selectors = _vaultSelectors_
-    public readonly actions:   VaultSDK.Actions   = _createVaultActions_(this)
+    public readonly actions: VaultSDK.Actions = _createVaultActions_(this)
+
+    public readonly query = {
+        instances: {
+            queryKey:  ['vault', 'instances'] as const,
+            queryFn:   () => this.actions.instance.list(),
+            staleTime: INSTANCES_STALE_TIME,
+        },
+        templates: (ids: Vault.Credential.Template.Id[]) => ({
+            queryKey:  ['vault', 'templates', ...[...ids].sort()] as const,
+            queryFn:   () => this.actions.template.loadBatch(ids),
+            staleTime: TEMPLATES_STALE_TIME,
+            enabled:   ids.length > 0,
+        }),
+    }
 }
 
 export const VaultSDK = SDK.get<VaultSDKImpl>("Vault")
@@ -35,7 +50,6 @@ export namespace VaultSDK {
         selectors:           VaultSDK.Selectors
     }
 
-    export type Reducers = {}
     export type Selectors = _VaultSDKSelectors
     export type Actions   = _VaultSDKActions
 }

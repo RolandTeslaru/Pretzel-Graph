@@ -19,7 +19,7 @@ const resolveCredentialDefaults = (blueprint: Foundations.Blueprint) => {
         if (template.optional)
             continue;
 
-        const instances = VaultSDK.selectors.byTemplateId(VaultSDK.state, template.id);
+        const instances = VaultSDK.state.selectors.byTemplateId(VaultSDK.state, template.id);
 
         if (instances.length === 1)
             defaults[template.id] = instances[0].id;

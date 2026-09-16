@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { Select } from "@pretzel-graph/standard-ui/foundations/select";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
@@ -17,19 +17,14 @@ interface Props {
 
 export const CredentialPicker = memo(
     ({ credentialTemplate, nodeId, showTitle = true }: Props) => {
-        const instances = VaultSDK.useStore((s) =>
-            s.selectors.byTemplateId(s, credentialTemplate.id),
+        const [instances] = VaultSDK.useWith(
+            (s) => s.selectors.byTemplateId(s, credentialTemplate.id),
+            [VaultSDK.query.instances],
         );
         const [instanceId, setInstance, issue] = WorkbenchSDK.useCredential(
             nodeId,
             credentialTemplate.id,
         );
-
-        useEffect(() => {
-            if (instances.length === 0) {
-                VaultSDK.actions.instance.refreshAll().catch(() => { });
-            }
-        }, []);
 
         const openAddDialog = () => {
             const dialogId = `add-credentialTemplate-${credentialTemplate.id}`;

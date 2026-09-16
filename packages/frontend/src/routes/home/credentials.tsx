@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Button, AlertDialog, ScrollArea, Frame } from '@pretzel-graph/standard-ui/foundations'
+import { Button, AlertDialog, ScrollArea, Skeleton } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { VaultSDK } from '@/SDKs/VaultSDK/sdk'
@@ -10,18 +10,6 @@ import type { Vault } from '@pretzel-graph/shared/domain'
 
 
 export const Route = createFileRoute('/home/credentials')({
-    loader: async () => {
-        await VaultSDK.actions.instance.refreshAll()
-
-        const templateIds = [...new Set(
-            Object.values(VaultSDK.state.credentialInstances).map(i => i.template_id),
-        )]
-
-        if (templateIds.length > 0)
-            await VaultSDK.actions.template.loadBatch(templateIds).catch(() => { })
-
-        return null
-    },
     component: CredentialsRoute,
 })
 
@@ -33,8 +21,20 @@ type Group = {
 }
 
 function CredentialsRoute() {
-    const instances = VaultSDK.useStore(s => s.credentialInstances)
-    const templates = VaultSDK.useStore(s => s.credentialTemplates)
+    const [instances, [instancesRequest]] = VaultSDK.useWith(
+        (s) => s.credentialInstances,
+        [VaultSDK.query.instances],
+    )
+
+    const templateIds = useMemo(
+        () => [...new Set(Object.values(instances).map(i => i.template_id))],
+        [instances],
+    )
+
+    const [templates, [templatesRequest]] = VaultSDK.useWith(
+        (s) => s.credentialTemplates,
+        [VaultSDK.query.templates(templateIds)],
+    )
 
     const groups = useMemo<Group[]>(() => {
         const byTemplate = new Map<Vault.Credential.Template.Id, Vault.Credential.Instance[]>()
@@ -56,6 +56,12 @@ function CredentialsRoute() {
             )
     }, [instances, templates])
 
+    const isLoadingInstances = instancesRequest.isPending && groups.length === 0
+    const isLoadingTemplates = templatesRequest.isLoading && groups.some(group => !group.template)
+
+    if (isLoadingInstances || isLoadingTemplates)
+        return <CredentialsSkeleton />
+
     if (groups.length === 0)
         return <EmptyState />
 
@@ -63,6 +69,39 @@ function CredentialsRoute() {
         <div className='flex flex-col gap-2 pb-10 pt-[60px] pr-10 pl-2'>
             {groups.map(group => (
                 <TemplateGroup key={group.templateId} group={group} />
+            ))}
+        </div>
+    )
+}
+
+
+const GROUP_SKELETONS = [0, 1, 2]
+const ROW_SKELETONS = [0, 1]
+
+function CredentialsSkeleton() {
+    return (
+        <div className='flex flex-col gap-2 pb-10 pt-[60px] pr-10 pl-2'>
+            {GROUP_SKELETONS.map(groupIndex => (
+                <div key={groupIndex} className='flex flex-col'>
+                    <div className='flex items-center gap-2 px-3 py-2'>
+                        <Skeleton className='size-4 rounded-sm' />
+                        <Skeleton className='h-4 w-32' />
+                        <Skeleton className='h-3 w-3' />
+                        <Skeleton className='ml-auto h-8 w-16' />
+                    </div>
+                    <div className='flex flex-col'>
+                        {ROW_SKELETONS.map(rowIndex => (
+                            <div key={rowIndex} className='flex items-center gap-3 px-3 py-2 border-t border-border/40 first:border-t-0'>
+                                <Skeleton className='h-4 w-40' />
+                                <Skeleton className='ml-auto h-3 w-16' />
+                                <div className='flex gap-1'>
+                                    <Skeleton className='size-6' />
+                                    <Skeleton className='size-6' />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             ))}
         </div>
     )
@@ -87,34 +126,27 @@ function TemplateGroup({ group }: { group: Group }) {
     }
 
     return (
-        <Frame.Root>
-            <Frame.Header>
-                <div className='flex items-center gap-2'>
-                    {template?.icon
-                        ? <IconRenderer name={template.icon} className='size-4' />
-                        : <SystemIcons.KeyRound size={16} className='opacity-60' />
-                    }
-                    <span className='text-sm font-medium'>{template?.displayName ?? templateId}</span>
-                    <span className='text-xs text-muted-foreground'>{instances.length}</span>
+        <div className='flex flex-col'>
+            <div className='flex items-center gap-2 px-3 py-2'>
+                {template?.icon
+                    ? <IconRenderer name={template.icon} className='size-4' />
+                    : <SystemIcons.KeyRound size={16} className='opacity-60' />
+                }
+                <span className='text-sm font-medium'>{template?.displayName ?? templateId}</span>
+                <span className='text-xs text-muted-foreground'>{instances.length}</span>
 
-                    {template && (
-                        <Button variant={"input"} size='sm' className='ml-auto' onClick={openAddDialog}>
-                            <SystemIcons.Plus /> Add
-                        </Button>
-                    )}
-                </div>
-            </Frame.Header>
-            <Frame.Panel>
-                <div className='rounded-xl  overflow-hidden'>
-
-                    <div className='flex flex-col'>
-                        {instances.map(instance => (
-                            <CredentialRow key={instance.id} instance={instance} template={template} />
-                        ))}
-                    </div>
-                </div>
-            </Frame.Panel>
-        </Frame.Root>
+                {template && (
+                    <Button variant={"input"} size='sm' className='ml-auto' onClick={openAddDialog}>
+                        <SystemIcons.Plus /> Add
+                    </Button>
+                )}
+            </div>
+            <div className='flex flex-col'>
+                {instances.map(instance => (
+                    <CredentialRow key={instance.id} instance={instance} template={template} />
+                ))}
+            </div>
+        </div>
     )
 }
 
