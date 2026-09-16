@@ -4,10 +4,12 @@ import { EmptyFolder } from "./empty-folder";
 import classNames from "classnames";
 import type { LibraryBrowserBaseProps } from "..";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
-import { ScrollArea } from "@pretzel-graph/standard-ui/foundations";
+import { VersionControlSDK } from "@/SDKs/VersionControlSDK";
+import { ScrollArea, Skeleton } from "@pretzel-graph/standard-ui/foundations";
 import { FolderItem } from "./items/folder";
 import { WorkflowItem } from "./items/workflow";
 import { SkillItem } from "./items/skill";
+import { sizeStyles as itemSizeStyles, type ItemSize } from "./items/sizes";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 
 interface Props extends LibraryBrowserBaseProps {
@@ -30,12 +32,40 @@ const sizeStyles = {
     },
 } as const
 
+const SKELETONS = [0, 1, 2, 3, 4, 5, 6, 7]
+
+const skeletonTextStyles = {
+    default: { name: 'h-3.5 w-20', meta: 'h-3 w-12' },
+    sm:      { name: 'h-3 w-14',   meta: 'h-2.5 w-10' },
+} as const
+
+const ItemSkeleton = ({ size }: { size: ItemSize }) => (
+    <div className={classNames('flex m-auto', itemSizeStyles[size].card)}>
+        <div className='p-1 flex flex-col items-center gap-1.5 m-auto'>
+            <Skeleton className={classNames('shrink-0 rounded-lg', itemSizeStyles[size].folderIcon)} />
+            <Skeleton className={skeletonTextStyles[size].name} />
+            <Skeleton className={skeletonTextStyles[size].meta} />
+        </div>
+    </div>
+)
+
+export const FolderViewSkeleton = ({ size = 'default', className }: { size?: ItemSize, className?: string }) => (
+    <div className={className}>
+        <Skeleton className='h-4 w-20 mb-2' />
+        <div className={classNames('grid', sizeStyles[size].grid)}>
+            {SKELETONS.map((index) => <ItemSkeleton key={index} size={size} />)}
+        </div>
+    </div>
+)
+
 export const FolderView: React.FC<Props> = ({ scrollContainerClassName, className, setCwd, cwd, size = 'default', onItemClick, isItemDisabled, headerRenderer, searchQuery }) => {
 
-    const [view, breadCrumbs] = LibrarySDK.useStore(s => [
-        s.selectors.getLibraryView(s, cwd),
-        s.selectors.getBreadcrumbs(s, cwd)
-    ])
+    const [view, [request]] = LibrarySDK.useWith(
+        (s) => s.selectors.getLibraryView(s, cwd),
+        [LibrarySDK.query.bootstrap],
+    )
+
+    VersionControlSDK.useWith(() => null, [VersionControlSDK.query.activeWorkflows])
 
     const query = searchQuery ? searchQuery.trim().toLowerCase() : ""
 
@@ -55,7 +85,9 @@ export const FolderView: React.FC<Props> = ({ scrollContainerClassName, classNam
 
     return (
         <ScrollArea.Root className={"relative flex-1 mt-0! gap-2 flex flex-col " + scrollContainerClassName }>
-            {isEmpty ? (
+            {isEmpty && request.isPending ? (
+                <FolderViewSkeleton size={size} className={className} />
+            ) : isEmpty ? (
                 <EmptyFolder />
             ) : (
                 <div className={className}>

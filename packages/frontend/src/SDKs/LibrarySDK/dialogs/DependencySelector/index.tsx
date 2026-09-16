@@ -4,8 +4,6 @@ import { Library, type Dependency } from '@pretzel-graph/shared/domain'
 import type { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
-import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
@@ -32,12 +30,6 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
     const [viewSearchQuery, setViewSearchQuery] = useState('')
-
-    QuerySDK.useQuery(
-        ['version-control', 'active-workflows'],
-        () => VersionControlSDK.actions.listActiveWorkflows(),
-        { staleTime: 60_000 },
-    )
 
     const attach = async (ref: Dependency.Ref) => {
         const success = await options.onSelect(ref)

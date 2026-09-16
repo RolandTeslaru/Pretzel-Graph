@@ -8,6 +8,9 @@ import { createVersionControlSDKActions, type VersionControlSDKActions } from ".
 import { createVersionControlSDKReducers, type VersionControlSDKReducers } from "./reducers";
 import { versionControlSDKSelectors, type VersionControlSDKSelectors } from "./selectors";
 
+const ACTIVE_WORKFLOWS_STALE_TIME = 60_000
+const PUBLICATIONS_STALE_TIME = 30_000
+
 @SDK("VersionControl")
 export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
     constructor() { super() }
@@ -17,15 +20,34 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
             currentWorkflowPublications: [],
             activeWorkflows: {},
             subscribedWorkflowId: null,
+            selectors: versionControlSDKSelectors,
+            reducers: createVersionControlSDKReducers(this),
         })),
         shallow
     )
 
     public unsubscribers: Array<() => void> = [];
 
-    public readonly reducers: VersionControlSDK.Reducers = createVersionControlSDKReducers(this)
     public readonly actions: VersionControlSDK.Actions = createVersionControlSDKActions(this)
-    public readonly selectors: VersionControlSDK.Selectors = versionControlSDKSelectors
+
+    public readonly query = {
+        activeWorkflows: {
+            queryKey:  ['version-control', 'active-workflows'] as const,
+            queryFn:   () => this.actions.listActiveWorkflows(),
+            staleTime: ACTIVE_WORKFLOWS_STALE_TIME,
+        },
+        activeWorkflow: (workflowId: Workflow.Id) => ({
+            queryKey:  ['version-control', 'active-workflow', workflowId] as const,
+            queryFn:   () => this.actions.getActiveByWorkflowId(workflowId),
+            staleTime: ACTIVE_WORKFLOWS_STALE_TIME,
+        }),
+        publications: (workflowId: Workflow.Id) => ({
+            queryKey:  ['version-control', 'publications', workflowId] as const,
+            queryFn:   () => this.actions.list(workflowId),
+            staleTime: PUBLICATIONS_STALE_TIME,
+            enabled:   Boolean(workflowId),
+        }),
+    }
 }
 
 export const VersionControlSDK = SDK.get<VersionControlSDKImpl>("VersionControl")
@@ -35,6 +57,8 @@ export namespace VersionControlSDK {
         currentWorkflowPublications: VersionControl.Publication.Meta[]
         activeWorkflows: Record<Workflow.Id, VersionControl.Publication.Meta>
         subscribedWorkflowId: Workflow.Id | null
+        selectors: VersionControlSDKSelectors
+        reducers: VersionControlSDKReducers
     }
 
     export type Reducers = VersionControlSDKReducers

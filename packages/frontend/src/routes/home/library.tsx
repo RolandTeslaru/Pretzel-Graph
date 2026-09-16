@@ -1,32 +1,11 @@
 import { createFileRoute, Outlet, useNavigate, useParams } from '@tanstack/react-router'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
-import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
 import { ScrollArea, SearchInput } from '@pretzel-graph/standard-ui/foundations'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { useState } from 'react'
 
-const BOOTSTRAP_STALE_TIME = 60_000
-
 export const Route = createFileRoute('/home/library')({
-    loader: async () => {
-        await Promise.all([
-            QuerySDK.client.fetchQuery({
-                queryKey: ['library', 'bootstrap'],
-                queryFn: () => LibrarySDK.actions.bootstrap.get(),
-                staleTime: BOOTSTRAP_STALE_TIME,
-            }),
-            QuerySDK.client.fetchQuery({
-                queryKey: ['version-control', 'active-workflows'],
-                queryFn: () => VersionControlSDK.actions.listActiveWorkflows(),
-                staleTime: BOOTSTRAP_STALE_TIME,
-            }),
-        ])
-
-        return null
-    },
     component: LibraryLayout,
 })
 
@@ -35,16 +14,6 @@ function LibraryLayout() {
     const openItem = useOpenLibraryItem()
     const { folderId } = useParams({ strict: false })
     const cwd = folderId as Library.Folder.Id
-
-    QuerySDK.useQuery(['library', 'bootstrap'], () => LibrarySDK.actions.bootstrap.get(), {
-        staleTime: BOOTSTRAP_STALE_TIME,
-    })
-
-    QuerySDK.useQuery(
-        ['version-control', 'active-workflows'],
-        () => VersionControlSDK.actions.listActiveWorkflows(),
-        { staleTime: BOOTSTRAP_STALE_TIME },
-    )
 
     const [treeSearchQuery, setTreeSearchQuery] = useState("");
 

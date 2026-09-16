@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Tree } from '@/components/Tree'
-import { ScrollArea, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import type { FileSystemNodeData } from '../../../actions'
 import { LibrarySDK } from '../../../sdk'
+import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import type { LibraryBrowserBaseProps } from '..'
 import { sizeStyles } from './sizes'
 import { filterTree } from './utils'
@@ -17,7 +18,12 @@ interface Props extends LibraryBrowserBaseProps {
 export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 'default', cwd, selectedWorkflowId, setCwd, onItemClick, isItemDisabled, className, searchQuery }) => {
     const styles = sizeStyles[size]
 
-    const treeData = LibrarySDK.useStore((s) => s.treeData)
+    const [treeData, [request]] = LibrarySDK.useWith(
+        (s) => s.treeData,
+        [LibrarySDK.query.bootstrap],
+    )
+
+    VersionControlSDK.useWith(() => null, [VersionControlSDK.query.activeWorkflows])
 
     const query = searchQuery ? searchQuery.trim().toLowerCase() : ""
 
@@ -34,7 +40,11 @@ export const LibraryTree: React.FC<Props> = ({ scrollContainerClassName, size = 
 
     return (
         <ScrollArea.Root className={"relative " + scrollContainerClassName}>
-            {!hasContents ? (
+            {!hasContents && request.isPending ? (
+                <div className='flex justify-center py-10'>
+                    <Spinner className='size-4' />
+                </div>
+            ) : !hasContents ? (
                 <div className='text-sm opacity-60 px-2 py-1'>Nothing here yet.</div>
             ) : !hasResults ? (
                 <div className='text-sm opacity-60 px-2 py-1'>No matches.</div>

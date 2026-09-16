@@ -54,16 +54,8 @@ export const Route = createFileRoute('/workflow/$workflowid')({
             queryFn: () => ShelfSDK.actions.loadSection("integrations"),
             staleTime: Infinity
         })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: 60_000,
-        })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['version-control', 'publications', workflowId],
-            queryFn: () => VersionControlSDK.actions.list(workflowId),
-            staleTime: 30_000,
-        })
+        void LibrarySDK.prefetch(LibrarySDK.query.bootstrap)
+        void VersionControlSDK.prefetch(VersionControlSDK.query.publications(workflowId))
         QuerySDK.client.prefetchQuery({
             queryKey: ['chats', workflowId],
             queryFn: () => ChatSDK.actions.chat.listByWorkflow(workflowId),

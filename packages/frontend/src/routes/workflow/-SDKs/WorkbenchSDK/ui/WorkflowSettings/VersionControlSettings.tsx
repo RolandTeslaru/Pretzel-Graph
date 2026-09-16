@@ -9,7 +9,7 @@ export const VersionControlSettings = () => {
     const [hasPublications, hasActivePublication, activePublication] = VersionControlSDK.useStore(s => [
         s.currentWorkflowPublications.length > 0,
         s.currentWorkflowPublications.some(p => p.is_active),
-        VersionControlSDK.selectors.getActive(s),
+        s.selectors.getActive(s),
     ]);
         
     return (

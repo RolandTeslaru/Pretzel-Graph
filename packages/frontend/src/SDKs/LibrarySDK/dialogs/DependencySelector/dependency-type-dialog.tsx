@@ -3,7 +3,6 @@ import { Badge, Button, Dialog, Spinner, Tabs } from '@pretzel-graph/standard-ui
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { DEPENDENCY_SELECTOR_DIALOG_ID, type DependencySelectorOptions, type LocalWorkflowKind } from './constants'
 
@@ -41,13 +40,10 @@ const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProp
 
     const [isAttaching, setIsAttaching] = useState(false)
 
-    const query = QuerySDK.useQuery(
-        ['version-control', 'active-workflow', workflowId],
-        () => VersionControlSDK.actions.getActiveByWorkflowId(workflowId),
-        { staleTime: 60_000 },
+    const [activePublication, [request]] = VersionControlSDK.useWith(
+        (s) => s.activeWorkflows[workflowId],
+        [VersionControlSDK.query.activeWorkflow(workflowId)],
     )
-
-    const activePublication = VersionControlSDK.useStore(s => s.activeWorkflows[workflowId])
 
     const hasPublication = Boolean(activePublication)
 
@@ -69,7 +65,7 @@ const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProp
         <div className='p-2 w-[400px] h-[250px] flex flex-col gap-2'>
             <Dialog.Title>Attach workflow</Dialog.Title>
             <Dialog.Description></Dialog.Description>
-            {query.isPending ? (
+            {request.isPending ? (
                 <div className='flex items-center justify-center gap-2 py-10 text-xs text-muted-foreground'>
                     <Spinner className='size-3.5' />
                     Checking publications

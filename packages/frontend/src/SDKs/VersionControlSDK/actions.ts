@@ -10,8 +10,8 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
         publish: async (workflowId, payload) => {
             const data = await VersionControl.API.publish(api, workflowId, payload);
             sdk.setState(s => {
-                sdk.reducers.currentWorkflow.upsert(s, data.publication);
-                sdk.reducers.activeWorkflows.upsert(s, data.publication);
+                s.reducers.currentWorkflow.upsert(s, data.publication);
+                s.reducers.activeWorkflows.upsert(s, data.publication);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", workflowId] });
             return data;
@@ -19,21 +19,21 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
 
         list: async (workflowId) => {
             const data = await VersionControl.API.list(api, workflowId);
-            sdk.setState(s => { sdk.reducers.currentWorkflow.set(s, data.publications) });
+            sdk.setState(s => { s.reducers.currentWorkflow.set(s, data.publications) });
             return data;
         },
 
         listActiveWorkflows: async () => {
             const data = await VersionControl.API.listActiveWorkflows(api);
-            sdk.setState(s => { sdk.reducers.activeWorkflows.set(s, data.activeWorkflows) });
+            sdk.setState(s => { s.reducers.activeWorkflows.set(s, data.activeWorkflows) });
             return data;
         },
 
         getActiveByWorkflowId: async (workflowId) => {
             const data = await VersionControl.API.getActiveByWorkflow(api, workflowId);
             sdk.setState(s => {
-                if (data.publication) sdk.reducers.activeWorkflows.upsert(s, data.publication);
-                else sdk.reducers.activeWorkflows.removeByWorkflowId(s, workflowId);
+                if (data.publication) s.reducers.activeWorkflows.upsert(s, data.publication);
+                else s.reducers.activeWorkflows.removeByWorkflowId(s, workflowId);
             });
             return data;
         },
@@ -45,9 +45,9 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
         activate: async (workflowId, publicationId) => {
             const data = await VersionControl.API.activate(api, workflowId, publicationId);
             sdk.setState(s => {
-                sdk.reducers.currentWorkflow.deactivateAll(s);
-                sdk.reducers.currentWorkflow.upsert(s, data.publication);
-                sdk.reducers.activeWorkflows.upsert(s, data.publication);
+                s.reducers.currentWorkflow.deactivateAll(s);
+                s.reducers.currentWorkflow.upsert(s, data.publication);
+                s.reducers.activeWorkflows.upsert(s, data.publication);
             });
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
@@ -56,8 +56,8 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
         deactivate: async (workflowId, publicationId) => {
             const data = await VersionControl.API.deactivate(api, workflowId, publicationId);
             sdk.setState(s => {
-                sdk.reducers.currentWorkflow.upsert(s, data.publication);
-                sdk.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
+                s.reducers.currentWorkflow.upsert(s, data.publication);
+                s.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
             });
             LibrarySDK.actions.workflow.__removeListingId(workflowId);
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
@@ -67,10 +67,10 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
         remove: async (workflowId, publicationId) => {
             const data = await VersionControl.API.remove(api, workflowId, publicationId);
             sdk.setState(s => {
-                sdk.reducers.currentWorkflow.remove(s, publicationId);
-                sdk.reducers.activeWorkflows.removeByWorkflowId(s, data.workflowId);
+                s.reducers.currentWorkflow.remove(s, publicationId);
+                s.reducers.activeWorkflows.removeByWorkflowId(s, data.workflowId);
             });
-            if (!sdk.selectors.getActive(sdk.state))
+            if (!sdk.state.selectors.getActive(sdk.state))
                 LibrarySDK.actions.workflow.__removeListingId(workflowId);
             QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
             return data;
@@ -78,7 +78,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
 
         subscribe: (workflowId) => {
             sdk.actions.unsubscribe();
-            sdk.setState(s => { sdk.reducers.subscription.setWorkflow(s, workflowId) });
+            sdk.setState(s => { s.reducers.subscription.setWorkflow(s, workflowId) });
 
             for (const action of VersionControl.Signal.Action.options) {
                 const channel = VersionControl.Signal.getChannel(workflowId, action);
@@ -93,8 +93,8 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                                 .then(({ publication }) => {
                                     if (!publication) return;
                                     sdk.setState(s => {
-                                        sdk.reducers.currentWorkflow.upsert(s, publication);
-                                        sdk.reducers.activeWorkflows.upsert(s, publication);
+                                        s.reducers.currentWorkflow.upsert(s, publication);
+                                        s.reducers.activeWorkflows.upsert(s, publication);
                                     });
                                     QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", signal.workflowId] });
                                 })
@@ -104,13 +104,13 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                             sdk.setState(s => {
                                 const pub = s.currentWorkflowPublications.find(p => p.id === signal.publicationId);
                                 if (pub) pub.is_active = false;
-                                sdk.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
+                                s.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
                             });
                             break;
                         case "removed":
                             sdk.setState(s => {
-                                sdk.reducers.currentWorkflow.remove(s, signal.publicationId);
-                                sdk.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
+                                s.reducers.currentWorkflow.remove(s, signal.publicationId);
+                                s.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
                             });
                             break;
                     }
@@ -122,15 +122,15 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
         unsubscribe: () => {
             for (const unsub of sdk.unsubscribers) unsub();
             sdk.unsubscribers = [];
-            sdk.setState(s => { sdk.reducers.subscription.setWorkflow(s, null) });
+            sdk.setState(s => { s.reducers.subscription.setWorkflow(s, null) });
         },
 
         activeWorkflows: {
             removeByWorkflowId: (workflowId) => {
-                sdk.setState(s => { sdk.reducers.activeWorkflows.removeByWorkflowId(s, workflowId) });
+                sdk.setState(s => { s.reducers.activeWorkflows.removeByWorkflowId(s, workflowId) });
             },
             removeByPublicationId: (publicationId) => {
-                sdk.setState(s => { sdk.reducers.activeWorkflows.removeByPublicationId(s, publicationId) });
+                sdk.setState(s => { s.reducers.activeWorkflows.removeByPublicationId(s, publicationId) });
             },
         },
     } satisfies VersionControlSDKActions;

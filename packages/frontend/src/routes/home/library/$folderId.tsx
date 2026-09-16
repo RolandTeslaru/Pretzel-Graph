@@ -1,37 +1,44 @@
 import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
+import { FolderView, FolderViewSkeleton } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
 import { useState } from 'react'
-import { Button, DropdownMenu, SearchInput, Tooltip } from '@pretzel-graph/standard-ui/foundations'
+import { Button, DropdownMenu, SearchInput, Skeleton, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
-
-const BOOTSTRAP_STALE_TIME = 60_000
 
 export const Route = createFileRoute('/home/library/$folderId')({
     loader: async ({ params }) => {
         const folderId = params.folderId as Library.Folder.Id
 
-        // The check below reads store state, so the fetch has to settle first.
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: BOOTSTRAP_STALE_TIME,
-        })
+        await LibrarySDK.fetch(LibrarySDK.query.bootstrap)
 
-        const folders = LibrarySDK.state.folders;
-
-        const hasFolder = folderId in folders;
+        const hasFolder = folderId in LibrarySDK.state.folders
         if (!hasFolder) throw notFound()
 
         return null
     },
+    pendingComponent: FolderPending,
     notFoundComponent: FolderNotFound,
     component: FolderRoute,
 })
+
+
+function FolderPending() {
+    return (
+        <div className='relative'>
+            <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
+                <Skeleton className='h-4 w-40' />
+                <div className='flex gap-2'>
+                    <Skeleton className='h-8 w-48 rounded-full' />
+                    <Skeleton className='h-9 w-20' />
+                </div>
+            </div>
+            <FolderViewSkeleton className='pt-[100px]' />
+        </div>
+    )
+}
 
 
 function FolderNotFound() {
@@ -56,21 +63,16 @@ function FolderRoute() {
     const { folderId: _folderId } = Route.useParams()
     const folderId = _folderId as Library.Folder.Id
 
-    const [folder, breadCrumbs] = LibrarySDK.useStore(s => [s.folders[folderId], s.selectors.getBreadcrumbs(s, folderId)])
-    const showHidden = LibrarySDK.useStore(s => s.showHidden)
-
-    if (!folder) {
-        return <div className="p-6 opacity-60">Folder not found.</div>
-    }
-
     const [searchQuery, setSearchQuery] = useState("");
+
+    const showHidden = LibrarySDK.useStore(s => s.showHidden)
 
     const setCwd = (folderId: Library.Folder.Id) => navigate({ to: '/home/library/$folderId', params: { folderId } })
 
     return (
         <div className='relative'>
             <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
-                <LibraryCwdBreadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
+                <LibraryCwdBreadcrumbs cwd={folderId} className="h-auto my-auto" setCwd={setCwd} />
                 <div className="flex gap-2 ">
                     {/* <Tooltip.Root>
                         <Tooltip.Trigger asChild>
@@ -80,7 +82,7 @@ function FolderRoute() {
                                 aria-pressed={showHidden}
                                 onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
                             >
-                                {showHidden ? <SystemIcons.Eye /> : <SystemIcons.EyeOff />}
+                                {showHidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}
                             </Button>
                         </Tooltip.Trigger>
                         <Tooltip.Content>

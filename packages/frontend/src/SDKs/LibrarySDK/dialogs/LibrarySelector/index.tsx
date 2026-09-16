@@ -3,8 +3,6 @@ import { Button, Dialog, SearchInput } from '@pretzel-graph/standard-ui/foundati
 import { Library } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
-import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
@@ -65,12 +63,6 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Pr
     const accepts = (type: LibrarySelector.Item['type']) => accept === type || accept === 'any'
 
     const cwdName = LibrarySDK.useStore((s) => s.folders[cwd]?.display_name ?? 'Library')
-
-    QuerySDK.useQuery(
-        ['version-control', 'active-workflows'],
-        () => VersionControlSDK.actions.listActiveWorkflows(),
-        { staleTime: 60_000 },
-    )
 
     const commit = (item: LibrarySelector.Item) => {
         onSelect(item)

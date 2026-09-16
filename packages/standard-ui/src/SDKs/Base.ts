@@ -7,7 +7,7 @@ export abstract class BaseSDK<T_State> {
 
     public abstract readonly useStore: BaseSDK.Store<T_State>
 
-    public use = <Selected, const Queries extends readonly BaseSDK.Query[]>(
+    public useWith = <Selected, const Queries extends readonly BaseSDK.Query[]>(
         selector: (state: T_State) => Selected,
         queries: Queries,
     ) => {
@@ -21,6 +21,9 @@ export abstract class BaseSDK<T_State> {
     public fetch = <Result>(query: BaseSDK.Query<Result>): Promise<Result> =>
         QuerySDK.client.fetchQuery(query)
 
+    public prefetch = (query: BaseSDK.Query): Promise<void> =>
+        QuerySDK.client.prefetchQuery(query)
+
     public get state() { return this.useStore.getState() }
     public get subscribe() { return this.useStore.subscribe }
     public get setState() { return this.useStore.setState }
@@ -31,6 +34,7 @@ export namespace BaseSDK {
         queryKey: readonly unknown[]
         queryFn: () => Promise<Result>
         staleTime?: number
+        enabled?: boolean
         retry?: number
         retryDelay?: (attemptIndex: number) => number
         initialData?: Result
