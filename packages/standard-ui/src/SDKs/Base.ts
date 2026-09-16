@@ -1,5 +1,5 @@
 import type { StoreApi, UseBoundStore } from "zustand"
-import { useQueries } from "@tanstack/react-query"
+import { useQueries, type UseQueryResult } from "@tanstack/react-query"
 import { QuerySDK } from "./QuerySDK/sdk"
 
 export abstract class BaseSDK<T_State> {
@@ -11,7 +11,7 @@ export abstract class BaseSDK<T_State> {
         selector: (state: T_State) => Selected,
         queries: Queries,
     ) => {
-        const results = useQueries({ queries })
+        const results = useQueries({ queries }) as BaseSDK.QueryResults<Queries>
 
         const selected = this.useStore(selector)
 
@@ -33,6 +33,13 @@ export namespace BaseSDK {
         staleTime?: number
         retry?: number
         retryDelay?: (attemptIndex: number) => number
+        initialData?: Result
+    }
+
+    export type QueryResults<Queries extends readonly Query[]> = {
+        [Index in keyof Queries]: Queries[Index] extends Query<infer Result>
+            ? UseQueryResult<Result, Error>
+            : never
     }
 
     export type Store<T> = UseBoundStore<StoreApi<T>> & {
