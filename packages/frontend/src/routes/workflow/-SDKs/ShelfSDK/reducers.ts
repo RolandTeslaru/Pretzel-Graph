@@ -1,9 +1,9 @@
 import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
-import type { ShelfSDKImpl, ShelfSDK } from "./sdk";
+import type { ShelfSDK } from "./sdk";
 
 export type State = ShelfSDK.State
 
-export function _createShelfReducers_(sdk: ShelfSDKImpl) {
+export function _createShelfReducers_() {
 
     const drawerReducers = {
         open: (s, drawerId) => {

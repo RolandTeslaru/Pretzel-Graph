@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { ChatSDK } from '../../sdk'
-import { ContextMenu, SearchInput, Separator } from '@pretzel-graph/standard-ui/foundations'
+import { ContextMenu, SearchInput, Separator, Skeleton } from '@pretzel-graph/standard-ui/foundations'
 import type { Chat, Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { useParams } from '@tanstack/react-router'
+
+const CHAT_SKELETONS = ['w-32', 'w-24', 'w-36', 'w-28', 'w-20', 'w-32']
 
 function formatChatDate(iso: string): string {
     const date = new Date(iso)
@@ -66,26 +67,18 @@ const ChatList = () => {
     const { workflowid } = useParams({ from: '/workflow/$workflowid' })
     const workflowId = workflowid as Workflow.Id
 
-    const chats = ChatSDK.useStore(s => s.chats);
-
-    const currentchatId = ChatSDK.useStore(s => s.currentChatId);
+    const [currentChatId, [request]] = ChatSDK.useWith((s) => s.currentChatId, [ChatSDK.query.list(workflowId)])
 
     const [query, setQuery] = useState('')
 
-    QuerySDK.useQuery(
-        ['chats', workflowId],
-        () => ChatSDK.actions.chat.listByWorkflow(workflowId),
-        { staleTime: Infinity },
-    )
-
     const matches = useMemo(() => {
-        const all = Object.values(chats)
+        const all = request.data ?? []
 
         if (!query)
             return all
 
         return all.filter(chat => chat.name?.toLowerCase().includes(query))
-    }, [chats, query])
+    }, [request.data, query])
 
     return (
         <div className='flex flex-col gap-2 h-full overflow-hidden'>
@@ -102,16 +95,33 @@ const ChatList = () => {
 
             {/* Scrollable list */}
             <div className='flex flex-col overflow-y-auto flex-1'>
-                {matches.length === 0 ? (
+                {request.isPending ? (
+                    <ChatListSkeleton />
+                ) : request.isError ? (
+                    <p className='text-xs text-destructive px-3 py-2'>
+                        Could not load chats.
+                    </p>
+                ) : matches.length === 0 ? (
                     <p className='text-xs opacity-60 px-3 py-2'>
                         {query ? 'No matches.' : 'No chats yet.'}
                     </p>
                 ) : matches.map((chat) => (
-                    <Item key={chat.id} chat={chat} isCurrent={chat.id === currentchatId} />
+                    <Item key={chat.id} chat={chat} isCurrent={chat.id === currentChatId} />
                 ))}
             </div>
         </div>
     )
 }
+
+const ChatListSkeleton = () => (
+    <>
+        {CHAT_SKELETONS.map((width, index) => (
+            <div className='flex items-center gap-2.5 px-3 py-2.5' key={index}>
+                <Skeleton className={`h-3.5 ${width}`} />
+                <Skeleton className='h-3 w-10 ml-auto' />
+            </div>
+        ))}
+    </>
+)
 
 export default ChatList

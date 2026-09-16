@@ -12,22 +12,23 @@ export function SkillMenuItems({ skill }: Props) {
     return (
         <>
             <ContextMenu.Item
-                icon={<SystemIcons.SquarePen className='size-4' />}
+                icon={<SystemIcons.Sparkles2 className='size-4' />}
                 onClick={() => LibrarySDK.dialogs.openSkillEditor({ skillId: skill.id })}
             >
-                Edit
-            </ContextMenu.Item>
-            <ContextMenu.Item
-                icon={<SystemIcons.Copy className='size-4' />}
-                onClick={() => copy(skill.id, 'Skill id copied')}
-            >
-                Copy ID
+                Open
             </ContextMenu.Item>
             <ContextMenu.Item
                 icon={<SystemIcons.ArrowRight className='size-4' />}
                 onClick={() => openMoveSkill(skill)}
             >
                 Move to…
+            </ContextMenu.Item>
+           
+            <ContextMenu.Item
+                icon={<SystemIcons.Copy className='size-4' />}
+                onClick={() => copy(skill.id, 'Skill id copied')}
+            >
+                Copy ID
             </ContextMenu.Item>
             <ContextMenu.Separator />
             <ContextMenu.Item

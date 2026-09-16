@@ -23,9 +23,17 @@ export function FolderMenuItems({ folder, onOpen }: Props) {
                     Open here
                 </ContextMenu.Item>
             )}
+            
             <OpenInSubMenu url={`/home/library/${folder.id}`} />
             <ContextMenu.Separator />
-            <NewSubMenu folderId={folder.id} />
+            {!isRoot && (
+                <ContextMenu.Item
+                    icon={<SystemIcons.ArrowRight className='size-4' />}
+                    onClick={() => openMoveFolder(folder)}
+                >
+                    Move to…
+                </ContextMenu.Item>
+            )}
             <ContextMenu.Separator />
             <ContextMenu.Item
                 icon={<SystemIcons.SquarePen className='size-4' />}
@@ -39,14 +47,7 @@ export function FolderMenuItems({ folder, onOpen }: Props) {
             >
                 Copy ID
             </ContextMenu.Item>
-            {!isRoot && (
-                <ContextMenu.Item
-                    icon={<SystemIcons.ArrowRight className='size-4' />}
-                    onClick={() => openMoveFolder(folder)}
-                >
-                    Move to…
-                </ContextMenu.Item>
-            )}
+  
             {!isRoot && (
                 <ContextMenu.Item
                     icon={folder.hidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}

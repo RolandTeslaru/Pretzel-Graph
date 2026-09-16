@@ -16,8 +16,8 @@ function deriveChatName(content: string, maxLength = 50): string {
 export function createChatSDKActions(sdk: ChatSDKImpl) {
     return {
         message: {
-            upsert: (message) => sdk.setState(s => sdk.reducers.upsertMessage(s, message)),
-            appendContent: (messageId, content) => sdk.setState(s => sdk.reducers.appendContent(s, messageId, content))
+            upsert: (message) => sdk.setState(s => s.reducers.upsertMessage(s, message)),
+            appendContent: (messageId, content) => sdk.setState(s => s.reducers.appendContent(s, messageId, content))
             ,
             setContent: (messageId, content) => sdk.setState(s => {
                 s.messagesRecord[messageId].content = content;
@@ -30,8 +30,7 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                 const workflow_id = WorkbenchSDK.document.workflowId
 
-                let currentChatId = sdk.state.currentChatId;
-                let currentChat = currentChatId ? sdk.state.chats[currentChatId] : null;
+                let currentChat = sdk.state.currentChat;
 
                 let createdNewChat = false
 
@@ -41,12 +40,13 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                         const { chat } = await Chat.API.create(api, workflow_id, { name: deriveChatName(content) })
 
                         currentChat = chat;
-                        currentChatId = chat.id;
 
                         sdk.setState(s => {
                             s.currentChatId = chat.id;
-                            s.chats[chat.id] = chat;
+                            s.currentChat = chat;
                         })
+
+                        void sdk.invalidate(sdk.query.list(workflow_id))
 
                         createdNewChat = true;
                     }
@@ -88,31 +88,13 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
         chat: {
             listByWorkflow: async (workflowId: Workflow.Id) => {
-                try {
-                    const { chats } = await Chat.API.listByWorkflow(api, workflowId);
+                const { chats } = await Chat.API.listByWorkflow(api, workflowId);
 
-                    sdk.setState(s => {
-                        s.chats = {};
-                        chats.forEach(chat => {
-                            s.chats[chat.id] = chat;
-                        });
-
-                        if (!s.chats[s.currentChatId]) {
-                            s.currentChatId = Chat.createId();
-                            sdk.reducers.resetMessages(s);
-                        }
-                    });
-
-                    return true;
-                } catch (err) {
-                    toast.error(SystemError.messageFrom(err));
-                    console.error("Failed to list chats by workflow", err);
-                    return false;
-                }
+                return chats;
             },
             load: async (chatId: Chat.Id) => {
                 sdk.useStore.setState(s => {
-                    sdk.reducers.resetMessages(s);
+                    s.reducers.resetMessages(s);
                     s.isLoading = true;
                 })
 
@@ -121,7 +103,8 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                     sdk.useStore.setState(s => {
                         s.currentChatId = chatId;
-                        messages.forEach(m => sdk.reducers.upsertMessage(s, m))
+                        s.currentChat = chat;
+                        messages.forEach(m => s.reducers.upsertMessage(s, m))
                         s.isLoading = false;
                     })
 
@@ -157,26 +140,29 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
             new: () => {
                 sdk.setState(s => {
                     s.currentChatId = Chat.createId();
-                    sdk.reducers.resetMessages(s);
+                    s.currentChat = null;
+                    s.reducers.resetMessages(s);
                 });
                 // ExecutionSessionSDK.setState(s => {
                 //     s.session.messages = [];
                 // });
             },
             clearMessages: async () => {
-                sdk.setState(s => sdk.reducers.resetMessages(s))
+                sdk.setState(s => s.reducers.resetMessages(s))
             },
             erase: async (chatId: Chat.Id) => {
                 try {
                     await Chat.API.erase(api, chatId);
 
                     sdk.setState(s => {
-                        delete s.chats[chatId];
                         if (s.currentChatId === chatId) {
                             s.currentChatId = Chat.createId();
-                            sdk.reducers.resetMessages(s);
+                            s.currentChat = null;
+                            s.reducers.resetMessages(s);
                         }
                     });
+
+                    void sdk.invalidate(sdk.query.list(WorkbenchSDK.document.workflowId));
                 } catch (err) {
                     toast.error(SystemError.messageFrom(err));
                     console.error("Failed to delete chat", err);
@@ -219,7 +205,7 @@ export interface ChatSDKActions {
         }) => Promise<void>
     }
     chat: {
-        listByWorkflow: (workflowId: Workflow.Id) => Promise<boolean>
+        listByWorkflow: (workflowId: Workflow.Id) => Promise<Chat[]>
         load: (chatId: Chat.Id) => Promise<void>
         new: () => void
         clearMessages: () => Promise<void>

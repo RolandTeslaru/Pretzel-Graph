@@ -26,6 +26,14 @@ export function WorkflowMenuItems({ workflow, onOpen }: Props) {
             <OpenInSubMenu url={`/workflow/${workflow.id}`} />
             <ContextMenu.Separator />
             <ContextMenu.Item
+                icon={<SystemIcons.ArrowRight className='size-4' />}
+                onClick={() => openMoveWorkflow(workflow)}
+            >
+                Move to…
+            </ContextMenu.Item>
+            <ContextMenu.Separator />
+            
+            <ContextMenu.Item
                 icon={<SystemIcons.SquarePen className='size-4' />}
                 onClick={() => LibrarySDK.dialogs.openEditWorkflow({ workflow })}
             >
@@ -55,12 +63,6 @@ export function WorkflowMenuItems({ workflow, onOpen }: Props) {
                     )}
                 </ContextMenu.SubContent>
             </ContextMenu.Sub>
-            <ContextMenu.Item
-                icon={<SystemIcons.ArrowRight className='size-4' />}
-                onClick={() => openMoveWorkflow(workflow)}
-            >
-                Move to…
-            </ContextMenu.Item>
             <ContextMenu.Item
                 icon={<SystemIcons.Download className='size-4' />}
                 onClick={() => downloadWorkflowJson(workflow)}

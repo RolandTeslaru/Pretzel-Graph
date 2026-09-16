@@ -1,6 +1,5 @@
 import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { RealtimeSDK } from "../Realtime/sdk";
 import { LibrarySDK } from "../LibrarySDK/sdk";
 import type { VersionControlSDKImpl } from "./sdk";
@@ -13,7 +12,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 s.reducers.currentWorkflow.upsert(s, data.publication);
                 s.reducers.activeWorkflows.upsert(s, data.publication);
             });
-            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", workflowId] });
+            void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
@@ -49,7 +48,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 s.reducers.currentWorkflow.upsert(s, data.publication);
                 s.reducers.activeWorkflows.upsert(s, data.publication);
             });
-            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
+            void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
@@ -60,7 +59,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 s.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
             });
             LibrarySDK.actions.workflow.__removeListingId(workflowId);
-            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
+            void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
@@ -72,7 +71,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
             });
             if (!sdk.state.selectors.getActive(sdk.state))
                 LibrarySDK.actions.workflow.__removeListingId(workflowId);
-            QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications"] });
+            void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
@@ -96,7 +95,7 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                                         s.reducers.currentWorkflow.upsert(s, publication);
                                         s.reducers.activeWorkflows.upsert(s, publication);
                                     });
-                                    QuerySDK.client.invalidateQueries({ queryKey: ["version-control", "publications", signal.workflowId] });
+                                    void sdk.invalidate(sdk.query.publications(signal.workflowId));
                                 })
                                 .catch(() => {});
                             break;

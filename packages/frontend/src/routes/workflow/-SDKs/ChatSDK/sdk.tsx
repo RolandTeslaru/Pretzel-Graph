@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
-import { Chat } from "@pretzel-graph/shared/domain";
+import { Chat, Workflow } from "@pretzel-graph/shared/domain";
 import { createChatSDKActions, type ChatSDKActions } from "./actions";
 import { createChatSDKReducers, type ChatSDKReducers } from "./reducers";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
@@ -34,17 +34,23 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             toolCallStatus: {},
             isLoading: false,
             isSidebarVisible: false,
-            chats: {},
+            currentChat: null,
+            reducers: createChatSDKReducers(),
         })),
         shallow
     )
-    public readonly reducers: ChatSDK.Reducers = createChatSDKReducers(this)
 
 
     public readonly actions = createChatSDKActions(this);
 
 
-    public readonly selectors: ChatSDK.Selectors = {}
+    public readonly query = {
+        list: (workflowId: Workflow.Id) => ({
+            queryKey:  ['chat', 'list', workflowId] as const,
+            queryFn:   () => this.actions.chat.listByWorkflow(workflowId),
+            staleTime: Infinity,
+        }),
+    }
 
 
     public get executionSDK(): ExecutionSDKImpl { return SDK.get<ExecutionSDKImpl>("Execution") }
@@ -54,7 +60,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             case "message:added":
                 this.useStore.setState(s => {
                     e.messages.forEach(m => {
-                        this.reducers.upsertMessage(s, m);
+                        s.reducers.upsertMessage(s, m);
 
                         if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
                             s.isSidebarVisible = true;
@@ -93,11 +99,11 @@ export namespace ChatSDK {
         toolCallStatus: Record<Chat.ToolCall.Id, Chat.ToolCall.Status>,
         isLoading: boolean,
         isSidebarVisible: boolean,
-        chats: Record<Chat.Id, Chat>,
+        currentChat: Chat | null,
+        reducers: ChatSDK.Reducers,
     }
 
     export type Reducers = ChatSDKReducers
 
     export type Actions = ChatSDKActions
-    export type Selectors = {}
 }

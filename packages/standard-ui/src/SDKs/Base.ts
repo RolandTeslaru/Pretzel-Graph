@@ -24,6 +24,9 @@ export abstract class BaseSDK<T_State> {
     public prefetch = (query: BaseSDK.Query): Promise<void> =>
         QuerySDK.client.prefetchQuery(query)
 
+    public invalidate = (query: BaseSDK.Query): Promise<void> =>
+        QuerySDK.client.invalidateQueries({ queryKey: query.queryKey })
+
     public get state() { return this.useStore.getState() }
     public get subscribe() { return this.useStore.subscribe }
     public get setState() { return this.useStore.setState }

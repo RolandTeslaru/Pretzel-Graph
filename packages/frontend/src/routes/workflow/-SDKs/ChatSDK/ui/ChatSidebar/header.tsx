@@ -7,7 +7,7 @@ import FloatContainer from '@/components/FloatContainer'
 
 const Header = () => {
 
-    const currentChatName = ChatSDK.useStore(s => s.chats[s.currentChatId]?.name)
+    const currentChatName = ChatSDK.useStore(s => s.currentChat?.name)
 
     return (
         <div className='flex flex-row gap-2 absolute top-2 w-[calc(100%-16px)] left-2 z-10 '>
