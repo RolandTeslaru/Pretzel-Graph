@@ -1,10 +1,9 @@
-import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { FolderView, FolderViewSkeleton } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
+import { LibraryBrowser } from '@/SDKs/LibrarySDK/ui/LibraryBrowser'
 import { Skeleton } from '@pretzel-graph/standard-ui/foundations'
-import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
 
 export const Route = createFileRoute('/home/library/$folderId')({
     loader: async ({ params }) => {
@@ -34,7 +33,7 @@ function FolderPending() {
                     <Skeleton className='h-9 w-20' />
                 </div>
             </div>
-            <FolderViewSkeleton className='pt-[100px]' />
+            <LibraryBrowser.View.Skeleton className='pt-[100px]' />
         </div>
     )
 }
@@ -57,32 +56,24 @@ function FolderNotFound() {
 
 
 function FolderRoute() {
-    const navigate = useNavigate()
-    const openItem = useOpenLibraryItem()
-    const { folderId: _folderId } = Route.useParams()
-    const folderId = _folderId as Library.Folder.Id
-
     const showHidden = LibrarySDK.useStore(s => s.showHidden)
 
-    const setCwd = (folderId: Library.Folder.Id) => navigate({ to: '/home/library/$folderId', params: { folderId } })
-
     return (
-        <FolderView.Root cwd={folderId} setCwd={setCwd}>
-            <FolderView.Header className='top-[60px] pr-10'>
-                <FolderView.Breadcrumbs className="h-auto my-auto" />
+        <div className='relative'>
+            <LibraryBrowser.View.Header className='top-[60px] pr-10'>
+                <LibraryBrowser.View.Breadcrumbs className="h-auto my-auto" />
                 <div className="flex gap-2 ">
-                    <FolderView.SearchInput
+                    <LibraryBrowser.View.SearchInput
                         size='sm'
                         className='rounded-full!'
                     />
-                    <FolderView.CreateBtn />
+                    <LibraryBrowser.View.CreateBtn />
                 </div>
-            </FolderView.Header>
-            <FolderView.Content
+            </LibraryBrowser.View.Header>
+            <LibraryBrowser.View
                 scrollContainerClassName='h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]'
                 className='pt-[100px]'
-                onItemClick={openItem}
             />
-        </FolderView.Root>
+        </div>
     )
 }

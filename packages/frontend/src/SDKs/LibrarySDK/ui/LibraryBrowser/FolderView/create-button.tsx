@@ -1,15 +1,16 @@
 import { Button, DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
+import type { ButtonProps } from '@pretzel-graph/standard-ui/foundations/button'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { useFolderView } from './root'
+import { useLibraryBrowser } from '../root'
 
-export const CreateBtn = () => {
-    const { cwd } = useFolderView()
+export const CreateBtn = ({ size }: { size?: ButtonProps['size'] }) => {
+    const { cwd } = useLibraryBrowser()
 
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button>
+                <Button size={size}>
                     Create
                 </Button>
             </DropdownMenu.Trigger>

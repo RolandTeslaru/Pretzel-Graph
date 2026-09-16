@@ -3,7 +3,7 @@ import { SearchInput as BaseSearchInput } from '@pretzel-graph/standard-ui/found
 import { useLibraryBrowser } from '../root'
 
 export const SearchInput = (props: Omit<ComponentProps<typeof BaseSearchInput>, 'onSearch'>) => {
-    const { setSearchQuery } = useLibraryBrowser()
+    const { setTreeSearchQuery } = useLibraryBrowser()
 
-    return <BaseSearchInput {...props} onSearch={setSearchQuery} />
+    return <BaseSearchInput {...props} onSearch={setTreeSearchQuery} />
 }

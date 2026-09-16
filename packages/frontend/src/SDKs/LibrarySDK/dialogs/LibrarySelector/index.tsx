@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Button, Dialog, SearchInput } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { Library } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
-import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
-import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
+import { LibraryBrowser } from '@/SDKs/LibrarySDK/ui/LibraryBrowser'
 
 export const LIBRARY_SELECTOR_DIALOG_ID = 'library-selector'
+
+const DEFAULT_QUERY_DELAY = 150
 
 export namespace LibrarySelector {
     export type Accept = 'workflow' | 'folder' | 'skill' | 'any'
@@ -28,6 +29,8 @@ export namespace LibrarySelector {
         /** Folder the browser opens in. Defaults to the library root. */
         initialCwd?: Library.Folder.Id
         onSelect: (item: ItemFor<A>) => void
+        /** Holds the library queries back until the dialog has animated in. */
+        queryDelay?: number
     }
 }
 
@@ -42,7 +45,7 @@ export function openLibrarySelector<A extends LibrarySelector.Accept>(options: L
     const onSelect = options.onSelect as (item: LibrarySelector.Item) => void
 
     DialogSDK.actions.push(LIBRARY_SELECTOR_DIALOG_ID, (props) => (
-        <LibrarySelectorDialog dialogProps={props} accept={options.accept} initialCwd={options.initialCwd} onSelect={onSelect} />
+        <LibrarySelectorDialog dialogProps={props} accept={options.accept} initialCwd={options.initialCwd} onSelect={onSelect} queryDelay={options.queryDelay ?? DEFAULT_QUERY_DELAY} />
     ))
 }
 
@@ -51,12 +54,11 @@ interface Props {
     accept: LibrarySelector.Accept
     initialCwd?: Library.Folder.Id
     onSelect: (item: LibrarySelector.Item) => void
+    queryDelay: number
 }
 
-const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Props) => {
+const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect, queryDelay }: Props) => {
     const [cwd, setCwd] = useState<Library.Folder.Id>(initialCwd ?? Library.Folder.ROOT_ID)
-
-    const [treeSearchQuery, setTreeSearchQuery] = useState('')
 
     const accepts = (type: LibrarySelector.Item['type']) => accept === type || accept === 'any'
 
@@ -72,57 +74,54 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Pr
     const handleSelectFolder = () => commit({ type: 'folder', id: cwd })
 
     return (
-        <DialogSDK.SplitTemplate {...dialogProps}
-            sidebarRenderer={() => (
-                <div className='relative'>
-                    <div className='absolute flex flex-col gap-2 top-0 left-0 px-2 py-2 z-20 w-full'>
-                        <Dialog.Title className='text-sm px-2'>{TITLES[accept]}</Dialog.Title>
-                        <SearchInput size='xs'
-                            className='rounded-full!'
-                            onSearch={(value) => setTreeSearchQuery(value)}
-                        />
-                    </div>
+        <LibraryBrowser.Root cwd={cwd} setCwd={setCwd} onItemClick={commit} isItemDisabled={isItemDisabled} queryDelay={queryDelay}>
+            <DialogSDK.SplitTemplate {...dialogProps}
+                sidebarRenderer={() => (
+                    <div className='relative'>
+                        <LibraryBrowser.Tree.Header className='flex-col gap-2 top-0 left-0 px-2 py-2 z-20'>
+                            <Dialog.Title className='text-sm px-2'>{TITLES[accept]}</Dialog.Title>
+                            <LibraryBrowser.Tree.SearchInput size='xs'
+                                className='rounded-full!'
+                            />
+                        </LibraryBrowser.Tree.Header>
 
-                    <div className='flex-1 min-h-0'>
-                        <LibraryTree
-                            size='sm'
-                            cwd={cwd}
-                            setCwd={setCwd}
-                            searchQuery={treeSearchQuery}
-                            onItemClick={commit}
-                            isItemDisabled={isItemDisabled}
-                            className='pt-[70px] px-2'
-                            scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_80px)]'
-                        />
-                    </div>
-                </div>
-            )}
-            sidebarClassName='w-[260px] shrink-0 p-0!'
-            contentClassName='p-0!'
-        >
-            <FolderView.Root cwd={cwd} setCwd={setCwd} className='flex h-full w-[480px] shrink-0 flex-col gap-2'>
-                <FolderView.Header className='z-20 px-2 top-2'>
-                    <FolderView.Breadcrumbs className='h-auto my-auto' linkClassName='text-xs!' />
-                    <FolderView.SearchInput className='rounded-full!' size='xs' />
-                </FolderView.Header>
-                <div className='flex-1 min-h-0'>
-                    <FolderView.Content
-                        size='sm'
-                        onItemClick={commit}
-                        isItemDisabled={isItemDisabled}
-                        className='pt-[40px] px-2'
-                        scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
-                    />
-                </div>
-                {accepts('folder') && (
-                    <div className='absolute z-20 bottom-2 right-2'>
-                        <Button size='sm' onClick={handleSelectFolder}>
-                            <SystemIcons.FolderOpen className='size-4' />
-                            Select "{cwdName}"
-                        </Button>
+                        <div className='flex-1 min-h-0'>
+                            <LibraryBrowser.Tree
+                                size='sm'
+                                className='pt-[70px] px-2'
+                                scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_80px)]'
+                            />
+                        </div>
                     </div>
                 )}
-            </FolderView.Root>
-        </DialogSDK.SplitTemplate>
+                sidebarClassName='w-[260px] shrink-0 p-0!'
+                contentClassName='p-0!'
+            >
+                <div className='relative flex h-full w-[480px] shrink-0 flex-col gap-2'>
+                    <LibraryBrowser.View.Header className='z-20 px-2 top-2 flex flex-col!'>
+                        <LibraryBrowser.View.Breadcrumbs className='w-auto mr-auto pt-1' linkClassName='text-xs!' />
+                        <div className='ml-auto flex flex-row gap-2 w-auto'>
+                            <LibraryBrowser.View.SearchInput className='rounded-full!' size='xs' />
+                            <LibraryBrowser.View.CreateBtn size="xs"/>
+                        </div>
+                    </LibraryBrowser.View.Header>
+                    <div className='flex-1 min-h-0'>
+                        <LibraryBrowser.View
+                            size='sm'
+                            className='pt-[60px] px-2'
+                            scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_90px)]'
+                        />
+                    </div>
+                    {accepts('folder') && (
+                        <div className='absolute z-20 bottom-2 right-2'>
+                            <Button size='sm' onClick={handleSelectFolder}>
+                                <SystemIcons.FolderOpen className='size-4' />
+                                Select "{cwdName}"
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </DialogSDK.SplitTemplate>
+        </LibraryBrowser.Root>
     )
 }

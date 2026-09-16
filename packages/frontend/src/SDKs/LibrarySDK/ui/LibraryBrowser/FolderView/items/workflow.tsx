@@ -5,7 +5,6 @@ import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrat
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames'
 import { sizeStyles, type ItemSize } from './sizes'
-import { WorkflowContextMenu } from '../../context-menus/workflow'
 
 interface WorkflowCardProps {
     workflow: Library.WorkflowMeta
@@ -29,40 +28,40 @@ export function WorkflowItem({ workflow, size = 'default', disabled = false, onC
     const handleClick = disabled ? undefined : onClick
 
     return (
-        <WorkflowContextMenu workflow={workflow} onOpen={handleClick}>
-            <div
-                onClick={handleClick}
-                className={classNames(
-                    'group flex gap-1 relative m-auto select-none rounded-md',
-                    styles.card,
-                    workflow.hidden && 'opacity-50',
-                    disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-accent/30',
+        <div
+            data-library-item='workflow'
+            data-library-id={workflow.id}
+            onClick={handleClick}
+            className={classNames(
+                'group flex gap-1 relative m-auto select-none rounded-md',
+                styles.card,
+                workflow.hidden && 'opacity-50',
+                disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-accent/30',
+            )}
+        >
+            <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
+                {workflow.icon ? (
+                    <IconRenderer
+                        name={workflow.icon}
+                        className={classNames('shrink-0 m-auto', styles.workflowIcon)}
+                        style={{ color: iconColor(workflow) }}
+                    />
+                ) : (
+                    <WorkflowIllustration
+                        className={classNames('shrink-0 m-auto', styles.workflowIcon)}
+                        style={{ color: "var(--primary)" }}
+                    />
                 )}
-            >
-                <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>
-                    {workflow.icon ? (
-                        <IconRenderer
-                            name={workflow.icon}
-                            className={classNames('shrink-0 m-auto', styles.workflowIcon)}
-                            style={{ color: iconColor(workflow) }}
-                        />
-                    ) : (
-                        <WorkflowIllustration
-                            className={classNames('shrink-0 m-auto', styles.workflowIcon)}
-                            style={{ color: "var(--primary)" }}
-                        />
-                    )}
-                    <div className="min-w-0 flex flex-col gap-1">
+                <div className="min-w-0 flex flex-col gap-1">
 
-                        <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
-                        {hasActiveWorkflow ? (
-                            <Badge variant="success" className='mx-auto' size={styles.badge}>
-                                Active
-                            </Badge>
-                        ) : null}
-                    </div>
+                    <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
+                    {hasActiveWorkflow ? (
+                        <Badge variant="success" className='mx-auto' size={styles.badge}>
+                            Active
+                        </Badge>
+                    ) : null}
                 </div>
             </div>
-        </WorkflowContextMenu>
+        </div>
     )
 }

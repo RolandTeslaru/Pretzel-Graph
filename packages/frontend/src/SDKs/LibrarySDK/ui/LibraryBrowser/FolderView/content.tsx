@@ -1,4 +1,4 @@
-import type { Skill } from "@pretzel-graph/shared/domain";
+import { Library, type Skill } from "@pretzel-graph/shared/domain";
 import React, { useMemo } from "react";
 import { EmptyFolder } from "./empty-folder";
 import classNames from "classnames";
@@ -11,9 +11,11 @@ import { WorkflowItem } from "./items/workflow";
 import { SkillItem } from "./items/skill";
 import { sizeStyles as itemSizeStyles, type ItemSize } from "./items/sizes";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
-import { useFolderView } from "./root";
+import { useLibraryBrowser } from "../root";
+import { LibraryContextMenu } from "../context-menus";
+import { useDelay } from "@/hooks/useDelay";
 
-interface Props extends Pick<LibraryBrowserBaseProps, 'size' | 'onItemClick' | 'isItemDisabled'> {
+interface Props extends Pick<LibraryBrowserBaseProps, 'size'> {
     scrollContainerClassName?: string
     className?: string
 }
@@ -57,16 +59,18 @@ export const FolderViewSkeleton = ({ size = 'default', className }: { size?: Ite
     </div>
 )
 
-export const Content: React.FC<Props> = ({ scrollContainerClassName, className, size = 'default', onItemClick, isItemDisabled }) => {
+export const Content: React.FC<Props> = ({ scrollContainerClassName, className, size = 'default' }) => {
 
-    const { cwd, setCwd, searchQuery } = useFolderView()
+    const { cwd, setCwd, onItemClick, isItemDisabled, queryDelay, searchQuery } = useLibraryBrowser()
 
-    const [view, [request]] = LibrarySDK.useWith(
-        (s) => s.selectors.getLibraryView(s, cwd),
-        [LibrarySDK.query.bootstrap],
+    const isQueryReady = useDelay(queryDelay)
+
+    const [[view, hasLibrary], [request]] = LibrarySDK.useWith(
+        (s) => [s.selectors.getLibraryView(s, cwd), Library.Folder.ROOT_ID in s.folders] as const,
+        [{ ...LibrarySDK.query.bootstrap, enabled: isQueryReady }],
     )
 
-    VersionControlSDK.useWith(() => null, [VersionControlSDK.query.activeWorkflows])
+    VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.activeWorkflows, enabled: isQueryReady }])
 
     const query = searchQuery ? searchQuery.trim().toLowerCase() : ""
 
@@ -85,49 +89,51 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
     const hasNoMatches = !isEmpty && filteredFolders.length === 0 && filteredWorkflows.length === 0
 
     return (
-        <ScrollArea.Root className={"relative flex-1 mt-0! gap-2 flex flex-col " + scrollContainerClassName }>
-            {isEmpty && request.isPending ? (
-                <FolderViewSkeleton size={size} className={className} />
-            ) : isEmpty ? (
-                <EmptyFolder />
-            ) : (
-                <div className={className}>
-                    {filteredFolders.length > 0 &&
-                        <h4 className={styles.heading}>
-                            {filteredFolders.length} Folder
-                            {filteredFolders.length === 1 ? "" : "s"}
-                        </h4>
-                    }
-                    <div className={classNames('grid', styles.grid)}>
-                        {filteredFolders.map((f) => (
-                            <FolderItem key={f.id} folder={f} size={size} onClick={() => setCwd(f.id)} />
-                        ))}
+        <LibraryContextMenu>
+            <ScrollArea.Root className={"relative flex-1 mt-0! gap-2 flex flex-col " + scrollContainerClassName }>
+                {!hasLibrary && request.isPending ? (
+                    <FolderViewSkeleton size={size} className={className} />
+                ) : isEmpty ? (
+                    <EmptyFolder />
+                ) : (
+                    <div className={className}>
+                        {filteredFolders.length > 0 &&
+                            <h4 className={styles.heading}>
+                                {filteredFolders.length} Folder
+                                {filteredFolders.length === 1 ? "" : "s"}
+                            </h4>
+                        }
+                        <div className={classNames('grid', styles.grid)}>
+                            {filteredFolders.map((f) => (
+                                <FolderItem key={f.id} folder={f} size={size} onClick={() => setCwd(f.id)} />
+                            ))}
+                        </div>
+                        {filteredWorkflows.length > 0 &&
+                            <h4 className={styles.heading}>
+                                {filteredWorkflows.length} Workflow
+                                {filteredWorkflows.length === 1 ? "" : "s"}
+                            </h4>
+                        }
+                        <div className={classNames('grid', styles.grid)}>
+                            {filteredWorkflows.map((w) => (
+                                <WorkflowItem key={w.id} workflow={w} size={size} {...itemProps({ type: 'workflow', id: w.id })} />
+                            ))}
+                        </div>
+                        {filteredSkills.length > 0 &&
+                            <h4 className={styles.heading}>
+                                {filteredSkills.length} Skill
+                                {filteredSkills.length === 1 ? "" : "s"}
+                            </h4>
+                        }
+                        <div className={classNames('grid', styles.grid)}>
+                            {filteredSkills.map((k) => (
+                                <SkillItem key={k.id} skill={k} size={size} {...itemProps({ type: 'skill', id: k.id })} />
+                            ))}
+                        </div>
                     </div>
-                    {filteredWorkflows.length > 0 &&
-                        <h4 className={styles.heading}>
-                            {filteredWorkflows.length} Workflow
-                            {filteredWorkflows.length === 1 ? "" : "s"}
-                        </h4>
-                    }
-                    <div className={classNames('grid', styles.grid)}>
-                        {filteredWorkflows.map((w) => (
-                            <WorkflowItem key={w.id} workflow={w} size={size} {...itemProps({ type: 'workflow', id: w.id })} />
-                        ))}
-                    </div>
-                    {filteredSkills.length > 0 &&
-                        <h4 className={styles.heading}>
-                            {filteredSkills.length} Skill
-                            {filteredSkills.length === 1 ? "" : "s"}
-                        </h4>
-                    }
-                    <div className={classNames('grid', styles.grid)}>
-                        {filteredSkills.map((k) => (
-                            <SkillItem key={k.id} skill={k} size={size} {...itemProps({ type: 'skill', id: k.id })} />
-                        ))}
-                    </div>
-                </div>
-            )}
-        </ScrollArea.Root>
+                )}
+            </ScrollArea.Root>
+        </LibraryContextMenu>
     );
 };
 
