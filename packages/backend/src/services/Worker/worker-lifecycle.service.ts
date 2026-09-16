@@ -29,8 +29,6 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
         private readonly queue: Queue,
         private readonly cloud: CloudService,
         private readonly realtime: RealtimeService,
-        // Circular by design: this drives the worker, and the worker going down
-        // decides what becomes of the runs that were on it.
         @Inject(forwardRef(() => ExecutionService))
         private readonly executions: ExecutionService,
     ) {}
