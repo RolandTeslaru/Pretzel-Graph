@@ -1,9 +1,25 @@
 import type { StoreApi, UseBoundStore } from "zustand"
+import { useQueries } from "@tanstack/react-query"
+import { QuerySDK } from "./QuerySDK/sdk"
 
 export abstract class BaseSDK<T_State> {
     protected constructor() { }
 
     public abstract readonly useStore: BaseSDK.Store<T_State>
+
+    public use = <Selected, const Queries extends readonly BaseSDK.Query[]>(
+        selector: (state: T_State) => Selected,
+        queries: Queries,
+    ) => {
+        const results = useQueries({ queries })
+
+        const selected = this.useStore(selector)
+
+        return [selected, results] as const
+    }
+
+    public fetch = <Result>(query: BaseSDK.Query<Result>): Promise<Result> =>
+        QuerySDK.client.fetchQuery(query)
 
     public get state() { return this.useStore.getState() }
     public get subscribe() { return this.useStore.subscribe }
@@ -11,6 +27,14 @@ export abstract class BaseSDK<T_State> {
 }
 
 export namespace BaseSDK {
+    export type Query<Result = unknown> = {
+        queryKey: readonly unknown[]
+        queryFn: () => Promise<Result>
+        staleTime?: number
+        retry?: number
+        retryDelay?: (attemptIndex: number) => number
+    }
+
     export type Store<T> = UseBoundStore<StoreApi<T>> & {
         setState: {
             (nextStateOrUpdater: T | Partial<T> | ((state: T) => void), shouldReplace?: false | undefined): void;
