@@ -79,17 +79,16 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect, quer
                 sidebarRenderer={() => (
                     <div className='relative'>
                         <LibraryBrowser.Tree.Header className='flex-col gap-2 top-0 left-0 px-2 py-2 z-20'>
-                            <Dialog.Title className='text-sm px-2'>{TITLES[accept]}</Dialog.Title>
                             <LibraryBrowser.Tree.SearchInput size='xs'
-                                className='rounded-full!'
+                                className='rounded-full! '
                             />
                         </LibraryBrowser.Tree.Header>
 
                         <div className='flex-1 min-h-0'>
                             <LibraryBrowser.Tree
                                 size='sm'
-                                className='pt-[70px] px-2'
-                                scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_80px)]'
+                                className='pt-[40px] px-2'
+                                scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_40px)]'
                             />
                         </div>
                     </div>
@@ -99,16 +98,20 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect, quer
             >
                 <div className='relative flex h-full w-[480px] shrink-0 flex-col gap-2'>
                     <LibraryBrowser.View.Header className='z-20 px-2 top-2 flex flex-col!'>
-                        <LibraryBrowser.View.Breadcrumbs className='w-auto mr-auto pt-1' linkClassName='text-xs!' />
-                        <div className='ml-auto flex flex-row gap-2 w-auto'>
-                            <LibraryBrowser.View.SearchInput className='rounded-full!' size='xs' />
-                            <LibraryBrowser.View.CreateBtn size="xs"/>
+                        <div className='flex flex-row w-full'>
+                            <Dialog.Title className='text-sm h-auto my-auto'>{TITLES[accept]}</Dialog.Title>
+                            <div className='ml-auto flex flex-row gap-2 w-auto'>
+                                <LibraryBrowser.View.SearchInput className='rounded-full!' size='xs' />
+                                <LibraryBrowser.View.CreateBtn size="xs"/>
+                            </div>
                         </div>
+                        
+                        <LibraryBrowser.View.Breadcrumbs className='w-auto mr-auto ' linkClassName='text-xs!' />
                     </LibraryBrowser.View.Header>
                     <div className='flex-1 min-h-0'>
                         <LibraryBrowser.View
                             size='sm'
-                            className='pt-[60px] px-2'
+                            className='pt-[70px] px-2'
                             scrollContainerClassName='h-[600px] [mask-image:linear-gradient(to_bottom,transparent_8px,black_90px)]'
                         />
                     </div>
