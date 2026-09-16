@@ -57,6 +57,12 @@ createSDKDecorator.list = function (): string[] {
     return Array.from(sdkRegistry.keys());
 };
 
+createSDKDecorator.cleanup = function (): void {
+    for (const instance of sdkInstances.values()) {
+        instance.cleanup?.();
+    }
+};
+
 createSDKDecorator.getClass = function <T>(name: string): T | undefined {
     return sdkRegistry.get(name);
 };
