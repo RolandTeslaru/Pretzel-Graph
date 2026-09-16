@@ -38,14 +38,14 @@ export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, tr
                 isItemDisabled={isItemDisabled}
                 {...treeProps}
             />
-            <FolderView
-                cwd={cwd}
-                setCwd={setCwd}
-                size={size}
-                onItemClick={onItemClick}
-                isItemDisabled={isItemDisabled}
-                {...folderViewProps}
-            />
+            <FolderView.Root cwd={cwd} setCwd={setCwd}>
+                <FolderView.Content
+                    size={size}
+                    onItemClick={onItemClick}
+                    isItemDisabled={isItemDisabled}
+                    className={folderViewProps?.className}
+                />
+            </FolderView.Root>
         </div>
     )
 }

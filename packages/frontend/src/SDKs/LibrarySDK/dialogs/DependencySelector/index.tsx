@@ -6,7 +6,6 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 import { DEPENDENCY_SELECTOR_DIALOG_ID, getAcceptedNoun, groupAcceptedKinds, type DependencySelectorOptions } from './constants'
 import { ListingSelector } from './listing-selector'
 import { openDependencyTypeDialog } from './dependency-type-dialog'
@@ -29,7 +28,6 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
     const [cwd, setCwd] = useState<Library.Folder.Id>(options.initialCwd ?? Library.Folder.ROOT_ID)
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
-    const [viewSearchQuery, setViewSearchQuery] = useState('')
 
     const attach = async (ref: Dependency.Ref) => {
         const success = await options.onSelect(ref)
@@ -118,22 +116,19 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
                                 scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                             />
                         </div>
-                        <div className='relative flex-1 '>
-                            <div className='absolute z-10 flex flex-row pr-4 justify-between top-2 w-full'>
-                                <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd}/>
-                                <SearchInput className='rounded-full!' size="xs" onSearch={value => setViewSearchQuery(value)}/>
-                            </div>
-                            <FolderView
+                        <FolderView.Root cwd={cwd} setCwd={setCwd} className='flex-1'>
+                            <FolderView.Header className='pr-4 top-2'>
+                                <FolderView.Breadcrumbs className='h-auto my-auto' linkClassName='text-xs!' />
+                                <FolderView.SearchInput className='rounded-full!' size="xs" />
+                            </FolderView.Header>
+                            <FolderView.Content
                                 size="sm"
-                                cwd={cwd}
-                                setCwd={setCwd}
-                                searchQuery={viewSearchQuery}
                                 onItemClick={selectLocal}
                                 isItemDisabled={isItemDisabled}
                                 className='pt-[50px] h-full '
                                 scrollContainerClassName='h-full [mask-image:linear-gradient(to_bottom,transparent_8px,black_50px)]'
                             />
-                        </div>
+                        </FolderView.Root>
                     </Tabs.Content>
                     <Tabs.Content value="publicListing">
                         <ListingSelector

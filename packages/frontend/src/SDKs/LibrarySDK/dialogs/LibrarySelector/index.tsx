@@ -6,7 +6,6 @@ import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { LibraryTree } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/LibraryTree'
 import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
 
 export const LIBRARY_SELECTOR_DIALOG_ID = 'library-selector'
 
@@ -58,7 +57,6 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Pr
     const [cwd, setCwd] = useState<Library.Folder.Id>(initialCwd ?? Library.Folder.ROOT_ID)
 
     const [treeSearchQuery, setTreeSearchQuery] = useState('')
-    const [viewSearchQuery, setViewSearchQuery] = useState('')
 
     const accepts = (type: LibrarySelector.Item['type']) => accept === type || accept === 'any'
 
@@ -102,17 +100,14 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Pr
             sidebarClassName='w-[260px] shrink-0 p-0!'
             contentClassName='p-0!'
         >
-            <div className='flex h-full w-[480px] shrink-0 flex-col gap-2 relative'>
-                <div className='absolute z-20 px-2 w-full top-2 flex flex-row justify-between'>
-                    <LibraryCwdBreadcrumbs className='h-auto my-auto' linkClassName='text-xs!' cwd={cwd} setCwd={setCwd} />
-                    <SearchInput className='rounded-full!' size='xs' onSearch={(value) => setViewSearchQuery(value)} />
-                </div>
+            <FolderView.Root cwd={cwd} setCwd={setCwd} className='flex h-full w-[480px] shrink-0 flex-col gap-2'>
+                <FolderView.Header className='z-20 px-2 top-2'>
+                    <FolderView.Breadcrumbs className='h-auto my-auto' linkClassName='text-xs!' />
+                    <FolderView.SearchInput className='rounded-full!' size='xs' />
+                </FolderView.Header>
                 <div className='flex-1 min-h-0'>
-                    <FolderView
+                    <FolderView.Content
                         size='sm'
-                        cwd={cwd}
-                        setCwd={setCwd}
-                        searchQuery={viewSearchQuery}
                         onItemClick={commit}
                         isItemDisabled={isItemDisabled}
                         className='pt-[40px] px-2'
@@ -127,7 +122,7 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect }: Pr
                         </Button>
                     </div>
                 )}
-            </div>
+            </FolderView.Root>
         </DialogSDK.SplitTemplate>
     )
 }

@@ -2,18 +2,12 @@ import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-r
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { useMemo, type ComponentType } from 'react'
 import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
-import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { AdminPanelItem, PretzelGraphDropdown, WORKSPACES_URL } from '@/components/PretzelGraphDropdown'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 // import { Preview } from 'shaders/react'
 
 export const Route = createFileRoute('/home')({
-    loader: () => {
-        void LibrarySDK.prefetch(LibrarySDK.query.bootstrap)
-
-        return null
-    },
     component: HomeLayout,
 })
 

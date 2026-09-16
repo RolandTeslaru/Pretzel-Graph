@@ -3,9 +3,7 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
 import { FolderView, FolderViewSkeleton } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import { useState } from 'react'
-import { Button, DropdownMenu, SearchInput, Skeleton, Tooltip } from '@pretzel-graph/standard-ui/foundations'
-import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
+import { Skeleton } from '@pretzel-graph/standard-ui/foundations'
 import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
 
 export const Route = createFileRoute('/home/library/$folderId')({
@@ -22,6 +20,7 @@ export const Route = createFileRoute('/home/library/$folderId')({
     pendingComponent: FolderPending,
     notFoundComponent: FolderNotFound,
     component: FolderRoute,
+    pendingMs: 0
 })
 
 
@@ -63,69 +62,27 @@ function FolderRoute() {
     const { folderId: _folderId } = Route.useParams()
     const folderId = _folderId as Library.Folder.Id
 
-    const [searchQuery, setSearchQuery] = useState("");
-
     const showHidden = LibrarySDK.useStore(s => s.showHidden)
 
     const setCwd = (folderId: Library.Folder.Id) => navigate({ to: '/home/library/$folderId', params: { folderId } })
 
     return (
-        <div className='relative'>
-            <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
-                <LibraryCwdBreadcrumbs cwd={folderId} className="h-auto my-auto" setCwd={setCwd} />
+        <FolderView.Root cwd={folderId} setCwd={setCwd}>
+            <FolderView.Header className='top-[60px] pr-10'>
+                <FolderView.Breadcrumbs className="h-auto my-auto" />
                 <div className="flex gap-2 ">
-                    {/* <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <Button
-                                variant="input"
-                                size="icon-sm"
-                                aria-pressed={showHidden}
-                                onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
-                            >
-                                {showHidden ? <SystemIcons.Eye className='size-4' /> : <SystemIcons.EyeOff className='size-4' />}
-                            </Button>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                            {showHidden ? 'Hide hidden items' : 'Show hidden items'}
-                        </Tooltip.Content>
-                    </Tooltip.Root> */}
-                    <SearchInput
+                    <FolderView.SearchInput
                         size='sm'
                         className='rounded-full!'
-                        onSearch={setSearchQuery}
                     />
-
-
-                    <DropdownMenu.Root>
-                        <DropdownMenu.Trigger asChild>
-                            <Button>
-                                Create
-                            </Button>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content align="end">
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateFolder({ parent_folder_id: folderId })}
-                            ><SystemIcons.Folder />Create Folder</DropdownMenu.Item>
-
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateWorkflow({ folder_id: folderId })}
-                            ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
-
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folderId })}
-                            ><SystemIcons.Sparkles2 />Create Skill</DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
+                    <FolderView.CreateBtn />
                 </div>
-            </div>
-            <FolderView
-                cwd={folderId}
+            </FolderView.Header>
+            <FolderView.Content
                 scrollContainerClassName='h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]'
                 className='pt-[100px]'
-                setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
                 onItemClick={openItem}
-                searchQuery={searchQuery}
             />
-        </div>
+        </FolderView.Root>
     )
 }
