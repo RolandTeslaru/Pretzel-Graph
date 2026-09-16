@@ -1,11 +1,10 @@
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import React, { useState } from 'react'
 import { ExecutionSDK } from '../../sdk'
 import { WorkbenchSDK } from '../../../WorkbenchSDK/sdk'
 import { Execution } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import { toast } from 'sonner'
-import { Badge, Button, Input, ScrollArea } from '@pretzel-graph/standard-ui/foundations'
+import { Badge, Button, Input, ScrollArea, Skeleton } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { useDebounce } from 'use-debounce'
 import type { BadgeProps } from '@pretzel-graph/standard-ui/foundations'
@@ -20,11 +19,14 @@ const statusVariant: Record<Execution.Status, BadgeProps["variant"]> = {
     terminated: "secondary",
 }
 
+const HISTORY_SKELETONS = [0, 1, 2, 3, 4, 5]
+
 const ExecutionHistoryPanel = () => {
 
     const workflowId = WorkbenchSDK.useDocument(d => d.workflowId);
-    const executionHistory = ExecutionSDK.useStore(s => s.executionHistory)
-    const currentExecutionId = ExecutionSDK.useStore(s => s.currentExecution?.id)
+    const [currentExecutionId, [request]] = ExecutionSDK.useWith((s) => s.currentExecution?.id, [ExecutionSDK.query.list(workflowId)])
+
+    const executionHistory = request.data ?? []
 
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
@@ -44,15 +46,6 @@ const ExecutionHistoryPanel = () => {
         URL.revokeObjectURL(url);
     }
 
-
-    QuerySDK.useQuery(
-        [`execution-history`, workflowId],
-        () => ExecutionSDK.actions.loadHistory(workflowId),
-        {
-            staleTime: Infinity
-        }
-    )
-
     return (
         <div className='w-[300px]  flex flex-col gap-1 pb-0'>
             <div className='px-2 py-1 flex flex-col gap-2'>
@@ -62,7 +55,7 @@ const ExecutionHistoryPanel = () => {
                         <SystemIcons.Download className='scale-75'/>
                     </Button>
                     <Button size="icon-xs" variant="ghost" onClick={() => {
-                        QuerySDK.client.invalidateQueries({ queryKey: [`execution-history`, workflowId] })
+                        void ExecutionSDK.invalidate(ExecutionSDK.query.list(workflowId))
                     }}>
                         <SystemIcons.RefreshCcw className='scale-75'/>
                     </Button>
@@ -75,7 +68,26 @@ const ExecutionHistoryPanel = () => {
                 />
             </div>
             <ScrollArea.Root className=" max-h-[400px] min-h-[400px] h-[400px] [mask-image:linear-gradient(to_bottom,black_calc(100%-48px),transparent)]">
-                {executionHistory.length === 0 && (
+                {request.isPending && (
+                    <div className='flex flex-col'>
+                        {HISTORY_SKELETONS.map((index) => (
+                            <div className='p-2 flex flex-col gap-1.5' key={index}>
+                                <div className='flex items-center gap-2'>
+                                    <Skeleton className='h-3 w-24' />
+                                    <Skeleton className='h-4 w-16 ml-auto rounded-full' />
+                                </div>
+                                <Skeleton className='h-2.5 w-40' />
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {request.isError && (
+                    <p className='text-xs text-destructive absolute top-1/2 left-1/2 text-center -translate-1/2'>
+                        <SystemIcons.AlertTriangle className='mx-auto mb-2 size-4' />
+                        Could not load executions.
+                    </p>
+                )}
+                {request.isSuccess && executionHistory.length === 0 && (
                     <p className='text-xs text-muted-foreground absolute top-1/2 left-1/2 text-center -translate-1/2'>
                         <SystemIcons.Activity className='mx-auto mb-2 text-muted-foreground size-4' />
                         No executions yet.

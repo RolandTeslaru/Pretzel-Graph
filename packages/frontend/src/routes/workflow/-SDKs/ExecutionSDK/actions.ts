@@ -58,7 +58,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
                 created_at: now,
                 updated_at: now,
             };
-            sdk.reducers.timeline.reset(s);
+            s.reducers.timeline.reset(s);
         });
 
         const executionCreationPromise = Execution.API.run(api, WorkbenchSDK.document.workflowId, {
@@ -124,7 +124,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             const confirmEvent = sdk.useAwaitConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, executionId);
             if (success) {
-                sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
+                sdk.setState(s => { s.reducers.currentExecution.setStatus(s, "terminated") })
                 toast.info('Workflow execution terminated')
             }
             else
@@ -144,7 +144,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
             // Kept in step when it happens to be the run on screen.
             if (success && sdk.state.currentExecution?.id === executionId)
-                sdk.setState(s => { sdk.reducers.currentExecution.setStatus(s, "terminated") })
+                sdk.setState(s => { s.reducers.currentExecution.setStatus(s, "terminated") })
 
             return success;
         },
@@ -187,47 +187,46 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         },
         setCurrentExecution: (execution: Execution) => {
             sdk.setState(s => {
-                sdk.reducers.currentExecution.set(s, execution);
-                sdk.reducers.timeline.rebuild(s);
+                s.reducers.currentExecution.set(s, execution);
+                s.reducers.timeline.rebuild(s);
             });
         },
-        loadHistory: async (workflowId: Workflow.Id) => {
+        list: async (workflowId: Workflow.Id) => {
             const { executions } = await Execution.API.Meta.list(api, workflowId);
-            sdk.setState(s => { s.executionHistory = executions });
+
             return executions;
         },
         clear: () => {
             sdk.setState(s => {
                 s.currentExecution = undefined;
-                s.executionHistory = [];
                 s.igniterAttributes = { record: false, debug: false }
-                sdk.reducers.timeline.reset(s);
+                s.reducers.timeline.reset(s);
             })
         },
         addAwaitedConfirmation: (event) => {
-            sdk.setState(s => { sdk.reducers.awaitedConfirmation.add(s, event) })
+            sdk.setState(s => { s.reducers.awaitedConfirmation.add(s, event) })
         },
         removeAwaitedConfirmation: (event) => {
-            sdk.setState(s => { sdk.reducers.awaitedConfirmation.remove(s, event) })
+            sdk.setState(s => { s.reducers.awaitedConfirmation.remove(s, event) })
         },
         loadLiveRecording: async (executionId) => {
             try {
                 const { recording } = await Execution.API.Recording.getLive(api, executionId);
                 sdk.setState(s => {
-                    sdk.reducers.currentExecution.recording.set(s, recording);
-                    sdk.reducers.timeline.rebuild(s);
+                    s.reducers.currentExecution.recording.set(s, recording);
+                    s.reducers.timeline.rebuild(s);
                 });
             } catch {
                 sdk.setState(s => {
-                    sdk.reducers.currentExecution.recording.set(s, null);
-                    sdk.reducers.timeline.rebuild(s);
+                    s.reducers.currentExecution.recording.set(s, null);
+                    s.reducers.timeline.rebuild(s);
                 });
             }
         },
         pendingConsultations: {
-            add:    (request)        => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.add(s, request) }) },
-            remove: (consultationId) => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.remove(s, consultationId) }) },
-            clear:  ()               => { sdk.setState(s => { sdk.reducers.currentExecution.pendingConsultations.clear(s) }) },
+            add:    (request)        => { sdk.setState(s => { s.reducers.currentExecution.pendingConsultations.add(s, request) }) },
+            remove: (consultationId) => { sdk.setState(s => { s.reducers.currentExecution.pendingConsultations.remove(s, consultationId) }) },
+            clear:  ()               => { sdk.setState(s => { s.reducers.currentExecution.pendingConsultations.clear(s) }) },
 
             // User → engine. The route only returns once the worker has consumed the answer
             // and un-parked, so success means the card is genuinely done. Dropping it here is
@@ -256,15 +255,15 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             },
         },
         igniter: {
-            setShouldRecord: (record) => { sdk.setState(s => { sdk.reducers.igniter.setShouldRecord(s, record) }) },
-            setShouldDebug: (debug) => { sdk.setState(s => { sdk.reducers.igniter.setShouldDebug(s, debug) }) }
+            setShouldRecord: (record) => { sdk.setState(s => { s.reducers.igniter.setShouldRecord(s, record) }) },
+            setShouldDebug: (debug) => { sdk.setState(s => { s.reducers.igniter.setShouldDebug(s, debug) }) }
         },
         timeline: {
-            setZoom:        (zoom) => { sdk.setState(s => { sdk.reducers.timeline.setZoom(s, zoom) }) },
-            setViewMode:    (mode) => { sdk.setState(s => { sdk.reducers.timeline.setViewMode(s, mode) }) },
-            toggleViewMode: ()     => { sdk.setState(s => { sdk.reducers.timeline.toggleViewMode(s) }) },
-            toggleRemnants: ()     => { sdk.setState(s => { sdk.reducers.timeline.toggleRemnants(s) }) },
-            selectUoW:      (id)   => { sdk.setState(s => { sdk.reducers.timeline.selectUoW(s, id) }) },
+            setZoom:        (zoom) => { sdk.setState(s => { s.reducers.timeline.setZoom(s, zoom) }) },
+            setViewMode:    (mode) => { sdk.setState(s => { s.reducers.timeline.setViewMode(s, mode) }) },
+            toggleViewMode: ()     => { sdk.setState(s => { s.reducers.timeline.toggleViewMode(s) }) },
+            toggleRemnants: ()     => { sdk.setState(s => { s.reducers.timeline.toggleRemnants(s) }) },
+            selectUoW:      (id)   => { sdk.setState(s => { s.reducers.timeline.selectUoW(s, id) }) },
         },
         runStep: (targetNodeId: Workflow.Node.Id) => run({ variant: "workbench_step", targetNodeId, record: false }),
         runFromIgniteableNode: (nodeId: Workflow.Node.Id) => run({ variant: "workbench_igniter", nodeId }),
@@ -279,7 +278,7 @@ export type ExecutionSDKActions = {
     runStep: (targetNodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
     runFromIgniteableNode: (nodeId: Workflow.Node.Id) => Promise<Execution.Id | null>,
     setCurrentExecution: (execution: Execution) => void,
-    loadHistory: (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
+    list: (workflowId: Workflow.Id) => Promise<Execution.Meta[]>,
     clear: () => void,
     // Act on the current execution, read at call time — there is never another one to target.
     pause: () => Promise<boolean>,

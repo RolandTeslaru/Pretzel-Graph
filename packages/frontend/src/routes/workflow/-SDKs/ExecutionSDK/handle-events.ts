@@ -30,7 +30,7 @@ const reduceEvent = (
     s:     ExecutionSDK.State,
     event: Execution.Event.Base,
 ): (() => void) | undefined => {
-    const r = sdk.reducers.currentExecution;
+    const r = s.reducers.currentExecution;
 
     // The channel is Base-typed so new domains don't have to be threaded through here.
     // This SDK narrows to its own union; everything else belongs to a listener.
@@ -44,17 +44,17 @@ const reduceEvent = (
         case "lifecycle:completed":
             r.session.set(s, e.session);
             r.setStatus(s, "completed");
-            sdk.reducers.awaitedConfirmation.remove(s, "started");
+            s.reducers.awaitedConfirmation.remove(s, "started");
             break;
         case "lifecycle:failed":
             r.session.set(s, e.session);
             r.setStatus(s, "failed");
             r.setError(s, e.error);
-            sdk.reducers.awaitedConfirmation.remove(s, "started");
+            s.reducers.awaitedConfirmation.remove(s, "started");
             return () => toast.error(`Execution failed: ${e.error.message}`);
         case "lifecycle:terminated":
             r.setStatus(s, "terminated");
-            sdk.reducers.awaitedConfirmation.remove(s, "terminated");
+            s.reducers.awaitedConfirmation.remove(s, "terminated");
             break;
         case "lifecycle:paused":
             r.session.set(s, e.session);
@@ -150,7 +150,7 @@ const flush = (sdk: ExecutionSDKImpl) => {
         // once for the whole batch (they depend on durations/totalDuration), and
         // only if something in it actually moved a unit.
         if (s.isTimelineGeometryDirty)
-            sdk.reducers.timeline.recompute(s);
+            s.reducers.timeline.recompute(s);
     });
 
     // Three phases, in order: our state (above), other domains' state, then all

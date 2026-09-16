@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
-import { Execution } from "@pretzel-graph/shared/domain";
+import { Execution, Workflow } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createExecutionSDKActions, type ExecutionSDKActions } from "./actions";
@@ -13,6 +13,8 @@ import { api } from "@/SDKs/ApiInterceptorSDK";
 import { discardQueuedEvents, handleExecutionEvents } from "./handle-events";
 import { observeCurrentExecution, type CurrentExecutionObserver, type ObserveOptions as ObserveOptions_ } from "./observe";
 import type { ChatSDKImpl } from "../ChatSDK/sdk";
+
+const LIST_STALE_TIME = 30_000
 
 @SDK("Execution")
 export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
@@ -29,9 +31,9 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
     public readonly useStore: BaseSDK.Store<ExecutionSDK.State> = createWithEqualityFn(
         immer<ExecutionSDK.State>(() => ({
             currentExecution: undefined,
-            executionHistory: [],
             awaitedConfirmation: new Set(),
             selectors: executionSDKSelectors,
+            reducers: _createExecutionReducers_(),
             igniterAttributes: {
                 record: false,
                 debug: false
@@ -42,9 +44,15 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         shallow
     )
 
-    public readonly reducers:  ExecutionSDK.Reducers  = _createExecutionReducers_(this)
-    public readonly actions:   ExecutionSDK.Actions   = createExecutionSDKActions(this);
-    public readonly selectors: ExecutionSDK.Selectors = executionSDKSelectors;
+    public readonly actions: ExecutionSDK.Actions = createExecutionSDKActions(this);
+
+    public readonly query = {
+        list: (workflowId: Workflow.Id) => ({
+            queryKey:  ['execution', 'list', workflowId] as const,
+            queryFn:   () => this.actions.list(workflowId),
+            staleTime: LIST_STALE_TIME,
+        }),
+    }
     
     public useAwaitConfirmation = (event: ExecutionSDK.AwaitedConfirmation): () => void => {
         this.actions.addAwaitedConfirmation(event);
@@ -157,6 +165,10 @@ function stopHeartbeat() {
 }
 
 ExecutionSDK.observeCurrent({
+    onSettle: (execution) => void ExecutionSDK.invalidate(ExecutionSDK.query.list(execution.workflow_id)),
+})
+
+ExecutionSDK.observeCurrent({
     onPause:  (execution) => startHeartbeat(execution.id),
     onDetach: () => stopHeartbeat(),
 
@@ -184,9 +196,9 @@ export namespace ExecutionSDK {
 
     export type State = {
         currentExecution?: Execution
-        executionHistory: Execution.Meta[]
         awaitedConfirmation: Set<AwaitedConfirmation>
         selectors: ExecutionSDKSelectors
+        reducers: ExecutionSDK.Reducers
         igniterAttributes: {
             record: boolean,
             debug: boolean,

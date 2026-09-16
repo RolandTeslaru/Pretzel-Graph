@@ -1,6 +1,6 @@
 import { Execution } from "@pretzel-graph/shared/domain";
 import type { Consultation, Workflow } from "@pretzel-graph/shared/domain";
-import type { ExecutionSDK, ExecutionSDKImpl } from "./sdk";
+import type { ExecutionSDK } from "./sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import {
     getTimelineLayout,
@@ -53,7 +53,7 @@ const ensureRecording = (s: State): Execution.Recording => {
     return execution.recording;
 };
 
-export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
+export function _createExecutionReducers_() {
     return {
         currentExecution: {
             set: (s, execution) => {
@@ -121,7 +121,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                 ensure: ensureRecording,
                 unit: {
                     patchStarted: (s, unit) => {
-                        const rec = _sdk.reducers.currentExecution.recording.ensure(s);
+                        const rec = s.reducers.currentExecution.recording.ensure(s);
                         rec.units[unit.id] = unit;
                         s.isTimelineGeometryDirty = true;
 
@@ -131,11 +131,11 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                         } else {
                             // A track is born — append its (append-only) geometry row.
                             rec.tracks[unit.trackId] = { id: unit.trackId, unitIds: [unit.id] };
-                            _sdk.reducers.timeline.appendTrack(s, unit.trackId);
+                            s.reducers.timeline.appendTrack(s, unit.trackId);
                         }
                     },
                     patchCompleted: (s, event) => {
-                        const rec = _sdk.reducers.currentExecution.recording.ensure(s);
+                        const rec = s.reducers.currentExecution.recording.ensure(s);
                         const unit = rec.units[event.unitId];
                         if (!unit)
                             return;
@@ -150,7 +150,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                             unit.metrics = event.metrics;
                     },
                     patchFailed: (s, event) => {
-                        const rec = _sdk.reducers.currentExecution.recording.ensure(s);
+                        const rec = s.reducers.currentExecution.recording.ensure(s);
                         const unit = rec.units[event.unitId];
                         if (!unit)
                             return;
@@ -166,7 +166,7 @@ export function _createExecutionReducers_(_sdk: ExecutionSDKImpl) {
                 },
                 relation: {
                     patchCreateBatch: (s, event) => {
-                        const rec = _sdk.reducers.currentExecution.recording.ensure(s);
+                        const rec = s.reducers.currentExecution.recording.ensure(s);
                         for (const relation of event.relations)
                             rec.relations[relation.id] = relation;
                     },
