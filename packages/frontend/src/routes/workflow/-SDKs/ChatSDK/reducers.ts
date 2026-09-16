@@ -1,9 +1,9 @@
 import { Chat } from "@pretzel-graph/shared/domain";
-import type { ChatSDK, ChatSDKImpl } from "./sdk";
+import type { ChatSDK } from "./sdk";
 
 export type State = ChatSDK.State;
 
-export function createChatSDKReducers(_sdk: ChatSDKImpl) {
+export function createChatSDKReducers() {
     return {
         upsertMessage: (s, message) => {
             if (!s.messagesRecord[message.id]) {

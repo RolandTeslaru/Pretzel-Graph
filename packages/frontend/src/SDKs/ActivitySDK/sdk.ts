@@ -4,7 +4,6 @@ import { shallow } from "zustand/shallow";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Activity } from "@pretzel-graph/shared/domain";
-import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { _createActivityActions_, type _ActivitySDKActions } from "./actions";
 
@@ -39,22 +38,13 @@ export class ActivitySDKImpl extends BaseSDK<ActivitySDK.State> {
 
     public readonly actions: ActivitySDK.Actions = _createActivityActions_(this)
 
-    /** One descriptor, so every caller names the same cache entry. */
-    private readonly activityQuery = {
-        queryKey:  ['activity', 'bootstrap'] as const,
-        queryFn:   () => this.actions.bootstrap(),
-        staleTime: ACTIVITY_STALE_TIME,
+    public readonly query = {
+        bootstrap: {
+            queryKey:  ['activity', 'bootstrap'] as const,
+            queryFn:   () => this.actions.bootstrap(),
+            staleTime: ACTIVITY_STALE_TIME,
+        },
     }
-
-    /** Seeds the store; the channel subscription keeps it live from there. */
-    public useActivityBootstrapQuery = () => QuerySDK.useQuery<Activity, Error>(
-        this.activityQuery.queryKey,
-        this.activityQuery.queryFn,
-        { staleTime: this.activityQuery.staleTime },
-    )
-
-    /** The same query for route loaders, which run before anything renders. */
-    public fetchActivityBootstrap = () => QuerySDK.client.fetchQuery(this.activityQuery)
 
     public readonly selectors: ActivitySDK.Selectors = {}
 

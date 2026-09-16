@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
@@ -7,44 +6,39 @@ import { toast } from 'sonner'
 
 interface Props {
     skill: Skill.Meta
-    children: ReactNode
 }
 
-export function SkillContextMenu({ skill, children }: Props) {
+export function SkillMenuItems({ skill }: Props) {
     return (
-        <ContextMenu.Root>
-            <ContextMenu.Trigger asChild>
-                {children}
-            </ContextMenu.Trigger>
-            <ContextMenu.Content className='w-[170px]'>
-                <ContextMenu.Item
-                    icon={<SystemIcons.SquarePen className='size-4' />}
-                    onClick={() => LibrarySDK.dialogs.openSkillEditor({ skillId: skill.id })}
-                >
-                    Edit
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                    icon={<SystemIcons.Copy className='size-4' />}
-                    onClick={() => copy(skill.id, 'Skill id copied')}
-                >
-                    Copy ID
-                </ContextMenu.Item>
-                <ContextMenu.Item
-                    icon={<SystemIcons.ArrowRight className='size-4' />}
-                    onClick={() => openMoveSkill(skill)}
-                >
-                    Move to…
-                </ContextMenu.Item>
-                <ContextMenu.Separator />
-                <ContextMenu.Item
-                    variant='destructive'
-                    icon={<SystemIcons.Trash2 className='size-4' />}
-                    onClick={() => LibrarySDK.dialogs.openDeleteSkill(skill)}
-                >
-                    Delete
-                </ContextMenu.Item>
-            </ContextMenu.Content>
-        </ContextMenu.Root>
+        <>
+            <ContextMenu.Item
+                icon={<SystemIcons.Sparkles2 className='size-4' />}
+                onClick={() => LibrarySDK.dialogs.openSkillEditor({ skillId: skill.id })}
+            >
+                Open
+            </ContextMenu.Item>
+            <ContextMenu.Item
+                icon={<SystemIcons.ArrowRight className='size-4' />}
+                onClick={() => openMoveSkill(skill)}
+            >
+                Move to…
+            </ContextMenu.Item>
+           
+            <ContextMenu.Item
+                icon={<SystemIcons.Copy className='size-4' />}
+                onClick={() => copy(skill.id, 'Skill id copied')}
+            >
+                Copy ID
+            </ContextMenu.Item>
+            <ContextMenu.Separator />
+            <ContextMenu.Item
+                variant='destructive'
+                icon={<SystemIcons.Trash2 className='size-4' />}
+                onClick={() => LibrarySDK.dialogs.openDeleteSkill(skill)}
+            >
+                Delete
+            </ContextMenu.Item>
+        </>
     )
 }
 

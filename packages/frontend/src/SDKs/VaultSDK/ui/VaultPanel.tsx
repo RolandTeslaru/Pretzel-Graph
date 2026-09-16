@@ -11,11 +11,10 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 
 const VaultPanel = () => {
-    const instances = VaultSDK.useStore(s => Object.values(s.credentialInstances))
-
-    useEffect(() => {
-        VaultSDK.actions.instance.refreshAll()
-    }, [])
+    const [instances] = VaultSDK.useWith(
+        (s) => Object.values(s.credentialInstances),
+        [VaultSDK.query.instances],
+    )
 
     return (
         <div className='flex flex-col h-full w-full p-4 gap-4 min-w-[600px]'>

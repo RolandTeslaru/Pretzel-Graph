@@ -10,6 +10,8 @@ import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
 import { _createLibraryDialogs_, type _LibrarySDKDialogs } from './dialogs';
 
+const BOOTSTRAP_STALE_TIME = 60_000
+
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
@@ -33,6 +35,14 @@ export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
     public readonly selectors: LibrarySDK.Selectors = _createLibrarySelectors_(this)
     public readonly actions: LibrarySDK.Actions = _createLibraryActions_(this)
+
+    public readonly query = {
+        bootstrap: {
+            queryKey: ['library', 'bootstrap'] as const,
+            queryFn: () => this.actions.bootstrap.get(),
+            staleTime: BOOTSTRAP_STALE_TIME,
+        },
+    }
 
     public readonly dialogs: LibrarySDK.Dialogs = _createLibraryDialogs_()
 }

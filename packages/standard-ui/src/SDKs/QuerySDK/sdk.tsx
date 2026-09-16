@@ -9,6 +9,10 @@ export class QuerySDKImpl {
 
     public readonly client = new QueryClient();
 
+    public cleanup() {
+        this.client.clear();
+    }
+
 
     public useQuery: QuerySDK.UseQuery = (
         queryKey,

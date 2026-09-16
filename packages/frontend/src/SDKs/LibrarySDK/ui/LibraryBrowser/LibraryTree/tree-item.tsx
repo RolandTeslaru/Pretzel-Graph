@@ -8,9 +8,6 @@ import { Skill, type Library, type Workflow } from '@pretzel-graph/shared/domain
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames'
 import { sizeStyles, type FileSystemTreeSize } from './sizes'
-import { FolderContextMenu } from '../context-menus/folder'
-import { WorkflowContextMenu } from '../context-menus/workflow'
-import { SkillContextMenu } from '../context-menus/skill'
 
 export function TreeItem({
     branch,
@@ -45,8 +42,6 @@ export function TreeItem({
         ? (key.slice('skill:'.length) as Skill.Id)
         : undefined
 
-    const folder = LibrarySDK.useStore((s) => (folderId ? s.folders[folderId] : undefined))
-    const workflow = LibrarySDK.useStore((s) => (workflowId ? s.workflowMetas[workflowId] : undefined))
     const skill = LibrarySDK.useStore((s) => (skillId ? s.skillMetas[skillId] : undefined))
 
     const item       = getItem(workflowId, skillId)
@@ -78,7 +73,7 @@ export function TreeItem({
 
     const isHidden = branch.data?.hidden === true
 
-    const row = (
+    return (
         <div
             className={classNames(
                 'flex items-center pr-1 pl-1 rounded-md select-none',
@@ -87,6 +82,8 @@ export function TreeItem({
                 isHidden && 'opacity-50',
                 isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
             )}
+            data-library-item={folderId ? 'folder' : workflowId ? 'workflow' : skillId ? 'skill' : undefined}
+            data-library-id={folderId ?? workflowId ?? skillId}
             onClick={handleClick}
         >
             <Tree.IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} elbow={isFolder} size={size} />
@@ -115,32 +112,6 @@ export function TreeItem({
             ) : null}
         </div>
     )
-
-    if (workflow) {
-        return (
-            <WorkflowContextMenu workflow={workflow} onOpen={handleClick}>
-                {row}
-            </WorkflowContextMenu>
-        )
-    }
-
-    if (skill) {
-        return (
-            <SkillContextMenu skill={skill}>
-                {row}
-            </SkillContextMenu>
-        )
-    }
-
-    if (folder) {
-        return (
-            <FolderContextMenu folder={folder} onOpen={() => onFolderClick?.(folder.id)}>
-                {row}
-            </FolderContextMenu>
-        )
-    }
-
-    return row
 }
 
 // The library item a row stands for; folder rows have none.

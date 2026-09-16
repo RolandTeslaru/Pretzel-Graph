@@ -9,7 +9,7 @@ export type _VaultSDKActions = {
         loadBatch: (ids: Vault.Credential.Template.Id[]) => Promise<Record<Vault.Credential.Template.Id, Vault.Credential.Template>>
     }
     instance: {
-        refreshAll: () => Promise<void>
+        list:       () => Promise<Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>>
         create:     (req: Vault.API.CredentialInstance.Create.Request) => Promise<Vault.Credential.Instance>
         remove:     (id: Vault.Credential.Instance.Id) => Promise<void>
         reveal:     (id: Vault.Credential.Instance.Id) => Promise<Vault.Credential.Instance.DecryptedValues>
@@ -56,13 +56,15 @@ export function _createVaultActions_(sdk: VaultSDKImpl): _VaultSDKActions {
         },
 
         instance: {
-            refreshAll: async () => {
+            list: async () => {
                 try {
                     const { instances } = await Vault.API.CredentialInstance.list(api)
                     setState(s => { s.credentialInstances = instances })
+                    return instances
                 } catch (err) {
-                    console.error('VaultSDK.instance.refreshAll failed', err)
+                    console.error('VaultSDK.instance.list failed', err)
                     toast.error('Failed to load credentials')
+                    throw err
                 }
             },
 

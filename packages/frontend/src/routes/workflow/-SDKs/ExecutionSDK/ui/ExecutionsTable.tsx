@@ -17,8 +17,7 @@ import 'react18-json-view/src/dark.css'
 import { Badge, Button, DropdownMenu, Popover, ScrollArea, Table } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Execution, SystemError, type Workflow } from '@pretzel-graph/shared/domain'
-import { api } from '@/SDKs/ApiInterceptorSDK/sdk'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
+import { ExecutionSDK } from '../sdk'
 
 
 const STATUS_VARIANT: Record<Execution.Status, 'success' | 'destructive' | 'secondary' | 'outline'> = {
@@ -172,12 +171,9 @@ const codeLabel = (code: SystemError.Code) => `${SystemError.Code[code] ?? 'UNKN
 
 
 export function ExecutionsTable({ workflowId }: { workflowId: Workflow.Id }) {
-    const { data, isPending, isError } = QuerySDK.useQuery(
-        ['executions', 'meta', workflowId],
-        () => Execution.API.Meta.list(api, workflowId),
-    )
+    const [, [{ data, isPending, isError }]] = ExecutionSDK.useWith(() => null, [ExecutionSDK.query.list(workflowId)])
 
-    const executions = useMemo(() => data?.executions ?? [], [data])
+    const executions = useMemo(() => data ?? [], [data])
 
     const table = useTable(
         {

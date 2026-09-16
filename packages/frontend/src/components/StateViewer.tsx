@@ -78,7 +78,7 @@ function ExecutionSDKControls() {
             <span className="font-medium">status</span>
             <Select.Root
                 value={currentExecution.status}
-                onValueChange={(v) => ExecutionSDK.setState(s => { ExecutionSDK.reducers.currentExecution.setStatus(s, v as Execution.Status) })}
+                onValueChange={(v) => ExecutionSDK.setState(s => { s.reducers.currentExecution.setStatus(s, v as Execution.Status) })}
             >
                 <Select.Trigger size="xs" className="max-w-[140px]">
                     <Select.Value />

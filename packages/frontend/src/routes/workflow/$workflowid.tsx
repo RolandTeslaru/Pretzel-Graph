@@ -1,4 +1,3 @@
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk'
 import ShelfSidebar from '@/routes/workflow/-SDKs/ShelfSDK/ui/ShelfSidebar'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
@@ -44,30 +43,11 @@ export const Route = createFileRoute('/workflow/$workflowid')({
     loader: ({ params, abortController }) => {
         const workflowId = params.workflowid as Workflow.Id;
 
-        QuerySDK.client.prefetchQuery({
-            queryKey: ["core-blueprints"],
-            queryFn: () => ShelfSDK.actions.loadSection("core_extended"),
-            staleTime: Infinity,
-        })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ["bundle-blueprints"],
-            queryFn: () => ShelfSDK.actions.loadSection("integrations"),
-            staleTime: Infinity
-        })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: 60_000,
-        })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['version-control', 'publications', workflowId],
-            queryFn: () => VersionControlSDK.actions.list(workflowId),
-            staleTime: 30_000,
-        })
-        QuerySDK.client.prefetchQuery({
-            queryKey: ['chats', workflowId],
-            queryFn: () => ChatSDK.actions.chat.listByWorkflow(workflowId),
-        })
+        void ShelfSDK.prefetch(ShelfSDK.query.section("core_extended"))
+        void ShelfSDK.prefetch(ShelfSDK.query.section("integrations"))
+        void LibrarySDK.prefetch(LibrarySDK.query.bootstrap)
+        void VersionControlSDK.prefetch(VersionControlSDK.query.publications(workflowId))
+        void ChatSDK.prefetch(ChatSDK.query.list(workflowId))
 
         ChatSDK.actions.chat.new();
         ChatSDK.actions.ui.setSidebarVisibility(false);

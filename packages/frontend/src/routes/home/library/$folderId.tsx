@@ -1,37 +1,42 @@
-import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
-import { QuerySDK } from '@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import type { Library } from '@pretzel-graph/shared/domain'
-import { FolderView } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/FolderView'
-import { useState } from 'react'
-import { Button, DropdownMenu, SearchInput, Tooltip } from '@pretzel-graph/standard-ui/foundations'
-import { LibraryCwdBreadcrumbs } from '@/SDKs/LibrarySDK/ui/LibraryCwdBreadcrumbs'
-import { useOpenLibraryItem } from '@/SDKs/LibrarySDK/ui/LibraryBrowser/use-open-item'
-
-const BOOTSTRAP_STALE_TIME = 60_000
+import { LibraryBrowser } from '@/SDKs/LibrarySDK/ui/LibraryBrowser'
+import { Skeleton } from '@pretzel-graph/standard-ui/foundations'
 
 export const Route = createFileRoute('/home/library/$folderId')({
     loader: async ({ params }) => {
         const folderId = params.folderId as Library.Folder.Id
 
-        // The check below reads store state, so the fetch has to settle first.
-        await QuerySDK.client.fetchQuery({
-            queryKey: ['library', 'bootstrap'],
-            queryFn: () => LibrarySDK.actions.bootstrap.get(),
-            staleTime: BOOTSTRAP_STALE_TIME,
-        })
+        await LibrarySDK.fetch(LibrarySDK.query.bootstrap)
 
-        const folders = LibrarySDK.state.folders;
-
-        const hasFolder = folderId in folders;
+        const hasFolder = folderId in LibrarySDK.state.folders
         if (!hasFolder) throw notFound()
 
         return null
     },
+    pendingComponent: FolderPending,
     notFoundComponent: FolderNotFound,
     component: FolderRoute,
+    pendingMs: 0
 })
+
+
+function FolderPending() {
+    return (
+        <div className='relative'>
+            <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
+                <Skeleton className='h-4 w-40' />
+                <div className='flex gap-2'>
+                    <Skeleton className='h-8 w-48 rounded-full' />
+                    <Skeleton className='h-9 w-20' />
+                </div>
+            </div>
+            <LibraryBrowser.View.Skeleton className='pt-[100px]' />
+        </div>
+    )
+}
 
 
 function FolderNotFound() {
@@ -51,78 +56,23 @@ function FolderNotFound() {
 
 
 function FolderRoute() {
-    const navigate = useNavigate()
-    const openItem = useOpenLibraryItem()
-    const { folderId: _folderId } = Route.useParams()
-    const folderId = _folderId as Library.Folder.Id
-
-    const [folder, breadCrumbs] = LibrarySDK.useStore(s => [s.folders[folderId], s.selectors.getBreadcrumbs(s, folderId)])
     const showHidden = LibrarySDK.useStore(s => s.showHidden)
-
-    if (!folder) {
-        return <div className="p-6 opacity-60">Folder not found.</div>
-    }
-
-    const [searchQuery, setSearchQuery] = useState("");
-
-    const setCwd = (folderId: Library.Folder.Id) => navigate({ to: '/home/library/$folderId', params: { folderId } })
 
     return (
         <div className='relative'>
-            <div className='absolute z-10 top-[60px] flex justify-between w-full pr-10 items-center gap-2'>
-                <LibraryCwdBreadcrumbs cwd={folder.id} className="h-auto my-auto" setCwd={setCwd} />
+            <LibraryBrowser.View.Header className='top-[60px] pr-10'>
+                <LibraryBrowser.View.Breadcrumbs className="h-auto my-auto" />
                 <div className="flex gap-2 ">
-                    {/* <Tooltip.Root>
-                        <Tooltip.Trigger asChild>
-                            <Button
-                                variant="input"
-                                size="icon-sm"
-                                aria-pressed={showHidden}
-                                onClick={() => LibrarySDK.actions.preferences.setShowHidden(!showHidden)}
-                            >
-                                {showHidden ? <SystemIcons.Eye /> : <SystemIcons.EyeOff />}
-                            </Button>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                            {showHidden ? 'Hide hidden items' : 'Show hidden items'}
-                        </Tooltip.Content>
-                    </Tooltip.Root> */}
-                    <SearchInput
+                    <LibraryBrowser.View.SearchInput
                         size='sm'
                         className='rounded-full!'
-                        onSearch={setSearchQuery}
                     />
-
-
-                    <DropdownMenu.Root>
-                        <DropdownMenu.Trigger asChild>
-                            <Button>
-                                Create
-                            </Button>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content align="end">
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateFolder({ parent_folder_id: folderId })}
-                            ><SystemIcons.Folder />Create Folder</DropdownMenu.Item>
-
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateWorkflow({ folder_id: folderId })}
-                            ><SystemIcons.Graph />Create Workflow</DropdownMenu.Item>
-
-                            <DropdownMenu.Item
-                                onClick={() => LibrarySDK.dialogs.openCreateSkill({ folder_id: folderId })}
-                            ><SystemIcons.Sparkles2 />Create Skill</DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
+                    <LibraryBrowser.View.CreateBtn />
                 </div>
-            </div>
-            <FolderView
-                cwd={folderId}
+            </LibraryBrowser.View.Header>
+            <LibraryBrowser.View
                 scrollContainerClassName='h-screen [mask-image:linear-gradient(to_bottom,transparent_8px,black_72px)]'
                 className='pt-[100px]'
-                setCwd={(folderId) => navigate({ to: '/home/library/$folderId', params: { folderId } })}
-                onItemClick={openItem}
-                searchQuery={searchQuery}
             />
         </div>
     )

@@ -48,6 +48,7 @@ export { Tabs } from "./tabs";
 export { Text, BooleanText } from "./Text";
 
 export { Spinner } from "./spinner"
+export { Skeleton } from "./skeleton"
 
 export { Checkbox } from "./checkbox"
 

@@ -191,7 +191,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
             const authorizeUrl = await mintAuthorizeUrl()
             const instanceId   = await awaitOAuthConnection(popup, authorizeUrl)
 
-            await VaultSDK.actions.instance.refreshAll()
+            await VaultSDK.fetch({ ...VaultSDK.query.instances, staleTime: 0 })
 
             return instanceId
         } catch (err) {

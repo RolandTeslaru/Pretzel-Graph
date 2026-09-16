@@ -41,7 +41,7 @@ function SearchInput({
       <Input
         type="search"
         placeholder={placeholder}
-        className={cn("pr-7 backdrop-blur-md ", className)}
+        className={cn("pr-7 rounded-full! backdrop-blur-md ", className)}
         value={value}
         onChange={handleChange}
         {...props}

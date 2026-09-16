@@ -1,4 +1,5 @@
 import { Kanban } from '@pretzel-graph/standard-ui/components/kanban'
+import { Frame, Skeleton } from '@pretzel-graph/standard-ui/foundations'
 import { useMemo } from 'react'
 import { ActivitySDK } from '../sdk'
 import type { Execution, Workflow } from '@pretzel-graph/shared/domain'
@@ -35,11 +36,37 @@ const byActivity = (a: Execution.Meta, b: Execution.Meta) => {
 }
 
 
+const COLUMN_SKELETONS = [0, 1, 2, 3, 4, 5, 6, 7]
+const ITEM_SKELETONS = [0, 1, 2, 3, 4]
+
+const ActivityKanbanSkeleton = () => (
+    <div className='flex [&>*]:w-[220px] [&>*]:shrink-0'>
+        {COLUMN_SKELETONS.map((columnIndex) => (
+            <Frame.Root key={columnIndex} spacing='sm' className='p-2 gap-2'>
+                <Frame.Header className='flex flex-row px-2 pt-0! items-center gap-2'>
+                    <Skeleton className='size-4 rounded-sm' />
+                    <Skeleton className='h-3 w-24' />
+                </Frame.Header>
+                <div className='flex flex-col gap-2'>
+                    {ITEM_SKELETONS.map((itemIndex) => (
+                        <Frame.Panel key={itemIndex} fit className='flex flex-col justify-between p-1! h-[60px]'>
+                            <Skeleton className='h-4 w-16 rounded-full' />
+                            <Skeleton className='h-3 w-20 ml-1' />
+                        </Frame.Panel>
+                    ))}
+                </div>
+            </Frame.Root>
+        ))}
+    </div>
+)
+
+
 const ActivityKanban = () => {
 
-    ActivitySDK.useActivityBootstrapQuery()
-
-    const activity = ActivitySDK.useStore(s => s.activity)
+    const [activity, [request]] = ActivitySDK.useWith(
+        (s) => s.activity,
+        [ActivitySDK.query.bootstrap],
+    )
 
     const columns = useMemo(
         () => Object.fromEntries(
@@ -55,6 +82,9 @@ const ActivityKanban = () => {
         ),
         [columns],
     )
+
+    if (request.isPending && columnIds.length === 0)
+        return <ActivityKanbanSkeleton />
 
     return (
         <Kanban.Root

@@ -78,7 +78,10 @@ export class ExecutionService {
         workflowId: Workflow.Id,
         payload:    Execution.API.Run.Request,
     ): Promise<Execution.API.Run.Response> {
-        const workflowData = payload.workflowData ?? (await this.workbenchRepository.workflow.get(principal, workflowId)).data;
+        const workflowData = payload.workflowData ?? (
+                                await this.workbenchRepository.workflow.get(principal, workflowId)
+                            ).data;
+                            
         const started      = await this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
 
         if (!payload.await)

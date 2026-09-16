@@ -1,51 +1,32 @@
-import { ScrollArea } from "@pretzel-graph/standard-ui/foundations"
-import { LibraryTree } from "./LibraryTree"
-import { FolderView } from "./FolderView"
-import type { Library, Workflow } from "@pretzel-graph/shared/domain"
-import type { LibrarySDK } from "@/SDKs/LibrarySDK/sdk"
-import type React from "react"
+import type { Workflow } from "@pretzel-graph/shared/domain"
+import { Root } from "./root"
+import { Content as TreeContent } from "./LibraryTree/content"
+import { Header as TreeHeader } from "./LibraryTree/header"
+import { SearchInput as TreeSearchInput } from "./LibraryTree/search-input"
+import { Content as ViewContent, FolderViewSkeleton } from "./FolderView/content"
+import { Header as ViewHeader } from "./FolderView/header"
+import { Breadcrumbs } from "./FolderView/breadcrumbs"
+import { SearchInput as ViewSearchInput } from "./FolderView/search-input"
+import { CreateBtn } from "./FolderView/create-button"
+
+export { useLibraryBrowser } from "./root"
 
 export interface LibraryBrowserBaseProps {
     size?: 'default' | 'sm'
-    cwd: Library.Folder.Id,
-    setCwd: (value: Library.Folder.Id) => void
     selectedWorkflowId?: Workflow.Id
-    onItemClick?: (item: LibrarySDK.Item) => void
-    isItemDisabled?: (item: LibrarySDK.Item) => boolean
 }
 
-interface Props extends LibraryBrowserBaseProps {
-    className?: string
-    folderViewProps?: {
-        className?: string
-        headerClassName?: string
-    }
-    treeProps?: {
-        className?: string
-        headerClassName?: string
-    }
-}
-
-export const LibraryBrowser: React.FC<Props> = ({ folderViewProps, className, treeProps, cwd, setCwd, selectedWorkflowId, onItemClick, isItemDisabled, size }) => {
-    return (
-        <div className={"flex flex-row w-full gap-2 " + className}>
-            <LibraryTree
-                size={size}
-                cwd={cwd}
-                selectedWorkflowId={selectedWorkflowId}
-                setCwd={setCwd}
-                onItemClick={onItemClick}
-                isItemDisabled={isItemDisabled}
-                {...treeProps}
-            />
-            <FolderView
-                cwd={cwd}
-                setCwd={setCwd}
-                size={size}
-                onItemClick={onItemClick}
-                isItemDisabled={isItemDisabled}
-                {...folderViewProps}
-            />
-        </div>
-    )
+export const LibraryBrowser = {
+    Root,
+    Tree: Object.assign(TreeContent, {
+        Header: TreeHeader,
+        SearchInput: TreeSearchInput,
+    }),
+    View: Object.assign(ViewContent, {
+        Header: ViewHeader,
+        Breadcrumbs,
+        SearchInput: ViewSearchInput,
+        CreateBtn,
+        Skeleton: FolderViewSkeleton,
+    }),
 }

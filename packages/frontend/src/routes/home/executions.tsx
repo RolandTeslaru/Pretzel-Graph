@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { type Workflow } from '@pretzel-graph/shared/domain'
-import { ActivitySDK } from '@/SDKs/ActivitySDK/sdk'
 import ActivityKanban from '@/SDKs/ActivitySDK/ActivityKanban'
 import { ExecutionsTable } from '@/routes/workflow/-SDKs/ExecutionSDK/ui/ExecutionsTable'
 import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
@@ -10,11 +9,6 @@ import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 
 
 export const Route = createFileRoute('/home/executions')({
-    loader: async () => {
-        await ActivitySDK.fetchActivityBootstrap()
-
-        return null
-    },
     component: ExecutionsRoute,
 })
 

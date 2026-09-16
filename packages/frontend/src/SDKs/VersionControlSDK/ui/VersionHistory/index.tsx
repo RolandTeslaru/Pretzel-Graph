@@ -1,5 +1,4 @@
 import { cn } from "@/utils/styleUtils";
-import { QuerySDK } from "@pretzel-graph/standard-ui/SDKs/QuerySDK/sdk";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
 import { Badge, Button, ScrollArea, Spinner } from "@pretzel-graph/standard-ui/foundations";
@@ -34,18 +33,9 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
     const [workflowId, isDirty] = WorkbenchSDK.useDocument(d => [d.workflowId, d.isDirty]);
     const workflowUpdatedAt = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.updated_at);
 
-    const activePublication = VersionControlSDK.useStore(s => VersionControlSDK.selectors.getActive(s));
-
-    const versionsQuery = QuerySDK.useQuery(
-        ["version-control", "publications", workflowId],
-        async () => {
-            if (!workflowId) return { publications: [] };
-            return VersionControlSDK.actions.list(workflowId);
-        },
-        {
-            enabled: Boolean(workflowId),
-            staleTime: 30_000,
-        },
+    const [activePublication, [versionsQuery]] = VersionControlSDK.useWith(
+        (s) => s.selectors.getActive(s),
+        [VersionControlSDK.query.publications(workflowId)],
     );
 
     const publications = versionsQuery.data?.publications ?? [];

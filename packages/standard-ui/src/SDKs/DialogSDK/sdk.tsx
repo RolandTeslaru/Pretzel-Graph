@@ -257,10 +257,10 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-lg border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {sidebarRenderer()}
                     </div>
-                    <div className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-lg flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
                 </Dialog.Content>
@@ -292,13 +292,13 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + leftSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + leftSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {leftSidebarRenderer()}
                     </div>
                     <div className={"bg-card/80 border-y border-border backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
-                    <div className={"bg-card/50 rounded-r-2xl backdrop-blur-md border border-border min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + rightSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/50 rounded-r-2xl backdrop-blur-md border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + rightSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {rightSidebarRenderer()}
                     </div>
                 </Dialog.Content>
