@@ -4,7 +4,7 @@
  */
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { S2Engine } from "../S2/engine";
-import { S2Graph, Vertex } from "../S2/graph";
+import { Vertex } from "../S2/graph";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { S2Hooks } from "src/S2/types";
 import { AggexExecutionError } from "src/errors";
@@ -20,6 +20,7 @@ import { ErrorService } from "./error-service";
 import { SessionService } from "./session-service";
 import { System } from "@pretzel-graph/shared/system";
 import { frameworkFields } from "./framework-fields";
+import { ExecutionContext } from "../execution-context";
 
 
 export interface AggexHooks {
@@ -65,11 +66,10 @@ export class AggexEngine {
         routing:     new RoutingService(this),
         nodeIO:      new NodeIOService(this),
         errors:      new ErrorService(this),
-        session:     new SessionService(),
+        session:     new SessionService(this),
     };
 
-    /** @internal — accessed by engine services (RoutingService). */
-    public nodeRuntimeMap = new Map<Vertex.Id, { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }>();
+    public readonly ctx: ExecutionContext;
 
     private pausePromise: Promise<void> | null = null;
     private pauseResolve: (() => void) | null = null;
@@ -78,14 +78,9 @@ export class AggexEngine {
 
 
 
-    constructor(hooks: AggexHooks = {}) {
+    constructor({ hooks = {}, ...contextOptions }: AggexEngine.Options) {
         this.hooks = hooks;
-    }
-
-
-
-    public registerNode(vertexId: Vertex.Id | Workflow.Node.Id, wfNode: Workflow.Node.Raw, instance: RuntimeNode<Blueprint>): void {
-        this.nodeRuntimeMap.set(vertexId as Vertex.Id, { wfNode, instance });
+        this.ctx   = new ExecutionContext(this, contextOptions);
     }
 
 
@@ -96,34 +91,23 @@ export class AggexEngine {
 
 
 
-    public readonly instanceRegistryAPI = {
-
-        get:    (nodeId: Workflow.Node.Id): RuntimeNode<Blueprint> | undefined =>
-            this.nodeRuntimeMap.get(nodeId as unknown as Vertex.Id)?.instance,
-
-        getAll: (): RuntimeNode<Blueprint>[] =>
-            Array.from(this.nodeRuntimeMap.values()).map(e => e.instance),
-    }
-
-
-
     // Getters preserve the external contract (`engine.propagationAPI.*`, `engine.schedulerAPI.*`).
     public get propagationAPI() { return this.services.propagation; }
     public get schedulerAPI()   { return this.services.scheduler; }
 
 
 
-    public async run(ctx: AggexEngine.Execution.Context): Promise<AggexEngine.Execution.Result> {
+    public async run(): Promise<AggexEngine.Execution.Result> {
 
-        ctx.activeNodes.clear();
+        this.ctx.activeNodes.clear();
 
         const hooks: S2Hooks = {
-            onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(ctx, ...props),
-            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(ctx, ...props),
-            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(ctx, ...props),
-            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(ctx, ...props),
-            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(ctx, ...props),
-            canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(ctx, ...props),
+            onVertexExecute:   (...props: Parameters<S2Hooks["onVertexExecute"]>)   => this.onNodeExecuted(...props),
+            onVertexFired:     (...props: Parameters<S2Hooks["onVertexFired"]>)     => this.onNodeFired(...props),
+            onVertexCompleted: (...props: Parameters<S2Hooks["onVertexCompleted"]>) => this.onNodeCompleted(...props),
+            onVertexWaiting:   (...props: Parameters<S2Hooks["onVertexWaiting"]>)   => this.onNodeWaiting(...props),
+            onVertexError:     (...props: Parameters<S2Hooks["onVertexError"]>)     => this.onNodeError(...props),
+            canVertexRun:      (...props: Parameters<S2Hooks["canVertexRun"]>)      => this.canNodeRun(...props),
         } as const
 
         const start = performance.now();
@@ -131,31 +115,31 @@ export class AggexEngine {
         try {
             return await Promise.race<AggexEngine.Execution.Result>([
 
-                this.s2Engine.ignite(ctx.compiledGraph, hooks).then(
+                this.s2Engine.ignite(this.ctx.compiledGraph, hooks).then(
                     () => ({
                         status: "completed" as const,
                         duration: (performance.now() - start) / 1000
                     })
                 ),
 
-                this.createRejectionPromise(ctx, start)
+                this.createRejectionPromise(start)
             ])
         }
         finally {
-            ctx.proxyAPI.destroyAll();
+            this.ctx.proxyAPI.destroyAll();
         }
     }
 
 
 
-    private createRejectionPromise(ctx: AggexEngine.Execution.Context, start: number){
+    private createRejectionPromise(start: number){
 
         return new Promise<AggexEngine.Execution.Result>((resolve, reject) => {
 
-            ctx.abortAPI.signal.addEventListener("abort", () => {
+            this.ctx.abortAPI.signal.addEventListener("abort", () => {
 
                 // An intentional stop, not a termination.
-                const stoppedAtTarget = ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
+                const stoppedAtTarget = this.ctx.abortAPI.signal.reason === AggexEngine.STOP_AT_TARGET_REASON;
 
                 resolve({
                     status: stoppedAtTarget ? "completed" as const : "terminated" as const,
@@ -193,12 +177,12 @@ export class AggexEngine {
 
 
 
-    private async awaitPause(ctx: AggexEngine.Execution.Context) {
+    private async awaitPause() {
 
         if(!this.pausePromise)
             return
 
-        if(ctx.activeNodes.size === 0)
+        if(this.ctx.activeNodes.size === 0)
             this.hooks.onPause?.();
 
         await this.pausePromise;
@@ -207,31 +191,29 @@ export class AggexEngine {
 
 
     private onNodeFired(
-        ctx:    AggexEngine.Execution.Context,
         nodeId: Vertex.Id,
     ): void {
 
-        const entry = this.nodeRuntimeMap.get(nodeId);
+        const entry = this.ctx.nodeRuntimeMap.get(nodeId);
 
         if (!entry)
             return;
 
         this.flightRecorder?.onNodeFired(entry.wfNode.id);
 
-        ctx.activeNodes.add(nodeId);
+        this.ctx.activeNodes.add(nodeId);
 
-        this.services.session.onNodeFired(ctx, entry);
+        this.services.session.onNodeFired(entry);
     }
 
 
 
     private onNodeExecuted = async (
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         signals:  Set<Workflow.Node.Id | Vertex.Id>
     ): Promise<Set<Vertex.Id> | void> => {
 
-        const entry = this.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
 
         if (!entry)
             return;
@@ -240,12 +222,12 @@ export class AggexEngine {
         const nodeInstance = entry.instance;
 
         // An upstream node failed with `propagate` — catch or re-propagate instead of running.
-        const intercepted = this.services.errors.interceptIncoming(ctx, vertexId, nodeInstance);
+        const intercepted = this.services.errors.interceptIncoming(vertexId, nodeInstance);
 
         if (intercepted)
             return intercepted;
 
-        const allDependencies = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
+        const allDependencies = this.ctx.compiledGraph.dependenciesMap.get(vertexId)!;
         const dataDependency  = frameworkFields(entry.instance)["dataDependency" as Field.Id];
 
         let result;
@@ -253,7 +235,6 @@ export class AggexEngine {
 
         try {
             const inputs = this.services.nodeIO.getIncomingData(
-                                ctx,
                                 wfNode.id,
                                 dataDependency === "AND" ? allDependencies : signals
                             );
@@ -270,7 +251,7 @@ export class AggexEngine {
                 inputPorts:     Object.keys(inputs),
             });
 
-            this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields, ctx);
+            this.flightRecorder?.onNodeExecuted(wfNode.id, signals, allDependencies, inputs, fields);
 
             const isTool = frameworkFields(nodeInstance)["isConvertedToTool" as Field.Id] === true;
 
@@ -279,17 +260,17 @@ export class AggexEngine {
             else
                 result = await nodeInstance.run(inputs, fields);
 
-            projectedResult = this.services.nodeIO.projectOutputs(ctx, result, wfNode);
+            projectedResult = this.services.nodeIO.projectOutputs(result, wfNode);
         }
         catch (err) {
             // Input resolution, expression eval, execution and projection share one failure boundary.
-            return this.services.errors.handle(ctx, vertexId, err);
+            return this.services.errors.handle(vertexId, err);
         }
 
-        this.services.session.onNodeExecuted(ctx, wfNode.id, result, projectedResult);
+        this.services.session.onNodeExecuted(wfNode.id, result, projectedResult);
 
         switch (nodeInstance.getPropagationStrategy()) {
-            case "router": return this.services.routing.resolveRouterSignals(ctx, wfNode.id, result)
+            case "router": return this.services.routing.resolveRouterSignals(wfNode.id, result)
             case "none":   return new Set<Vertex.Id>()   // empty set → fireVertexDependents signals nobody
             case "all":    return                        // void → fireVertexDependents signals all
         }
@@ -298,45 +279,43 @@ export class AggexEngine {
 
 
     private async onNodeCompleted(
-        ctx:               AggexEngine.Execution.Context,
         vertexId:          Vertex.Id,
         resolvedOutSignals:Set<Vertex.Id> | void,
     ) {
-        ctx.activeNodes.delete(vertexId);
+        this.ctx.activeNodes.delete(vertexId);
 
-        const entry = this.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
 
         if (!entry)
             return
 
         // Errored nodes already recorded "failed" and handled their own propagation — don't
         // overwrite that. S2 still drives any returned signal set after this.
-        if (ctx.session.node_status[entry.wfNode.id]?.status === "failed") {
-            await this.awaitPause(ctx);
+        if (this.ctx.session.node_status[entry.wfNode.id]?.status === "failed") {
+            await this.awaitPause();
             return;
         }
 
-        this.services.session.onNodeCompleted(ctx, entry, resolvedOutSignals);
+        this.services.session.onNodeCompleted(entry, resolvedOutSignals);
 
-        this.flightRecorder?.onNodeCompleted(entry.wfNode.id, ctx);
+        this.flightRecorder?.onNodeCompleted(entry.wfNode.id);
 
         // The target ran and its output is persisted + emitted — stop the rest of the workflow.
-        if (ctx.stopAtNodeId === entry.wfNode.id)
-            ctx.abortAPI.abort(AggexEngine.STOP_AT_TARGET_REASON);
+        if (this.ctx.stopAtNodeId === entry.wfNode.id)
+            this.ctx.abortAPI.abort(AggexEngine.STOP_AT_TARGET_REASON);
 
-        await this.awaitPause(ctx);
+        await this.awaitPause();
     }
 
 
 
     private onNodeWaiting(
-        ctx:                     AggexEngine.Execution.Context,
         vertexId:                Vertex.Id,
         arrivedSignals:          Set<Vertex.Id>,
         dependencyResolutionMap: Record<Vertex.Id, boolean>,
         _totalDeps:              number,
     ) {
-        const entry = this.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
 
         if (!entry)
             return
@@ -356,9 +335,9 @@ export class AggexEngine {
             resolution: nodeDepMap,
         });
 
-        this.services.session.onNodeWaiting(ctx, wfNode.id);
+        this.services.session.onNodeWaiting(wfNode.id);
 
-        const partialInputs = this.services.nodeIO.getIncomingData(ctx, wfNode.id, arrivedSignals);
+        const partialInputs = this.services.nodeIO.getIncomingData(wfNode.id, arrivedSignals);
 
         let partialFields;
 
@@ -366,7 +345,7 @@ export class AggexEngine {
             partialFields = instance.evaluateFieldValues(partialInputs);
         }
         catch (err) {
-            this.services.errors.handle(ctx, vertexId, err);  // OOM → throws (terminate); else recorded
+            this.services.errors.handle(vertexId, err);  // OOM → throws (terminate); else recorded
             return;
         }
 
@@ -378,7 +357,6 @@ export class AggexEngine {
     // Only reached when a throw escapes to S2 (`terminate` strategy, or a terminal/cyclic
     // UncaughtRuntimeNodeError). The run is already rejecting; just record it.
     private onNodeError(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         error:    unknown,
     ) {
@@ -395,35 +373,38 @@ export class AggexEngine {
                 error instanceof Error ? error.message : String(error),
             )
 
-        this.services.errors.record(ctx, vertexId as unknown as Workflow.Node.Id, aggexError.toJSON());
+        this.services.errors.record(vertexId as unknown as Workflow.Node.Id, aggexError.toJSON());
     }
 
 
 
     private canNodeRun(
-        ctx:               AggexEngine.Execution.Context,
         vertexId:          Vertex.Id,
         receivedSignals:   Set<Vertex.Id>,
         s2EngineAssesment: boolean
     ): boolean {
 
-        const entry = this.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
 
         if (!entry)
             return true;
 
         // Fail-fast: an error envelope bypasses every gate so the node fires immediately rather
         // than waiting on sibling inputs that will never arrive.
-        if (this.services.errors.findIncomingEnvelope(ctx, vertexId))
+        if (this.services.errors.findIncomingEnvelope(vertexId))
             return true;
 
-        return this.services.routing.canRunByDependencies(ctx, vertexId);
+        return this.services.routing.canRunByDependencies(vertexId);
     }
 }
 
 
 
 export namespace AggexEngine {
+
+    export interface Options extends ExecutionContext.Options {
+        hooks?: AggexHooks;
+    }
 
     export namespace Execution {
 
@@ -440,18 +421,5 @@ export namespace AggexEngine {
             path:  Workflow.Node.Id[];
         }
 
-        export interface Context extends RuntimeNode.ExecutionContext {
-            compiledGraph: S2Graph,
-            activeNodes:   Set<Workflow.Node.Id | Vertex.Id>;
-
-            /** Out-of-band error propagation channel, keyed by the edge the error travels. */
-            errorChannel:  Map<Workflow.Edge.Id, ErrorEnvelope>;
-
-            /** "Execute up until this point": once this node completes, the run aborts. The full
-             *  graph still compiles and runs normally. Undefined on a normal run. */
-            stopAtNodeId?: Workflow.Node.Id;
-        }
     }
-
-    export type ExecutionContext = Execution.Context;
 }

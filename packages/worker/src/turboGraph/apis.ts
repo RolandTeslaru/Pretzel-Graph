@@ -8,104 +8,80 @@ import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 import { AggexEngine } from "src/engine";
 
 import { AggexCompilerError } from "../errors";
-import { AirlockService } from "../airlock";
 import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 import { agentToolBridgeService } from "../tool-bridge/service";
 import { lifecycleService } from "./lifecycle";
-
-type ExecutionAPIs = Pick<
-    RuntimeNode.ExecutionContext,
-    | "portAPI"
-    | "propagationAPI"
-    | "instanceRegistryAPI"
-    | "workflowQueryAPI"
-    | "schedulerAPI"
-    | "subWorkflowAPI"
-    | "dependencyAPI"
-    | "credentialsAPI"
-    | "catalogueAPI"
-    | "abortAPI"
-    | "realtimeAPI"
-    | "updateSession"
-    | "airlockAPI"
-    | "httpAPI"
-    | "proxyAPI"
-    | "agentToolBridgeAPI"
-    | "internalAPI"
-    | "consultationAPI"
-    | "lifecycleAPI"
->;
+import { ExecutionAPIs, ExecutionContext } from "../execution-context";
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
 export function createExecutionAPIs(
     engine:              AggexEngine,
-    airlock:             AirlockService,
-    ctxRef:              { current: AggexEngine.Execution.Context },
+    executionCtx:        ExecutionContext,
     execution:           Execution,
-    workflowId:          Workflow.Id,
-    workflowData:        Workflow.Data,
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RuntimeNode.RealtimeScope,
     internalAPI:         HTTP.Client,
 ): ExecutionAPIs {
+    const { airlock, workflowId, workflowData } = executionCtx;
+
     const portAPI = {
-        write: (nodeId, outputId, value) => engine.services.nodeIO.writePort(ctxRef.current, nodeId, outputId, value),
+        write: (nodeId, outputId, value) => engine.services.nodeIO.writePort(nodeId, outputId, value),
     } satisfies RuntimeNode.ExecutionContext["portAPI"];
 
 
 
 
     const propagationAPI = {
-        emitPort: (nodeId, outputId) => engine.propagationAPI.emitPort(ctxRef.current, nodeId, outputId),
-        emitNode: (nodeId)           => engine.propagationAPI.emitNode(ctxRef.current, nodeId),
+        emitPort: (nodeId, outputId) => engine.propagationAPI.emitPort(nodeId, outputId),
+        emitNode: (nodeId)           => engine.propagationAPI.emitNode(nodeId),
     } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
 
 
 
 
     const instanceRegistryAPI = {
-        get:    (nodeId) => engine.instanceRegistryAPI.get(nodeId),
-        getAll: ()       => engine.instanceRegistryAPI.getAll(),
+        get:    (nodeId) => executionCtx.nodeRuntimeMap.get(nodeId)?.instance,
+        getAll: ()       => Array.from(executionCtx.nodeRuntimeMap.values()).map(({ instance }) => instance),
     } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
 
 
 
 
     const workflowQueryAPI = {
-        getNode:                     (nodeId)         => ctxRef.current.workflowData.nodes[nodeId],
-        getNodeOutput:               (nodeId, portId) => ctxRef.current.session.node_output_instances[nodeId]?.[portId],
-        getInputs:                   (nodeId)         => ctxRef.current.workflowCache.resolvedShape[nodeId].inputs,
-        getOutputs:                  (nodeId)         => ctxRef.current.workflowCache.resolvedShape[nodeId].outputs,
-        getOutputPort:               (nodeId, portId) => ctxRef.current.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
-        getInputPort:                (nodeId, portId) => ctxRef.current.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
-        getFields:                   (nodeId)         => ctxRef.current.workflowCache.resolvedShape[nodeId].fields,
-        getStaticValues:             (nodeId)         => ctxRef.current.workflowData.staticValues[nodeId] ?? {},
-        getExpressionTaggedFieldIds: (nodeId)         => ctxRef.current.workflowData.fieldExpressions?.[nodeId] ?? {},
+        getNode:                     (nodeId)         => executionCtx.workflowData.nodes[nodeId],
+        getNodeOutput:               (nodeId, portId) => executionCtx.session.node_output_instances[nodeId]?.[portId],
+        getInputs:                   (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].inputs,
+        getOutputs:                  (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].outputs,
+        getOutputPort:               (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
+        getInputPort:                (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
+        getFields:                   (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].fields,
+        getStaticValues:             (nodeId)         => executionCtx.workflowData.staticValues[nodeId] ?? {},
+        getExpressionTaggedFieldIds: (nodeId)         => executionCtx.workflowData.fieldExpressions?.[nodeId] ?? {},
 
         getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
-            Object.values(ctxRef.current.workflowData.nodes)
+            Object.values(executionCtx.workflowData.nodes)
                 .filter(n => n.blueprintId === blueprintId)
                 .map(n => ({
                     node:   n,
                     fields: mapFieldValues<T_Blueprint>(
-                        ctxRef.current.catalogueAPI.getBlueprint(n.id).fields,
-                        ctxRef.current.workflowData.staticValues[n.id] ?? {},
+                        executionCtx.catalogueAPI.getBlueprint(n.id).fields,
+                        executionCtx.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
-        getNodeDependency: (nodeId) => Workbench.Document.selectors.node.dependency.getShapeValue({ data: ctxRef.current.workflowData }, nodeId),
+        getNodeDependency: (nodeId) => Workbench.Document.selectors.node.dependency.getShapeValue({ data: executionCtx.workflowData }, nodeId),
     } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
 
 
 
 
     const schedulerAPI = {
-        fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(ctxRef.current, nodeId, signals),
-        signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(ctxRef.current, nodeId, fromNodeId),
-        removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(ctxRef.current, nodeId, fromNodeId),
-        clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(ctxRef.current, nodeId),
-        scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(ctxRef.current, nodeId),
+        fireNode:      (nodeId, signals)    => engine.schedulerAPI.fireNode(nodeId, signals),
+        signalNode:    (nodeId, fromNodeId) => engine.schedulerAPI.signalNode(nodeId, fromNodeId),
+        removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(nodeId, fromNodeId),
+        clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(nodeId),
+        scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(nodeId),
     } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
 
 
@@ -120,16 +96,35 @@ export function createExecutionAPIs(
 
     const subWorkflowAPI = {
         createEnv: () => {
-            const subEngine   = new AggexEngine();
             const subCompiler = new TurboGraph();
+            let subEngine: AggexEngine | null = null;
 
             return {
                 // Same airlock ref → shared isolate (same execution); same internalAPI → the sub-workflow
                 // reuses the parent execution id, so the parent token is the right credential for it.
-                compile: (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) =>
-                    subCompiler.compile(workflowId, workflowData, execution, realtime, subEngine, airlock, credentialInstances, internalAPI, compilationCtx, enclosingNodeAPI),
+                compile: async (workflowId, workflowData, execution, compilationCtx, enclosingNodeAPI) => {
+                    subEngine = new AggexEngine({
+                        execution,
+                        workflowId,
+                        workflowData,
+                        airlock,
+                        credentialInstances,
+                        realtime,
+                        internalAPI,
+                        enclosingNodeAPI,
+                    });
 
-                run: (ctx: unknown) => subEngine.run(ctx as AggexEngine.Execution.Context),
+                    await subCompiler.compile(subEngine.ctx, compilationCtx);
+
+                    return subEngine.ctx;
+                },
+
+                run: (_ctx: unknown) => {
+                    if (!subEngine)
+                        throw new Error("Sub-workflow must compile before it runs");
+
+                    return subEngine.run();
+                },
             };
         },
     } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];

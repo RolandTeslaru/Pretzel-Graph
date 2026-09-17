@@ -8,6 +8,7 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { System } from "@pretzel-graph/shared/system";
 import type { AggexEngine } from "./index";
+import { ExecutionContext } from "../execution-context";
 
 type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> };
 
@@ -18,6 +19,9 @@ type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }
  * is a shared primitive the other services emit through.
  */
 export class SessionService {
+    constructor(private engine: AggexEngine) {}
+
+    private get ctx(): ExecutionContext { return this.engine.ctx; }
 
     /**
      * Mutates edge states in the session and returns the updated entries for event emission.
@@ -26,12 +30,11 @@ export class SessionService {
      * @param onUpdate  — optional callback applied to each edge state after status is set (e.g. runCount increment)
      */
     public createEdgeStateUpdate(
-        ctx:       AggexEngine.Execution.Context,
         edgeIds:   Record<string, Workflow.Edge.Id>,
         status:    Execution.Session.EdgeState["status"],
         onUpdate?: (state: Execution.Session.EdgeState) => void,
     ): Execution.Session["edge_state"] {
-        ctx.updateSession(d => {
+        this.ctx.updateSession(d => {
             if (!d.edge_state)
                 d.edge_state = {};
 
@@ -48,7 +51,7 @@ export class SessionService {
 
         const update: Execution.Session["edge_state"] = {};
         for (const edgeId of Object.values(edgeIds))
-            update[edgeId] = ctx.session.edge_state[edgeId];
+            update[edgeId] = this.ctx.session.edge_state[edgeId];
 
         return update;
     }
@@ -59,19 +62,19 @@ export class SessionService {
 
     /** Node fired: incoming edges → completed, outgoing → preparing (strategy "all" only),
      *  node → running. Emits `node:started`. */
-    public onNodeFired(ctx: AggexEngine.Execution.Context, entry: NodeEntry): void {
-        const { workflowCache } = ctx;
+    public onNodeFired(entry: NodeEntry): void {
+        const { workflowCache } = this.ctx;
         const edgeStateUpdate: Execution.Session["edge_state"] = {};
 
         const incomingEdges = workflowCache.incomingEdgesMap[entry.wfNode.id];
         if (incomingEdges)
-            Object.assign(edgeStateUpdate, this.createEdgeStateUpdate(ctx, incomingEdges, "completed"));
+            Object.assign(edgeStateUpdate, this.createEdgeStateUpdate(incomingEdges, "completed"));
 
         // Skip outgoing for "router" (branch unknown yet) and "none" (node manages its own).
         if (entry.instance.getPropagationStrategy() === "all") {
             const outgoingEdges = workflowCache.outgoingEdgesMap[entry.wfNode.id];
             if (outgoingEdges)
-                Object.assign(edgeStateUpdate, this.createEdgeStateUpdate(ctx, outgoingEdges, "preparing"));
+                Object.assign(edgeStateUpdate, this.createEdgeStateUpdate(outgoingEdges, "preparing"));
         }
 
         const nodeStatus: Execution.Session.NodeStatus = {
@@ -80,9 +83,9 @@ export class SessionService {
         };
         const nodeStatusUpdate = { [entry.wfNode.id]: nodeStatus };
 
-        ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
+        this.ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("node:started", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("node:started", {
             nodeId:       entry.wfNode.id,
             sessionPatch: {
                 upsert: {
@@ -97,12 +100,11 @@ export class SessionService {
     /** Node produced output: merge instances + projections into the session. No emit
      *  (the projections are surfaced on `node:completed`). */
     public onNodeExecuted(
-        ctx:       AggexEngine.Execution.Context,
         nodeId:    Workflow.Node.Id,
         result:    Record<string, any>,
         projected: Record<Port.Output.Id, Projection>,
     ): void {
-        ctx.updateSession(d => {
+        this.ctx.updateSession(d => {
             d.node_output_instances[nodeId] = {
                 ...(d.node_output_instances[nodeId] ?? {}),
                 ...result,
@@ -118,11 +120,10 @@ export class SessionService {
     /** Node completed: outgoing edges → waiting (+runCount; router → taken branches only,
      *  "none" → skip), node → completed. Emits `node:completed` with projected output. */
     public onNodeCompleted(
-        ctx:                AggexEngine.Execution.Context,
         entry:              NodeEntry,
         resolvedOutSignals: Set<Vertex.Id> | void,
     ): void {
-        const { session, workflowCache } = ctx;
+        const { session, workflowCache } = this.ctx;
 
         const allOutgoingEdges = workflowCache.outgoingEdgesMap[entry.wfNode.id];
         let edgeStateUpdate: Execution.Session["edge_state"] = {};
@@ -136,11 +137,11 @@ export class SessionService {
                     if (resolvedOutSignals.has(targetId as unknown as Vertex.Id))
                         takenEdges[targetId] = edgeId;
                 }
-                edgeStateUpdate = this.createEdgeStateUpdate(ctx, takenEdges, "waiting", s => { s.runCount += 1; });
+                edgeStateUpdate = this.createEdgeStateUpdate(takenEdges, "waiting", s => { s.runCount += 1; });
             } else if (strategy === "none") {
                 // Node managed its own edge state via propagationAPI — nothing to do
             } else {
-                edgeStateUpdate = this.createEdgeStateUpdate(ctx, allOutgoingEdges, "waiting", s => { s.runCount += 1; });
+                edgeStateUpdate = this.createEdgeStateUpdate(allOutgoingEdges, "waiting", s => { s.runCount += 1; });
             }
         }
 
@@ -153,12 +154,12 @@ export class SessionService {
         const projectedOutput = session.node_output_projections[entry.wfNode.id];
         const nodeStatusUpdate = { [entry.wfNode.id]: nodeStatus };
 
-        ctx.updateSession(d => {
+        this.ctx.updateSession(d => {
             d.edge_state = { ...d.edge_state, ...edgeStateUpdate };
             Object.assign(d.node_status, nodeStatusUpdate);
         });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("node:completed", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("node:completed", {
             nodeId:       entry.wfNode.id,
             output:       projectedOutput,
             sessionPatch: {
@@ -180,17 +181,17 @@ export class SessionService {
 
 
     /** Node waiting on dependencies: node → waiting. Emits `node:waiting`. */
-    public onNodeWaiting(ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id): void {
-        const existing = ctx.session.node_status[nodeId];
+    public onNodeWaiting(nodeId: Workflow.Node.Id): void {
+        const existing = this.ctx.session.node_status[nodeId];
         const nodeStatus: Execution.Session.NodeStatus = {
             status:     "waiting",
             started_at: existing?.started_at,
         };
         const nodeStatusUpdate = { [nodeId]: nodeStatus };
 
-        ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
+        this.ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("node:waiting", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("node:waiting", {
             nodeId:       nodeId,
             sessionPatch: {
                 upsert: { node_status: nodeStatusUpdate },
@@ -201,11 +202,10 @@ export class SessionService {
 
     /** Node failed: node → failed (carries the error). Emits `node:error`. */
     public onNodeFailed(
-        ctx:    AggexEngine.Execution.Context,
         nodeId: Workflow.Node.Id,
         error:  SystemError.Serialized,
     ): void {
-        const existing = ctx.session.node_status[nodeId];
+        const existing = this.ctx.session.node_status[nodeId];
         const nodeStatus: Execution.Session.NodeStatus = {
             status:       "failed",
             started_at:   existing?.started_at,
@@ -214,9 +214,9 @@ export class SessionService {
         };
         const nodeStatusUpdate = { [nodeId]: nodeStatus };
 
-        ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
+        this.ctx.updateSession(d => { Object.assign(d.node_status, nodeStatusUpdate); });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("node:error", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("node:error", {
             nodeId:       nodeId,
             error:        error,
             sessionPatch: {

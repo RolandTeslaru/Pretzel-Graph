@@ -11,6 +11,7 @@ import { AirlockTerminationError } from "src/airlock";
 import { System } from "@pretzel-graph/shared/system";
 import type { AggexEngine } from "./index";
 import { frameworkFields } from "./framework-fields";
+import { ExecutionContext } from "../execution-context";
 
 /**
  * Error handling across the graph: records failures, applies each node's
@@ -20,6 +21,8 @@ import { frameworkFields } from "./framework-fields";
 export class ErrorService {
     constructor(private engine: AggexEngine) {}
 
+    private get ctx(): ExecutionContext { return this.engine.ctx; }
+
     /**
      * A node's own execution threw. Branch on its `onErrorStrategy` field:
      *   - `terminate` (default) → re-throw so S2 rejects the whole run (`onNodeError` records it).
@@ -27,11 +30,10 @@ export class ErrorService {
      *   - `propagate`           → record + emit, then send an error envelope down every outgoing edge.
      */
     public handle(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         error:    unknown,
     ): Set<Vertex.Id> | void {
-        const entry = this.engine.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
         const nodeId = vertexId as unknown as Workflow.Node.Id;
 
         const aggexError = error instanceof SystemError
@@ -60,7 +62,7 @@ export class ErrorService {
                     nodeId,
                     error: aggexError.message,
                 });
-                this.record(ctx, nodeId, aggexError.toJSON());
+                this.record(nodeId, aggexError.toJSON());
                 return new Set<Vertex.Id>();   // fire nobody
             default:
             case "propagate":
@@ -69,7 +71,7 @@ export class ErrorService {
                     error: aggexError.toJSON(),
                     path:  [],
                 };
-                return this.propagate(ctx, vertexId, envelope);
+                return this.propagate(vertexId, envelope);
         }
     }
 
@@ -81,32 +83,30 @@ export class ErrorService {
      * `undefined` when there is no envelope (caller proceeds normally).
      */
     public interceptIncoming(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         instance: RuntimeNode<Blueprint>,
     ): Set<Vertex.Id> | undefined {
-        const incomingEnvelope = this.findIncomingEnvelope(ctx, vertexId);
+        const incomingEnvelope = this.findIncomingEnvelope(vertexId);
         if (!incomingEnvelope) return undefined;
 
-        this.consumeIncomingEnvelopes(ctx, vertexId);   // delivered — clear from channel
+        this.consumeIncomingEnvelopes(vertexId);   // delivered — clear from channel
 
         if (instance.CATCHES_ERROR === true)
-            return this.materializeCaught(ctx, vertexId, incomingEnvelope);
+            return this.materializeCaught(vertexId, incomingEnvelope);
 
-        return this.propagate(ctx, vertexId, incomingEnvelope);
+        return this.propagate(vertexId, incomingEnvelope);
     }
 
 
     /** First error envelope sitting on any of this node's incoming edges, if any. */
     public findIncomingEnvelope(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
     ): AggexEngine.Execution.ErrorEnvelope | undefined {
-        const incoming = ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
+        const incoming = this.ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
         if (!incoming) return undefined;
 
         for (const edgeId of Object.values(incoming)) {
-            const envelope = ctx.errorChannel.get(edgeId);
+            const envelope = this.ctx.errorChannel.get(edgeId);
             if (envelope) return envelope;
         }
         return undefined;
@@ -117,12 +117,11 @@ export class ErrorService {
      *  Shared by the engine's S2 error hook (terminate) and the inline strategy
      *  handler (do_nothing/propagate). */
     public record(
-        ctx:    AggexEngine.Execution.Context,
         nodeId: Workflow.Node.Id,
         error:  SystemError.Serialized,
     ) {
-        this.engine.flightRecorder?.onNodeFailed(nodeId, ctx);
-        this.engine.services.session.onNodeFailed(ctx, nodeId, error);
+        this.engine.flightRecorder?.onNodeFailed(nodeId);
+        this.engine.services.session.onNodeFailed(nodeId, error);
     }
 
 
@@ -137,7 +136,6 @@ export class ErrorService {
      *   - this node has no wired outgoing edges → `UncaughtRuntimeNodeError`
      */
     private propagate(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         envelope: AggexEngine.Execution.ErrorEnvelope,
     ): Set<Vertex.Id> {
@@ -150,7 +148,7 @@ export class ErrorService {
                 [...envelope.path, nodeId] as unknown as string[],
             );
 
-        const outgoing = ctx.workflowCache.outgoingEdgesMap[nodeId];
+        const outgoing = this.ctx.workflowCache.outgoingEdgesMap[nodeId];
         const wiredEdgeIds = outgoing ? Object.values(outgoing) : [];
 
         // Terminal: nowhere left to forward → the error was never caught.
@@ -161,7 +159,7 @@ export class ErrorService {
             );
 
         // This node is now carrying the error.
-        this.record(ctx, nodeId, envelope.error);
+        this.record(nodeId, envelope.error);
 
         const nextEnvelope: AggexEngine.Execution.ErrorEnvelope = {
             ...envelope,
@@ -172,18 +170,18 @@ export class ErrorService {
         const targets = new Set<Vertex.Id>();
 
         for (const edgeId of wiredEdgeIds) {
-            ctx.errorChannel.set(edgeId, nextEnvelope);
+            this.ctx.errorChannel.set(edgeId, nextEnvelope);
             edgeIdMap[edgeId] = edgeId;
-            const edge = ctx.workflowCache.edges[edgeId];
+            const edge = this.ctx.workflowCache.edges[edgeId];
             if (edge)
                 targets.add(edge.target.nodeId as unknown as Vertex.Id);
         }
 
         const edgeStateUpdate = this.engine.services.session.createEdgeStateUpdate(
-            ctx, edgeIdMap, "waiting", s => { s.runCount += 1; },
+            edgeIdMap, "waiting", s => { s.runCount += 1; },
         );
 
-        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: { upsert: { edge_state: edgeStateUpdate } },
         }));
 
@@ -198,28 +196,26 @@ export class ErrorService {
      * stops here. The node completes normally (it succeeded at catching).
      */
     private materializeCaught(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
         envelope: AggexEngine.Execution.ErrorEnvelope,
     ): Set<Vertex.Id> {
         const nodeId = vertexId as unknown as Workflow.Node.Id;
         const onErrorPort = "onError" as Port.Output.Id;
 
-        this.engine.services.nodeIO.writePort(ctx, nodeId, onErrorPort, envelope.error);
+        this.engine.services.nodeIO.writePort(nodeId, onErrorPort, envelope.error);
 
-        return this.engine.services.routing.resolveRouterSignals(ctx, nodeId, { [onErrorPort]: envelope.error });
+        return this.engine.services.routing.resolveRouterSignals(nodeId, { [onErrorPort]: envelope.error });
     }
 
 
     /** Remove delivered envelopes from this node's incoming edges. */
     private consumeIncomingEnvelopes(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
     ): void {
-        const incoming = ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
+        const incoming = this.ctx.workflowCache.inputEdgesByPort[vertexId as unknown as Workflow.Node.Id];
         if (!incoming) return;
 
         for (const edgeId of Object.values(incoming))
-            ctx.errorChannel.delete(edgeId);
+            this.ctx.errorChannel.delete(edgeId);
     }
 }

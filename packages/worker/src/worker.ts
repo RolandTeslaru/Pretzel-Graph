@@ -43,8 +43,7 @@ export class AggexWorkerImpl {
 
     private compiler = new TurboGraph();
 
-    private runningEnginesMap           = new Map<Execution.Id, AggexEngine>();
-    private runningExecutionContextsMap = new Map<Execution.Id, AggexEngine.Execution.Context>()
+    private runningExecutions = new Map<Execution.Id, AggexEngine>();
 
     // Recording cache only; publishing goes through the realtime scope.
     private redisPub    = new IORedis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null })
@@ -107,64 +106,70 @@ export class AggexWorkerImpl {
             this.pauseTimeoutResetters.delete(execution.id);
         };
 
+        // One isolate per execution; disposed in `finally`.
+        const airlock = new AirlockService();
+        const origin  = performance.now();
+
+        const onPauseTimeout = () => {
+            console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
+            engine.ctx.abortAPI.abort()
+            engine.resume();
+        };
+
+        // Not from httpClientFactory: that would route the token through a node proxy.
+        const internalAPI = createInternalClient(executionToken);
+
+        const aggexHooks: AggexHooks = {
+            onPause: () => {
+                startLockExtension();
+                startPauseTimeout(onPauseTimeout);
+                this.pauseTimeoutResetters.set(executionId, () => startPauseTimeout(onPauseTimeout));
+                scope.emit(Execution.Event.create("lifecycle:paused", {
+                    session: engine.ctx.session,
+                }));
+            },
+            onResume: () => {
+                stopLockExtension();
+                scope.emit(Execution.Event.create("lifecycle:resumed", {
+                    session: engine.ctx.session,
+                }));
+            },
+        };
+
+        const engine = new AggexEngine({
+            hooks: aggexHooks,
+            execution,
+            workflowId,
+            workflowData,
+            airlock,
+            credentialInstances,
+            realtime: scope,
+            internalAPI,
+        });
+
+        const executionCtx = engine.ctx;
+
+        const recorder = new FlightRecorderService(executionCtx, origin);
+        if(igniter.record)
+            engine.attachFlightRecorder(recorder);
+
+        this.runningExecutions.set(executionId, engine);
+
         scope.emit(Execution.Event.create("lifecycle:started"));
 
         await Execution.API.update(AxiosService.api, { executionId, status: 'running' }).catch(() => {});
 
-        let recorder: FlightRecorderService | null = null;
-        // One isolate per execution; disposed in `finally`.
-        const airlock = new AirlockService();
-        const origin = performance.now();
-
         try {
-            let executionCtx!: AggexEngine.Execution.Context;
-            let engine!: AggexEngine;
+            await this.compiler.compile(executionCtx);
 
-            const onPauseTimeout = () => {
-                console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
-                executionCtx.abortAPI.abort()
-                engine.resume();
-            };
-
-            const aggexHooks: AggexHooks = {
-                onPause: () => {
-                    startLockExtension();
-                    startPauseTimeout(onPauseTimeout);
-                    this.pauseTimeoutResetters.set(executionId, () => startPauseTimeout(onPauseTimeout));
-                    scope.emit(Execution.Event.create("lifecycle:paused", {
-                        session: executionCtx.session,
-                    }));
-                },
-                onResume: () => {
-                    stopLockExtension();
-                    scope.emit(Execution.Event.create("lifecycle:resumed", {
-                        session: executionCtx.session,
-                    }));
-                },
-            };
-
-            engine = new AggexEngine(aggexHooks);
-            this.runningEnginesMap.set(executionId, engine);
-
-            recorder = new FlightRecorderService(executionId, workflowId, workflowData, origin);
-            if(igniter.record)
-                engine.attachFlightRecorder(recorder);
-
-            // Not from httpClientFactory: that would route the token through a node proxy.
-            const internalAPI = createInternalClient(executionToken);
-
-            executionCtx = await this.compiler.compile(workflowId, workflowData, execution, scope, engine, airlock, credentialInstances, internalAPI);
-            
-            this.runningExecutionContextsMap.set(executionId, executionCtx);
-
-            const result = await engine.run(executionCtx);
+            const result = await engine.run();
 
             const session = executionCtx.session;
             const status = result.status === 'terminated' ? 'terminated' : 'completed';
 
             // Holders finish what they hold before the outcome is reported.
             await lifecycleService.runEnding(executionId, status);
-            const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
+            const recording = igniter.record ? recorder.getRecording() : null;
             const duration = performance.now() - origin;
 
             await Execution.API.update(AxiosService.api, { executionId, status, duration, session, recording });
@@ -190,11 +195,10 @@ export class AggexWorkerImpl {
 
             console.error("Error during execution of job", execution.id, systemError.message, systemError.detail || "");
 
-            const executionCtx = this.runningExecutionContextsMap.get(execution.id)!;
-            const session = executionCtx?.session ?? Execution.Session.createInitial();
+            const session = executionCtx.session;
 
             await lifecycleService.runEnding(execution.id, 'failed');
-            const recording = (igniter.record && recorder) ? recorder.getRecording() : null;
+            const recording = igniter.record ? recorder.getRecording() : null;
             const duration = performance.now() - origin;
 
             await Execution.API.update(AxiosService.api, { executionId: execution.id, status: 'failed', duration, session, recording }).catch(() => {});
@@ -222,8 +226,7 @@ export class AggexWorkerImpl {
 
             airlock.dispose();
             lifecycleService.clear(execution.id);
-            this.runningEnginesMap.delete(execution.id);
-            this.runningExecutionContextsMap.delete(execution.id);
+            this.runningExecutions.delete(execution.id);
 
             scope.close();
         }
@@ -241,7 +244,7 @@ export class AggexWorkerImpl {
         console.log('[Worker] Shutting down: closing queue, pools, redis');
 
         // Announce running executions before anything that can block.
-        const running = [...this.runningExecutionContextsMap.keys()];
+        const running = [...this.runningExecutions.keys()];
 
         if (running.length > 0) {
             const channel = WorkerD.Event.getChannel();
@@ -287,22 +290,21 @@ export class AggexWorkerImpl {
     })
 
     private handleSignal(signal: Execution.Signal) {
-        const engine = this.runningEnginesMap.get(signal.executionId);
-        const ctx = this.runningExecutionContextsMap.get(signal.executionId);
-        if (!ctx) return;
+        const engine = this.runningExecutions.get(signal.executionId);
+        if (!engine) return;
 
         switch (signal.type) {
             case "terminate":
-                ctx.abortAPI.abort()
+                engine.ctx.abortAPI.abort()
                 break;
             case "pause":
-                engine?.pause();
+                engine.pause();
                 break;
             case "resume":
-                engine?.resume();
+                engine.resume();
                 break;
             case "suspend":
-                ctx.abortAPI.abort();
+                engine.ctx.abortAPI.abort();
                 break;
             case "heartbeat":
                 this.pauseTimeoutResetters.get(signal.executionId)?.();

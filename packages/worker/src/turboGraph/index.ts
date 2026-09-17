@@ -2,20 +2,18 @@
  * PretzelGraph — https://github.com/RolandTeslaru/Pretzel-Graph
  * Elastic License 2.0. See LICENSE.
  */
-import { Airlock, Execution, Foundations, Realtime, Vault, Workbench } from "@pretzel-graph/shared/domain";
+import { Airlock, Execution, Workbench } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, HTTP, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { CatalogueService, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
-import { AirlockService } from "../airlock";
 import { S2Graph, Vertex } from "../S2/graph";
 import { isUUID } from "../utils";
 
-import { AggexEngine } from "src/engine";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { createContexts } from "./contexts";
+import type { ExecutionContext } from "../execution-context";
 
 
 // Turns stored Workflow.Data into a runnable execution context. compile() in order:
@@ -23,64 +21,51 @@ import { createContexts } from "./contexts";
 //   1. Resolve every node's blueprint via CatalogueService — load, derive, or fall back to a
 //      subworkflow dependency — into a map keyed the way createCache indexes it.
 //   2. Build the Workflow.Cache (resolved port/field shapes, fat edges) off those blueprints.
-//   3. Create the S2Graph and its START vertex.
+//   3. Populate the execution context's S2Graph and add its START vertex.
 //   4. Register the workflow with the airlock sandbox.
-//   5. Build the node + engine execution contexts, wiring the API facade nodes receive.
-//   6. prepareNode per enabled node: instantiate its RuntimeNode class, register it with the
+//   5. prepareNode per enabled node: instantiate its RuntimeNode class, register it with the
 //      engine, add its vertex, and set the AND/OR signal strategy.
-//   7. Warm the expression cache (needs step 6's resolved blueprints).
-//   8. Add each edge as a graph dependency, skipping disabled endpoints.
-//   9. Wire start nodes — no incoming edges and not passive — to START. Throws if there are none.
-//  10. Fire the igniter (webhook payload / chat message) at the nodes that handle it.
+//   6. Warm the expression cache (needs step 5's resolved blueprints).
+//   7. Add each edge as a graph dependency, skipping disabled endpoints.
+//   8. Wire start nodes — no incoming edges and not passive — to START. Throws if there are none.
+//   9. Fire the igniter (webhook payload / chat message) at the nodes that handle it.
 //
-// The returned context is what AggexEngine.run() consumes. Note the graph is a signal graph,
-// not a DAG — nodes fire on accumulated signals and may re-fire, so cycles are legal here.
+// The graph is a signal graph, not a DAG — nodes fire on accumulated signals and may re-fire,
+// so cycles are legal here.
 export class TurboGraph {
     constructor() { }
 
 
 
     public async compile(
-        workflowId:          Workflow.Id,
-        workflowData:        Workflow.Data,
-        execution:           Execution,
-        realtime:            RuntimeNode.RealtimeScope,
-        engine:              AggexEngine,
-        airlock:             AirlockService,
-        credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
-        internalAPI:         HTTP.Client,
-        compilationCtx:      TurboGraph.Compilation.Context = createCompilationContext(workflowId),
-        enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"],
-    ): Promise<AggexEngine.Execution.Context> {
+        executionCtx:        ExecutionContext,
+        compilationCtx:      TurboGraph.Compilation.Context = createCompilationContext(executionCtx.workflowId),
+    ): Promise<void> {
+
+        const { workflowId, workflowData, compiledGraph: graph } = executionCtx;
 
         await CatalogueService.warmBlueprintCache(workflowData);
 
         const blueprints    = await this.loadAllBlueprints(workflowData);
-        const workflowCache = Workbench.Document.createCache(workflowData, blueprints);
+        executionCtx.workflowCache = Workbench.Document.createCache(workflowData, blueprints);
 
-        const graph = new S2Graph();
         const nodes = workflowData.nodes;
-        const edges = workflowCache.edges;
+        const edges = executionCtx.workflowCache.edges;
 
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
         // Registers the @workflow copy, deduped by id.
-        airlock.registerWorkflow(workflowId, workflowData);
-
-        const { nodeExecutionCtx, engineExecutionCtx } = createContexts({
-            engine, airlock, execution, workflowId, workflowData, workflowCache,
-            graph, credentialInstances, realtime, internalAPI, enclosingNodeAPI,
-        });
+        executionCtx.airlock.registerWorkflow(workflowId, workflowData);
 
         for (const wfNode of Object.values(nodes)) {
             if (wfNode.isDisabled)
                 continue;
 
-            await this.prepareNode(engine, engineExecutionCtx, nodeExecutionCtx, wfNode, compilationCtx);
+            await this.prepareNode(executionCtx, wfNode, compilationCtx);
         }
 
         // Must run after prepareNode — needs the resolved blueprints.
-        this.warmExpressionCache(airlock, engineExecutionCtx);
+        this.warmExpressionCache(executionCtx);
 
         for (const edge of Object.values(edges)) {
 
@@ -97,15 +82,15 @@ export class TurboGraph {
         }
 
 
-        const electedNodeId = "nodeId" in execution.igniter ? execution.igniter.nodeId : undefined;
+        const electedNodeId = "nodeId" in executionCtx.igniter ? executionCtx.igniter.nodeId : undefined;
 
         if (electedNodeId !== undefined)
-            this.assertIgniteable(electedNodeId, engineExecutionCtx);
+            this.assertIgniteable(electedNodeId, executionCtx);
 
         const startNodes = this.findStartNodes(
             nodes,
             edges,
-            (id) => engineExecutionCtx.catalogueAPI.getBlueprint(id),
+            (id) => executionCtx.catalogueAPI.getBlueprint(id),
             electedNodeId,
         );
 
@@ -119,9 +104,7 @@ export class TurboGraph {
             graph.addDependency(S2Graph.START_VERTEX_ID, nodeId);
         });
 
-        await this.handleIgniter(engine, execution.igniter);
-
-        return engineExecutionCtx;
+        await this.handleIgniter(executionCtx);
     }
 
 
@@ -147,7 +130,7 @@ export class TurboGraph {
 
 
     // Best-effort: evaluate compiles on demand anyway, so failures here are swallowed.
-    private warmExpressionCache(airlock: AirlockService, ctx: AggexEngine.Execution.Context): void {
+    private warmExpressionCache(ctx: ExecutionContext): void {
 
         for (const node of Object.values(ctx.workflowData.nodes)) {
 
@@ -167,7 +150,7 @@ export class TurboGraph {
                     continue;
 
                 try {
-                    airlock.compileExpression(
+                    ctx.airlock.compileExpression(
                         Airlock.Source.asExpression(raw),
                         Airlock.coerceTargetForVariant(field.variant),
                     );
@@ -182,14 +165,15 @@ export class TurboGraph {
 
 
     private async handleIgniter(
-        engine:  AggexEngine,
-        igniter: Execution.Igniter,
+        executionCtx: ExecutionContext,
     ){
+        const igniter = executionCtx.igniter;
+
         switch (igniter.variant) {
 
             case "webhook": {
 
-                const instance = engine.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
+                const instance = executionCtx.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
 
                 if (instance)
                     await instance.triggerWebhook(igniter.payload as Record<string, unknown>);
@@ -199,7 +183,7 @@ export class TurboGraph {
 
             case "chat_message": {
 
-                for (const instance of engine.instanceRegistryAPI.getAll())
+                for (const instance of executionCtx.instanceRegistryAPI.getAll())
                     await instance.handleIgniter(igniter);
 
                 break;
@@ -214,10 +198,10 @@ export class TurboGraph {
     private assertProxySupported(
         wfNode:             Workflow.Node.Raw,
         blueprint:          Blueprint,
-        engineExecutionCtx: AggexEngine.Execution.Context,
+        executionCtx:       ExecutionContext,
     ): void {
 
-        const attached = engineExecutionCtx.workflowData
+        const attached = executionCtx.workflowData
             .credentialInstanceIds[wfNode.id]?.[NetworkProxy.TEMPLATE_ID];
 
         if (!attached || blueprint.proxyCompatible)
@@ -233,32 +217,30 @@ export class TurboGraph {
 
 
     private async prepareNode(
-        engine:             AggexEngine,
-        engineExecutionCtx: AggexEngine.Execution.Context,
-        nodeExecutionCtx:   RuntimeNode.ExecutionContext,
+        executionCtx:       ExecutionContext,
         wfNode:             Workflow.Node.Raw,
         compilationCtx:     TurboGraph.Compilation.Context,
     ): Promise<void> {
 
-        const { compiledGraph: graph } = engineExecutionCtx;
+        const { compiledGraph: graph } = executionCtx;
 
-        const workflowData = engineExecutionCtx.workflowData
+        const workflowData = executionCtx.workflowData
         const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
         const { RuntimeNode, blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
-        this.assertProxySupported(wfNode, blueprint, engineExecutionCtx);
+        this.assertProxySupported(wfNode, blueprint, executionCtx);
 
         // Resolved blueprint, so this includes derivative-contributed fields.
         const fieldValues = mapFieldValues(blueprint.fields, staticValues);
 
-        const instance = new RuntimeNode(wfNode.id, nodeExecutionCtx);
+        const instance = new RuntimeNode(wfNode.id, executionCtx);
 
         await instance.compile(compilationCtx);
 
         graph.addVertex(wfNode.id);
 
-        engine.registerNode(wfNode.id, wfNode, instance);
+        executionCtx.nodeRuntimeMap.set(wfNode.id, { wfNode, instance });
 
         // Defaults to "AND" when the node has no signalDependency field.
         if (Object.hasOwn(fieldValues, "signalDependency"))
@@ -274,7 +256,7 @@ export class TurboGraph {
     // node that has no way to start anything, and it would run against nothing.
     private assertIgniteable(
         nodeId: Workflow.Node.Id,
-        ctx:    AggexEngine.Execution.Context,
+        ctx:    ExecutionContext,
     ): void {
 
         const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);

@@ -7,23 +7,25 @@ import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexExecutionError } from "src/errors";
 import type { AggexEngine } from "./index";
+import { ExecutionContext } from "../execution-context";
 
 /**
  * A node's input/output data plane: resolve its incoming inputs from edges/static
  * values (`getIncomingData`), project its outputs for emission (`projectOutputs`),
- * and write a single output port value (`write`). Pure `ctx`-in — reaches back only
- * for the event channel.
+ * and write a single output port value (`write`). Reads the execution context off
+ * the engine.
  */
 export class NodeIOService {
     constructor(private engine: AggexEngine) {}
 
+    private get ctx(): ExecutionContext { return this.engine.ctx; }
+
     public readonly writePort = (
-        ctx:      AggexEngine.Execution.Context,
         nodeId:   Workflow.Node.Id,
         outputId: Port.Output.Id,
         value:    unknown,
     ) => {
-        const outputPort = ctx.workflowQueryAPI.getOutputPort(nodeId, outputId);
+        const outputPort = this.ctx.workflowQueryAPI.getOutputPort(nodeId, outputId);
         if(!outputPort)
             throw new AggexExecutionError(
                 SystemError.Code.EXECUTION_NODE_FAILED,
@@ -32,7 +34,7 @@ export class NodeIOService {
 
         const projection = Synthesizer.project(value, outputPort.variant);
 
-        ctx.updateSession(d => {
+        this.ctx.updateSession(d => {
             d.node_output_instances[nodeId] ??= {};
             d.node_output_projections[nodeId] ??= {};
 
@@ -40,7 +42,7 @@ export class NodeIOService {
         d.node_output_projections[nodeId][outputId] = projection;
         });
 
-        ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("session:patch", {
             sessionPatch: {
                 upsert: {
                     node_output_projections: {
@@ -54,22 +56,21 @@ export class NodeIOService {
     }
 
     public readonly getIncomingData = (
-        ctx:             AggexEngine.Execution.Context,
         nodeId:          Workflow.Node.Id,
         incomingSignals: Set<Workflow.Node.Id | Vertex.Id> = new Set(),
         keepMissingPorts = false,
     ): Record<Port.Input.Id, any> => {
-        const staticValues = ctx.workflowData.staticValues[nodeId] ?? {};
+        const staticValues = this.ctx.workflowData.staticValues[nodeId] ?? {};
 
         const resolved: Record<Port.Input.Id, any> = {};
 
-        const incomingEdgeByPort = ctx.workflowCache.inputEdgesByPort[nodeId]
+        const incomingEdgeByPort = this.ctx.workflowCache.inputEdgesByPort[nodeId]
 
-        const inputs = ctx.workflowQueryAPI.getInputs(nodeId);
+        const inputs = this.ctx.workflowQueryAPI.getInputs(nodeId);
 
         for (const input of inputs) {
             const edgeId = incomingEdgeByPort[input.id]
-            const edge = ctx.workflowCache.edges[edgeId];
+            const edge = this.ctx.workflowCache.edges[edgeId];
 
             if (edge) {
                 if(incomingSignals.has(edge.source.nodeId) === false){
@@ -78,7 +79,7 @@ export class NodeIOService {
                     continue;
                 }
 
-                const sourceOutputs = ctx.session.node_output_instances[edge.source.nodeId];
+                const sourceOutputs = this.ctx.session.node_output_instances[edge.source.nodeId];
                 if (sourceOutputs) {
                     const rawReference = sourceOutputs[edge.source.portId as string];
                     // undefined = nothing produced yet (keep waiting).
@@ -115,13 +116,12 @@ export class NodeIOService {
 
 
     public readonly projectOutputs = (
-        ctx: AggexEngine.Execution.Context,
         result: Record<string, any>,
         wfNode: Workflow.Node.Raw
     ): Record<Port.Output.Id, Projection> => {
         const projected: Record<Port.Output.Id, Projection> = {};
 
-        const outputs = ctx.workflowQueryAPI.getOutputs(wfNode.id);
+        const outputs = this.ctx.workflowQueryAPI.getOutputs(wfNode.id);
 
         for (const output of outputs) {
             const key = output.id;
