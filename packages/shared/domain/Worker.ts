@@ -6,6 +6,9 @@ import { ExecutionId } from "./Execution/ids"
 // deployment; nothing here is scoped to an execution.
 export namespace Worker {
 
+    export const Id = z.string().min(1).brand("Worker.Id")
+    export type  Id = z.infer<typeof Id>
+
     export namespace Event {
 
         export const Channel = Realtime.Channel.brand("WorkerChannel")
@@ -14,7 +17,9 @@ export namespace Worker {
         export const getChannel = () => "worker" as Channel
 
         export const Base = Realtime.Event.Base.extend({
-            channel: Channel,
+            channel:  Channel,
+            // Null when the worker runs without an assigned id.
+            workerId: Id.nullable(),
         })
         export type Base = z.infer<typeof Base>
 

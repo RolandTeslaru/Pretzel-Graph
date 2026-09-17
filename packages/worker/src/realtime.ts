@@ -247,7 +247,7 @@ export class SharedRealtimeService {
 
     // Subscribing here rather than at the first park closes the window where a reply lands
     // on a channel nobody is listening to.
-    public scope(executionId: Execution.Id, workflowId: Workflow.Id): RuntimeNode.RealtimeScope {
+    public createScope(executionId: Execution.Id, workflowId: Workflow.Id): RuntimeNode.RealtimeScope {
         const channel = Execution.Signal.getChannel(executionId);
 
         if (this.scopes.has(channel))

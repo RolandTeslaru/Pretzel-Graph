@@ -25,6 +25,11 @@ const ABANDON_TIMEOUT_MS =   500;
 const PURGE_TIMEOUT_MS   = 3_000;
 const QUIT_TIMEOUT_MS    = 1_000;
 
+// Null when the worker runs without an assigned id.
+const WORKER_ID = process.env.WORKER_ID
+    ? WorkerD.Id.parse(process.env.WORKER_ID)
+    : null;
+
 const bounded = <T>(work: Promise<T>, ms: number): Promise<T | 'timeout'> => {
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), ms));
 
@@ -53,29 +58,6 @@ export class AggexWorkerImpl {
 
     private pauseTimeoutResetters = new Map<Execution.Id, () => void>();
 
-    private handleSignal(signal: Execution.Signal) {
-        const engine = this.runningEnginesMap.get(signal.executionId);
-        const ctx = this.runningExecutionContextsMap.get(signal.executionId);
-        if (!ctx) return;
-
-        switch (signal.type) {
-            case "terminate":
-                ctx.abortAPI.abort()
-                break;
-            case "pause":
-                engine?.pause();
-                break;
-            case "resume":
-                engine?.resume();
-                break;
-            case "suspend":
-                ctx.abortAPI.abort();
-                break;
-            case "heartbeat":
-                this.pauseTimeoutResetters.get(signal.executionId)?.();
-                break;
-        }
-    }
 
     private processQueueItem = async (
         bullJob: BullJob<Execution.Queue.Item>,
@@ -85,26 +67,20 @@ export class AggexWorkerImpl {
         const executionId = execution.id;
         const { igniter } = execution;
 
-        // Unverified: only guards against a token/execution mismatch.
-        const claims = Execution.Token.decodeUnverified(executionToken);
-
-        if (claims?.executionId !== executionId)
-            throw new SystemError(
-                SystemError.Code.INFRA_QUEUE_ERROR,
-                `Execution token does not match queued execution ${executionId}`
-            );
-
         console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
 
         // Scope lives for the whole job; all emits/awaits go through it.
-        const scope = this.realtime.scope(executionId, workflowId);
-        const unsubscribeFromLifecycleSignals = scope.onSignal(Execution.Signal.Schema, signal => this.handleSignal(signal));
+        const scope = this.realtime.createScope(executionId, workflowId)
+
+        scope.onSignal(Execution.Signal.Schema, signal => this.handleSignal(signal));
 
         let lockExtendInterval: ReturnType<typeof setInterval> | null = null;
         let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
 
         const startPauseTimeout = (onTimeout: () => void) => {
-            if (pauseTimeout) clearTimeout(pauseTimeout);
+            if (pauseTimeout) 
+                clearTimeout(pauseTimeout);
+            
             pauseTimeout = setTimeout(onTimeout, MAX_PAUSE_DURATION_MS);
         };
 
@@ -178,6 +154,7 @@ export class AggexWorkerImpl {
             const internalAPI = createInternalClient(executionToken);
 
             executionCtx = await this.compiler.compile(workflowId, workflowData, execution, scope, engine, airlock, credentialInstances, internalAPI);
+            
             this.runningExecutionContextsMap.set(executionId, executionCtx);
 
             const result = await engine.run(executionCtx);
@@ -233,6 +210,7 @@ export class AggexWorkerImpl {
                     JSON.stringify(recording),
                     'EX', Execution.Recording.LIVE_TTL_SECONDS,
                 ).catch(redisErr => console.error('[Worker] Failed to cache recording:', redisErr));
+                
                 scope.emit(Execution.Event.create("recording:fullyUploaded"))
             }
 
@@ -271,6 +249,7 @@ export class AggexWorkerImpl {
             const event: WorkerD.Event.ShuttingDown = {
                 type:         'worker:shutting-down',
                 channel,
+                workerId:     WORKER_ID,
                 executionIds: running,
             };
 
@@ -298,6 +277,7 @@ export class AggexWorkerImpl {
     private worker = new Worker(Execution.Queue.ID, this.processQueueItem, {
         connection: this.redisWorker,
         autorun: false,
+        name: WORKER_ID ?? undefined,
         concurrency: Number(process.env.EXECUTION_CONCURRENCY ?? 5),
         // Lease must outlast long synchronous evaluation or the job is marked stalled.
         lockDuration:    5 * 60_000,
@@ -305,6 +285,30 @@ export class AggexWorkerImpl {
         // Never re-run a stalled job; fail it visibly.
         maxStalledCount: 0,
     })
+
+    private handleSignal(signal: Execution.Signal) {
+        const engine = this.runningEnginesMap.get(signal.executionId);
+        const ctx = this.runningExecutionContextsMap.get(signal.executionId);
+        if (!ctx) return;
+
+        switch (signal.type) {
+            case "terminate":
+                ctx.abortAPI.abort()
+                break;
+            case "pause":
+                engine?.pause();
+                break;
+            case "resume":
+                engine?.resume();
+                break;
+            case "suspend":
+                ctx.abortAPI.abort();
+                break;
+            case "heartbeat":
+                this.pauseTimeoutResetters.get(signal.executionId)?.();
+                break;
+        }
+    }
 }
 
 export const AggexWorker = container.resolve(AggexWorkerImpl);

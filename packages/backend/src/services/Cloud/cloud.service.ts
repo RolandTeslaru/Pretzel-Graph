@@ -38,4 +38,12 @@ export class CloudService {
             );
         }
     }
+
+    // A bodiless POST that throws unless the cloud answers with a success status.
+    public async post(path: string): Promise<void> {
+        const response = await this.fetch(path, { method: 'POST' });
+
+        if (!response.ok)
+            throw new Error(`${response.status} ${response.statusText}`);
+    }
 }
