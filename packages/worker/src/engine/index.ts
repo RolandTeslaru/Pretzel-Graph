@@ -18,6 +18,7 @@ import { PropagationService } from "./propagation-service";
 import { NodeIOService } from "./node-io-service";
 import { ErrorService } from "./error-service";
 import { SessionService } from "./session-service";
+import { LifecycleEffectService } from "./lifecycle-effect-service";
 import { System } from "@pretzel-graph/shared/system";
 import { frameworkFields } from "./framework-fields";
 import { ExecutionContext } from "../execution-context";
@@ -67,6 +68,7 @@ export class AggexEngine {
         nodeIO:      new NodeIOService(this),
         errors:      new ErrorService(this),
         session:     new SessionService(this),
+        lifecycleEffect: new LifecycleEffectService(this),
     };
 
     public readonly ctx: ExecutionContext;
@@ -113,7 +115,7 @@ export class AggexEngine {
         const start = performance.now();
 
         try {
-            return await Promise.race<AggexEngine.Execution.Result>([
+            const result = await Promise.race<AggexEngine.Execution.Result>([
 
                 this.s2Engine.ignite(this.ctx.compiledGraph, hooks).then(
                     () => ({
@@ -124,6 +126,15 @@ export class AggexEngine {
 
                 this.createRejectionPromise(start)
             ])
+
+            await this.services.lifecycleEffect.runEnding(result.status);
+
+            return result;
+        }
+        catch (error) {
+            await this.services.lifecycleEffect.runEnding("failed");
+
+            throw error;
         }
         finally {
             this.ctx.proxyAPI.destroyAll();

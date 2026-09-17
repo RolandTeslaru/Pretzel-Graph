@@ -14,7 +14,6 @@ import {
     DependencyAPI,
     AgentToolBridgeAPI,
     ConsultationAPI,
-    LifecycleAPI,
 } from "./apis";
 import { HTTP } from "../domain/http";
 import { NetworkProxy } from "../domain/networkProxy";
@@ -44,7 +43,6 @@ export interface ExecutionContext {
     readonly subWorkflowAPI:          SubWorkflowAPI,
     readonly dependencyAPI:           DependencyAPI,
     readonly consultationAPI:         ConsultationAPI,
-    readonly lifecycleAPI:            LifecycleAPI,
     /** Backend internal routes. Carries this execution's token and is NOT proxied —
      *  never build one from httpClientFactory, that would send the token through the
      *  node's proxy credential. Third-party egress belongs on httpClientFactory. */

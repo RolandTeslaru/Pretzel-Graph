@@ -8,22 +8,24 @@ import { buildTools } from "./tools";
 
 export class Node extends RuntimeNode<typeof Blueprint> {
 
+    private readonly toolClients = new Map<Workflow.Id, WorkbenchClient>();
+
     // Reads run on a snapshot and never hold the workflow; writes run in one short hold. As a
     // tool set, the first write opens one hold that lasts until the run ends or a tool commits.
     protected override async onRun() {
         const f  = this.fieldValues;
-        const client = await WorkbenchClient.open(this.context.internalAPI, this.context.realtimeAPI, f.workflowId as Workflow.Id);
+        const workflowId = f.workflowId as Workflow.Id;
+
+        // A workflow can only be held once, so a refire keeps using the client that holds it.
+        const heldClient = this.toolClients.get(workflowId);
+
+        if (f.isConvertedToTool === true && heldClient?.inTransaction)
+            return { tools: buildTools(heldClient) };
+
+        const client = await WorkbenchClient.open(this.context.internalAPI, this.context.realtimeAPI, workflowId);
 
         if (f.isConvertedToTool === true) {
-            this.context.lifecycleAPI.onEnding(async outcome => {
-                if (!client.inTransaction)
-                    return;
-
-                if (outcome === "completed")
-                    await client.commitTransaction();
-                else
-                    await client.abortTransaction();
-            });
+            this.toolClients.set(workflowId, client);
 
             return { tools: buildTools(client) };
         }
@@ -73,5 +75,30 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
 
         throw new Error("Unsupported operation");
+    }
+
+
+
+
+    // Saves what the tools left open when the run completed, and discards it otherwise.
+    protected override async onWorkflowEnding(outcome: RuntimeNode.ExecutionOutcome) {
+        const clients = [...this.toolClients.values()];
+
+        this.toolClients.clear();
+
+        const results = await Promise.allSettled(clients.map(async client => {
+            if (!client.inTransaction)
+                return;
+
+            if (outcome === "completed")
+                await client.commitTransaction();
+            else
+                await client.abortTransaction();
+        }));
+
+        const failures = results.filter(result => result.status === "rejected");
+
+        if (failures.length > 0)
+            throw new AggregateError(failures.map(failure => failure.reason), "Workbench transactions failed to end");
     }
 }

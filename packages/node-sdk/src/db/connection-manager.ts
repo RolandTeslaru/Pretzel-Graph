@@ -5,14 +5,7 @@ const SWEEP = 60_000;
 
 type Registration<TClient> = { client: TClient; lastUsed: number };
 
-/**
- * Caches an expensive-to-create client (pool / driver client) keyed by a hash of the
- * decrypted credentials, with a TTL reaper. The caching/keying/lifecycle is shared by
- * every database; subclasses only implement how to create and dispose the client.
- *
- * Each process gets its own instance — loaders run in the backend, execution in the
- * worker, so the two pools are independent (acceptable).
- */
+// Caches clients nodes open at execution time, keyed by a hash of their credentials and reaped when idle.
 export abstract class ConnectionManager<TCreds, TClient> {
     private map = new Map<string, Registration<TClient>>();
 

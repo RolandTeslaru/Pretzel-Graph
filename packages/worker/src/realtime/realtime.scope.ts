@@ -1,18 +1,7 @@
 import type { z } from "zod";
-import Redis from "ioredis";
-import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from "@pretzel-graph/shared/constants";
 import { Execution } from "@pretzel-graph/shared/domain";
 import type { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
-
-// Process-wide realtime layer for the worker: one pub + one sub connection shared across
-// every execution running in this process.
-//
-// An execution has exactly two channels — execution:<id> outbound, execution:<id>:signal
-// inbound — and a scope is the only way to reach either. Inbound messages are routed by
-// schema plus a correlation predicate, so many independent domains (lifecycle signals, node
-// parks) share the one channel without seeing each other's traffic.
-
 
 // A registration is erased: the router only calls back through `deliver`, and each
 // registration's own schema is what re-narrows the message for its handler.
@@ -25,7 +14,7 @@ type Registration = {
 }
 
 
-/** Exported for tests — production code gets one from SharedRealtimeService.scope. */
+/** Exported for tests — production code gets one from RealtimeService.createScope. */
 export class RealtimeScopeImpl implements RuntimeNode.RealtimeScope {
 
     private readonly registrations = new Set<Registration>();
@@ -223,52 +212,5 @@ export class RealtimeScopeImpl implements RuntimeNode.RealtimeScope {
                 }
             }
         });
-    }
-}
-
-
-
-
-export class SharedRealtimeService {
-
-    private readonly pub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
-    private readonly sub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
-
-    private readonly scopes = new Map<Execution.Signal.Channel, RealtimeScopeImpl>();
-
-    constructor() {
-        this.sub.on("message", (channel: string, raw: string) => {
-            this.scopes.get(channel as Execution.Signal.Channel)?.dispatch(raw);
-        });
-    }
-
-
-
-
-    // Subscribing here rather than at the first park closes the window where a reply lands
-    // on a channel nobody is listening to.
-    public createScope(executionId: Execution.Id, workflowId: Workflow.Id): RuntimeNode.RealtimeScope {
-        const channel = Execution.Signal.getChannel(executionId);
-
-        if (this.scopes.has(channel))
-            throw new Error(`Realtime scope already open for execution ${executionId}`);
-
-        const scope = new RealtimeScopeImpl(
-            executionId,
-            workflowId,
-            (ch, payload) => { this.pub.publish(ch, payload); },
-            () => {
-                this.scopes.delete(channel);
-                this.sub.unsubscribe(channel).catch(() => {});
-            },
-        );
-
-        this.scopes.set(channel, scope);
-
-        this.sub.subscribe(channel).catch(err =>
-            console.error(`[Realtime] Failed to subscribe to ${channel}:`, err),
-        );
-
-        return scope;
     }
 }

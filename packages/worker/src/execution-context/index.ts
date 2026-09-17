@@ -26,7 +26,6 @@ export type ExecutionAPIs = Pick<
     | "agentToolBridgeAPI"
     | "internalAPI"
     | "consultationAPI"
-    | "lifecycleAPI"
 >;
 
 export class ExecutionContext implements RuntimeNode.ExecutionContext {
@@ -69,7 +68,6 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     readonly agentToolBridgeAPI!:  ExecutionAPIs["agentToolBridgeAPI"];
     readonly internalAPI!:         ExecutionAPIs["internalAPI"];
     readonly consultationAPI!:     ExecutionAPIs["consultationAPI"];
-    readonly lifecycleAPI!:        ExecutionAPIs["lifecycleAPI"];
     readonly enclosingNodeAPI?:    RuntimeNode.ExecutionContext["enclosingNodeAPI"];
 
     constructor(

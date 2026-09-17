@@ -1,8 +1,8 @@
 import axios from "axios";
-import { container, singleton } from "tsyringe";
+import { Injectable } from "@nestjs/common";
 
-@singleton()
-export class AxiosServiceImpl {
+@Injectable()
+export class AxiosService {
     constructor() {
         this.init();
     }
@@ -38,5 +38,3 @@ export class AxiosServiceImpl {
         );
     }
 }
-
-export const AxiosService = container.resolve(AxiosServiceImpl);
