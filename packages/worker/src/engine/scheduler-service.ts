@@ -9,23 +9,23 @@ import type { AggexEngine } from "./index";
 export class SchedulerService {
     constructor(private engine: AggexEngine) {}
 
-    public readonly fireNode = (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, signals: Set<Workflow.Node.Id | Vertex.Id> = new Set()) => {
+    public readonly fireNode = (nodeId: Workflow.Node.Id, signals: Set<Workflow.Node.Id | Vertex.Id> = new Set()) => {
         this.engine.s2Engine.overrides.fireVertex(nodeId as unknown as Vertex.Id, signals as Set<Vertex.Id>);
     }
 
-    public readonly signalNode = (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
+    public readonly signalNode = (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
         this.engine.s2Engine.overrides.addSignal(nodeId as unknown as Vertex.Id, fromNodeId as unknown as Vertex.Id);
     }
 
-    public readonly removeSignal = (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
+    public readonly removeSignal = (nodeId: Workflow.Node.Id, fromNodeId: Workflow.Node.Id) => {
         this.engine.s2Engine.overrides.removeSignal(nodeId as unknown as Vertex.Id, fromNodeId as unknown as Vertex.Id);
     }
 
-    public readonly clearSignals = (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id) => {
+    public readonly clearSignals = (nodeId: Workflow.Node.Id) => {
         this.engine.s2Engine.overrides.clearSignals(nodeId as unknown as Vertex.Id);
     }
 
-    public readonly scheduleCheck = (ctx: AggexEngine.Execution.Context, nodeId: Workflow.Node.Id) => {
+    public readonly scheduleCheck = (nodeId: Workflow.Node.Id) => {
         this.engine.s2Engine.overrides.scheduleCheck(nodeId as unknown as Vertex.Id);
     }
 }

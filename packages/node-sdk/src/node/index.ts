@@ -13,7 +13,6 @@ import type {
     RealtimeAPI                  as RealtimeAPIType,
     RealtimeScope                as RealtimeScopeType,
     UnstampedConsultationRequest as UnstampedConsultationRequestType,
-    LifecycleAPI                 as LifecycleAPIType,
     ExecutionOutcome             as ExecutionOutcomeType,
 } from "./apis";
 import type { HTTP } from "../domain/http";
@@ -400,6 +399,23 @@ export abstract class RuntimeNode<
 
 
 
+
+    public async workflowEnding(
+        outcome: ExecutionOutcomeType,
+    ): Promise<void> {
+        return this.onWorkflowEnding(outcome);
+    }
+
+
+
+    // Runs when the workflow this node is in finishes a run; a sub-workflow ends once per run.
+    protected onWorkflowEnding(
+        outcome: ExecutionOutcomeType,
+    ): Promise<void> | void { }
+
+
+
+
     protected onRecordMetrics(args: {
         inputs:   InferIncoming<T_Blueprint>,
         outputs:  Partial<InferOutputs<T_Blueprint>>,
@@ -477,6 +493,5 @@ export namespace RuntimeNode {
     export type RealtimeAPI      = RealtimeAPIType;
     export type RealtimeScope    = RealtimeScopeType;
     export type UnstampedConsultationRequest = UnstampedConsultationRequestType;
-    export type LifecycleAPI     = LifecycleAPIType;
     export type ExecutionOutcome = ExecutionOutcomeType;
 }

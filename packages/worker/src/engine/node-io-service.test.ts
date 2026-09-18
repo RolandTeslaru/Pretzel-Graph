@@ -11,7 +11,6 @@ import { NodeIOService } from "./node-io-service";
 test("synthesizes static Message inputs and preserves static Data inputs", () => {
     const nodeId = "Test.StaticInputs-node";
     const data = { nested: { value: 42 } };
-    const service = new NodeIOService({} as never);
     const context = {
         workflowData: {
             staticValues: {
@@ -33,7 +32,8 @@ test("synthesizes static Message inputs and preserves static Data inputs", () =>
         },
     };
 
-    const incoming = service.getIncomingData(context as never, nodeId as never);
+    const service  = new NodeIOService({ ctx: context } as never);
+    const incoming = service.getIncomingData(nodeId as never);
     const values = incoming as Record<string, unknown>;
 
     assert.ok(values.prompt instanceof HumanMessage);

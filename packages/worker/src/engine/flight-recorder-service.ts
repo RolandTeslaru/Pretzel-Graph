@@ -2,7 +2,7 @@ import { Execution } from "@pretzel-graph/shared/domain"
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port"
 import { Vertex } from "../S2/graph"
-import type { AggexEngine } from "./index"
+import type { ExecutionContext } from "../execution-context"
 
 export class FlightRecorderService {
 
@@ -15,13 +15,13 @@ export class FlightRecorderService {
     private uowInputs:     Map<Execution.Recording.UnitOfWork.Id, Record<string, unknown>> = new Map()
 
     constructor(
-        executionId:  Execution.Id,
-        workflowId:   Workflow.Id,
-        workflowData: Workflow.Data,
-        origin:       number,  // performance.now() at execution start
+        private readonly ctx: ExecutionContext,
+        origin:               number,  // performance.now() at execution start
     ) {
-        this.executionId = executionId
-        this.workflowId  = workflowId
+        const workflowData = ctx.workflowData
+
+        this.executionId = ctx.executionId
+        this.workflowId  = ctx.workflowId
         this.origin      = origin
 
         this.recording = {
@@ -73,7 +73,6 @@ export class FlightRecorderService {
         allDeps: Set<Vertex.Id>,
         inputs:  Record<string, unknown>,
         fields:  Record<string, unknown>,
-        ctx:     AggexEngine.ExecutionContext,
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
         if (!unitId) return
@@ -84,15 +83,15 @@ export class FlightRecorderService {
         this.uowInputs.set(unitId, inputs)
         unit.fieldSnapshot = fields
 
-        const inputEdges = ctx.workflowCache.inputEdgesByPort[nodeId] ?? {}
+        const inputEdges = this.ctx.workflowCache.inputEdgesByPort[nodeId] ?? {}
 
-        ctx.realtimeAPI.emit(Execution.Event.create("unit:started", { unit }))
+        this.ctx.realtimeAPI.emit(Execution.Event.create("unit:started", { unit }))
 
         const incomingRelations: Execution.Recording.Relation[] = []
 
         for (const [portIdStr, edgeId] of Object.entries(inputEdges)) {
             const portId = portIdStr as Port.Input.Id
-            const edge   = ctx.workflowCache.edges[edgeId]
+            const edge   = this.ctx.workflowCache.edges[edgeId]
             if (!edge) continue
 
             const sourceNodeId  = edge.source.nodeId
@@ -124,7 +123,7 @@ export class FlightRecorderService {
         }
 
         if (incomingRelations.length > 0)
-            ctx.realtimeAPI.emit(Execution.Event.create("relation:createBatch", {
+            this.ctx.realtimeAPI.emit(Execution.Event.create("relation:createBatch", {
                 relations: incomingRelations,
             }))
     }
@@ -135,7 +134,6 @@ export class FlightRecorderService {
     // Sets duration, populates outputSnapshot + DataBank entries.
     public onNodeCompleted(
         nodeId: Workflow.Node.Id,
-        ctx:    AggexEngine.ExecutionContext,
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
         if (!unitId) return
@@ -146,7 +144,7 @@ export class FlightRecorderService {
         unit.status   = "completed"
         unit.duration = performance.now() - this.origin - unit.startedAt
 
-        const projections = ctx.session.node_output_projections[nodeId] ?? {}
+        const projections = this.ctx.session.node_output_projections[nodeId] ?? {}
 
         for (const [portIdStr, value] of Object.entries(projections)) {
             const portId  = portIdStr as Port.Output.Id
@@ -160,10 +158,10 @@ export class FlightRecorderService {
             unit.outputSnapshot[portId] = snapId
         }
 
-        const metrics = this.collectMetrics(nodeId, unitId, "completed", unit.duration!, ctx)
+        const metrics = this.collectMetrics(nodeId, unitId, "completed", unit.duration!)
         if (metrics) unit.metrics = metrics
 
-        ctx.realtimeAPI.emit(Execution.Event.create("unit:completed", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("unit:completed", {
             unitId:         unit.id,
             duration:       unit.duration!,
             outputSnapshot: unit.outputSnapshot,
@@ -179,7 +177,6 @@ export class FlightRecorderService {
     // Sets status to failed and duration.
     public onNodeFailed(
         nodeId: Workflow.Node.Id,
-        ctx: AggexEngine.Execution.Context
     ): void {
         const unitId = this.mostRecentUoW.get(nodeId)
         if (!unitId) return
@@ -190,10 +187,10 @@ export class FlightRecorderService {
         unit.status   = "failed"
         unit.duration = performance.now() - this.origin - unit.startedAt
 
-        const metrics = this.collectMetrics(nodeId, unitId, "failed", unit.duration!, ctx)
+        const metrics = this.collectMetrics(nodeId, unitId, "failed", unit.duration!)
         if (metrics) unit.metrics = metrics
 
-        ctx.realtimeAPI.emit(Execution.Event.create("unit:failed", {
+        this.ctx.realtimeAPI.emit(Execution.Event.create("unit:failed", {
             unitId:   unit.id,
             duration: unit.duration!,
             metrics,
@@ -209,13 +206,12 @@ export class FlightRecorderService {
         unitId:   Execution.Recording.UnitOfWork.Id,
         status:   Execution.Recording.UnitOfWork["status"],
         duration: number,
-        ctx:      AggexEngine.ExecutionContext,
     ): Record<string, Execution.Recording.Metric> | undefined {
-        const instance = ctx.instanceRegistryAPI.get(nodeId)
+        const instance = this.ctx.instanceRegistryAPI.get(nodeId)
         if (!instance) return undefined
 
         const inputs  = this.uowInputs.get(unitId) ?? {}
-        const outputs = ctx.session.node_output_instances[nodeId] ?? {}
+        const outputs = this.ctx.session.node_output_instances[nodeId] ?? {}
 
         return instance.recordMetrics({
             inputs:   inputs as any,

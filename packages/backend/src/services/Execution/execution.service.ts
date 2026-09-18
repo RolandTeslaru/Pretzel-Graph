@@ -30,15 +30,16 @@ export class ExecutionService {
 
     constructor(
         @InjectQueue(Execution.Queue.ID)
-        private readonly executionQueue: Queue,
-        private readonly realtime:       RealtimeService,
-        private readonly ownership:      PermissionService,
+        private readonly executionQueue:      Queue,
+        private readonly realtime:            RealtimeService,
+        private readonly ownership:           PermissionService,
         private readonly executionRepository: ExecutionRepository,
-        private readonly chatDatabase:   ChatDatabase,
-        private readonly vaultRepository: VaultRepository,
+        private readonly chatDatabase:        ChatDatabase,
+        private readonly vaultRepository:     VaultRepository,
         private readonly workbenchRepository: WorkbenchRepository,
+        
         @Inject(forwardRef(() => WorkerLifecycleService))
-        private readonly workerLifecycle: WorkerLifecycleService,
+        private readonly workerLifecycle:     WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
             console.error(`[Execution] ${jobId} failed:`, failedReason);
@@ -46,9 +47,9 @@ export class ExecutionService {
             this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
 
-        // The idle window runs from the last job to end, whichever way it ended.
-        this.queueEvents.on('failed',    () => this.workerLifecycle.noteJobEnded());
-        this.queueEvents.on('completed', () => this.workerLifecycle.noteJobEnded());
+        // A worker's idle window runs from its last job to end, whichever way it ended.
+        this.queueEvents.on('failed',    ({ jobId }) => void this.workerLifecycle.noteJobEnded(jobId));
+        this.queueEvents.on('completed', ({ jobId }) => void this.workerLifecycle.noteJobEnded(jobId));
     }
 
 
@@ -81,7 +82,7 @@ export class ExecutionService {
         const workflowData = payload.workflowData ?? (
                                 await this.workbenchRepository.workflow.get(principal, workflowId)
                             ).data;
-                            
+
         const started      = await this.runCore(principal, workflowId, workflowData, payload.igniter, payload.executionId);
 
         if (!payload.await)
@@ -237,6 +238,8 @@ export class ExecutionService {
         } satisfies Execution
         
 
+        let workerStarted: Promise<boolean>;
+
         try {
             const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
             const instances = await this.vaultRepository.credentialInstance.listByIds(Principal.SELF, [...credentialInstanceIds]);
@@ -250,11 +253,17 @@ export class ExecutionService {
                 executionToken: ExecutionToken.sign(executionId),
             };
 
-            // Before the add: a sleeping worker is not watching the queue, so
-            // the job would sit there until something else woke it.
-            await this.workerLifecycle.ensureAwake();
+            // Listening before the add, so a worker that picks the job up at once is not missed.
+            workerStarted = this.realtime.awaitEvent(
+                Execution.Event.getChannel(executionId),
+                'lifecycle:started',
+                10_000
+            );
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
+
+            // After the add, so waiting on a machine to start never holds the job back.
+            await this.workerLifecycle.ensureComputeForJob();
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -262,11 +271,7 @@ export class ExecutionService {
             throw error;
         }
 
-        const started = await this.realtime.awaitEvent(
-            Execution.Event.getChannel(executionId),
-            'lifecycle:started',
-            10_000
-        );
+        const started = await workerStarted;
 
         if (!started) {
             this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: 'No worker picked up the job' }));

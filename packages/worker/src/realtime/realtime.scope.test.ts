@@ -4,7 +4,7 @@ import test from "node:test";
 import { Consultation, Execution } from "@pretzel-graph/shared/domain";
 import type { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 
-import { RealtimeScopeImpl } from "./realtime";
+import { RealtimeScopeImpl } from "./realtime.scope";
 
 // The three ways the old per-channel waiter broke once two things shared a channel.
 // Each one used to be silent, so each is asserted directly rather than through a run.

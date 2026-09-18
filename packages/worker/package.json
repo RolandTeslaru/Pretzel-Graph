@@ -6,13 +6,15 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-        "dev": "tsx watch src/server.ts",
+        "dev": "nodemon -w src -w ../node-sdk/src -w ../shared -e ts,json --exec 'TS_NODE_PROJECT=tsconfig.build.json ts-node -r tsconfig-paths/register src/server.ts'",
         "start": "node dist/worker/src/server.js",
         "test": "node --import tsx --test \"src/**/*.test.ts\""
     },
     "dependencies": {
         "@langchain/community": "^1.1.27",
         "@modelcontextprotocol/sdk": "^1.30.0",
+        "@nestjs/common": "^11.1.16",
+        "@nestjs/core": "^11.1.16",
         "@pretzel-graph/node-sdk": "*",
         "@pretzel-graph/shared": "*",
         "axios": "^1.13.6",
@@ -25,8 +27,8 @@
         "isolated-vm": "^6.1.2",
         "lodash": "^4.17.23",
         "reflect-metadata": "^0.2.2",
+        "rxjs": "^7.8.2",
         "socks-proxy-agent": "^10.1.0",
-        "tsyringe": "^4.10.0",
         "typescript": "^5.9.3",
         "uuid": "^13.0.0",
         "viem": "^2.47.12",
@@ -35,6 +37,9 @@
     "devDependencies": {
         "@types/uuid": "^10.0.0",
         "concurrently": "^9.2.1",
-        "tsc-alias": "^1.9.1"
+        "nodemon": "^3.1.14",
+        "ts-node": "^10.9.2",
+        "tsc-alias": "^1.9.1",
+        "tsconfig-paths": "^4.2.0"
     }
 }

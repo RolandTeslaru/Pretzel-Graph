@@ -3,7 +3,7 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferIncoming, InferOutputs } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
-import { AggexEngine, TurboGraph } from "@pretzel-graph/worker";
+import { ExecutionContext, TurboGraph } from "@pretzel-graph/worker";
 import { System } from "@pretzel-graph/shared/system";
 import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
@@ -14,7 +14,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.NONE
 
     private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
-    private subEngineCtx!: AggexEngine.Execution.Context;
+    private subExecutionCtx!: ExecutionContext;
 
     /** Author-written `$metrics` rollups from the sub-workflow, read back after the sub-run. */
     private aggregatedMetrics?: Record<string, Execution.Recording.Metric>;
@@ -75,13 +75,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         this.injectGlobalFieldValues(childWorkflowData);
 
-        this.subEngineCtx = await this.subEnvironment.compile(
+        this.subExecutionCtx = await this.subEnvironment.compile(
             subWorkflowId,
             childWorkflowData,
             execution,
             childCompilationCtx,
             enclosingNodeAPI,
-        ) as AggexEngine.ExecutionContext;
+        ) as ExecutionContext;
     }
 
     protected override async onRun(
@@ -91,10 +91,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         this.injectInputNodeValues(incoming);
 
         try {
-            await this.subEnvironment.run(this.subEngineCtx);
+            await this.subEnvironment.run(this.subExecutionCtx);
 
             this.aggregatedMetrics = normalizeMetrics(
-                this.subEngineCtx.airlockAPI.readGlobal<Record<string, unknown>>(Airlock.Globals.METRICS),
+                this.subExecutionCtx.airlockAPI.readGlobal<Record<string, unknown>>(Airlock.Globals.METRICS),
             );
 
             // getPropagationStrategy() returns "none" — ExposeOutputPort nodes propagate
@@ -118,11 +118,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
     private injectInputNodeValues(incoming: InferIncoming<typeof Blueprint>): void {
-        const exposeInputNodes = this.subEngineCtx.workflowQueryAPI
+        const exposeInputNodes = this.subExecutionCtx.workflowQueryAPI
             .getNodesByBlueprint("Core.SubWorkflow.ExposeInputPort" as any);
 
         for (const { node } of exposeInputNodes) {
-            const instance = this.subEngineCtx.instanceRegistryAPI.get(node.id);
+            const instance = this.subExecutionCtx.instanceRegistryAPI.get(node.id);
             if (!(instance instanceof ExposeInputPortNode))
                 continue;
 

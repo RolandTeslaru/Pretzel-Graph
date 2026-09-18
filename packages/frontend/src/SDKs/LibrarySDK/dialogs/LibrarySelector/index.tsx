@@ -102,7 +102,7 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect, quer
                             <Dialog.Title className='text-sm h-auto my-auto'>{TITLES[accept]}</Dialog.Title>
                             <div className='ml-auto flex flex-row gap-2 w-auto'>
                                 <LibraryBrowser.View.SearchInput className='rounded-full!' size='xs' />
-                                <LibraryBrowser.View.CreateBtn size="xs"/>
+                                <LibraryBrowser.View.CreateBtn size="xs" triggerClassName='rounded-full'/>
                             </div>
                         </div>
                         

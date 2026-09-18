@@ -4,6 +4,7 @@ import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { AggexEngine } from "./index";
 import { frameworkFields } from "./framework-fields";
+import { ExecutionContext } from "../execution-context";
 
 /**
  * Routing decisions: which downstream branches a router node took
@@ -13,14 +14,15 @@ import { frameworkFields } from "./framework-fields";
 export class RoutingService {
     constructor(private engine: AggexEngine) {}
 
+    private get ctx(): ExecutionContext { return this.engine.ctx; }
+
 
     public resolveRouterSignals(
-        ctx:    AggexEngine.Execution.Context,
         nodeId: Workflow.Node.Id,
         result: Record<string, any>
     ): Set<Vertex.Id> {
         const signals = new Set<Vertex.Id>();
-        const edges = ctx.workflowCache.edges;
+        const edges = this.ctx.workflowCache.edges;
         const returnedKeys = new Set(Object.keys(result));
 
         for (const edge of Object.values(edges))
@@ -37,10 +39,9 @@ export class RoutingService {
      * any wired input port has not produced data yet.
      */
     public canRunByDependencies(
-        ctx:      AggexEngine.Execution.Context,
         vertexId: Vertex.Id,
     ): boolean {
-        const entry = this.engine.nodeRuntimeMap.get(vertexId);
+        const entry = this.ctx.nodeRuntimeMap.get(vertexId);
         if (!entry) return true;
 
         const { instance, wfNode } = entry;
@@ -58,13 +59,13 @@ export class RoutingService {
             //   any value → arrived                         → proceed
             // A router-skipped branch leaves its port undefined and never signals;
             // the node stays waiting and the engine settles once nothing can run.
-            const dependencies       = ctx.compiledGraph.dependenciesMap.get(vertexId)!;
-            const incomingInputs     = this.engine.services.nodeIO.getIncomingData(ctx, wfNode.id, dependencies, true);
-            const incomingEdgeByPort = ctx.workflowCache.inputEdgesByPort[wfNode.id];
+            const dependencies       = this.ctx.compiledGraph.dependenciesMap.get(vertexId)!;
+            const incomingInputs     = this.engine.services.nodeIO.getIncomingData(wfNode.id, dependencies, true);
+            const incomingEdgeByPort = this.ctx.workflowCache.inputEdgesByPort[wfNode.id];
 
             for (const portId in incomingInputs) {
                 const edgeId  = incomingEdgeByPort?.[portId as Port.Input.Id];
-                const isWired = !!edgeId && !!ctx.workflowCache.edges[edgeId];
+                const isWired = !!edgeId && !!this.ctx.workflowCache.edges[edgeId];
 
                 if (isWired && incomingInputs[portId as Port.Input.Id] === undefined)
                     return false;

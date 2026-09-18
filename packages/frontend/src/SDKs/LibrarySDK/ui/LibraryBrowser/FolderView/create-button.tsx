@@ -4,13 +4,18 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { useLibraryBrowser } from '../root'
 
-export const CreateBtn = ({ size }: { size?: ButtonProps['size'] }) => {
+type Props = {
+    size?: ButtonProps['size']
+    triggerClassName?: string
+}
+
+export const CreateBtn = ({ size, triggerClassName }: Props) => {
     const { cwd } = useLibraryBrowser()
 
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-                <Button size={size}>
+                <Button size={size} className={triggerClassName}>
                     Create
                 </Button>
             </DropdownMenu.Trigger>

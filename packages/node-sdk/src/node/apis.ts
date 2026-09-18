@@ -263,12 +263,5 @@ export interface ConsultationAPI {
 }
 
 
-/** How a run ended, as its hooks see it. */
+/** How a workflow run ended. */
 export type ExecutionOutcome = "completed" | "terminated" | "failed"
-
-// The moment after the graph has settled and before the run's outcome is reported. A node
-// that holds something beyond its own firing — an open transaction, a connection — finishes
-// it here. Hooks run in registration order, each bounded; a failing hook is logged, never fatal.
-export interface LifecycleAPI {
-    onEnding: (hook: (outcome: ExecutionOutcome) => void | Promise<void>) => () => void,
-}
