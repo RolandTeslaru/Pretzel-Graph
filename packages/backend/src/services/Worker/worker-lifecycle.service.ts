@@ -14,7 +14,7 @@ const WORKER_REPLY_TIMEOUT_MS = 2_000;
 const PREPARE_TIMEOUT_MS = 10_000;
 
 // How long a worker may sit idle before it is suspended.
-const IDLE_MS = 10 * 60_000;
+const IDLE_MS = Number(process.env.WORKER_IDLE_SECONDS ?? 600) * 1_000;
 
 // Attempts at one wake before the next enqueue has to ask again.
 const WAKE_ATTEMPTS = 3;
