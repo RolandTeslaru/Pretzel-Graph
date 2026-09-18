@@ -16,6 +16,13 @@ const CLOSE_TIMEOUT_MS   = 4_000;
 const FORCE_TIMEOUT_MS   = 2_000;
 const QUIT_TIMEOUT_MS    = 1_000;
 
+// A frozen process misses its ticks, so a gap this wide means the machine was suspended and resumed.
+const FREEZE_CHECK_MS = 1_000;
+const FREEZE_GAP_MS   = 5_000;
+
+// Asleep this long without a freeze means no suspend is coming, so the worker takes jobs again.
+const SLEEP_LEASE_MS = 30_000;
+
 // Null when the worker runs without an assigned id.
 const WORKER_ID = process.env.WORKER_ID
     ? WorkerD.Id.parse(process.env.WORKER_ID)
@@ -33,6 +40,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
     private bullWorker: BullWorker<Execution.Queue.Item> | null = null;
 
     private sleeping = false;
+    private suspendWatch: NodeJS.Timeout | null = null;
     private lifecycleTransition = Promise.resolve();
     private removeLifecycleSubscription: (() => void) | null = null;
 
@@ -115,6 +123,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
             await this.redisWorker.quit();
 
             console.log('[Worker] Asleep: queue consumer closed, pools purged, redis released');
+
+            this.watchForSuspend();
         }
         catch (error) {
             this.redisWorker.disconnect();
@@ -139,6 +149,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
             return;
         }
+
+        this.stopWatchingForSuspend();
 
         console.log('[Worker] Waking: reopening realtime, redis and the queue consumer');
 
@@ -186,6 +198,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
     public async onApplicationShutdown(): Promise<void> {
+        this.stopWatchingForSuspend();
+
         this.removeLifecycleSubscription?.();
 
         await bounded(this.redisWorker.quit().catch(() => {}), QUIT_TIMEOUT_MS);
@@ -230,12 +244,64 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
         console.log(`[Worker] Received ${signal.type} (${signal.requestId})`);
 
+        this.queueTransition(() => this.handleLifecycleSignal(signal));
+    }
+
+
+
+
+    // Sleeps and wakes run one at a time, in the order they were asked for.
+    private queueTransition(transition: () => Promise<void>): void {
         this.lifecycleTransition = this.lifecycleTransition
             .catch(() => {})
-            .then(() => this.handleLifecycleSignal(signal))
+            .then(transition)
             .catch(error => {
                 console.error(`[Worker] Lifecycle transition failed: ${error instanceof Error ? error.message : error}`);
             });
+    }
+
+
+
+
+    // Takes jobs again once the machine comes back from a suspend, or when the suspend never happens.
+    private watchForSuspend(): void {
+        const asleepSince = Date.now();
+
+        let lastTick = asleepSince;
+
+        this.suspendWatch = setInterval(() => {
+            const now = Date.now();
+            const gap = now - lastTick;
+
+            lastTick = now;
+
+            const resumed    = gap > FREEZE_GAP_MS;
+            const leaseEnded = now - asleepSince > SLEEP_LEASE_MS;
+
+            if (!resumed && !leaseEnded)
+                return;
+
+            if (resumed)
+                console.log(`[Worker] Resumed after ${Math.round(gap / 1_000)}s frozen`);
+            else
+                console.log(`[Worker] No suspend within ${SLEEP_LEASE_MS / 1_000}s; taking jobs again`);
+
+            this.stopWatchingForSuspend();
+
+            this.queueTransition(() => this.resume());
+        }, FREEZE_CHECK_MS);
+
+        this.suspendWatch.unref();
+    }
+
+
+
+
+    private stopWatchingForSuspend(): void {
+        if (this.suspendWatch)
+            clearInterval(this.suspendWatch);
+
+        this.suspendWatch = null;
     }
 
 
@@ -264,20 +330,6 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
                 break;
             }
 
-            case 'worker:consumption:resume': {
-                await this.resume();
-
-                await this.realtime.emit({
-                    type: 'worker:consumption:ready',
-                    channel,
-                    workerId: WORKER_ID,
-                    requestId: signal.requestId,
-                } satisfies WorkerD.Event.Consumption.Ready);
-
-                console.log(`[Worker] Reported ready to consume (${signal.requestId})`);
-
-                break;
-            }
         }
     }
 }

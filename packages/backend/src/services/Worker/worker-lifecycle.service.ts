@@ -8,9 +8,6 @@ import { CloudService } from '../Cloud/cloud.service';
 import { ExecutionService } from '../Execution/execution.service';
 import { RealtimeService } from '../Realtime/realtime.service';
 
-// How long a woken worker may take to answer before the wake counts as failed.
-const WAKE_GRACE_MS = 60_000;
-const WORKER_REPLY_TIMEOUT_MS = 2_000;
 const PREPARE_TIMEOUT_MS = 10_000;
 
 // How long a worker may sit idle before it is suspended.
@@ -299,31 +296,10 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             const ready = await this.prepareToSleep(workerId);
 
+            // Busy, or it drained and the reply was lost; either way it takes jobs again on its own.
             if (!ready) {
-                this.logger.log(`Worker ${workerId} did not report ready to sleep; keeping it consuming`);
+                this.logger.log(`Worker ${workerId} did not report ready to sleep; leaving it awake`);
 
-                this.realtime.emitSignal({
-                    type: 'worker:consumption:resume',
-                    channel: Worker.Signal.getChannel(workerId),
-                    workerId,
-                    requestId: Worker.RequestId.parse(randomUUID()),
-                } satisfies Worker.Signal.Consumption.Resume);
-
-                await this.armTimer(workerId);
-
-                return;
-            }
-
-            // Work that arrived during the drain keeps this worker available.
-            const [waitingAfterDrain, delayedAfterDrain] = await Promise.all([
-                this.queue.getWaitingCount(),
-                this.queue.getDelayedCount(),
-            ]);
-
-            if (waitingAfterDrain + delayedAfterDrain > 0) {
-                this.logger.log(`Work arrived while worker ${workerId} drained; reopening it`);
-
-                await this.resumeWorkerConsumption(workerId);
                 await this.armTimer(workerId);
 
                 return;
@@ -331,19 +307,13 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             this.logger.log(`Worker ${workerId} drained; asking the platform to suspend it`);
 
-            try {
-                await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/sleep`);
-            }
-            catch (error) {
-                // A failed suspend leaves the machine running, so reopen its consumer.
-                await this.resumeWorkerConsumption(workerId).catch(resumeError =>
-                    this.logger.error(`Could not reopen worker ${workerId} after suspend failed: ${resumeError instanceof Error ? resumeError.message : resumeError}`),
-                );
-
-                throw error;
-            }
+            // A failed suspend leaves a drained worker running; it takes jobs again once its lease ends.
+            await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/sleep`);
 
             this.logger.log(`Worker ${workerId} suspended after an idle period`);
+
+            // Work that arrived during the drain may have counted on this worker.
+            await this.ensureComputeForJob();
         }
         catch (error) {
             this.logger.warn(`Could not suspend worker ${workerId}: ${error instanceof Error ? error.message : error}`);
@@ -353,17 +323,13 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     }
 
     // Throws so the job retries; a wake that runs out of attempts leaves the next enqueue to ask again.
+    // The worker takes jobs again by itself once its machine is running.
     private async wake(workerId: Worker.Id): Promise<void> {
-        const start = Date.now();
-
         await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/wake`);
 
-        await this.resumeWorkerConsumption(workerId);
-
-        // The idle countdown starts once the worker is taking jobs.
         await this.armTimer(workerId);
 
-        this.logger.log(`Worker ${workerId} is consuming again after ${Date.now() - start}ms`);
+        this.logger.log(`Worker ${workerId} asked to start`);
     }
 
 
@@ -392,41 +358,5 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
                     && ready.data.requestId === requestId;
             },
         );
-    }
-
-
-
-
-    private async resumeWorkerConsumption(workerId: Worker.Id): Promise<void> {
-        const requestId = Worker.RequestId.parse(randomUUID());
-        const deadline  = Date.now() + WAKE_GRACE_MS;
-
-        const signal: Worker.Signal.Consumption.Resume = {
-            type: 'worker:consumption:resume',
-            channel: Worker.Signal.getChannel(workerId),
-            workerId,
-            requestId,
-        };
-
-        while (Date.now() < deadline) {
-            const ready = await this.realtime.signalAndAwaitEvent(
-                signal,
-                Worker.Event.getChannel(),
-                'worker:consumption:ready',
-                Math.max(1, Math.min(WORKER_REPLY_TIMEOUT_MS, deadline - Date.now())),
-                event => {
-                    const response = Worker.Event.Consumption.Ready.safeParse(event);
-
-                    return response.success
-                        && response.data.workerId === workerId
-                        && response.data.requestId === requestId;
-                },
-            );
-
-            if (ready)
-                return;
-        }
-
-        throw new Error(`Worker ${workerId} did not become ready within ${WAKE_GRACE_MS}ms`);
     }
 }

@@ -35,16 +35,7 @@ export namespace Worker {
             export type Prepare = z.infer<typeof Prepare>
         }
 
-        export namespace Consumption {
-
-            // Asks a woken worker to take jobs again.
-            export const Resume = Base.extend({
-                type: z.literal("worker:consumption:resume"),
-            })
-            export type Resume = z.infer<typeof Resume>
-        }
-
-        export const Schema = z.discriminatedUnion("type", [Sleep.Prepare, Consumption.Resume])
+        export const Schema = z.discriminatedUnion("type", [Sleep.Prepare])
     }
     export type Signal = z.infer<typeof Signal.Schema>
 
@@ -89,16 +80,7 @@ export namespace Worker {
             export type Ready = z.infer<typeof Ready>
         }
 
-        export namespace Consumption {
-
-            // The worker is taking jobs again.
-            export const Ready = Reply.extend({
-                type: z.literal("worker:consumption:ready"),
-            })
-            export type Ready = z.infer<typeof Ready>
-        }
-
-        export const Schema = z.discriminatedUnion("type", [ShuttingDown, Sleep.Ready, Consumption.Ready])
+        export const Schema = z.discriminatedUnion("type", [ShuttingDown, Sleep.Ready])
     }
     export type Event = z.infer<typeof Event.Schema>
 }
