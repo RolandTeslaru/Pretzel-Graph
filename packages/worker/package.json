@@ -15,6 +15,7 @@
         "@modelcontextprotocol/sdk": "^1.30.0",
         "@nestjs/common": "^11.1.16",
         "@nestjs/core": "^11.1.16",
+        "@nestjs/platform-express": "^11.1.16",
         "@pretzel-graph/node-sdk": "*",
         "@pretzel-graph/shared": "*",
         "axios": "^1.13.6",

@@ -6,10 +6,12 @@ import { ConnectionPoolService } from './services/connection-pool.service';
 import { LockService } from './services/lock.service';
 import { QueueProcessorService } from './services/queue-processor.service';
 import { SignalHandlerService } from './services/signal-handler.service';
+import { HealthController } from './health.controller';
 import { WorkerService } from './worker.service';
 
 @Module({
     imports: [RealtimeModule, AxiosModule],
+    controllers: [HealthController],
     providers: [
         WorkerService,
         QueueProcessorService,
