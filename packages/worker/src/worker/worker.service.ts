@@ -46,6 +46,15 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
 
+    public isReady(): boolean {
+        return !this.sleeping
+            && this.bullWorker?.isRunning() === true
+            && !this.bullWorker.isPaused();
+    }
+
+
+
+
     public async onApplicationBootstrap(): Promise<void> {
         await this.startConsuming();
 
