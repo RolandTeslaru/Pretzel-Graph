@@ -90,6 +90,9 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
             ? execution.igniter.targetNodeId
             : undefined;
 
+        // Registered before the APIs are built: the airlock scope among them needs the @workflow copy.
+        airlock.registerWorkflow(workflowId, workflowData);
+
         Object.assign(this, createExecutionAPIs(
             engine,
             this,

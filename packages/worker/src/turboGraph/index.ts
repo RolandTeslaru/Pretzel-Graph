@@ -54,9 +54,6 @@ export class TurboGraph {
 
         graph.addVertex(S2Graph.START_VERTEX_ID);
 
-        // Registers the @workflow copy, deduped by id.
-        executionCtx.airlock.registerWorkflow(workflowId, workflowData);
-
         for (const wfNode of Object.values(nodes)) {
             if (wfNode.isDisabled)
                 continue;
