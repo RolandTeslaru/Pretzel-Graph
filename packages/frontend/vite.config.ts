@@ -4,6 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { Agent } from 'node:http'
+import { readFileSync } from 'node:fs'
+
+const { version } = JSON.parse(
+  readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+) as { version: string }
 
 // Keep-alive upstream sockets; without it busy sessions exhaust TIME_WAIT and Vite hangs.
 const backendProxy = {
@@ -17,6 +22,9 @@ const backendProxy = {
 // https://vite.dev/config/
 export default defineConfig({
   envDir: '../../',
+  define: {
+    __PRETZELGRAPH_VERSION__: JSON.stringify(version),
+  },
   server: {
     // Pin the HMR socket to the dev server when the page is served from another origin.
     hmr: { host: 'localhost', port: 5173, protocol: 'ws' },

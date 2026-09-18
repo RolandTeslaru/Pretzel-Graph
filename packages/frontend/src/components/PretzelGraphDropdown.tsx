@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import pretzelLogo from '@/assets/pretzel-logo.png'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK/sdk'
 import { AuthSDK } from '@/SDKs/AuthSDK/sdk'
 import { CLOUD_URL } from '@/config'
+import { openPretzelGraphInformationDialog } from './PretzelGraphInformationDialog'
 
 // The origin is configured; the path is not.
 export const WORKSPACES_URL = CLOUD_URL && `${CLOUD_URL.replace(/\/$/, '')}/`
@@ -16,6 +18,7 @@ export function AdminPanelItem() {
 
     return (
         <>
+            <DropdownMenu.Separator />
             <DropdownMenu.Item asChild>
                 {/* Another origin, so a plain anchor rather than a router link. */}
                 <a href={WORKSPACES_URL}>
@@ -23,7 +26,6 @@ export function AdminPanelItem() {
                     Admin panel
                 </a>
             </DropdownMenu.Item>
-            <DropdownMenu.Separator />
         </>
     )
 }
@@ -31,7 +33,7 @@ export function AdminPanelItem() {
 type Props = {
     compact?: boolean
     title?: string
-    /** Entries for this screen, placed above the theme group. */
+    /** Entries for this screen, placed below the theme group. */
     children?: ReactNode
 }
 
@@ -55,7 +57,17 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', 
                 )}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="start">
-                {children}
+                <DropdownMenu.Item asChild>
+                    <Link to="/home/library">
+                        <SystemIcons.Folder />
+                        Home
+                    </Link>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onSelect={openPretzelGraphInformationDialog}>
+                    <SystemIcons.Info />
+                    Information
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
                 {/* <DropdownMenu.Item>
                     <SystemIcons.Settings />
                     Settings
@@ -77,6 +89,7 @@ export function PretzelGraphDropdown({ compact = false, title = 'PretzelGraph', 
                         System
                     </DropdownMenu.RadioItem>
                 </DropdownMenu.RadioGroup>
+                {children}
                 {/* Self-hosted only: with a cloud origin the session is managed there. */}
                 {!WORKSPACES_URL && (
                     <>
