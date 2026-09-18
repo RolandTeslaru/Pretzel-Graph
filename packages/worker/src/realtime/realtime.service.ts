@@ -24,10 +24,28 @@ export class RealtimeService implements OnApplicationShutdown {
     private readonly sub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
 
     private readonly scopes = new Map<Execution.Signal.Channel, RealtimeScopeImpl>();
+    private readonly listeners = new Map<Realtime.Channel, Set<(signal: Realtime.Signal) => void>>();
 
     constructor() {
         this.sub.on("message", (channel: string, raw: string) => {
             this.scopes.get(channel as Execution.Signal.Channel)?.dispatch(raw);
+
+            const listeners = this.listeners.get(channel as Realtime.Channel);
+
+            if (!listeners)
+                return;
+
+            let signal: Realtime.Signal;
+
+            try {
+                signal = JSON.parse(raw) as Realtime.Signal;
+            }
+            catch {
+                return;
+            }
+
+            for (const listener of listeners)
+                listener(signal);
         });
     }
 
@@ -55,7 +73,9 @@ export class RealtimeService implements OnApplicationShutdown {
             (ch, payload) => { this.pub.publish(ch, payload); },
             () => {
                 this.scopes.delete(channel);
-                this.sub.unsubscribe(channel).catch(() => {});
+
+                if (!this.listeners.has(channel))
+                    this.sub.unsubscribe(channel).catch(() => {});
             },
         );
 
@@ -66,6 +86,42 @@ export class RealtimeService implements OnApplicationShutdown {
         );
 
         return scope;
+    }
+
+
+
+
+    // A process-level signal subscription, used for lifecycle messages outside an execution.
+    public subscribe<T extends Realtime.Signal>(
+        channel: Realtime.Channel,
+        handler: (signal: T) => void,
+    ): () => void {
+        if (!this.listeners.has(channel)) {
+            this.listeners.set(channel, new Set());
+            this.sub.subscribe(channel).catch(err =>
+                console.error(`[Realtime] Failed to subscribe to ${channel}:`, err),
+            );
+        }
+
+        const listener = handler as (signal: Realtime.Signal) => void;
+
+        this.listeners.get(channel)!.add(listener);
+
+        return () => {
+            const listeners = this.listeners.get(channel);
+
+            if (!listeners)
+                return;
+
+            listeners.delete(listener);
+
+            if (listeners.size === 0) {
+                this.listeners.delete(channel);
+
+                if (!this.scopes.has(channel as Execution.Signal.Channel))
+                    this.sub.unsubscribe(channel).catch(() => {});
+            }
+        };
     }
 
 
@@ -85,7 +141,7 @@ export class RealtimeService implements OnApplicationShutdown {
 
 
     // Publishes any event on its own channel.
-    public async emit(event: Realtime.Event): Promise<void> {
+    public async emit<T extends Realtime.Event>(event: T): Promise<void> {
         await this.pub.publish(event.channel, JSON.stringify(event));
     }
 
@@ -106,7 +162,10 @@ export class RealtimeService implements OnApplicationShutdown {
             .filter((connection) => connection.status === 'end')
             .map((connection) => connection.connect()));
 
-        const channels = [...this.scopes.keys()];
+        const channels = [...new Set<Realtime.Channel>([
+            ...this.scopes.keys(),
+            ...this.listeners.keys(),
+        ])];
 
         if (channels.length > 0)
             await this.sub.subscribe(...channels);

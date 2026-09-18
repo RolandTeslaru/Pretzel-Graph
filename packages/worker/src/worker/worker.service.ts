@@ -33,6 +33,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
     private bullWorker: BullWorker<Execution.Queue.Item> | null = null;
 
     private sleeping = false;
+    private lifecycleTransition = Promise.resolve();
+    private removeLifecycleSubscription: (() => void) | null = null;
 
     constructor(
         private readonly realtime: RealtimeService,
@@ -44,18 +46,21 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
 
-    public onApplicationBootstrap(): void {
-        this.startConsuming();
+    public async onApplicationBootstrap(): Promise<void> {
+        await this.startConsuming();
+
+        if (WORKER_ID) {
+            this.removeLifecycleSubscription = this.realtime.subscribe<WorkerD.Signal>(
+                WorkerD.Signal.getChannel(WORKER_ID),
+                signal => this.queueLifecycleSignal(signal),
+            );
+        }
     }
 
 
 
 
-    /**
-     * Lets go of everything a suspended machine would find dead on resume. False, with nothing
-     * released, while an execution is running. Realtime stays connected so the caller can confirm
-     * before disconnecting it.
-     */
+    // Releases suspend-sensitive resources only when no execution is running.
     public async sleep(): Promise<boolean> {
         if (this.sleeping || !this.bullWorker)
             return this.sleeping;
@@ -64,25 +69,43 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         await this.bullWorker.pause(true);
 
         if (this.bookkeeping.getRunningExecutionIds().length > 0) {
-            this.bullWorker.resume();
+            await this.bullWorker.resume();
 
             return false;
         }
 
         // A closed BullMQ worker cannot run again, so `resume` builds a new one.
-        await this.bullWorker.close();
+        try {
+            await this.bullWorker.close();
+        }
+        catch (error) {
+            try {
+                this.bullWorker.resume();
+            }
+            catch {}
+
+            throw error;
+        }
 
         this.bullWorker = null;
-
-        await this.connectionPools.purgeAll();
-
-        // Idle keep-alive sockets would be stale after a suspend.
-        http.globalAgent.destroy();
-        https.globalAgent.destroy();
-
-        await this.redisWorker.quit().catch(() => {});
-
         this.sleeping = true;
+
+        try {
+            await this.connectionPools.purgeAll();
+
+            // Idle keep-alive sockets would be stale after a suspend.
+            http.globalAgent.destroy();
+            https.globalAgent.destroy();
+
+            await this.redisWorker.quit();
+        }
+        catch (error) {
+            this.redisWorker.disconnect();
+
+            await this.resume().catch(() => {});
+
+            throw error;
+        }
 
         return true;
     }
@@ -92,14 +115,17 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
     // Reopens what `sleep` let go of and takes jobs again.
     public async resume(): Promise<void> {
-        if (!this.sleeping)
+        if (!this.sleeping) {
+            await this.bullWorker?.waitUntilReady();
+
             return;
+        }
 
         await this.realtime.reconnect();
 
         this.redisWorker = createRedisConnection();
 
-        this.startConsuming();
+        await this.startConsuming();
 
         this.sleeping = false;
     }
@@ -137,7 +163,9 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
     public async onApplicationShutdown(): Promise<void> {
-        await bounded(this.redisWorker.quit(), QUIT_TIMEOUT_MS);
+        this.removeLifecycleSubscription?.();
+
+        await bounded(this.redisWorker.quit().catch(() => {}), QUIT_TIMEOUT_MS);
 
         this.redisWorker.disconnect();
     }
@@ -145,7 +173,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
 
-    private startConsuming(): void {
+    private async startConsuming(): Promise<void> {
         this.bullWorker = new BullWorker(Execution.Queue.ID, this.queueProcessor.processJob, {
             connection:  this.redisWorker,
             autorun:     false,
@@ -158,6 +186,69 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
             maxStalledCount: 0,
         });
 
-        void this.bullWorker.run();
+        void this.bullWorker.run().catch(error => {
+            if (!this.sleeping)
+                console.error(`[Worker] Queue consumer stopped: ${error instanceof Error ? error.message : error}`);
+        });
+
+        await this.bullWorker.waitUntilReady();
+    }
+
+
+
+
+    private queueLifecycleSignal(raw: WorkerD.Signal): void {
+        const parsed = WorkerD.Signal.Schema.safeParse(raw);
+
+        if (!parsed.success || parsed.data.workerId !== WORKER_ID)
+            return;
+
+        const signal = parsed.data;
+
+        this.lifecycleTransition = this.lifecycleTransition
+            .catch(() => {})
+            .then(() => this.handleLifecycleSignal(signal))
+            .catch(error => {
+                console.error(`[Worker] Lifecycle transition failed: ${error instanceof Error ? error.message : error}`);
+            });
+    }
+
+
+
+
+    private async handleLifecycleSignal(signal: WorkerD.Signal): Promise<void> {
+        if (!WORKER_ID)
+            return;
+
+        const channel = WorkerD.Event.getChannel();
+
+        switch (signal.type) {
+            case 'worker:sleep:prepare': {
+                if (!await this.sleep())
+                    return;
+
+                await this.realtime.emit({
+                    type: 'worker:sleep:ready',
+                    channel,
+                    workerId: WORKER_ID,
+                    requestId: signal.requestId,
+                } satisfies WorkerD.Event.Sleep.Ready);
+
+                break;
+            }
+
+            case 'worker:consumption:resume': {
+                await this.resume();
+
+                await this.realtime.emit({
+                    type: 'worker:consumption:ready',
+                    channel,
+                    workerId: WORKER_ID,
+                    requestId: signal.requestId,
+                } satisfies WorkerD.Event.Consumption.Ready);
+
+                break;
+            }
+        }
     }
 }

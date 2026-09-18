@@ -70,7 +70,9 @@ export class RealtimeService implements OnModuleDestroy {
                     
                     if (channelWaiters.size === 0) {
                         this.waiters.delete(eventChannel);
-                        this.redisSub.unsubscribe(eventChannel);
+
+                        if (!this.listeners.has(eventChannel))
+                            this.redisSub.unsubscribe(eventChannel);
                     }
                 }
             };
