@@ -49,6 +49,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
     public async onApplicationBootstrap(): Promise<void> {
         await this.startConsuming();
 
+        console.log(`[Worker] Consuming ${Execution.Queue.ID} as ${WORKER_ID ?? 'an unnamed worker'}`);
+
         if (WORKER_ID) {
             this.removeLifecycleSubscription = this.realtime.subscribe<WorkerD.Signal>(
                 WorkerD.Signal.getChannel(WORKER_ID),
@@ -68,8 +70,12 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         // Stop taking jobs first, so none can start between the check and the close.
         await this.bullWorker.pause(true);
 
-        if (this.bookkeeping.getRunningExecutionIds().length > 0) {
+        const running = this.bookkeeping.getRunningExecutionIds();
+
+        if (running.length > 0) {
             await this.bullWorker.resume();
+
+            console.log(`[Worker] Sleep refused: ${running.length} execution(s) still running`);
 
             return false;
         }
@@ -98,6 +104,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
             https.globalAgent.destroy();
 
             await this.redisWorker.quit();
+
+            console.log('[Worker] Asleep: queue consumer closed, pools purged, redis released');
         }
         catch (error) {
             this.redisWorker.disconnect();
@@ -118,8 +126,12 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         if (!this.sleeping) {
             await this.bullWorker?.waitUntilReady();
 
+            console.log('[Worker] Already consuming; nothing to reopen');
+
             return;
         }
+
+        console.log('[Worker] Waking: reopening realtime, redis and the queue consumer');
 
         await this.realtime.reconnect();
 
@@ -128,6 +140,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         await this.startConsuming();
 
         this.sleeping = false;
+
+        console.log('[Worker] Awake: taking jobs again');
     }
 
 
@@ -205,6 +219,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
         const signal = parsed.data;
 
+        console.log(`[Worker] Received ${signal.type} (${signal.requestId})`);
+
         this.lifecycleTransition = this.lifecycleTransition
             .catch(() => {})
             .then(() => this.handleLifecycleSignal(signal))
@@ -234,6 +250,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
                     requestId: signal.requestId,
                 } satisfies WorkerD.Event.Sleep.Ready);
 
+                console.log(`[Worker] Reported ready to sleep (${signal.requestId})`);
+
                 break;
             }
 
@@ -246,6 +264,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
                     workerId: WORKER_ID,
                     requestId: signal.requestId,
                 } satisfies WorkerD.Event.Consumption.Ready);
+
+                console.log(`[Worker] Reported ready to consume (${signal.requestId})`);
 
                 break;
             }

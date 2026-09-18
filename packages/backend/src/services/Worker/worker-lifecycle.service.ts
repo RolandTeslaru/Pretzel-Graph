@@ -155,6 +155,9 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             const workersToWake = sleepingWorkers.slice(0, Math.max(workersNeeded - awakeOrWaking.size, 0));
 
+            if (workersToWake.length > 0)
+                this.logger.log(`Queue needs ${workersNeeded} worker(s); ${connectedWorkers.length} connected, ${wakingWorkers.length} waking, waking ${workersToWake.join(', ')}`);
+
             await Promise.all(workersToWake.map((workerId) => this.requestWake(workerId)));
         }
         catch (error) {
@@ -181,6 +184,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     // A wake already queued for this worker absorbs the request.
     private async requestWake(workerId: Worker.Id): Promise<void> {
+        this.logger.log(`Queued a wake for worker ${workerId}`);
+
         await this.lifecycleQueues.get(workerId)?.add(WAKE_JOB, {}, {
             jobId:            WAKE_JOB,
             attempts:         WAKE_ATTEMPTS,
@@ -262,6 +267,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async sleepIfIdle(workerId: Worker.Id): Promise<void> {
+        this.logger.log(`Worker ${workerId} reached its idle window; checking the queue`);
+
         try {
             const [activeJobs, waiting, delayed, connectedWorkers] = await Promise.all([
                 this.queue.getActive(),
@@ -271,13 +278,18 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             ]);
 
             // Already down; the next wake schedules its countdown.
-            if (!connectedWorkers.includes(workerId))
+            if (!connectedWorkers.includes(workerId)) {
+                this.logger.log(`Worker ${workerId} is not connected; leaving it down`);
+
                 return;
+            }
 
             const runningJobsOnWorker = activeJobs.filter((job) => job.processedBy === workerId);
 
             // Busy, or work is queued that may need its capacity.
             if (runningJobsOnWorker.length > 0 || waiting + delayed > 0) {
+                this.logger.log(`Worker ${workerId} stays awake: ${runningJobsOnWorker.length} running, ${waiting + delayed} queued`);
+
                 await this.armTimer(workerId);
 
                 return;
@@ -286,6 +298,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             const ready = await this.prepareToSleep(workerId);
 
             if (!ready) {
+                this.logger.log(`Worker ${workerId} did not report ready to sleep; keeping it consuming`);
+
                 this.realtime.emitSignal({
                     type: 'worker:consumption:resume',
                     channel: Worker.Signal.getChannel(workerId),
@@ -305,11 +319,15 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             ]);
 
             if (waitingAfterDrain + delayedAfterDrain > 0) {
+                this.logger.log(`Work arrived while worker ${workerId} drained; reopening it`);
+
                 await this.resumeWorkerConsumption(workerId);
                 await this.armTimer(workerId);
 
                 return;
             }
+
+            this.logger.log(`Worker ${workerId} drained; asking the platform to suspend it`);
 
             try {
                 await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/sleep`);
@@ -334,12 +352,16 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     // Throws so the job retries; a wake that runs out of attempts leaves the next enqueue to ask again.
     private async wake(workerId: Worker.Id): Promise<void> {
+        const start = Date.now();
+
         await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/wake`);
 
         await this.resumeWorkerConsumption(workerId);
 
         // The idle countdown starts once the worker is taking jobs.
         await this.armTimer(workerId);
+
+        this.logger.log(`Worker ${workerId} is consuming again after ${Date.now() - start}ms`);
     }
 
 
@@ -347,6 +369,8 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     private prepareToSleep(workerId: Worker.Id): Promise<boolean> {
         const requestId = Worker.RequestId.parse(randomUUID());
+
+        this.logger.log(`Asking worker ${workerId} to prepare for sleep`);
 
         return this.realtime.signalAndAwaitEvent<Worker.Signal.Sleep.Prepare>(
             {
