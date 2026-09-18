@@ -277,9 +277,11 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
                 this.getConnectedWorkerIds(),
             ]);
 
-            // Already down; the next wake schedules its countdown.
+            // Down, or still booting; checked again next window either way.
             if (!connectedWorkers.includes(workerId)) {
-                this.logger.log(`Worker ${workerId} is not connected; leaving it down`);
+                this.logger.log(`Worker ${workerId} is not connected; checking again next window`);
+
+                await this.armTimer(workerId);
 
                 return;
             }
