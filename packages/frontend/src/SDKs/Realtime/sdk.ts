@@ -73,15 +73,22 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         };
     }
 
-    // Resolve once an event of `type` lands on `channel`, then auto-unsubscribe.
+    // Resolve once an event of `type` (or any type in the set) lands on `channel`, then auto-unsubscribe.
     // Frontend mirror of the backend RealtimeService.awaitEvent. timeoutMs <= 0 waits forever;
     // pass an abortSignal to stop waiting early (rejects with AbortError).
     public awaitEvent<E extends Realtime.Event>(
-        channel:     Realtime.Channel,
-        type:        E["type"],
-        timeoutMs:   number = 5000,
+        channel:      Realtime.Channel,
+        type:         E["type"] | ReadonlySet<string>,
+        timeoutMs:    number = 5000,
         abortSignal?: AbortSignal,
     ): Promise<E> {
+        const isAwaited = (eventType: string) => {
+            if (typeof type === "string")
+                return eventType === type;
+
+            return type.has(eventType);
+        };
+
         return new Promise<E>((resolve, reject) => {
             let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -93,7 +100,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             const onAbort = () => { cleanup(); reject(new DOMException("aborted", "AbortError")); };
 
             const unsubscribe = this.subscribeToChannel<Realtime.Event>(channel, (event) => {
-                if (event.type !== type) return;
+                if (!isAwaited(event.type)) return;
                 cleanup();
                 resolve(event as E);
             });
@@ -104,7 +111,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             if (timeoutMs > 0) {
                 timer = setTimeout(() => {
                     cleanup();
-                    reject(new Error(`awaitEvent: timed out after ${timeoutMs}ms waiting for "${type}" on ${channel}`));
+                    reject(new Error(`awaitEvent: timed out after ${timeoutMs}ms waiting on ${channel}`));
                 }, timeoutMs);
             }
         });

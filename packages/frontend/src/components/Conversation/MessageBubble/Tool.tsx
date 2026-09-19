@@ -47,10 +47,10 @@ const Tool: React.FC<Props> = ({ message }) => {
     );
 
     if (!error)
-        return <div className="flex flex-col items-start w-full">{pill}</div>;
+        return <div className="flex flex-col items-start w-full animate-in fade-in-0 slide-in-from-left-2 duration-300 ease-out">{pill}</div>;
 
     return (
-        <div className="flex flex-col items-start w-full">
+        <div className="flex flex-col items-start w-full animate-in fade-in-0 slide-in-from-left-2 duration-300 ease-out">
             <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                     {pill}

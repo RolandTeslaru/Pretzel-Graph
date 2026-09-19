@@ -3,6 +3,7 @@ import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { router } from "@/main";
+import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
 import { deriveChatName } from "../ChatSDK/actions";
 import type { AssistantSDKImpl } from "./sdk";
@@ -24,6 +25,8 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
                     content,
                 }
 
+                const abortController = new AbortController()
+
                 try {
                     if (!sdk.state.currentChat) {
                         const { chat } = await Chat.API.ensure(api, Assistant.WORKFLOW_ID, { chatId, name: deriveChatName(content) })
@@ -43,7 +46,18 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
                     const context: Assistant.Context = { workflowId: WorkbenchSDK.document.workflowId }
                     const executionId = Execution.createId()
 
-                    sdk.followExecution(executionId)
+                    sdk.setState(s => { s.executionId = executionId })
+
+                    // Listening before the run starts, so a fast run cannot settle unseen.
+                    const settled = RealtimeSDK.awaitEvent(
+                        Execution.Event.getChannel(executionId),
+                        Execution.Event.TERMINAL,
+                        0,
+                        abortController.signal,
+                    )
+
+                    // Rejects with AbortError when the run fails to start; nothing awaits it then.
+                    settled.catch(() => undefined)
 
                     await Execution.API.run(api, Assistant.WORKFLOW_ID, {
                         executionId,
@@ -54,11 +68,16 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
                             inputs:  { [Assistant.CONTEXT_PORT_ID]: context },
                         },
                     })
+
+                    await settled
                 }
                 catch (err) {
-                    sdk.unfollowExecution()
                     toast.error(SystemError.messageFrom(err))
                     console.error("Failed to send message to the assistant", err)
+                }
+                finally {
+                    abortController.abort()
+                    sdk.setState(s => { s.executionId = null })
                 }
             },
 

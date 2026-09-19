@@ -20,7 +20,7 @@ const AI: React.FC<Props> = ({ message, toolCallStatus }) => {
     return null
 
   return (
-    <div className="flex flex-col items-start w-full gap-1">
+    <div className="flex flex-col items-start w-full gap-1 origin-bottom-left animate-in fade-in-0 zoom-in-95 slide-in-from-left-3 slide-in-from-bottom-2 duration-300 ease-out">
       {message.content && 
         <div className="flex flex-row gap-3 items-end max-w-[85%]">
           <div className="bg-muted/40 border border-border text-foreground px-2 py-0.5 rounded-2xl rounded-bl-sm text-sm shadow-sm">

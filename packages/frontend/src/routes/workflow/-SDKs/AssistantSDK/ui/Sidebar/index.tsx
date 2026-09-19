@@ -2,7 +2,7 @@ import { memo, useEffect } from 'react'
 import { AssistantSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import AssistantPanel from '../ConversationArea'
-import { AuroraRays } from '@/components/AuroraRays/AuroraRays'
+import AssistantAurora from '../AssistantAurora'
 import ConversationRoot from '../ConversationRoot'
 import { Conversation } from '@/components/Conversation'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -30,9 +30,7 @@ const AssistantSidebar = () => {
                             </Conversation.Actions>
                         </Conversation.Header>
                         <AssistantPanel />
-                        <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-[-1] -scale-x-100'>
-                            <AuroraRays />
-                        </div>
+                        <AssistantAurora />
                     </ConversationRoot>
                 </StackSDK.Template>
             ))
