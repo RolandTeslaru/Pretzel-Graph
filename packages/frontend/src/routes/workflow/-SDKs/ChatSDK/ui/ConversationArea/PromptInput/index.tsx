@@ -1,6 +1,4 @@
-import { useRef } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@pretzel-graph/standard-ui/foundations/input-group'
+import { InputGroupButton } from '@pretzel-graph/standard-ui/foundations/input-group'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { ChatSDK } from '../../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
@@ -9,99 +7,33 @@ import AddImageDialogContent from './dialogs/AddImageDialog'
 import AddFileDialogContent from './dialogs/AddFileDialog'
 import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'
 import { NodeBadge } from '@/components/NodeBadge'
-import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
+import { Conversation } from '@/components/Conversation'
 
-type PromptFormValues = {
-    prompt: string
-}
-
-interface Props {
-    className: string
-}
-
-const PromptInput: React.FC<Props> = ({ className }) => {
+const PromptInput: React.FC = () => {
     const hasChatInputNode = WorkbenchSDK.useDocument(d => {
         return Object.values(d.data.nodes).some(node => node.blueprintId === "Core.Chat.Input");
     })
-    
-    const { handleSubmit, control, reset, formState: { isValid } } = useForm<PromptFormValues>({
-        defaultValues: {
-            prompt: ""
-        },
-        mode: 'onChange'
-    })
-
-    const formRef = useRef<HTMLFormElement>(null)
-
-    const onSubmit = (data: PromptFormValues) => {
-        if (!data.prompt.trim()) return;
-
-        ChatSDK.actions.message.send({
-            content: data.prompt.trim(),
-        })
-        reset({ prompt: "" })
-    }
 
     return (
-        <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
-            <InputGroup className={`${className} has-[[data-slot=input-group-control]:focus-visible]:border-[--port-Message] has-[[data-slot=input-group-control]:focus-visible]:ring-blue-500/50`}>
-                {!hasChatInputNode && (
-                    <p className='absolute top-1/2 -translate-y-1/2 text-xs text-foreground flex items-center gap-1'>
-                        Add a <NodeBadge icon="MessagesSquare" label="Chat Input" accent="port-Message" /> node to send messages.
-                    </p>
-                )}
-                <Controller
-                    name="prompt"
-                    control={control}
-                    rules={{ required: true, validate: (val) => val.trim().length > 0 }}
-                    render={({ field }) => (
-                        <InputGroupTextarea
-                            value={field.value}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    formRef.current?.requestSubmit();
-                                }
-                            }}
-                            placeholder="Ask, Search or Chat..."
-                            disabled={!hasChatInputNode}
-                        />
-                    )}
-                />
-
-                <InputGroupAddon align="block-end">
-                    <ArtifactAddButton disabled={!hasChatInputNode} />
-                    <SendButton  disabled={!isValid || !hasChatInputNode} />
-                </InputGroupAddon>
-            </InputGroup>
-        </form>
+        <Conversation.PromptInput
+            onSend={(content) => ChatSDK.actions.message.send({ content })}
+            placeholder="Ask, Search or Chat..."
+            disabled={!hasChatInputNode}
+            notice={!hasChatInputNode && (
+                <>Add a <NodeBadge icon="MessagesSquare" label="Chat Input" accent="port-Message" /> node to send messages.</>
+            )}
+        >
+            <ArtifactAddButton />
+            <Conversation.SendButton />
+        </Conversation.PromptInput>
     )
 }
 
 export default PromptInput
 
-const SendButton = ({ disabled }: { disabled: boolean }) => {
+const ArtifactAddButton = () => {
+    const { disabled } = Conversation.usePromptInput()
 
-    // Note dont add disabled because it disables the whole text area for some dumb reason
-    return (
-        <InputGroupButton
-            variant="message"
-            className={` ml-auto transition-opacity ${disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100 hover:opacity-90'}`}
-            type="submit"
-            onClick={(e) => {
-                if (disabled) e.preventDefault();
-            }}
-        >
-                <>
-                    <span>Send</span>
-                    <SystemIcons.ArrowUp />
-                </>
-        </InputGroupButton>
-    )
-}
-
-const ArtifactAddButton = ({ disabled }: { disabled: boolean }) => {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -143,5 +75,3 @@ const ArtifactAddButton = ({ disabled }: { disabled: boolean }) => {
         </DropdownMenu.Root>
     )
 }
-
-

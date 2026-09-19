@@ -3,6 +3,7 @@ import { ChatSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import ConversationArea from '../ConversationArea'
 import Header from './header'
+import ConversationRoot from '../ConversationRoot'
 
 
 const ChatSidebar = () => {
@@ -12,7 +13,10 @@ const ChatSidebar = () => {
         if (isSidebarVisible) {
             StackSDK.actions.push("chatSidebar", (props) => (
                 <StackSDK.Template {...props}>
-                    <ChatSidebarContent />
+                    <ConversationRoot>
+                        <Header />
+                        <ConversationArea />
+                    </ConversationRoot>
                 </StackSDK.Template>
             ))
         } else {
@@ -24,14 +28,3 @@ const ChatSidebar = () => {
 }
 
 export default ChatSidebar
-
-
-const ChatSidebarContent = () => {
-
-    return (
-        <div className='flex flex-col h-full'>
-            <Header />
-            <ConversationArea/>
-        </div>
-    )
-}

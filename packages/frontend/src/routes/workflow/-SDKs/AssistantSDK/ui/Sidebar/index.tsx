@@ -4,6 +4,7 @@ import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import AssistantPanel from '../ConversationArea'
 import Header from './header'
 import { AuroraRays } from '@/components/AuroraRays/AuroraRays'
+import { Conversation } from '@/components/Conversation'
 
 const AssistantSidebar = () => {
     const isSidebarVisible = AssistantSDK.useStore(s => s.isSidebarVisible)
@@ -27,12 +28,12 @@ export default AssistantSidebar
 
 const AssistantSidebarContent = memo(() => {
     return (
-        <div className='flex flex-col h-full relative'>
+        <Conversation.Root accent="LanguageModel">
             <Header />
-            <AssistantPanel messagesAreaClassname='pt-[60px]' />
+            <AssistantPanel />
             <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-[-1] -scale-x-100'>
                 <AuroraRays />
             </div>
-        </div>
+        </Conversation.Root>
     )
 })

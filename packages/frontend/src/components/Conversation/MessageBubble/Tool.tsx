@@ -7,7 +7,7 @@ interface Props {
     message: Chat.Message.Tool
 }
 
-const ToolCall: React.FC<Props> = ({ message }) => {
+const Tool: React.FC<Props> = ({ message }) => {
     const isSuccess = message.data.status === "success";
     const error = !isSuccess ? message.data.error : undefined;
 
@@ -75,4 +75,4 @@ const ToolCall: React.FC<Props> = ({ message }) => {
     )
 }
 
-export default ToolCall
+export default Tool
