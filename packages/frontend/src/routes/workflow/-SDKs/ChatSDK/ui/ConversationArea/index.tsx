@@ -1,9 +1,7 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations/scrollArea'
-import HumanMessageBubble from './bubbles/HumanMessage'
-import AIMessageBubble from './bubbles/AIMessage'
-import ToolBubble from './bubbles/Tool'
+import { MessageBubble } from '@/components/AI/MessageBubble'
 import { Chat } from '@pretzel-graph/shared/domain'
 import PromptInput from './PromptInput'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
@@ -22,12 +20,12 @@ const ConversationArea: React.FC = () => {
 
 
 
-  const [messageIds, isLoading, lastMessageContent] = ChatSDK.useStore(s => {
+  const [messageIds, isLoading, lastMessageContent, toolCallStatus] = ChatSDK.useStore(s => {
 
     const lastId = s.messages[s.messages.length - 1];
     const lastMessageContent = lastId ? s.messagesRecord[lastId]?.content : undefined;
 
-    return [s.messages, s.isLoading, lastMessageContent]
+    return [s.messages, s.isLoading, lastMessageContent, s.toolCallStatus] as const
   })
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,7 +71,7 @@ const ConversationArea: React.FC = () => {
             </div>
           )}
           {messageIds.map((id, index) => (
-              <MessageItem key={index} id={id} />
+              <MessageItem key={index} id={id} toolCallStatus={toolCallStatus} />
           ))}
         </div>
       </ScrollArea.Root>
@@ -81,23 +79,26 @@ const ConversationArea: React.FC = () => {
   )
 }
 
-const MessageItem = memo(({ id }: { id: Chat.Message.Id }) => {
+interface MessageItemProps {
+  id: Chat.Message.Id
+  toolCallStatus: MessageBubble.ToolCallStatusRecord
+}
+
+const MessageItem = memo(({ id, toolCallStatus }: MessageItemProps) => {
   const message = ChatSDK.useStore(s => s.messagesRecord[id]);
 
   if (!message) return null;
 
   if (message.role === "human")
-    return <HumanMessageBubble message={message} />;
+    return <MessageBubble.Human message={message} />;
 
   if (message.role === "ai")
-    return <AIMessageBubble message={message} />;
+    return <MessageBubble.AI message={message} toolCallStatus={toolCallStatus} />;
 
   if (message.role === "tool")
-    return <ToolBubble message={message} />;
+    return <MessageBubble.ToolCall message={message} />;
 
   return null;
-}, (prevProps, nextProps) => {
-  return prevProps.id === nextProps.id;
 })
 
 export default ConversationArea

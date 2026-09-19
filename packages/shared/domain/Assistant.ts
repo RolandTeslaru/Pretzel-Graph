@@ -38,6 +38,7 @@ export namespace Assistant {
 
     export namespace ToolCall {
         export const Id = z.string().brand("AssistantToolCallId")
+        export type Id = z.infer<typeof ToolCall.Id>
         export const Schema = z.object({
             id: ToolCall.Id,
             name: z.string(),

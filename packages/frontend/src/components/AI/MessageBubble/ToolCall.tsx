@@ -1,9 +1,19 @@
-import { Chat } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { toast } from 'sonner'
+import type { MessageBubble } from '.'
 
-const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
+interface Props {
+    message: {
+        data: {
+            tool_name: string
+            status: MessageBubble.ToolCallStatus
+            error?: string
+        }
+    }
+}
+
+const ToolCall: React.FC<Props> = ({ message }) => {
     const isSuccess = message.data.status === "success";
     const error = !isSuccess ? message.data.error : undefined;
 
@@ -71,4 +81,4 @@ const ToolBubble = ({ message }: { message: Chat.Message.Tool }) => {
     )
 }
 
-export default ToolBubble
+export default ToolCall

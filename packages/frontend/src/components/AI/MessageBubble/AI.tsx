@@ -1,15 +1,23 @@
-import { Chat } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChatSDK } from '@/routes/workflow/-SDKs/ChatSDK/sdk'
+import type { MessageBubble } from '.'
 
-const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
+interface Props {
+  message: {
+    content: string
+    data: {
+      isProcessing: boolean
+      tool_calls?: { id: string, name: string }[]
+    }
+  }
+  toolCallStatus: MessageBubble.ToolCallStatusRecord
+}
 
-  const statuses = ChatSDK.useStore(s => (message.data.tool_calls ?? []).map(tc => s.toolCallStatus[tc.id]))
+const AI: React.FC<Props> = ({ message, toolCallStatus }) => {
 
-  const pendingToolCalls = (message.data.tool_calls ?? []).filter((_, i) => !statuses[i])
+  const pendingToolCalls = (message.data.tool_calls ?? []).filter(tc => !toolCallStatus[tc.id])
 
   const showSpinner = message.content === "" && message.data.isProcessing
 
@@ -48,4 +56,4 @@ const AIMessageBubble = ({ message }: { message: Chat.Message.AI }) => {
   )
 }
 
-export default AIMessageBubble
+export default AI

@@ -47,26 +47,22 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
         thread: {
             new: () => sdk.setState(s => {
                 s.currentAssistantId = Assistant.createId();
-                s.messages = [];
-                s.messagesRecord = {};
+                sdk.reducers.resetMessages(s);
             }),
             clear: () => sdk.setState(s => {
-                s.messages = [];
-                s.messagesRecord = {};
+                sdk.reducers.resetMessages(s);
             }),
             select: (assistantId) => sdk.setState(s => {
                 // TODO: load messages for the selected assistant from the backend.
                 s.currentAssistantId = assistantId;
-                s.messages = [];
-                s.messagesRecord = {};
+                sdk.reducers.resetMessages(s);
             }),
             erase: (assistantId) => sdk.setState(s => {
                 // TODO: erase the assistant on the backend.
                 delete s.assistants[assistantId];
                 if (s.currentAssistantId === assistantId) {
                     s.currentAssistantId = Assistant.createId();
-                    s.messages = [];
-                    s.messagesRecord = {};
+                    sdk.reducers.resetMessages(s);
                 }
             }),
         },

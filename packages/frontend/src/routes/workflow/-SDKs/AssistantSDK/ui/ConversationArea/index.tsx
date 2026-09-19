@@ -3,7 +3,7 @@ import { Assistant } from '@pretzel-graph/shared/domain'
 import { AssistantSDK } from '../../sdk'
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations/scrollArea'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
-import MessageBubble from './MessageBubble'
+import { MessageBubble } from '@/components/AI/MessageBubble'
 import PromptInput from './PromptInput'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 
@@ -12,10 +12,10 @@ interface Props {
 }
 
 const AssistantPanel: React.FC<Props> = () => {
-    const [messageIds, isLoading, lastMessageContent] = AssistantSDK.useStore(s => {
+    const [messageIds, isLoading, lastMessageContent, toolCallStatus] = AssistantSDK.useStore(s => {
         const lastId = s.messages[s.messages.length - 1]
         const lastMessageContent = lastId ? s.messagesRecord[lastId]?.content : undefined
-        return [s.messages, s.isLoading, lastMessageContent] as const
+        return [s.messages, s.isLoading, lastMessageContent, s.toolCallStatus] as const
     })
 
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -43,7 +43,7 @@ const AssistantPanel: React.FC<Props> = () => {
                         </div>
                     )}
                     {messageIds.map((id) => (
-                        <MessageItem key={id} id={id} />
+                        <MessageItem key={id} id={id} toolCallStatus={toolCallStatus} />
                     ))}
                 </div>
             </ScrollArea.Root>
@@ -51,10 +51,26 @@ const AssistantPanel: React.FC<Props> = () => {
     )
 }
 
-const MessageItem = memo(({ id }: { id: Assistant.Message.Id }) => {
+interface MessageItemProps {
+    id: Assistant.Message.Id
+    toolCallStatus: MessageBubble.ToolCallStatusRecord
+}
+
+const MessageItem = memo(({ id, toolCallStatus }: MessageItemProps) => {
     const message = AssistantSDK.useStore(s => s.messagesRecord[id])
+
     if (!message) return null
-    return <MessageBubble message={message} />
-}, (prev, next) => prev.id === next.id)
+
+    if (message.role === "human")
+        return <MessageBubble.Human message={message} />
+
+    if (message.role === "ai")
+        return <MessageBubble.AI message={message} toolCallStatus={toolCallStatus} />
+
+    if (message.role === "tool")
+        return <MessageBubble.ToolCall message={message} />
+
+    return null
+})
 
 export default AssistantPanel

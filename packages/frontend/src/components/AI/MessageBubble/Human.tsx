@@ -1,6 +1,8 @@
-import { Chat } from '@pretzel-graph/shared/domain'
+interface Props {
+  message: { content: string }
+}
 
-const HumanMessageBubble = ({ message }: { message: Chat.Message.Human }) => {
+const Human: React.FC<Props> = ({ message }) => {
   return (
     <div className="flex flex-col items-end w-full gap-1 mb-2">
       <div className="flex flex-row gap-2 items-end max-w-[85%]">
@@ -12,4 +14,4 @@ const HumanMessageBubble = ({ message }: { message: Chat.Message.Human }) => {
   )
 }
 
-export default HumanMessageBubble
+export default Human

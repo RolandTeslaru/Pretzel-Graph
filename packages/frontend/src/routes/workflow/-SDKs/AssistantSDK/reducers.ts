@@ -10,10 +10,19 @@ export function createAssistantSDKReducers(_sdk: AssistantSDKImpl) {
                 s.messages.push(message.id);
             }
             s.messagesRecord[message.id] = message;
+
+            if (message.role === "tool") {
+                s.toolCallStatus[message.data.tool_call_id] = message.data.status;
+            }
         },
         appendContent: (s, messageId, content) => {
             const msg = s.messagesRecord[messageId];
             if (msg) msg.content += content;
+        },
+        resetMessages: (s) => {
+            s.messages = [];
+            s.messagesRecord = {};
+            s.toolCallStatus = {};
         },
     } satisfies AssistantSDKReducers;
 }
@@ -21,4 +30,5 @@ export function createAssistantSDKReducers(_sdk: AssistantSDKImpl) {
 export interface AssistantSDKReducers {
     upsertMessage: (state: State, message: Assistant.Message) => void
     appendContent: (state: State, messageId: Assistant.Message.Id, content: string) => void
+    resetMessages: (state: State) => void
 }
