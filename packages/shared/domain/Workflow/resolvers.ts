@@ -68,7 +68,7 @@ export function extractExposedInputs(wfData: Workflow.Data): Port.Input[] {
 
 // A subworkflow's exposed output ports, read from its `ExposeOutputPort` nodes. Same skip-if-unresolved rule.
 export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
-    const outputs: Port.Output[] = [];
+    const byId: Record<Port.Output.Id, Port.Output> = {};
 
     for (const node of Object.values(wfData.nodes)) {
         if (node.blueprintId !== "Core.SubWorkflow.ExposeOutputPort") continue;
@@ -76,14 +76,16 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
         const variant = Object.values(node.polymorphicResolutions ?? {})[0];
         if (!variant) continue;
 
-        outputs.push({
-            id: Port.Output.Id.parse(node.id),
+        const portId = (wfData.staticValues[node.id]?.[EXPOSED_PORT_ID_FIELD] || node.id) as Port.Output.Id;
+
+        byId[portId] = {
+            id: portId,
             displayName: node.ui.displayName,
             variant,
-        } as Port.Output);
+        } as Port.Output;
     }
 
-    return outputs;
+    return Object.values(byId);
 }
 
 
