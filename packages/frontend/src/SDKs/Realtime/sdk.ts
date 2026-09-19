@@ -47,7 +47,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
     // Resolve once an event of `type` lands on `channel`, then auto-unsubscribe.
     // Frontend mirror of the backend RealtimeService.awaitEvent. timeoutMs <= 0 waits forever;
     // pass an abortSignal to stop waiting early (rejects with AbortError).
-    public useAwaitEvent<E extends Realtime.Event>(
+    public awaitEvent<E extends Realtime.Event>(
         channel:     Realtime.Channel,
         type:        E["type"],
         timeoutMs:   number = 5000,
@@ -75,7 +75,7 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
             if (timeoutMs > 0) {
                 timer = setTimeout(() => {
                     cleanup();
-                    reject(new Error(`useAwaitEvent: timed out after ${timeoutMs}ms waiting for "${type}" on ${channel}`));
+                    reject(new Error(`awaitEvent: timed out after ${timeoutMs}ms waiting for "${type}" on ${channel}`));
                 }, timeoutMs);
             }
         });

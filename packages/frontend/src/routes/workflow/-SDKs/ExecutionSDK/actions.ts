@@ -8,13 +8,16 @@ import type { DropFirstArg } from "@/SDKs/types";
 export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
 
     const run = async (igniter: Execution.Igniter): Promise<Execution.Id | null> => {
-        const confirmStartedEvent = sdk.useAwaitConfirmation("started")
+        const confirmStartedEvent = sdk.expectConfirmation("started")
+
+        const currentExecution = sdk.state.currentExecution
+        const igniterAttributes = sdk.state.igniterAttributes
 
         // Check if there's already a running or paused execution. If so, we don't allow starting a new one.
-        if (sdk.state.currentExecution && ["running", "paused"].includes(sdk.state.currentExecution.status)) {
+        if (currentExecution && ["running", "paused"].includes(currentExecution.status)) {
             toast.warning("A workflow is already running")
             confirmStartedEvent();
-            return sdk.state.currentExecution.id;
+            return currentExecution.id;
         }
 
         // Pre check before running the workflow
@@ -38,8 +41,8 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
         const executionId = Execution.createId();
         sdk._subscribeToExecutionChannel(executionId);
 
-        igniter.record = sdk.state.igniterAttributes.record;
-        igniter.debug = sdk.state.igniterAttributes.debug;
+        igniter.record = igniterAttributes.record;
+        igniter.debug = igniterAttributes.debug;
         igniter.chat_id = sdk.chatSDK.state.currentChatId ?? undefined;
 
         // Seed a stub currentExecution so events arriving before the HTTP
@@ -103,7 +106,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             if (!executionId)
                 return false;
 
-            const confirmEvent = sdk.useAwaitConfirmation("paused")
+            const confirmEvent = sdk.expectConfirmation("paused")
 
             const { success } = await Execution.API.pause(api, executionId);
             if (success) {
@@ -121,7 +124,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             if (!executionId)
                 return false;
 
-            const confirmEvent = sdk.useAwaitConfirmation("terminated")
+            const confirmEvent = sdk.expectConfirmation("terminated")
             const { success } = await Execution.API.terminate(api, executionId);
             if (success) {
                 sdk.setState(s => { s.reducers.currentExecution.setStatus(s, "terminated") })
@@ -153,7 +156,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             if (!executionId)
                 return false;
 
-            const confirmEvent = sdk.useAwaitConfirmation("resumed")
+            const confirmEvent = sdk.expectConfirmation("resumed")
 
             const { success } = await Execution.API.resume(api, executionId);
             if (success) {
@@ -171,7 +174,7 @@ export const createExecutionSDKActions = (sdk: ExecutionSDKImpl) => {
             if (!executionId)
                 return false;
 
-            const confirmEvent = sdk.useAwaitConfirmation("suspended")
+            const confirmEvent = sdk.expectConfirmation("suspended")
 
             const { success } = await Execution.API.suspend(api, executionId);
             if (!success)

@@ -54,7 +54,7 @@ export class ExecutionSDKImpl extends BaseSDK<ExecutionSDK.State> {
         }),
     }
     
-    public useAwaitConfirmation = (event: ExecutionSDK.AwaitedConfirmation): () => void => {
+    public expectConfirmation = (event: ExecutionSDK.AwaitedConfirmation): () => void => {
         this.actions.addAwaitedConfirmation(event);
         return () => { this.actions.removeAwaitedConfirmation(event); };
     }
