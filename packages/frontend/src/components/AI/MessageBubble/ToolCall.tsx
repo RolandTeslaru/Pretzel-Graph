@@ -1,16 +1,10 @@
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Button, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { toast } from 'sonner'
-import type { MessageBubble } from '.'
+import { Chat } from '@pretzel-graph/shared/domain'
 
 interface Props {
-    message: {
-        data: {
-            tool_name: string
-            status: MessageBubble.ToolCallStatus
-            error?: string
-        }
-    }
+    message: Chat.Message.Tool
 }
 
 const ToolCall: React.FC<Props> = ({ message }) => {

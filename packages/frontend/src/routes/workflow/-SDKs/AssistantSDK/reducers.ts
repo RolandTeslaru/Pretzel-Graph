@@ -1,4 +1,4 @@
-import { Assistant } from "@pretzel-graph/shared/domain";
+import { Chat } from "@pretzel-graph/shared/domain";
 import type { AssistantSDK, AssistantSDKImpl } from "./sdk";
 
 export type State = AssistantSDK.State;
@@ -28,7 +28,7 @@ export function createAssistantSDKReducers(_sdk: AssistantSDKImpl) {
 }
 
 export interface AssistantSDKReducers {
-    upsertMessage: (state: State, message: Assistant.Message) => void
-    appendContent: (state: State, messageId: Assistant.Message.Id, content: string) => void
+    upsertMessage: (state: State, message: Chat.Message) => void
+    appendContent: (state: State, messageId: Chat.Message.Id, content: string) => void
     resetMessages: (state: State) => void
 }

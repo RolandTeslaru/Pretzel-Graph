@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
-import { Assistant } from '@pretzel-graph/shared/domain'
+import { Chat } from '@pretzel-graph/shared/domain'
 import { AssistantSDK } from '../../sdk'
 import { ScrollArea } from '@pretzel-graph/standard-ui/foundations/scrollArea'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
@@ -52,7 +52,7 @@ const AssistantPanel: React.FC<Props> = () => {
 }
 
 interface MessageItemProps {
-    id: Assistant.Message.Id
+    id: Chat.Message.Id
     toolCallStatus: MessageBubble.ToolCallStatusRecord
 }
 

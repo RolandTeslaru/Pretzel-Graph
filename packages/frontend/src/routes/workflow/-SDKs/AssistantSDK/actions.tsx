@@ -1,4 +1,4 @@
-import { Assistant } from "@pretzel-graph/shared/domain";
+import { Assistant, Chat } from "@pretzel-graph/shared/domain";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import type { AssistantSDKImpl } from "./sdk";
 import FullscreenAssistant from "./ui/Fullscreen";
@@ -14,30 +14,22 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
                 if (msg) msg.content = content;
             }),
             finaliseStreaming: (messageId) => sdk.setState(s => {
-                const msg = s.messagesRecord[messageId] as Assistant.Message.AI | undefined;
+                const msg = s.messagesRecord[messageId] as Chat.Message.AI | undefined;
                 if (msg) msg.data.isProcessing = false;
             }),
             send: async ({ content }) => {
-                const assistantId = sdk.state.currentAssistantId;
-
-                const humanMessage: Assistant.Message.Human = {
-                    id: Assistant.Message.createId(),
-                    assistant_id: assistantId,
+                const humanMessage: Chat.Message.Human = {
+                    id: Chat.Message.createId(),
                     role: "human",
                     content,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
                 };
                 sdk.actions.message.upsert(humanMessage);
 
                 // TODO: wire up to the assistant backend / streaming endpoint.
-                const aiMessage: Assistant.Message.AI = {
-                    id: Assistant.Message.createId(),
-                    assistant_id: assistantId,
+                const aiMessage: Chat.Message.AI = {
+                    id: Chat.Message.createId(),
                     role: "ai",
                     content: "",
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
                     data: { isProcessing: true },
                 };
                 sdk.actions.message.upsert(aiMessage);
@@ -93,10 +85,10 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
 
 export interface AssistantSDKActions {
     message: {
-        upsert: (message: Assistant.Message) => void
-        appendContent: (messageId: Assistant.Message.Id, content: string) => void
-        setContent: (messageId: Assistant.Message.Id, content: string) => void
-        finaliseStreaming: (messageId: Assistant.Message.Id) => void
+        upsert: (message: Chat.Message) => void
+        appendContent: (messageId: Chat.Message.Id, content: string) => void
+        setContent: (messageId: Chat.Message.Id, content: string) => void
+        finaliseStreaming: (messageId: Chat.Message.Id) => void
         send: (props: { content: string }) => Promise<void>
     }
     thread: {

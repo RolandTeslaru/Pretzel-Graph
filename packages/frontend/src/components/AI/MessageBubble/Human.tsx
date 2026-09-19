@@ -1,5 +1,7 @@
+import { Chat } from '@pretzel-graph/shared/domain'
+
 interface Props {
-  message: { content: string }
+  message: Chat.Message.Human
 }
 
 const Human: React.FC<Props> = ({ message }) => {

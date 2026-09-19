@@ -2,16 +2,11 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Spinner } from '@pretzel-graph/standard-ui/foundations'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Chat } from '@pretzel-graph/shared/domain'
 import type { MessageBubble } from '.'
 
 interface Props {
-  message: {
-    content: string
-    data: {
-      isProcessing: boolean
-      tool_calls?: { id: string, name: string }[]
-    }
-  }
+  message: Chat.Message.AI
   toolCallStatus: MessageBubble.ToolCallStatusRecord
 }
 

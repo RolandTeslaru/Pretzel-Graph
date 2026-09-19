@@ -1,7 +1,7 @@
 import { immer } from "zustand/middleware/immer";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
-import { Assistant } from "@pretzel-graph/shared/domain";
+import { Assistant, Chat } from "@pretzel-graph/shared/domain";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import { createAssistantSDKActions, type AssistantSDKActions } from "./actions";
@@ -38,9 +38,9 @@ export const AssistantSDK = SDK.get<AssistantSDKImpl>("Assistant")
 export namespace AssistantSDK {
     export type State = {
         currentAssistantId: Assistant.Id,
-        messages: Assistant.Message.Id[],
-        messagesRecord: Record<Assistant.Message.Id, Assistant.Message>,
-        toolCallStatus: Record<Assistant.ToolCall.Id, Assistant.ToolCall.Status>,
+        messages: Chat.Message.Id[],
+        messagesRecord: Record<Chat.Message.Id, Chat.Message>,
+        toolCallStatus: Record<Chat.ToolCall.Id, Chat.ToolCall.Status>,
         isLoading: boolean,
         isSidebarVisible: boolean,
         assistants: Record<Assistant.Id, Assistant>,
