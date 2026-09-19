@@ -16,6 +16,9 @@
             "src/*": [
                 "./src/*"
             ],
+            "@pretzel-graph/worker": [
+                "./src/index.ts"
+            ],
             "@pretzel-graph/node-sdk": [
                 "../node-sdk/src/index.ts"
             ],

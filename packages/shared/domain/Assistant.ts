@@ -12,6 +12,9 @@ type ExecutionId = z.infer<typeof ExecutionId>;
 
 export namespace Assistant {
 
+    // The hidden workflow the assistant runs, seeded on boot.
+    export const WORKFLOW_ID = Workflow.Id.parse("00000000-0000-4000-8000-000000000002")
+
     export const Id = z.uuid().brand("AssistantId")
     export type Id = z.infer<typeof Id>
 
