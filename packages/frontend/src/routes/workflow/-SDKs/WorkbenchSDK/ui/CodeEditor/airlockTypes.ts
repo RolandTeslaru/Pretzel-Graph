@@ -1,6 +1,8 @@
+import { z } from 'zod'
 import { WorkbenchSDK } from '@/routes/workflow/-SDKs/WorkbenchSDK/sdk'
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk'
-import { Workflow as WorkflowDomain, type Foundations, type Workflow } from '@pretzel-graph/shared/domain'
+import { Foundations, Workflow as WorkflowDomain, type Workflow } from '@pretzel-graph/shared/domain'
+import { Document } from '@pretzel-graph/shared/domain/Workbench/Document'
 
 const MAX_DEPTH = 8
 const MAX_ARRAY_SAMPLE = 20
@@ -8,22 +10,22 @@ const MAX_ARRAY_SAMPLE = 20
 const isIdent = (k: string) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k)
 const key = (k: string) => (isIdent(k) ? k : JSON.stringify(k))
 
-// JS value → TS literal type string (numbers/strings/booleans as literals).
-export function tsLiteralType(value: unknown, depth = 0): string {
+// JS value → TS type string, primitives widened (string/number/boolean).
+export function tsValueType(value: unknown, depth = 0): string {
     if (value === null) return 'null'
     if (value === undefined) return 'undefined'
 
     const t = typeof value
-    if (t === 'string') return JSON.stringify(value)
-    if (t === 'number' || t === 'bigint') return String(value)
-    if (t === 'boolean') return String(value)
+    if (t === 'string') return 'string'
+    if (t === 'number' || t === 'bigint') return 'number'
+    if (t === 'boolean') return 'boolean'
     if (t === 'function') return 'Function'
     if (depth >= MAX_DEPTH) return 'any'
 
     if (Array.isArray(value)) {
         if (value.length === 0) return 'unknown[]'
         const elems = Array.from(
-            new Set(value.slice(0, MAX_ARRAY_SAMPLE).map((v) => tsLiteralType(v, depth + 1))),
+            new Set(value.slice(0, MAX_ARRAY_SAMPLE).map((v) => tsValueType(v, depth + 1))),
         )
         return `(${elems.join(' | ')})[]`
     }
@@ -31,42 +33,110 @@ export function tsLiteralType(value: unknown, depth = 0): string {
     if (t === 'object') {
         const entries = Object.entries(value as Record<string, unknown>)
         if (entries.length === 0) return 'Record<string, never>'
-        const body = entries.map(([k, v]) => `${key(k)}: ${tsLiteralType(v, depth + 1)}`).join('; ')
+        const body = entries.map(([k, v]) => `${key(k)}: ${tsValueType(v, depth + 1)}`).join('; ')
         return `{ ${body} }`
     }
 
     return 'any'
 }
 
-// Same projection the IncomingPanel renders: { [targetPortId]: lastRunValue }.
-export function getIncomingShape(nodeId: Workflow.Node.Id): Record<string, unknown> {
-    const execution = ExecutionSDK.state.currentExecution
-    if (!execution) return {}
+type JsonSchema = {
+    type?: string
+    anyOf?: JsonSchema[]
+    properties?: Record<string, JsonSchema>
+    required?: string[]
+    items?: JsonSchema
+    additionalProperties?: JsonSchema | boolean
+}
 
-    const { cache, data } = WorkbenchSDK.document
-    const result: Record<string, unknown> = {}
+// JSON schema (as emitted by z.toJSONSchema) → TS type string.
+function jsonSchemaType(schema: JsonSchema): string {
+    if (schema.anyOf)
+        return schema.anyOf.map(jsonSchemaType).join(' | ')
 
-    Object.entries(cache.inputEdgesByPort[nodeId] ?? {}).forEach(([targetPortId, edgeId]) => {
-        const edge = cache.edges[edgeId as Workflow.Edge.Id]
-        if (!edge) return
-        const value = execution.session.node_output_projections[edge.source.nodeId]?.[
-            edge.source.portId as Foundations.Port.Output.Id
-        ]
-        if (value !== undefined) result[targetPortId] = value
+    switch (schema.type) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+        case 'null':
+            return schema.type
+        case 'integer':
+            return 'number'
+        case 'array':
+            return `(${schema.items ? jsonSchemaType(schema.items) : 'any'})[]`
+        case 'object': {
+            const entries = Object.entries(schema.properties ?? {})
+            if (entries.length === 0) {
+                const extra = schema.additionalProperties
+                return typeof extra === 'object' ? `Record<string, ${jsonSchemaType(extra)}>` : 'object'
+            }
+            const required = new Set(schema.required ?? [])
+            const body = entries.map(([k, v]) => `${key(k)}${required.has(k) ? '' : '?'}: ${jsonSchemaType(v)}`).join('; ')
+            return `{ ${body} }`
+        }
+        default:
+            return 'any'
+    }
+}
+
+const projectionType = (schema: z.ZodType) => jsonSchemaType(z.toJSONSchema(schema) as JsonSchema)
+
+// Port variant → TS type of its projected value.
+const PORT_VARIANT_TS: Partial<Record<Foundations.Port.Variant, string>> = {
+    Message:       projectionType(Foundations.Projection.Message),
+    MessageList:   projectionType(Foundations.Projection.MessageList),
+    Document:      projectionType(Foundations.Projection.Document),
+    Tool:          projectionType(Foundations.Projection.Tool),
+    ToolList:      projectionType(Foundations.Projection.ToolList),
+    LanguageModel: projectionType(Foundations.Projection.LanguageModel),
+    Embeddings:    projectionType(Foundations.Projection.Embeddings),
+    Retriever:     'object',
+    VectorStore:   'object',
+    Text:          'string',
+    SkillList:     'any[]',
+    DataList:      'any[]',
+    UnresolvedList:'any[]',
+}
+
+// Variants whose value is free-form, so the last run's value refines the type.
+const SAMPLED_VARIANTS = new Set<Foundations.Port.Variant>([
+    'Data', 'DataList', 'Unresolved', 'UnresolvedScalar', 'UnresolvedList',
+])
+
+function getIncomingData(nodeId: Workflow.Node.Id): Record<string, unknown> {
+    const session = ExecutionSDK.state.currentExecution?.session
+    return Document.selectors.execution.getNodeIncomingData(WorkbenchSDK.document, nodeId, session) ?? {}
+}
+
+// `$in` type: one key per input port, typed by variant, refined by the last run for free-form ports.
+export function getIncomingType(nodeId: Workflow.Node.Id): string {
+    const doc = WorkbenchSDK.document
+    const inputs = doc.selectors.node.ports.getInputs(doc, nodeId)
+    if (inputs.length === 0) return 'Record<string, never>'
+
+    const incoming = getIncomingData(nodeId)
+
+    const entries = inputs.map((port) => {
+        const sample = incoming[port.id]
+        const type = SAMPLED_VARIANTS.has(port.variant) && sample !== undefined
+            ? tsValueType(sample)
+            : PORT_VARIANT_TS[port.variant] ?? 'any'
+        const comment = port.displayName ? `/** ${port.displayName} */ ` : ''
+        return `${comment}${key(port.id)}: ${type}`
     })
 
-    return result
+    return `{ ${entries.join('; ')} }`
 }
 
 // Element type for `$item` in item-scoped fields. If exactly one incoming port carries an
 // array, `$item` is typed as that array's element (sampled) — driving real autocomplete; when
 // it's ambiguous (zero or many incoming arrays) or empty, falls back to `any`.
 export function getItemType(nodeId: Workflow.Node.Id): string {
-    const arrays = Object.values(getIncomingShape(nodeId)).filter(Array.isArray) as unknown[][]
+    const arrays = Object.values(getIncomingData(nodeId)).filter(Array.isArray) as unknown[][]
     if (arrays.length !== 1 || arrays[0].length === 0) return 'any'
 
     const elems = Array.from(
-        new Set(arrays[0].slice(0, MAX_ARRAY_SAMPLE).map((v) => tsLiteralType(v, 1))),
+        new Set(arrays[0].slice(0, MAX_ARRAY_SAMPLE).map((v) => tsValueType(v, 1))),
     )
     return elems.join(' | ')
 }
@@ -94,7 +164,7 @@ export function getGlobalFieldsType(): string {
         const variant = (field as { variant?: Foundations.Field.Variant }).variant
         const type =
             (variant && VARIANT_TS[variant]) ??
-            ('initialValue' in field ? tsLiteralType((field as { initialValue?: unknown }).initialValue, 1) : 'any')
+            ('initialValue' in field ? tsValueType((field as { initialValue?: unknown }).initialValue, 1) : 'any')
         return `${key(field.id)}: ${type}`
     })
 
@@ -123,7 +193,7 @@ export function buildAirlockDts(nodeId: Workflow.Node.Id, options?: { itemScoped
         `    outputs: { id: string;[k: string]: any }[];`,
         `    isDisabled?: boolean;`,
         `}`,
-        `declare const $in: ${tsLiteralType(getIncomingShape(nodeId))};`,
+        `declare const $in: ${getIncomingType(nodeId)};`,
         `declare const $node: WorkflowNode;`,
         `declare const $workflow: {`,
         `    id: string;`,

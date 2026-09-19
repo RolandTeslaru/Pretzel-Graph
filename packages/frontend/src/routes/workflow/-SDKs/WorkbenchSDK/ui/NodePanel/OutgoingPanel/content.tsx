@@ -12,7 +12,7 @@ export const Content = ({ outputs, outputProjections }: Props) => {
     <PortProjectionsView
       ports={outputs}
       projections={outputProjections}
-      emptyMessage="No output data yet."
+      emptyMessage="No output ports."
     />
   )
 }

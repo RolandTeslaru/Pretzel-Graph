@@ -150,5 +150,37 @@ export class NodeOperations {
                 return { nodeId, portId }
             })(this.client.getDocument())
         },
+
+        updatePort: (nodeId: Workflow.Node.Id, portId: Port.Input.Id, spec: InputPortSpec): { nodeId: Workflow.Node.Id, port: Port.Input } => {
+            return withCyclesRecompute((d: Document) => {
+                const node = d.data.nodes[nodeId]
+
+                if (!node)
+                    throw new Error(`Node ${nodeId} not found`)
+
+                if (!node.addedInputs?.some(p => p.id === portId))
+                    throw new Error(`Input port ${portId} on ${nodeId} is not a hand-added port; only those can be edited`)
+
+                if (Port.isUnresolvedLike(spec.variant))
+                    throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
+
+                if (spec.id !== portId && d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
+                    throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)
+
+                const port = Port.Input.Schema.parse({
+                    id:            spec.id,
+                    displayName:   spec.displayName,
+                    variant:       spec.variant,
+                    required:      spec.required ?? false,
+                    isAddedByUser: true,
+                })
+
+                d.reducers.port.updateInput(d, nodeId, portId, port)
+                d.reducers.node.validate(d, nodeId)
+                this.client.report({ type: "node:inputPortUpdated", nodeId, portId, port })
+
+                return { nodeId, port }
+            })(this.client.getDocument())
+        },
     }
 }

@@ -31,8 +31,8 @@ const OutgoingPanel = ({ nodeId }: Props) => {
       </div>
 
 
-      {nodeId && outputProjections && 
-        <Content outputs={outputs} outputProjections={outputProjections} />
+      {nodeId &&
+        <Content outputs={outputs} outputProjections={outputProjections ?? {}} />
       }
     </div>
   )

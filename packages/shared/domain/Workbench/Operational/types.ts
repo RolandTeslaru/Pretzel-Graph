@@ -22,6 +22,7 @@ export type Operation =
     | { op: "node.move";            nodeId: Workflow.Node.Id; position: Position }
     | { op: "node.addInputPort";    nodeId: Workflow.Node.Id; port: InputPortSpec }
     | { op: "node.removeInputPort"; nodeId: Workflow.Node.Id; portId: Foundations.Port.Input.Id }
+    | { op: "node.updateInputPort"; nodeId: Workflow.Node.Id; portId: Foundations.Port.Input.Id; port: InputPortSpec }
     | ({ op: "edge.create" }          & Connection)
     | { op: "edge.delete";          edgeId: Workflow.Edge.Id }
     | { op: "field.set";            nodeId: Workflow.Node.Id; fieldId: Foundations.Field.Id; value: unknown }

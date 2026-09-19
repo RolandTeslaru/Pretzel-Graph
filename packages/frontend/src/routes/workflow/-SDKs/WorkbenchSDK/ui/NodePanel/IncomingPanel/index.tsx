@@ -31,8 +31,8 @@ const IncomingPanel = ({ nodeId }: Props) => {
         <p className='h-auto my-auto text-sm'>Incoming Data</p>
       </div>
 
-      {nodeId && nodeOutputProjections &&
-       <Content nodeId={nodeId} inputs={inputs} nodeOutputProjections={nodeOutputProjections} />
+      {nodeId &&
+       <Content nodeId={nodeId} inputs={inputs} nodeOutputProjections={nodeOutputProjections ?? {}} />
       }
 
 

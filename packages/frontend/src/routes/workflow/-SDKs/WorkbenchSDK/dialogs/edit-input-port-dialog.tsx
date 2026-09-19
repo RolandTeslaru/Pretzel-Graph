@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, Dialog, Form, Input, Select, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -10,11 +10,12 @@ import { INPUT_PORT_VARIANTS, inputPortSchema, type InputPortValues } from './in
 
 interface Props {
     nodeId: Workflow.Node.Id
+    port: Port.Input
     dialogId: string
 }
 
-export function openAddInputPortDialog(nodeId: Workflow.Node.Id) {
-    const id = `add-input-port-${nodeId}`
+export function openEditInputPortDialog(nodeId: Workflow.Node.Id, port: Port.Input) {
+    const id = `edit-input-port-${nodeId}-${port.id}`
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.SplitTemplate
             {...props}
@@ -23,43 +24,49 @@ export function openAddInputPortDialog(nodeId: Workflow.Node.Id) {
             sidebarRenderer={() => (
                 <div className='flex flex-col gap-2'>
                     <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.LogIn className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Add Input Port</p>
+                        <SystemIcons.SquarePen className='size-5 shrink-0' />
+                        <p className='text-md font-semibold text-foreground'>Edit Input Port</p>
                     </div>
 
                     <p className='text-xs text-muted-foreground'>
-                        Define a new input port on this node.
+                        Change this input port's ID, name, or type.
                     </p>
                 </div>
             )}
         >
-            <AddInputPortContent nodeId={nodeId} dialogId={id} />
+            <EditInputPortContent nodeId={nodeId} port={port} dialogId={id} />
         </DialogSDK.SplitTemplate>
     ))
 }
 
-const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
+const EditInputPortContent = ({ nodeId, port, dialogId }: Props) => {
     const form = useForm<InputPortValues>({
         resolver: zodResolver(inputPortSchema),
         mode: 'onSubmit',
-        defaultValues: { id: '', displayName: '', variant: 'Data', required: false },
+        defaultValues: {
+            id:          port.id,
+            displayName: port.displayName ?? '',
+            variant:     port.variant as InputPortValues['variant'],
+            required:    port.required ?? false,
+        },
     })
+
+    const isIdChanged = useWatch({ control: form.control, name: 'id' }).trim() !== port.id
 
     const onSubmit = (values: InputPortValues) => {
         const state = WorkbenchSDK.document
 
-        
-        const existingIds = new Set<string>(
-            [
-                ...state.selectors.node.ports.getInputs(state, nodeId).map(p => p.id) ?? [],
-                ...state.selectors.node.get(state, nodeId)?.addedInputs?.map(p => p.id) ?? [],
-            ]
+        const takenIds = new Set<string>(
+            state.selectors.node.ports.getInputs(state, nodeId)
+                .map(p => p.id)
+                .filter(id => id !== port.id)
         )
-        if (existingIds.has(values.id)) {
+        if (takenIds.has(values.id)) {
             form.setError('id', { message: `ID "${values.id}" is already in use on this node` })
             return
         }
-        WorkbenchSDK.actions.port.addInput(nodeId, Port.Input.Schema.parse({
+
+        WorkbenchSDK.actions.port.updateInput(nodeId, port.id, Port.Input.Schema.parse({
             id: Port.Input.Id.parse(values.id),
             displayName: values.displayName,
             variant: values.variant,
@@ -80,6 +87,11 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                                 <Input {...field} placeholder='e.g. context' autoFocus />
                             </Form.Control>
                             <Form.Message />
+                            {isIdChanged &&
+                                <span className='text-xs text-warning-text'>
+                                    Expressions and code that read <code>$in.{port.id}</code> won't be updated.
+                                </span>
+                            }
                         </Form.Item>
                     )} />
 
@@ -131,7 +143,7 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                             Cancel
                         </Button>
                         <Button type='submit'>
-                            Add
+                            Save
                         </Button>
                     </Dialog.Footer>
                 </form>

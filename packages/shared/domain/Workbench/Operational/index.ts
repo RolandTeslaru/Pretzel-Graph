@@ -96,6 +96,7 @@ export class OperationalClient {
             case "node.move":            return this.node.move(op.nodeId, op.position)
             case "node.addInputPort":    return this.node.input.addPort(op.nodeId, op.port)
             case "node.removeInputPort": return this.node.input.removePort(op.nodeId, op.portId)
+            case "node.updateInputPort": return this.node.input.updatePort(op.nodeId, op.portId, op.port)
             case "edge.create":          return this.edge.create(op)
             case "edge.delete":          return this.edge.delete(op.edgeId)
             case "field.set":            return this.field.set(op.nodeId, op.fieldId, op.value)
