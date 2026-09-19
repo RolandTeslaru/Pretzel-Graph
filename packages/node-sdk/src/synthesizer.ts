@@ -426,7 +426,7 @@ export class Synthesizer {
             response_metadata: msg.response_metadata ?? null,
         };
 
-        switch (msg._getType()) {
+        switch (msg.type) {
             case "ai": {
                 const lcMsg = msg as LC.AIMessage;
                 return {

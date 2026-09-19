@@ -55,6 +55,7 @@ export function createExecutionAPIs(
         getOutputs:                  (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].outputs,
         getOutputPort:               (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
         getInputPort:                (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
+        hasOutputEdge:               (nodeId, portId) => Boolean(executionCtx.workflowCache.outputEdgesByPort[nodeId]?.[portId]),
         getFields:                   (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].fields,
         getStaticValues:             (nodeId)         => executionCtx.workflowData.staticValues[nodeId] ?? {},
         getExpressionTaggedFieldIds: (nodeId)         => executionCtx.workflowData.fieldExpressions?.[nodeId] ?? {},

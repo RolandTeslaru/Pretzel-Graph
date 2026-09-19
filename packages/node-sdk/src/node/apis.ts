@@ -134,6 +134,7 @@ export interface WorkflowQueryAPI {
     getNodeDependency: (nodeId: Workflow.Node.Id) => Dependency.ValueFor<Dependency.Ref.Workflow> | null,
     getOutputPort: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => Port.Output | undefined,
     getInputPort:  (nodeId: Workflow.Node.Id, portId: Port.Input.Id) => Port.Input | undefined,
+    hasOutputEdge: (nodeId: Workflow.Node.Id, portId: Port.Output.Id) => boolean,
     getStaticValues: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, Foundations.Field.Value>,
     /** Per-node static/expression overrides. Absent key = no user choice; see Field.usesExpression. */
     getExpressionTaggedFieldIds: (nodeId: Workflow.Node.Id) => Record<Foundations.Field.Id, boolean>,
