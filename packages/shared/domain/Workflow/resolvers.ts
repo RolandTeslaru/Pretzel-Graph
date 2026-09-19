@@ -74,9 +74,9 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
         if (node.blueprintId !== "Core.SubWorkflow.ExposeOutputPort") continue;
 
         const variant = Object.values(node.polymorphicResolutions ?? {})[0];
-        if (!variant) continue;
-
-        const portId = (wfData.staticValues[node.id]?.[EXPOSED_PORT_ID_FIELD] || node.id) as Port.Output.Id;
+        const portId  = wfData.staticValues[node.id]?.[EXPOSED_PORT_ID_FIELD] as Port.Output.Id | undefined;
+        if (!variant || !portId)
+            continue;
 
         byId[portId] = {
             id: portId,

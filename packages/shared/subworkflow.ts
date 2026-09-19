@@ -43,7 +43,10 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
             if(!variant)
                 throw new Error(`Exposed output port node ${node.id} is missing a polymorphic resolution.`);
 
-            const portId = (wfData.staticValues[node.id]?.["exposed_port_id" as Field.Id] || node.id) as Port.Output.Id;
+            const portId = wfData.staticValues[node.id]?.["exposed_port_id" as Field.Id] as Port.Output.Id | undefined;
+
+            if(!portId)
+                throw new Error(`Exposed output port node ${node.id} is missing the 'exposed_port_id' static value.`);
 
             uniqueOutputPorts[portId] = {
                 id: portId,

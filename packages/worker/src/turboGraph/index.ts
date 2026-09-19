@@ -28,7 +28,7 @@ import type { ExecutionContext } from "../execution-context";
 //   6. Warm the expression cache (needs step 5's resolved blueprints).
 //   7. Add each edge as a graph dependency, skipping disabled endpoints.
 //   8. Wire start nodes — no incoming edges and not passive — to START. Throws if there are none.
-//   9. Fire the igniter (webhook payload / chat message) at the nodes that handle it.
+//   9. Fire the igniter (webhook payload / chat message / exposed inputs) at the nodes that handle it.
 //
 // The graph is a signal graph, not a DAG — nodes fire on accumulated signals and may re-fire,
 // so cycles are legal here.
@@ -166,6 +166,11 @@ export class TurboGraph {
     ){
         const igniter = executionCtx.igniter;
 
+        const broadcast = async () => {
+            for (const instance of executionCtx.instanceRegistryAPI.getAll())
+                await instance.handleIgniter(igniter);
+        };
+
         switch (igniter.variant) {
 
             case "webhook": {
@@ -180,8 +185,15 @@ export class TurboGraph {
 
             case "chat_message": {
 
-                for (const instance of executionCtx.instanceRegistryAPI.getAll())
-                    await instance.handleIgniter(igniter);
+                await broadcast();
+
+                break;
+            }
+
+            default: {
+
+                if (igniter.inputs)
+                    await broadcast();
 
                 break;
             }
