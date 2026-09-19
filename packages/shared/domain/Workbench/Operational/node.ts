@@ -127,7 +127,6 @@ export class NodeOperations {
             })
 
             d.reducers.port.addInput(d, nodeId, port)
-            d.reducers.node.validate(d, nodeId)
             this.client.report({ type: "node:inputPortAdded", nodeId, port })
 
             return { nodeId, port }
@@ -144,7 +143,6 @@ export class NodeOperations {
                     throw new Error(`Input port ${portId} on ${nodeId} is not a hand-added port; only those can be removed`)
 
                 d.reducers.port.removeInput(d, nodeId, portId)
-                d.reducers.node.validate(d, nodeId)
                 this.client.report({ type: "node:inputPortRemoved", nodeId, portId })
 
                 return { nodeId, portId }
@@ -176,7 +174,6 @@ export class NodeOperations {
                 })
 
                 d.reducers.port.updateInput(d, nodeId, portId, port)
-                d.reducers.node.validate(d, nodeId)
                 this.client.report({ type: "node:inputPortUpdated", nodeId, portId, port })
 
                 return { nodeId, port }

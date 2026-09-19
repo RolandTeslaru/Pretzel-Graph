@@ -14,6 +14,7 @@ export const portReducers: PortReducers = {
 
         node.addedInputs.push(port);
         d.reducers.cache.resolvedShape.recreate(d, nodeId);
+        d.reducers.node.validate(d, nodeId);
     },
     removeInput: (d, nodeId, portId) => {
         d.isDirty = true;
@@ -26,6 +27,7 @@ export const portReducers: PortReducers = {
 
         node.addedInputs = node.addedInputs?.filter(p => p.id !== portId)
         d.reducers.cache.resolvedShape.recreate(d, nodeId);
+        d.reducers.node.validate(d, nodeId);
     },
     updateInput: (d, nodeId, portId, port) => {
         d.isDirty = true;
@@ -52,17 +54,18 @@ export const portReducers: PortReducers = {
 
         d.reducers.cache.resolvedShape.recreate(d, nodeId);
 
-        if (!edge)
-            return;
+        if (edge) {
+            const sourcePort = d.selectors.node.ports.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
+            if (Validation.arePortsCompatible(sourcePort, port))
+                d.reducers.edge.create(d, {
+                    source:       edge.source.nodeId,
+                    sourceHandle: edge.source.portId,
+                    target:       nodeId,
+                    targetHandle: port.id,
+                });
+        }
 
-        const sourcePort = d.selectors.node.ports.getOutputs(d, edge.source.nodeId).find(o => o.id === edge.source.portId);
-        if (Validation.arePortsCompatible(sourcePort, port))
-            d.reducers.edge.create(d, {
-                source:       edge.source.nodeId,
-                sourceHandle: edge.source.portId,
-                target:       nodeId,
-                targetHandle: port.id,
-            });
+        d.reducers.node.validate(d, nodeId);
     },
     removeOutput: (d, nodeId, portId) => {
         d.isDirty = true;
