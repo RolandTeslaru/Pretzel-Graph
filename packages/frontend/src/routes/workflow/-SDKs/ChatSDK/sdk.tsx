@@ -14,8 +14,9 @@ import { shallow } from "zustand/shallow";
 export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
     constructor() {
         super()
-        this.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
-            Chat.Event.getChannel(this.state.currentChatId),
+        this.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeAnchored(
+            this.useStore,
+            s => s.currentChatId ? Chat.Event.getChannel(s.currentChatId) : null,
             this.handleOnEvent
         )
     }
@@ -72,22 +73,6 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
 }
 
 export const ChatSDK = SDK.get<ChatSDKImpl>("Chat")
-
-ChatSDK.subscribe((state, prevState) => {
-    if (state.currentChatId === prevState.currentChatId)
-        return;
-
-    ChatSDK.runtime.unsubscribeFromChatChannel?.();
-    ChatSDK.runtime.unsubscribeFromChatChannel = null;
-
-    if (!state.currentChatId)
-        return;
-
-    ChatSDK.runtime.unsubscribeFromChatChannel = RealtimeSDK.subscribeToChannel(
-        Chat.Event.getChannel(state.currentChatId),
-        ChatSDK.handleOnEvent
-    )
-})
 
 
 

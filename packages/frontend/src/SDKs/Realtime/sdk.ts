@@ -44,6 +44,35 @@ export class RealtimeSDKImpl extends BaseSDK<RealtimeSDK.State> {
         };
     }
 
+    // Keeps a subscription on whichever channel the anchor derives from store state, switching when it changes.
+    public subscribeAnchored<S, T>(
+        store:     BaseSDK.Store<S>,
+        anchor:    (state: S) => Realtime.Channel | null,
+        callback:  (data: T, websocketMessage: MessageEvent<T>) => void,
+        onSwitch?: () => void,
+    ) {
+        let channel     = anchor(store.getState());
+        let unsubscribe = channel ? this.subscribeToChannel(channel, callback) : null;
+
+        const unsubscribeFromStore = store.subscribe(state => {
+            const nextChannel = anchor(state);
+
+            if (nextChannel === channel)
+                return;
+
+            unsubscribe?.();
+            onSwitch?.();
+
+            channel     = nextChannel;
+            unsubscribe = channel ? this.subscribeToChannel(channel, callback) : null;
+        });
+
+        return () => {
+            unsubscribeFromStore();
+            unsubscribe?.();
+        };
+    }
+
     // Resolve once an event of `type` lands on `channel`, then auto-unsubscribe.
     // Frontend mirror of the backend RealtimeService.awaitEvent. timeoutMs <= 0 waits forever;
     // pass an abortSignal to stop waiting early (rejects with AbortError).

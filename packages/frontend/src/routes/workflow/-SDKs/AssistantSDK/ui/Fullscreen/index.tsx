@@ -6,6 +6,7 @@ import AssistantPanel from '../ConversationArea'
 import AssistantList from './AssistantList'
 import AuroraRays from '@/components/AuroraRays/AuroraRays'
 import { Conversation } from '@/components/Conversation'
+import ConversationRoot from '../ConversationRoot'
 
 const FullscreenAssistant = (props: DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
@@ -25,22 +26,22 @@ const FullscreenAssistant = (props: DialogSDK.TemplateProps) => (
         <div className='pointer-events-none absolute top-0 left-0 w-full h-2/3 z-[-1] -scale-x-100'>
             <AuroraRays />
         </div>
-        <Conversation.Root accent="LanguageModel">
+        <ConversationRoot>
             <Header />
             <AssistantPanel />
-        </Conversation.Root>
+        </ConversationRoot>
     </DialogSDK.SplitTemplate>
 )
 
 export default FullscreenAssistant
 
 const Header = () => {
-    const currentAssistantName = AssistantSDK.useStore(s => s.assistants[s.currentAssistantId]?.name)
+    const currentChatName = AssistantSDK.useStore(s => s.currentChat?.name)
 
     return (
         <Conversation.Header>
             <Conversation.Title icon={SystemIcons.Sparkles} iconClassName='fill-current'>Assistant</Conversation.Title>
-            <Conversation.Subtitle>{currentAssistantName}</Conversation.Subtitle>
+            <Conversation.Subtitle>{currentChatName}</Conversation.Subtitle>
             <Conversation.Actions>
                 <Button size="icon-xs" variant="ghost" onClick={() => AssistantSDK.actions.thread.new()}>
                     <SystemIcons.Plus className='text-secondary-foreground' />

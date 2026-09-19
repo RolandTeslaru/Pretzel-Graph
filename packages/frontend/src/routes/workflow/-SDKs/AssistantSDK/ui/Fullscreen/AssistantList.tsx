@@ -2,15 +2,16 @@ import { AssistantSDK } from '../../sdk'
 import { Conversation } from '@/components/Conversation'
 
 const AssistantList = () => {
-    const assistants = AssistantSDK.useStore(s => s.assistants)
-    const currentAssistantId = AssistantSDK.useStore(s => s.currentAssistantId)
+    const [currentChatId, [request]] = AssistantSDK.useWith((s) => s.currentChatId, [AssistantSDK.query.threads()])
 
     return (
         <Conversation.ThreadList
-            threads={Object.values(assistants)}
-            currentId={currentAssistantId}
-            onSelect={(assistantId) => AssistantSDK.actions.thread.select(assistantId)}
-            onErase={(assistantId) => AssistantSDK.actions.thread.erase(assistantId)}
+            threads={request.data ?? []}
+            currentId={currentChatId}
+            onSelect={(chatId) => AssistantSDK.actions.thread.load(chatId)}
+            onErase={(chatId) => AssistantSDK.actions.thread.erase(chatId)}
+            isPending={request.isPending}
+            isError={request.isError}
         />
     )
 }
