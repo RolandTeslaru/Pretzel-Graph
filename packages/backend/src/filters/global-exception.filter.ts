@@ -1,8 +1,9 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 import { Response } from 'express';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { ZodError } from 'zod';
 import { NoResultError } from 'kysely';
+import { System } from '@pretzel-graph/shared/system';
 
 const PG_INSUFFICIENT_PRIVILEGE = '42501';
 
@@ -14,7 +15,7 @@ const isPostgresError = (e: unknown): e is PostgresError =>
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-    private readonly logger = new Logger(GlobalExceptionFilter.name);
+    private readonly log = System.log.withContext("Exceptions");
 
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
@@ -22,7 +23,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         const { status, error } = this.resolve(exception);
 
-        this.logger.error(`[${status}] [${error.code}] ${error.message}`, exception instanceof Error ? exception.stack : undefined);
+        this.log.error(error.message, {
+            status,
+            code:  error.code,
+            stack: exception instanceof Error ? exception.stack : undefined,
+        });
 
         res.status(status).json({ status, error });
     }
@@ -59,7 +64,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         // own or new data — so this is FORBIDDEN, not NOT_FOUND. The offending table/column is
         // logged but never returned.
         if (isPostgresError(exception) && exception.code === PG_INSUFFICIENT_PRIVILEGE) {
-            this.logger.error(
+            this.log.error(
                 `42501 insufficient_privilege on ${exception.table ?? '?'}.${exception.column ?? '?'} — ${exception.message}`,
             );
 

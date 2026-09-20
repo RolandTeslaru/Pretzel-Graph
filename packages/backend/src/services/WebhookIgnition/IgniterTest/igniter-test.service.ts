@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { createRedisClient, createRedisSubscriber } from '../../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { Consultation, Execution, Workflow } from '@pretzel-graph/shared/domain';
+import { System } from '@pretzel-graph/shared/system';
 
 interface TestRegistration {
     workflowId: Workflow.Id;
@@ -16,7 +17,7 @@ interface TestRegistration {
 
 @Injectable()
 export class IgniterTestService {
-    private readonly logger = new Logger(IgniterTestService.name);
+    private readonly log = System.log.withContext("IgniterTest");
     private readonly redisPub = createRedisClient('igniter-test');
     private readonly registrations = new Map<Webhook.RouteId, TestRegistration>();
 
@@ -37,11 +38,11 @@ export class IgniterTestService {
 
         const timer = setTimeout(() => {
             this.registrations.delete(key);
-            this.logger.warn(`Test registration expired for workflow=${workflowId} path=${path}`);
+            this.log.warning(`Test registration expired for workflow=${workflowId} path=${path}`);
         }, timeoutMs);
 
         this.registrations.set(key, { workflowId, method, timer, executionId, consultationId });
-        this.logger.log(`Registered test webhook [${method}] /${workflowId}/${path}`);
+        this.log.info(`Registered test webhook [${method}] /${workflowId}/${path}`);
     }
 
     deregister(workflowId: Workflow.Id, path: Webhook.Path) {
@@ -65,7 +66,7 @@ export class IgniterTestService {
         // arrived with the registration — nothing here derives them, and this server still
         // addresses routes purely by workflow and path.
         if (!reg.executionId || !reg.consultationId) {
-            this.logger.warn(`Test webhook at /${reg.workflowId}/${path} has no consultation to answer — dropping payload`);
+            this.log.warning(`Test webhook at /${reg.workflowId}/${path} has no consultation to answer — dropping payload`);
             return false;
         }
 
@@ -86,7 +87,7 @@ export class IgniterTestService {
         await this.redisPub.publish(channel, JSON.stringify(signal));
 
         this.deregister(reg.workflowId, path);
-        this.logger.log(`Dispatched test webhook for workflow=${reg.workflowId} path=${path}`);
+        this.log.info(`Dispatched test webhook for workflow=${reg.workflowId} path=${path}`);
         return true;
     }
 

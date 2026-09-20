@@ -1,8 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { Principal } from '@/domain/Principal';
 import { createRedisSubscriber } from '@/utils/redis';
 import { ActivePublicationRepository } from './active-publication.repository';
+import { System } from '@pretzel-graph/shared/system';
 
 export type ActivePublicationChange =
     | { type: 'upserted'; publication: VersionControl.Publication }
@@ -14,7 +15,7 @@ export type ActivePublicationListener = (
 
 @Injectable()
 export class ActivePublicationService implements OnModuleInit, OnModuleDestroy {
-    private readonly logger = new Logger(ActivePublicationService.name);
+    private readonly log = System.log.withContext("ActivePublication");
     private readonly redisSub = createRedisSubscriber('active-publication');
     private readonly publications = new Map<Workflow.Id, VersionControl.Publication>();
     private readonly listeners = new Set<ActivePublicationListener>();
@@ -43,19 +44,19 @@ export class ActivePublicationService implements OnModuleInit, OnModuleDestroy {
             for (const publication of publications)
                 this.publications.set(publication.workflow_id, publication);
 
-            this.logger.log(`Registered ${publications.length} active publications`);
+            this.log.info(`Registered ${publications.length} active publications`);
         }
         catch (error) {
-            this.logger.error(`Failed to load active publications: ${(error as Error).message}`);
+            this.log.error(`Failed to load active publications: ${(error as Error).message}`);
         }
     }
 
     private subscribeToSignals(): void {
         this.redisSub.psubscribe(VersionControl.Signal.PATTERN_CHANNEL, (error) => {
             if (error)
-                this.logger.error(`psubscribe failed: ${error.message}`);
+                this.log.error(`psubscribe failed: ${error.message}`);
             else
-                this.logger.log(`Subscribed to ${VersionControl.Signal.PATTERN_CHANNEL}`);
+                this.log.info(`Subscribed to ${VersionControl.Signal.PATTERN_CHANNEL}`);
         });
 
         this.redisSub.on('pmessage', (_pattern, _channel, raw) => {
@@ -65,12 +66,12 @@ export class ActivePublicationService implements OnModuleInit, OnModuleDestroy {
                 signal = VersionControl.Signal.Schema.parse(JSON.parse(raw));
             }
             catch (error) {
-                this.logger.warn(`Ignored malformed signal: ${(error as Error).message}`);
+                this.log.warning(`Ignored malformed signal: ${(error as Error).message}`);
                 return;
             }
 
             this.handleSignal(signal).catch(error =>
-                this.logger.error(`Failed to handle signal for workflow ${signal.workflowId}: ${(error as Error).message}`),
+                this.log.error(`Failed to handle signal for workflow ${signal.workflowId}: ${(error as Error).message}`),
             );
         });
     }
@@ -113,7 +114,7 @@ export class ActivePublicationService implements OnModuleInit, OnModuleDestroy {
 
         for (const result of results) {
             if (result.status === 'rejected')
-                this.logger.error(`Active publication listener failed: ${String(result.reason)}`);
+                this.log.error(`Active publication listener failed: ${String(result.reason)}`);
         }
     }
 

@@ -18,6 +18,9 @@ import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
 import { ShelfService } from '../Shelf/shelf.service';
+import { System } from '@pretzel-graph/shared/system';
+
+const log = System.log.withContext('Execution');
 
 @Injectable()
 export class ExecutionService {
@@ -43,7 +46,7 @@ export class ExecutionService {
         private readonly workerLifecycle:     WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
-            console.error(`[Execution] ${jobId} failed:`, failedReason);
+            log.error('queue job failed', { jobId, reason: failedReason });
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
             this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
@@ -268,11 +271,16 @@ export class ExecutionService {
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
 
+            log.info('execution enqueued', { executionId, workflowId, igniter: igniter.variant });
+
             // After the add, so waiting on a machine to start never holds the job back.
             await this.workerLifecycle.ensureComputeForJob();
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+
+            log.error('failed to enqueue execution', { executionId, workflowId, error: message });
+
             this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: message }));
             throw error;
         }
@@ -280,9 +288,11 @@ export class ExecutionService {
         const started = await workerStarted;
 
         if (!started) {
+            log.error('no worker picked up the job', { executionId, workflowId });
+
             this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: 'No worker picked up the job' }));
             this.executionQueue.remove(executionId).catch(err =>
-                console.error('Failed to remove execution from queue after start timeout', err)
+                log.error('failed to remove execution from queue after start timeout', { error: err })
             );
             throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'No worker picked up the job');
         }

@@ -1,9 +1,10 @@
-import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
+import { Injectable, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
 import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { ActivePublicationService } from '../../ActivePublication/active-publication.service';
 import { ExecutionService } from '../../Execution/execution.service';
+import { System } from '@pretzel-graph/shared/system';
 
 export interface InboundRequest {
     workflowId: Webhook.WorkflowId;
@@ -16,7 +17,7 @@ export interface InboundRequest {
 
 @Injectable()
 export class IgniterService {
-    private readonly logger = new Logger(IgniterService.name);
+    private readonly log = System.log.withContext("Igniter");
 
     constructor(
         private readonly publishedWorkflows: ActivePublicationService,
@@ -56,7 +57,7 @@ export class IgniterService {
 
         const { execution } = await this.executions.runFromService(payload, 'webhook');
 
-        this.logger.log(
+        this.log.info(
             `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,
         );
 

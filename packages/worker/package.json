@@ -6,7 +6,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-        "dev": "nodemon -w src -w ../node-sdk/src -w ../nodes/src -w ../shared -e ts,json --exec 'TS_NODE_PROJECT=tsconfig.build.json ts-node -r tsconfig-paths/register src/server.ts'",
+        "dev": "nodemon -w src -w ../node-sdk/src -w ../nodes/src -w ../shared -e ts,json --exec 'TS_NODE_TRANSPILE_ONLY=true TS_NODE_PROJECT=tsconfig.build.json ts-node -r tsconfig-paths/register src/server.ts'",
         "start": "node dist/worker/src/server.js",
         "test": "node --import tsx --test \"src/**/*.test.ts\""
     },

@@ -1,16 +1,17 @@
 import type { Dependency } from '@pretzel-graph/shared/domain';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { VersionControlRepository } from '../VersionControl/version-control.repository';
 import { ListingRegistry } from './registry.client';
+import { System } from '@pretzel-graph/shared/system';
 
 const ROOT_FOLDER_ID = '00000000-0000-4000-8000-000000000001' as Workflow['folder_id'];
 
 @Injectable()
 export class ListingService {
 
-    private readonly logger = new Logger(ListingService.name);
+    private readonly log = System.log.withContext("Listing");
 
     constructor(
         private readonly versionControlRepository: VersionControlRepository,
@@ -94,7 +95,7 @@ export class ListingService {
             return await this.registry.getOwnedIds();
         }
         catch (error) {
-            this.logger.warn(`Could not read own listings: ${(error as Error).message}`);
+            this.log.warning(`Could not read own listings: ${(error as Error).message}`);
 
             return {};
         }

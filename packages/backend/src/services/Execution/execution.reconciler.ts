@@ -1,10 +1,11 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { Principal } from '@/domain/Principal';
 import { ExecutionRepository } from './execution.repository';
 import { ExecutionService } from './execution.service';
+import { System } from '@pretzel-graph/shared/system';
 
 /** Rows younger than this are left alone — they may not have been picked up yet. */
 const GRACE_MS = 2 * 60_000;
@@ -21,7 +22,7 @@ const SWEEP_MS = 60_000;
 @Injectable()
 export class ExecutionReconciler implements OnModuleInit {
 
-    private readonly logger = new Logger(ExecutionReconciler.name);
+    private readonly log = System.log.withContext("ExecutionReconciler");
 
     constructor(
         @InjectQueue(Execution.Queue.ID)
@@ -54,11 +55,11 @@ export class ExecutionReconciler implements OnModuleInit {
                 // never landed; the results are gone either way.
                 await this.executions.fail(id, `Its worker never reported an outcome (job ${state})`);
 
-                this.logger.warn(`Reconciled orphaned execution ${id} (job ${state})`);
+                this.log.warning(`Reconciled orphaned execution ${id} (job ${state})`);
             }
         }
         catch (error) {
-            this.logger.error(`Sweep failed: ${error instanceof Error ? error.message : error}`);
+            this.log.error(`Sweep failed: ${error instanceof Error ? error.message : error}`);
         }
     }
 }

@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit, forwardRef } from '@nestjs/common';
 import { Job, Queue, Worker as BullWorker } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from '@pretzel-graph/shared/constants';
@@ -7,6 +7,7 @@ import { Execution, Worker } from '@pretzel-graph/shared/domain';
 import { CloudService } from '../Cloud/cloud.service';
 import { ExecutionService } from '../Execution/execution.service';
 import { RealtimeService } from '../Realtime/realtime.service';
+import { System } from '@pretzel-graph/shared/system';
 
 const PREPARE_TIMEOUT_MS = 10_000;
 
@@ -41,7 +42,7 @@ const getLifecycleQueueName = (workerId: Worker.Id) => `worker-lifecycle-${worke
 @Injectable()
 export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
-    private readonly logger = new Logger(WorkerLifecycleService.name);
+    private readonly log = System.log.withContext("WorkerLifecycle");
 
     private readonly lifecycleQueues = new Map<Worker.Id, Queue>();
 
@@ -77,11 +78,11 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             );
 
             consumer.on('failed', (job, error) =>
-                this.logger.warn(`Worker ${workerId} ${job?.name ?? 'lifecycle'} job failed: ${error.message}`),
+                this.log.warning(`Worker ${workerId} ${job?.name ?? 'lifecycle'} job failed: ${error.message}`),
             );
 
             consumer.on('error', (error) =>
-                this.logger.warn(`Worker ${workerId} lifecycle consumer: ${error.message}`),
+                this.log.warning(`Worker ${workerId} lifecycle consumer: ${error.message}`),
             );
 
             this.lifecycleConsumers.set(workerId, consumer);
@@ -111,10 +112,10 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             try {
                 await this.executions.fail(executionId, 'Worker shut down mid-run');
 
-                this.logger.warn(`Failed execution ${executionId}: its worker shut down`);
+                this.log.warning(`Failed execution ${executionId}: its worker shut down`);
             }
             catch (error) {
-                this.logger.error(`Could not fail abandoned execution ${executionId}: ${error instanceof Error ? error.message : error}`);
+                this.log.error(`Could not fail abandoned execution ${executionId}: ${error instanceof Error ? error.message : error}`);
             }
         }
     }
@@ -153,13 +154,13 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
             const workersToWake = sleepingWorkers.slice(0, Math.max(workersNeeded - awakeOrWaking.size, 0));
 
             if (workersToWake.length > 0)
-                this.logger.log(`Queue needs ${workersNeeded} worker(s); ${connectedWorkers.length} connected, ${wakingWorkers.length} waking, waking ${workersToWake.join(', ')}`);
+                this.log.info(`Queue needs ${workersNeeded} worker(s); ${connectedWorkers.length} connected, ${wakingWorkers.length} waking, waking ${workersToWake.join(', ')}`);
 
             await Promise.all(workersToWake.map((workerId) => this.requestWake(workerId)));
         }
         catch (error) {
             // The job is already queued; a worker that is awake still takes it.
-            this.logger.warn(`Could not work out which workers to wake: ${error instanceof Error ? error.message : error}`);
+            this.log.warning(`Could not work out which workers to wake: ${error instanceof Error ? error.message : error}`);
         }
     }
 
@@ -181,7 +182,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
     // A wake already queued for this worker absorbs the request.
     private async requestWake(workerId: Worker.Id): Promise<void> {
-        this.logger.log(`Queued a wake for worker ${workerId}`);
+        this.log.info(`Queued a wake for worker ${workerId}`);
 
         await this.lifecycleQueues.get(workerId)?.add(WAKE_JOB, {}, {
             jobId:            WAKE_JOB,
@@ -264,7 +265,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async sleepIfIdle(workerId: Worker.Id): Promise<void> {
-        this.logger.log(`Worker ${workerId} reached its idle window; checking the queue`);
+        this.log.info(`Worker ${workerId} reached its idle window; checking the queue`);
 
         try {
             const [activeJobs, waiting, delayed, connectedWorkers] = await Promise.all([
@@ -276,7 +277,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             // Down, or still booting; checked again next window either way.
             if (!connectedWorkers.includes(workerId)) {
-                this.logger.log(`Worker ${workerId} is not connected; checking again next window`);
+                this.log.info(`Worker ${workerId} is not connected; checking again next window`);
 
                 await this.armTimer(workerId);
 
@@ -287,7 +288,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             // Busy, or work is queued that may need its capacity.
             if (runningJobsOnWorker.length > 0 || waiting + delayed > 0) {
-                this.logger.log(`Worker ${workerId} stays awake: ${runningJobsOnWorker.length} running, ${waiting + delayed} queued`);
+                this.log.info(`Worker ${workerId} stays awake: ${runningJobsOnWorker.length} running, ${waiting + delayed} queued`);
 
                 await this.armTimer(workerId);
 
@@ -298,25 +299,25 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
             // Busy, or it drained and the reply was lost; either way it takes jobs again on its own.
             if (!ready) {
-                this.logger.log(`Worker ${workerId} did not report ready to sleep; leaving it awake`);
+                this.log.info(`Worker ${workerId} did not report ready to sleep; leaving it awake`);
 
                 await this.armTimer(workerId);
 
                 return;
             }
 
-            this.logger.log(`Worker ${workerId} drained; asking the platform to suspend it`);
+            this.log.info(`Worker ${workerId} drained; asking the platform to suspend it`);
 
             // A failed suspend leaves a drained worker running; it takes jobs again once its lease ends.
             await this.cloud.post(`/api/workspaces/${this.cloud.workspaceId}/workers/${workerId}/sleep`);
 
-            this.logger.log(`Worker ${workerId} suspended after an idle period`);
+            this.log.info(`Worker ${workerId} suspended after an idle period`);
 
             // Work that arrived during the drain may have counted on this worker.
             await this.ensureComputeForJob();
         }
         catch (error) {
-            this.logger.warn(`Could not suspend worker ${workerId}: ${error instanceof Error ? error.message : error}`);
+            this.log.warning(`Could not suspend worker ${workerId}: ${error instanceof Error ? error.message : error}`);
 
             await this.armTimer(workerId);
         }
@@ -329,7 +330,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
 
         await this.armTimer(workerId);
 
-        this.logger.log(`Worker ${workerId} asked to start`);
+        this.log.info(`Worker ${workerId} asked to start`);
     }
 
 
@@ -338,7 +339,7 @@ export class WorkerLifecycleService implements OnModuleInit, OnModuleDestroy {
     private prepareToSleep(workerId: Worker.Id): Promise<boolean> {
         const requestId = Worker.RequestId.parse(randomUUID());
 
-        this.logger.log(`Asking worker ${workerId} to prepare for sleep`);
+        this.log.info(`Asking worker ${workerId} to prepare for sleep`);
 
         return this.realtime.signalAndAwaitEvent<Worker.Signal.Sleep.Prepare>(
             {

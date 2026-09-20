@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
@@ -7,6 +7,7 @@ import type { Loader } from '@pretzel-graph/node-sdk';
 import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { System } from '@pretzel-graph/shared/system';
 
 const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../../nodes/src');
 
@@ -26,7 +27,7 @@ function getCoreIndex(): Shelf.Index {
 @Injectable()
 export class ShelfService {
 
-    private readonly logger = new Logger(ShelfService.name);
+    private readonly log = System.log.withContext("Shelf");
 
     private extendedIndex: Record<Blueprint.Id, Blueprint> | null = null;
     private summaries:     Shelf.Catalogue.Summary[] | null       = null;
@@ -76,7 +77,7 @@ export class ShelfService {
         try {
             listings = await this.getPretzelOfficialListings();
         } catch (error) {
-            this.logger.warn(`Could not fetch the extended shelf: ${(error as Error).message}`);
+            this.log.warning(`Could not fetch the extended shelf: ${(error as Error).message}`);
             return {};
         }
 
@@ -125,7 +126,7 @@ export class ShelfService {
                 dependencyRef: { kind: 'listing', id: listing.id },
             });
         } catch (error) {
-            this.logger.warn(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);
+            this.log.warning(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);
             return null;
         }
     }

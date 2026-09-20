@@ -1,6 +1,9 @@
 import { DB } from '@/db';
 import { NoResultError } from 'kysely';
 import { SystemError, DatabaseError } from '@pretzel-graph/shared/domain';
+import { System } from '@pretzel-graph/shared/system';
+
+const log = System.log.withContext('Database');
 
 // Which roles each method declared, keyed by method name, stored on the
 // prototype so @DatabaseClass can find them.
@@ -89,7 +92,7 @@ export function catchDatabaseErrors(fn: (...args: unknown[]) => unknown, operati
             const sqlstate = (err as { code?: string }).code ?? '';
             const detail = err instanceof Error ? err.message : String(err);
 
-            console.error(`Database error during ${operation}:`, err);
+            log.error('database error', { operation, error: err });
 
             throw new DatabaseError(
                 SQLSTATE[sqlstate] ?? SystemError.Code.INFRA_DATABASE_ERROR,

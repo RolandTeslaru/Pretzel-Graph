@@ -9,6 +9,9 @@ import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { trustedProxyMiddleware } from './auth/trusted-proxy';
 import { frontendMiddleware } from './serve-frontend';
+import { System } from '@pretzel-graph/shared/system';
+
+System.log.setAppName('Backend');
 
 async function bootstrap() {
     // Before the modules load: some of them read the database on init.
@@ -53,8 +56,8 @@ async function bootstrap() {
     // Fails the boot rather than serving a route whose path names a resource it never checks.
 
     await app.listen(PORT);
-    console.log(`NestJS server is running on http://localhost:${PORT}`);
-    console.log(`WebSocket server initialized`);
+    System.log.withContext('Backend').info('listening', { port: PORT });
+    System.log.withContext('Backend').info('websocket gateway initialized');
 }
 
 bootstrap().catch((error: unknown) => {

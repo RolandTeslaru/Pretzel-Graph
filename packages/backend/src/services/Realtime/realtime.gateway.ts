@@ -7,6 +7,9 @@ import { Realtime } from "@pretzel-graph/shared/domain/Realtime";
 import { Auth, Chat, Execution } from "@pretzel-graph/shared/domain";
 import { verifyToken } from '../../utils/auth';
 import { isFromTrustedProxy } from '../../auth/trusted-proxy';
+import { System } from '@pretzel-graph/shared/system';
+
+const log = System.log.withContext('Realtime');
 
 interface SocketIdentity {
     userId: Auth.User.Id;
@@ -96,7 +99,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
             if (msg.action === "unsubscribe")
                 this.unsubscribe(ws, msg.channel);
         } catch (err) {
-            console.error('Invalid WS message:', err);
+            log.error('invalid websocket message', { error: err });
         }
     }
 
