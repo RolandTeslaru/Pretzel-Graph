@@ -9,7 +9,13 @@ import {
     fromHex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet, polygon, arbitrum, base, optimism, avalanche, celo } from "viem/chains";
+import { mainnet } from "viem/chains/definitions/mainnet";
+import { polygon } from "viem/chains/definitions/polygon";
+import { arbitrum } from "viem/chains/definitions/arbitrum";
+import { base } from "viem/chains/definitions/base";
+import { optimism } from "viem/chains/definitions/optimism";
+import { avalanche } from "viem/chains/definitions/avalanche";
+import { celo } from "viem/chains/definitions/celo";
 
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";

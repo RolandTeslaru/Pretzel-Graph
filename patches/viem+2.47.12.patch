@@ -1,0 +1,16 @@
+diff --git a/node_modules/viem/package.json b/node_modules/viem/package.json
+index 37ac876..21f3e5e 100644
+--- a/node_modules/viem/package.json
++++ b/node_modules/viem/package.json
+@@ -49,6 +49,11 @@
+       "import": "./_esm/chains/index.js",
+       "default": "./_cjs/chains/index.js"
+     },
++    "./chains/definitions/*": {
++      "types": "./_types/chains/definitions/*.d.ts",
++      "import": "./_esm/chains/definitions/*.js",
++      "default": "./_cjs/chains/definitions/*.js"
++    },
+     "./chains/utils": {
+       "types": "./_types/chains/utils.d.ts",
+       "import": "./_esm/chains/utils.js",

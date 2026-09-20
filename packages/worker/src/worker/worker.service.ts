@@ -66,7 +66,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
     public async onApplicationBootstrap(): Promise<void> {
-        await this.catalogue.preloadBlueprintsByNamespace("Core");
+        await this.catalogue.preloadByNamespace("Core");
 
         await this.startConsuming();
 

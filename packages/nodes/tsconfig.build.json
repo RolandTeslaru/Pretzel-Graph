@@ -13,6 +13,8 @@
         // These publish types only through an `exports` map, which Node10
         // resolution cannot read.
         "paths": {
+            // Node10 finds viem's raw .ts source here, which yields a second `Chain` type.
+            "viem/chains/definitions/*": ["../../node_modules/viem/_types/chains/definitions/*"],
             "@pretzel-graph/node-sdk": ["../node-sdk/src/index.ts"],
             "@pretzel-graph/node-sdk/*": ["../node-sdk/src/*"],
             "@pretzel-graph/shared/*": ["../shared/*"],

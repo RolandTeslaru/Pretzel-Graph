@@ -55,29 +55,38 @@ export class CatalogueService {
 
 
 
-    public async preloadBlueprint(blueprintId: Blueprint.Id): Promise<void> {
-        const blueprint = await this.getBlueprint(blueprintId);
+    // Loads both halves of one entry: the blueprint and its runtime-node constructor.
+    public async preload(blueprintId: Blueprint.Id): Promise<void> {
+        const [blueprint, node] = await Promise.all([
+            this.getBlueprint(blueprintId),
+            this.getNodeConstructor(blueprintId),
+        ]);
 
         if (!blueprint)
             throw new Error(`Failed to preload blueprint: ${blueprintId}`);
+
+        if (!node)
+            throw new Error(`Failed to preload node class: ${blueprintId}`);
     }
 
 
 
 
-    // Walks the namespace's directory and loads every blueprint under it, e.g. "Core" or "Integrations.Discord".
-    public async preloadBlueprintsByNamespace(namespace: string): Promise<void> {
+    // Walks the namespace's directory and preloads everything under it, e.g. "Core" or "Integrations.Discord".
+    public async preloadByNamespace(namespace: string): Promise<void> {
         const directory = path.join(this.nodesRoot, namespace.replace(/\./g, "/"));
         const ids = await this.discoverBlueprintIds(directory, namespace);
         const startedAt = performance.now();
 
-        const loaded = await Promise.all(ids.map(id => this.getBlueprint(id)));
-        const missing = ids.filter((_, index) => !loaded[index]);
+        const results = await Promise.allSettled(ids.map(id => this.preload(id)));
+        const failures = results.flatMap(result =>
+            result.status === "rejected" ? [String(result.reason?.message ?? result.reason)] : [],
+        );
 
-        if (missing.length > 0)
-            throw new Error(`Failed to preload ${namespace} blueprints: ${missing.join(", ")}`);
+        if (failures.length > 0)
+            throw new Error(`Failed to preload ${namespace}:\n${failures.join("\n")}`);
 
-        console.log(`[Catalogue] Preloaded ${ids.length} ${namespace} blueprints in ${Math.round(performance.now() - startedAt)}ms`);
+        console.log(`[Catalogue] Preloaded ${ids.length} ${namespace} nodes in ${Math.round(performance.now() - startedAt)}ms`);
     }
 
 
