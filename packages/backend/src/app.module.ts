@@ -24,6 +24,7 @@ import { HealthModule } from './services/Health/health.module';
 import { ListingModule } from './services/Listing/listing.module';
 import { ActivityModule } from './services/Activity/activity.module';
 import { WorkerModule } from './services/Worker/worker.module';
+import { GatewayModule } from './services/Gateway/gateway.module';
 
 @Module({
     imports: [
@@ -63,6 +64,7 @@ import { WorkerModule } from './services/Worker/worker.module';
         ListingModule,
         ActivityModule,
         WorkerModule,
+        GatewayModule,
     ],
     controllers: [],
     providers: [

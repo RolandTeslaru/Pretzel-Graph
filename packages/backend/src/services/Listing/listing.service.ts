@@ -121,19 +121,12 @@ export class ListingService {
         return this.registry.put(workflowId, toRequest(publication));
     }
 
-    // The registry mirrors whichever publication is active now; unlisted workflows are left alone.
-    public async syncActive(principal: Principal.User, workflowId: Workflow.Id): Promise<void> {
+    // The registry mirrors the publication that VersionControl just made active.
+    public async syncActive(publication: VersionControl.Publication): Promise<void> {
         if (!this.registry.canShare)
             return;
 
-        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
-
-        if (!publication) {
-            await this.registry.delete(workflowId);
-            return;
-        }
-
-        await this.registry.update(workflowId, toRequest(publication));
+        await this.registry.update(publication.workflow_id, toRequest(publication));
     }
 
     public async unshareWorkflow(workflowId: Workflow.Id): Promise<void> {
