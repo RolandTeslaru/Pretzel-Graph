@@ -1,5 +1,5 @@
 import { tool } from "@langchain/core/tools";
-import { RuntimeNode, InferIncoming, InferOutputs, jsonSchemaToZod, mcp, toMcpCreds, McpCreds } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, jsonSchemaToZod, toMcpCreds, McpCreds } from "@pretzel-graph/node-sdk";
 
 import { Blueprint } from "./blueprint";
 
@@ -17,7 +17,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         const creds = toMcpCreds(this.fieldValues as Record<string, unknown>, secrets);
 
-        const client = await mcp.get(creds);
+        const client = await this.context.connectionAPI.mcp.get(creds);
         const { tools } = await client.listTools();
 
         const include = new Set(
@@ -36,7 +36,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private wrap(creds: McpCreds, t: { name: string; description?: string; inputSchema: unknown }) {
         return tool(
             async (args) => {
-                const client = await mcp.get(creds);
+                const client = await this.context.connectionAPI.mcp.get(creds);
                 const result = await client.callTool({ name: t.name, arguments: args as Record<string, unknown> });
                 return flatten(result);
             },

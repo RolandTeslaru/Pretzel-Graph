@@ -71,6 +71,14 @@ export namespace Blueprint {
     export const extractBlueprintId = (id: Blueprint.ReconciledId | string): Blueprint.Id =>
         id.split(":")[0] as Blueprint.Id;
 
+    // Import path for one of a blueprint's modules: `Core.Text.Join` -> `<nodesRoot>/Core/Text/Join/node`.
+    export const getPath = (
+        nodesRoot   : string,
+        blueprintId : Blueprint.Id,
+        module      : "node" | "blueprint",
+    ): string =>
+        `${nodesRoot}/${blueprintId.replace(/\./g, "/")}/${module}`;
+
     export namespace Meta {
 
         export const Schema = z.object({

@@ -2,9 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
+import type { Loader } from '@pretzel-graph/node-sdk';
 import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../../nodes/src');
+
+type LoadableNode = {
+    loaders?: Record<Field.ResourceLoader.LoaderId, Loader.Fn>;
+};
 
 // Read once and held for the process; index changes arrive via a backend restart.
 let index: Shelf.Index | null = null;
@@ -22,8 +30,38 @@ export class ShelfService {
 
     private extendedIndex: Record<Blueprint.Id, Blueprint> | null = null;
     private summaries:     Shelf.Catalogue.Summary[] | null       = null;
+    private readonly loadableNodes = new Map<Blueprint.Id, LoadableNode>();
 
     constructor(private readonly cloud: CloudService) {}
+
+
+    // Resource loaders are static members on the node class, so the module has to be imported.
+    async getLoader(
+        blueprintId: Blueprint.Id,
+        loaderId: Field.ResourceLoader.LoaderId,
+    ): Promise<Loader.Fn | null> {
+        let NodeClass = this.loadableNodes.get(blueprintId);
+
+        if (!NodeClass) {
+            let module: { Node?: unknown };
+
+            try {
+                module = await import(Blueprint.getPath(NODES_ROOT, blueprintId, 'node'));
+            }
+            catch {
+                return null;
+            }
+
+            NodeClass = (module.Node ?? undefined) as LoadableNode | undefined;
+
+            if (!NodeClass)
+                return null;
+
+            this.loadableNodes.set(blueprintId, NodeClass);
+        }
+
+        return NodeClass.loaders?.[loaderId] ?? null;
+    }
 
     // The extended shelf blueprints, fetched from the registry once and kept for the process.
     async ensureExtendedShelfIndex(): Promise<Record<Blueprint.Id, Blueprint>> {

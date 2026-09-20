@@ -5,7 +5,7 @@
 import { Airlock, Execution, Workbench } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
@@ -14,6 +14,7 @@ import { isUUID } from "../utils";
 
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { ExecutionContext } from "../execution-context";
+import { CatalogueService } from "../catalogue";
 
 
 // Turns stored Workflow.Data into a runnable execution context. compile() in order:
@@ -33,7 +34,7 @@ import type { ExecutionContext } from "../execution-context";
 // The graph is a signal graph, not a DAG — nodes fire on accumulated signals and may re-fire,
 // so cycles are legal here.
 export class TurboGraph {
-    constructor() { }
+    constructor(private readonly catalogue: CatalogueService) { }
 
 
 
@@ -44,7 +45,7 @@ export class TurboGraph {
 
         const { workflowId, workflowData, compiledGraph: graph } = executionCtx;
 
-        await CatalogueService.warmBlueprintCache(workflowData);
+        await this.catalogue.preloadWorkflowBlueprints(workflowData);
 
         const blueprints    = await this.loadAllBlueprints(workflowData);
         executionCtx.workflowCache = Workbench.Document.createCache(workflowData, blueprints);
@@ -116,7 +117,7 @@ export class TurboGraph {
 
             const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-            const { blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
+            const { blueprint } = await this.catalogue.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
             blueprints[wfNode.reconciledBlueprintId ?? wfNode.blueprintId] = blueprint;
         }
@@ -236,7 +237,7 @@ export class TurboGraph {
         const workflowData = executionCtx.workflowData
         const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-        const { RuntimeNode, blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
+        const { RuntimeNode, blueprint } = await this.catalogue.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
         this.assertProxySupported(wfNode, blueprint, executionCtx);
 

@@ -48,7 +48,7 @@ packages/
   webhook/     # Standalone inbound webhook receiver (ignites published workflows)
   shared/      # Domain models (Zod schemas + branded IDs) used by every package
   standard-ui/ # UI kit: Radix + Tailwind foundations, icons, BaseSDK/SDKManager, Dialog/Notification/Query/System SDKs
-  node-sdk/    # Node authoring SDK: RuntimeNode, builders, CatalogueService, db/ connection managers
+  node-sdk/    # Node authoring SDK: RuntimeNode, builders, and execution-context API contracts
   nodes/       # Node implementations (blueprint.ts + node.ts) by provider
 ```
 
@@ -80,7 +80,8 @@ Zod schemas with inferred types and branded string IDs (`Workflow.Id`, `Node.Id`
 - `airlock/` — the `isolated-vm` sandbox user code runs in; one isolate per execution, shared by sub-workflows
 - `worker.ts` — BullMQ consumer of `Execution.Queue`; `server.ts` — its HTTP surface
 - Node implementations live in **`packages/nodes/src/`**, not the worker: `Core/` (Chat, LanguageModel, Routing, SubWorkflow, Text, Utils, Webhook, Workbench, Developer) and `Integrations/<Provider>/`. Each node is `blueprint.ts` + `node.ts`; conditional fields/ports are inline blueprint derivatives
-- `packages/node-sdk/` — `RuntimeNode` base class, field/port/credential/blueprint builders, `CatalogueService` (blueprint-id → path resolution), `src/db/` connection managers (Postgres, MySQL, Redis, Mongo)
+- `packages/node-sdk/` — `RuntimeNode` base class, field/port/credential/blueprint builders, and execution-context API contracts
+- The worker owns the Nest `CatalogueService` and live connection managers; RuntimeNodes reach them through `catalogueAPI` and `connectionAPI`
 
 ### Backend (`packages/backend`)
 NestJS on port 3001 (`PORT`). Entry `src/main.ts`; `serve-frontend.ts` serves the built editor for any non-API path.

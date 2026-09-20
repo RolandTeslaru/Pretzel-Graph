@@ -2,6 +2,7 @@ import { Airlock, Execution, Workflow } from "@pretzel-graph/shared/domain";
 import {
     RealtimeAPI,
     CatalogueAPI,
+    ConnectionAPI,
     CredentialsAPI,
     AbortAPI,
     PortAPI,
@@ -31,6 +32,7 @@ export interface ExecutionContext {
     // APIS
     readonly realtimeAPI:             RealtimeAPI,
     readonly catalogueAPI:            CatalogueAPI,
+    readonly connectionAPI:           ConnectionAPI,
     readonly airlockAPI:              Airlock.API,
     readonly credentialsAPI:          CredentialsAPI,
     readonly abortAPI:                AbortAPI,

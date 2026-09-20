@@ -12,12 +12,14 @@ import { RealtimeService } from '../../realtime/realtime.service';
 import { BookkeepingService } from './bookkeeping.service';
 import { LockService } from './lock.service';
 import { SignalHandlerService } from './signal-handler.service';
+import { CatalogueService } from '../../catalogue';
+import { ConnectionService } from '../../connections';
 
 // Runs one queued execution from compile to its reported outcome.
 @Injectable()
 export class QueueProcessorService {
 
-    private readonly compiler = new TurboGraph();
+    private readonly compiler: TurboGraph;
 
     constructor(
         private readonly signals: SignalHandlerService,
@@ -25,7 +27,11 @@ export class QueueProcessorService {
         private readonly bookkeeping: BookkeepingService,
         private readonly realtime: RealtimeService,
         private readonly axios: AxiosService,
-    ) {}
+        private readonly catalogue: CatalogueService,
+        private readonly connections: ConnectionService,
+    ) {
+        this.compiler = new TurboGraph(catalogue);
+    }
 
 
 
@@ -83,6 +89,8 @@ export class QueueProcessorService {
             credentialInstances,
             realtime: scope,
             internalAPI,
+            catalogue: this.catalogue,
+            connectionAPI: this.connections,
         });
 
         const executionCtx = engine.ctx;

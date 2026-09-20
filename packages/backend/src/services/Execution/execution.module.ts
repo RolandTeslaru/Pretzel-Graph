@@ -11,6 +11,7 @@ import { RealtimeModule } from '../Realtime/realtime.module';
 import { CloudModule } from '../Cloud/cloud.module';
 import { WorkerModule } from '../Worker/worker.module';
 import { WorkbenchModule } from '../Workbench/workbench.module';
+import { ShelfModule } from '../Shelf/shelf.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { WorkbenchModule } from '../Workbench/workbench.module';
         CloudModule,
         forwardRef(() => WorkerModule),
         WorkbenchModule,
+        ShelfModule,
     ],
     controllers: [ExecutionController],
     providers: [ExecutionService, ExecutionReconciler, ExecutionRepository, ChatDatabase, VaultRepository],

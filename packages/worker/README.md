@@ -37,7 +37,7 @@ The engine layering is deliberate: **S2Engine is a domain-agnostic scheduler**; 
 
 1. Create an `S2Graph` and add the `__START__` vertex.
 2. Build the execution context + all the node-facing APIs (`portAPI`, `propagationAPI`, `schedulerAPI`, `instanceRegistryAPI`, `workflowQueryAPI`, `subWorkflowAPI`, `dependencyAPI`, `credentialsAPI`) — each delegates into `AggexEngine` with the engine execution context.
-3. **Per node** (`prepareNode`): resolve the `RuntimeNode` class via `CatalogueService.getNode(blueprintId)` (by blueprint-id → path convention; dependency nodes fall back to `Core.SubWorkflow.Execute`), `new` it, call `onCompile`, `graph.addVertex`, `engine.registerNode`, and set the vertex's **signal strategy** from the node's `signalDependency` field (default `AND`).
+3. **Per node** (`prepareNode`): resolve the `RuntimeNode` class through the worker's injected `CatalogueService` (by blueprint-id → path convention; dependency nodes fall back to `Core.SubWorkflow.Execute`), `new` it, call `onCompile`, `graph.addVertex`, `engine.registerNode`, and set the vertex's **signal strategy** from the node's `signalDependency` field (default `AND`).
 4. **Edges → dependencies**: for every non-disabled edge, `graph.addDependency(source → target)`. This builds `dependenciesMap`/`dependentsMap`.
 5. **Start nodes** (`findStartNodes`): nodes with **no incoming edges** and **not `IS_PASSIVE`** → `graph.addDependency(__START__ → node)`. (No start nodes ⇒ compile error.)
 6. **Igniter**: a `webhook` igniter calls `triggerWebhook` on the target node; a `chat_message` igniter calls `handleIgniter` on every node instance.

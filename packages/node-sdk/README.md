@@ -7,7 +7,7 @@
 
 Conditional fields and ports are declared directly in `blueprint.ts` as derivatives.
 
-Nodes are resolved by a **blueprint-id → path convention**. Blueprint id `Integrations.Postgres.Query` lives at `packages/nodes/src/Integrations/Postgres/Query/{blueprint,node}.ts`. There is no central registry import — `CatalogueService` dynamic-imports by path.
+Nodes are resolved by a **blueprint-id → path convention**. Blueprint id `Integrations.Postgres.Query` lives at `packages/nodes/src/Integrations/Postgres/Query/{blueprint,node}.ts`. The worker-owned `CatalogueService` dynamic-imports these modules and exposes resolved blueprints to nodes through `ExecutionContext.catalogueAPI`.
 
 Everything a blueprint declares is built with a `define*` helper:
 
@@ -294,10 +294,7 @@ Use `field==value` or `field!=value`. Branch members are additive by default; us
 
 ## Database connection layer (`src/db/`)
 
-For DB-backed nodes, the SDK provides pooled connection managers so loaders and execution reuse warm connections (keyed by a hash of the decrypted credentials, with a TTL reaper).
-
-- `ConnectionManager<TCreds, TClient>` — base: cache + value-hash key + reap. Override `createClient` / `disposeClient`. Use directly for driver-pooled clients (Redis, Mongo).
-- `SqlConnectionManager` — adds `withConnection(creds, fn)` with a **reset seam** (`DISCARD ALL` / `changeUser`) that wipes session state before a connection returns to the pool. Use for raw-socket SQL (Postgres, MySQL).
+For DB-backed nodes, the worker owns pooled connection managers so execution reuse and suspend cleanup operate on the same live clients. Nodes access those managers through `ExecutionContext.connectionAPI`; the SDK exports only the API contracts, credential types, and credential conversion helpers.
 
 Ready-made singletons + cred mappers: `postgres` / `toPgCreds`, `mysql` / `toMySqlCreds`, `redis` / `toRedisCreds`, `mongo` / `toMongoCreds`.
 

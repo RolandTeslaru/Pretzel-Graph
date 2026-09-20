@@ -6,7 +6,7 @@ import { WorkbenchSessionService } from './session.service';
 import { VaultRepository } from '../Vault/vault.repository';
 import { OAuthService } from '../Vault/OAuth/oauth.service';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
-import { CatalogueService, Loader } from '@pretzel-graph/node-sdk';
+import type { Loader } from '@pretzel-graph/node-sdk';
 import { ShelfService } from '../Shelf/shelf.service';
 import { ListingService } from '../Listing/listing.service';
 import { Listing, SystemError } from '@pretzel-graph/shared/domain';
@@ -76,7 +76,7 @@ export class WorkbenchService {
                 principal: Principal.User,
                 payload: Workbench.API.Field.ResourceLoader.LoadOptions.Request,
             ): Promise<Workbench.API.Field.ResourceLoader.LoadOptions.Response> => {
-                const loaderFn = await CatalogueService.getLoader(
+                const loaderFn = await this.shelfService.getLoader(
                     payload.blueprintId,
                     payload.loaderId,
                 );

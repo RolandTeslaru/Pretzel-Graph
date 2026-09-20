@@ -1,8 +1,3 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { ConnectionManager } from "../db/connection-manager";
-
 export type McpCreds =
     | {
         transport: "stdio";
@@ -17,44 +12,7 @@ export type McpCreds =
         headers: Record<string, string>;
     };
 
-
-class McpConnectionManager extends ConnectionManager<McpCreds, Client> {
-    protected async createClient(c: McpCreds): Promise<Client> {
-        const client = new Client({ name: "pretzelgraph", version: "1.0.0" });
-
-        const transport = c.transport === "stdio"
-            ? new StdioClientTransport({
-                command: c.command,
-                args: c.args,
-                env: c.env,
-                cwd: c.cwd,
-                // NOTE: defaults to "inherit", so a server's stderr lands in the worker's.
-                // Routing it into the execution log is a follow-up; "pipe" without a
-                // reader would fill the buffer and stall the child.
-            })
-            : new StreamableHTTPClientTransport(new URL(c.url), {
-                requestInit: { headers: c.headers },
-            });
-
-        // Runs the initialize handshake; throws if the server is unreachable or incompatible.
-        await client.connect(transport);
-        return client;
-    }
-
-    /** Closes the session and, for stdio, kills the spawned child process. */
-    protected async disposeClient(client: Client): Promise<void> {
-        await client.close();
-    }
-}
-
-/** Process-wide singleton, mirroring the database managers. */
-export const mcp = new McpConnectionManager();
-
-/**
- * Builds the cache-keyed creds from the node's connection config plus the secrets held
- * in the credential. Split because only the secrets belong in the Vault — the endpoint,
- * command and args are node fields, so the editor can hide the ones a transport ignores.
- */
+// Combines the node's transport fields with the credential's secrets into typed MCP connection values.
 export function toMcpCreds(
     config: Record<string, unknown>,
     secrets: Record<string, unknown> = {},

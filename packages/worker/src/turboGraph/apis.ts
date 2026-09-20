@@ -3,7 +3,7 @@ import { Consultation, Dependency, Execution, Vault, Workbench } from "@pretzel-
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
-import { CatalogueService, HTTP, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { ConnectionAPI, HTTP, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
 import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 import { AggexEngine } from "src/engine";
 
@@ -13,6 +13,7 @@ import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 import { agentToolBridgeService } from "../tool-bridge/service";
 import { ExecutionAPIs, ExecutionContext } from "../execution-context";
+import { CatalogueService } from "../catalogue";
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
 export function createExecutionAPIs(
@@ -22,6 +23,8 @@ export function createExecutionAPIs(
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RuntimeNode.RealtimeScope,
     internalAPI:         HTTP.Client,
+    catalogue:           CatalogueService,
+    connectionAPI:       ConnectionAPI,
 ): ExecutionAPIs {
     const { airlock, workflowId, workflowData } = executionCtx;
 
@@ -96,7 +99,7 @@ export function createExecutionAPIs(
 
     const subWorkflowAPI = {
         createEnv: () => {
-            const subCompiler = new TurboGraph();
+            const subCompiler = new TurboGraph(catalogue);
             let subEngine: AggexEngine | null = null;
 
             return {
@@ -111,6 +114,8 @@ export function createExecutionAPIs(
                         credentialInstances,
                         realtime,
                         internalAPI,
+                        catalogue,
+                        connectionAPI,
                         enclosingNodeAPI,
                     });
 
@@ -151,7 +156,7 @@ export function createExecutionAPIs(
         // Sync read of the resolved derivative blueprint, warmed by prepareNode.
         getBlueprint: (nodeId) => {
             const n  = workflowData.nodes[nodeId];
-            const bp = CatalogueService.getBlueprint(n.reconciledBlueprintId ?? n.blueprintId);
+            const bp = catalogue.getCachedBlueprint(n.reconciledBlueprintId ?? n.blueprintId);
 
             if (!bp) {
                 throw new AggexCompilerError(
@@ -311,6 +316,7 @@ export function createExecutionAPIs(
         dependencyAPI,
         credentialsAPI,
         catalogueAPI,
+        connectionAPI,
         abortAPI,
         realtimeAPI,
         updateSession,

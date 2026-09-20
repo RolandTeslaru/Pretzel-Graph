@@ -7,16 +7,8 @@ import { AppModule } from './app.module';
 import { runMigrations } from './db/migrator';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
-import path from 'path';
-import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { trustedProxyMiddleware } from './auth/trusted-proxy';
 import { frontendMiddleware } from './serve-frontend';
-
-// Compiled runs point NODES_ROOT at the built nodes; the default is the sources
-// ts-node reads in development.
-CatalogueService.setNodesRoot(
-    process.env.NODES_ROOT ?? path.resolve(__dirname, '../../nodes/src'),
-);
 
 async function bootstrap() {
     // Before the modules load: some of them read the database on init.

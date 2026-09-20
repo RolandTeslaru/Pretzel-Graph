@@ -6,7 +6,6 @@ import { DB } from '@/db';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
 import { Activity, Chat, Execution, Validation, Vault, Workbench, Workflow } from '@pretzel-graph/shared/domain';
-import { CatalogueService } from '@pretzel-graph/node-sdk';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
@@ -18,6 +17,7 @@ import { WorkbenchRepository } from '../Workbench/workbench.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
+import { ShelfService } from '../Shelf/shelf.service';
 
 @Injectable()
 export class ExecutionService {
@@ -37,6 +37,7 @@ export class ExecutionService {
         private readonly chatDatabase:        ChatDatabase,
         private readonly vaultRepository:     VaultRepository,
         private readonly workbenchRepository: WorkbenchRepository,
+        private readonly shelf:               ShelfService,
         
         @Inject(forwardRef(() => WorkerLifecycleService))
         private readonly workerLifecycle:     WorkerLifecycleService,
@@ -147,6 +148,11 @@ export class ExecutionService {
         workflowData: Workflow.Data,
     ): Promise<Record<Blueprint.Id, Blueprint>> {
         const blueprints: Record<Blueprint.Id, Blueprint> = {};
+        const baseIds = new Set<Blueprint.Id>([
+            "Core.SubWorkflow.Execute" as Blueprint.Id,
+            ...Object.values(workflowData.nodes).map(node => node.blueprintId),
+        ]);
+        const resolved = await this.shelf.getBatchBlueprints({ blueprintIds: [...baseIds] });
 
         for (const node of Object.values(workflowData.nodes)) {
             // Subworkflow dependency node: absent from the catalogue by design, so never attempt the
@@ -156,7 +162,7 @@ export class ExecutionService {
             const shapeDepRef = Workbench.Document.selectors.node.dependency.getShapeRef({ data: workflowData }, node.id)
 
             if (shapeDepRef) {
-                const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
+                const executeBp = resolved.blueprints["Core.SubWorkflow.Execute" as Blueprint.Id];
 
                 if (executeBp) 
                     blueprints[node.blueprintId] = executeBp;
@@ -164,7 +170,7 @@ export class ExecutionService {
                 continue;
             }
 
-            const base = await CatalogueService.loadBaseBlueprint(node.blueprintId);
+            const base = resolved.blueprints[node.blueprintId];
 
             if (!base) continue;
 

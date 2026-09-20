@@ -1,10 +1,11 @@
 import { Execution, Vault, Workflow } from "@pretzel-graph/shared/domain";
-import type { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
+import type { ConnectionAPI, HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
 import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { AggexEngine } from "../engine";
 import { S2Graph, Vertex } from "../S2/graph";
 import type { AirlockService } from "../airlock";
 import { createExecutionAPIs } from "../turboGraph/apis";
+import type { CatalogueService } from "../catalogue";
 
 export type ExecutionAPIs = Pick<
     RuntimeNode.ExecutionContext,
@@ -17,6 +18,7 @@ export type ExecutionAPIs = Pick<
     | "dependencyAPI"
     | "credentialsAPI"
     | "catalogueAPI"
+    | "connectionAPI"
     | "abortAPI"
     | "realtimeAPI"
     | "updateSession"
@@ -59,6 +61,7 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     readonly dependencyAPI!:       ExecutionAPIs["dependencyAPI"];
     readonly credentialsAPI!:      ExecutionAPIs["credentialsAPI"];
     readonly catalogueAPI!:        ExecutionAPIs["catalogueAPI"];
+    readonly connectionAPI!:       ExecutionAPIs["connectionAPI"];
     readonly abortAPI!:            ExecutionAPIs["abortAPI"];
     readonly realtimeAPI!:         ExecutionAPIs["realtimeAPI"];
     readonly updateSession!:       ExecutionAPIs["updateSession"];
@@ -76,7 +79,7 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     ) {
         const {
             execution, workflowId, workflowData, airlock, credentialInstances,
-            realtime, internalAPI, enclosingNodeAPI,
+            realtime, internalAPI, catalogue, connectionAPI, enclosingNodeAPI,
         } = options;
 
         this.execution       = execution;
@@ -100,6 +103,8 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
             credentialInstances,
             realtime,
             internalAPI,
+            catalogue,
+            connectionAPI,
         ));
     }
 
@@ -118,6 +123,8 @@ export namespace ExecutionContext {
         credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
         realtime:            RuntimeNode.RealtimeScope;
         internalAPI:         HTTP.Client;
+        catalogue:           CatalogueService;
+        connectionAPI:       ConnectionAPI;
         enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"];
     }
 }

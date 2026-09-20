@@ -8,8 +8,9 @@ import { Execution, Worker as WorkerD } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../realtime/realtime.service';
 import { bounded } from '../utils';
 import { BookkeepingService } from './services/bookkeeping.service';
-import { ConnectionPoolService } from './services/connection-pool.service';
 import { QueueProcessorService } from './services/queue-processor.service';
+import { CatalogueService } from '../catalogue';
+import { ConnectionService } from '../connections';
 
 // Total budget ~10s, within the stop grace period.
 const CLOSE_TIMEOUT_MS   = 4_000;
@@ -48,7 +49,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         private readonly realtime: RealtimeService,
         private readonly bookkeeping: BookkeepingService,
         private readonly queueProcessor: QueueProcessorService,
-        private readonly connectionPools: ConnectionPoolService,
+        private readonly catalogue: CatalogueService,
+        private readonly connections: ConnectionService,
     ) {}
 
 
@@ -64,6 +66,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
     public async onApplicationBootstrap(): Promise<void> {
+        await this.catalogue.preloadBlueprintsByNamespace("Core");
+
         await this.startConsuming();
 
         console.log(`[Worker] Consuming ${Execution.Queue.ID} as ${WORKER_ID ?? 'an unnamed worker'}`);
@@ -114,7 +118,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         this.sleeping = true;
 
         try {
-            await this.connectionPools.purgeAll();
+            await this.connections.purgeAll();
 
             // Idle keep-alive sockets would be stale after a suspend.
             http.globalAgent.destroy();
