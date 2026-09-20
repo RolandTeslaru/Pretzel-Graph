@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from
 import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
-import { PublishedWorkflowCacheService } from '../PublishedWorkflowCache/published-workflow-cache.service';
+import { ActivePublicationService } from '../../ActivePublication/active-publication.service';
 import { ExecutionService } from '../../Execution/execution.service';
 
 export interface InboundRequest {
@@ -19,12 +19,12 @@ export class IgniterService {
     private readonly logger = new Logger(IgniterService.name);
 
     constructor(
-        private readonly publishedWorkflows: PublishedWorkflowCacheService,
+        private readonly publishedWorkflows: ActivePublicationService,
         private readonly executions: ExecutionService,
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
-        const publication = this.publishedWorkflows.lookup(req.workflowId as unknown as Workflow.Id);
+        const publication = this.publishedWorkflows.get(req.workflowId as unknown as Workflow.Id);
         if (!publication) {
             throw new NotFoundException(`No active webhook registered for workflow ${req.workflowId}`);
         }
