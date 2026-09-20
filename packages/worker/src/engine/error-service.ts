@@ -19,6 +19,9 @@ import { ExecutionContext } from "../execution-context";
  * (propagate / catch / terminate). The envelope channel lives on `ctx.errorChannel`.
  */
 export class ErrorService {
+
+    private readonly log = System.log.withContext("Errors");
+
     constructor(private engine: AggexEngine) {}
 
     private get ctx(): ExecutionContext { return this.engine.ctx; }
@@ -58,7 +61,7 @@ export class ErrorService {
                 throw aggexError;
             }
             case "do_nothing":
-                System.log.warning("node failed; swallowed (onErrorStrategy=do_nothing)", {
+                this.log.warning("node failed; swallowed (onErrorStrategy=do_nothing)", {
                     nodeId,
                     error: aggexError.message,
                 });

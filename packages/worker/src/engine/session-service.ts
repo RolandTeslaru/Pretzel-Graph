@@ -19,6 +19,9 @@ type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> }
  * is a shared primitive the other services emit through.
  */
 export class SessionService {
+
+    private readonly log = System.log.withContext("Session");
+
     constructor(private engine: AggexEngine) {}
 
     private get ctx(): ExecutionContext { return this.engine.ctx; }
@@ -173,7 +176,7 @@ export class SessionService {
             },
         }));
 
-        System.log.info("node completed", {
+        this.log.debug("node completed", {
             nodeId:      entry.wfNode.id,
             outputPorts: projectedOutput ? Object.keys(projectedOutput) : [],
         });

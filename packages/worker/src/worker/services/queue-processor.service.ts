@@ -12,12 +12,15 @@ import { RealtimeService } from '../../realtime/realtime.service';
 import { BookkeepingService } from './bookkeeping.service';
 import { LockService } from './lock.service';
 import { SignalHandlerService } from './signal-handler.service';
+import { System } from '@pretzel-graph/shared/system';
 import { CatalogueService } from '../../catalogue';
 import { ConnectionService } from '../../connections';
 
 // Runs one queued execution from compile to its reported outcome.
 @Injectable()
 export class QueueProcessorService {
+
+    private readonly log = System.log.withContext("QueueProcessor");
 
     private readonly compiler: TurboGraph;
 
@@ -44,7 +47,7 @@ export class QueueProcessorService {
         const executionId = execution.id;
         const { igniter } = execution;
 
-        console.log(`Processing job ${bullJob.id} for workflow ${workflowId} with execution id ${execution.id}`);
+        this.log.info("execution started", { executionId: execution.id, workflowId, jobId: bullJob.id });
 
         // Scope lives for the whole job; all emits/awaits go through it.
         const scope = this.realtime.createScope(executionId, workflowId)
@@ -56,7 +59,7 @@ export class QueueProcessorService {
         const origin  = performance.now();
 
         const onPauseTimeout = () => {
-            console.log(`[Worker] Max pause duration reached for job ${bullJob.id}, terminating`);
+            this.log.warning("max pause duration reached, terminating", { jobId: bullJob.id });
             engine.ctx.abortAPI.abort()
             engine.resume();
         };
@@ -118,6 +121,8 @@ export class QueueProcessorService {
 
             await Execution.API.update(this.axios.api, { executionId, status, duration, session, recording });
 
+            this.log.info("execution finished", { executionId, status, ms: duration });
+
             if (status === 'terminated')
                 scope.emit(Execution.Event.create("lifecycle:terminated"));
             else
@@ -133,12 +138,17 @@ export class QueueProcessorService {
         } catch (err: unknown) {
             const systemError = SystemError.fromUnknown(err)
 
-            console.error("Error during execution of job", execution.id, systemError.message, systemError.detail || "");
-
             const session = executionCtx.session;
 
             const recording = igniter.record ? recorder.getRecording() : null;
             const duration = performance.now() - origin;
+
+            this.log.error("execution failed", {
+                executionId: execution.id,
+                ms:          duration,
+                message:     systemError.message,
+                detail:      systemError.detail || "",
+            });
 
             await Execution.API.update(this.axios.api, { executionId: execution.id, status: 'failed', duration, session, recording }).catch(() => {});
 
@@ -149,7 +159,7 @@ export class QueueProcessorService {
 
             if (recording) {
                 await this.realtime.cacheRecording(execution.id, recording)
-                    .catch(redisErr => console.error('[Worker] Failed to cache recording:', redisErr));
+                    .catch(redisErr => this.log.error("failed to cache recording", { executionId: execution.id, error: redisErr }));
 
                 scope.emit(Execution.Event.create("recording:fullyUploaded"))
             }
@@ -158,7 +168,7 @@ export class QueueProcessorService {
 
         } finally {
             this.locks.stop(executionId);
-            console.log("Deleting job", execution.id, "from running engines and contexts")
+            this.log.debug("releasing engine and context", { executionId: execution.id })
 
             airlock.dispose();
             this.bookkeeping.remove(execution.id);

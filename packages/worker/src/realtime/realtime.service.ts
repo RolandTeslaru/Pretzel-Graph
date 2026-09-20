@@ -6,6 +6,7 @@ import type { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { bounded } from "../utils";
 import { RealtimeScopeImpl } from "./realtime.scope";
+import { System } from "@pretzel-graph/shared/system";
 
 const QUIT_TIMEOUT_MS = 1_000;
 
@@ -19,6 +20,9 @@ const QUIT_TIMEOUT_MS = 1_000;
 
 @Injectable()
 export class RealtimeService implements OnApplicationShutdown {
+
+    private readonly log = System.log.withContext("Realtime");
+
 
     private readonly pub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
     private readonly sub = new Redis({ host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD });
@@ -82,7 +86,7 @@ export class RealtimeService implements OnApplicationShutdown {
         this.scopes.set(channel, scope);
 
         this.sub.subscribe(channel).catch(err =>
-            console.error(`[Realtime] Failed to subscribe to ${channel}:`, err),
+            this.log.error("failed to subscribe", { channel, error: err }),
         );
 
         return scope;
@@ -99,7 +103,7 @@ export class RealtimeService implements OnApplicationShutdown {
         if (!this.listeners.has(channel)) {
             this.listeners.set(channel, new Set());
             this.sub.subscribe(channel).catch(err =>
-                console.error(`[Realtime] Failed to subscribe to ${channel}:`, err),
+                this.log.error("failed to subscribe", { channel, error: err }),
             );
         }
 

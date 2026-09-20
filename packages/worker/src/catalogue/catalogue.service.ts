@@ -5,6 +5,7 @@ import { Dependency, Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
+import { System } from "@pretzel-graph/shared/system";
 
 const SUBWORKFLOW_EXECUTE_BLUEPRINT_ID = "Core.SubWorkflow.Execute" as Blueprint.Id;
 
@@ -29,7 +30,12 @@ export class CatalogueService {
 
     private nodesRoot = process.env.NODES_ROOT ?? path.resolve(__dirname, "../../../nodes/src");
 
+    private readonly log = System.log.withContext("Catalogue");
+
     private readonly registry = new Map<Blueprint.Id, CatalogueEntry>();
+
+    // Non-zero while a preload runs, so its imports are not reported as lazy ones.
+    private preloadDepth = 0;
 
 
 
@@ -57,10 +63,12 @@ export class CatalogueService {
 
     // Loads both halves of one entry: the blueprint and its runtime-node constructor.
     public async preload(blueprintId: Blueprint.Id): Promise<void> {
+        this.preloadDepth++;
+
         const [blueprint, node] = await Promise.all([
             this.getBlueprint(blueprintId),
             this.getNodeConstructor(blueprintId),
-        ]);
+        ]).finally(() => { this.preloadDepth--; });
 
         if (!blueprint)
             throw new Error(`Failed to preload blueprint: ${blueprintId}`);
@@ -86,7 +94,7 @@ export class CatalogueService {
         if (failures.length > 0)
             throw new Error(`Failed to preload ${namespace}:\n${failures.join("\n")}`);
 
-        console.log(`[Catalogue] Preloaded ${ids.length} ${namespace} nodes in ${Math.round(performance.now() - startedAt)}ms`);
+        this.log.info("preloaded namespace", { namespace, nodes: ids.length, ms: performance.now() - startedAt });
     }
 
 
@@ -98,6 +106,7 @@ export class CatalogueService {
             return entry.node;
 
         const fullPath = Blueprint.getPath(this.nodesRoot, blueprintId, "node");
+        const startedAt = performance.now();
 
         try {
             const module = await import(fullPath);
@@ -108,10 +117,13 @@ export class CatalogueService {
 
             entry.node = NodeClass;
 
+            if (this.preloadDepth === 0)
+                this.log.info("lazy loaded node class", { blueprintId, ms: performance.now() - startedAt });
+
             return NodeClass;
         }
         catch (error) {
-            console.error(`[CatalogueService] Failed to load node '${blueprintId}':`, error);
+            this.log.error("failed to load node class", { blueprintId, error });
             return null;
         }
     }
@@ -136,13 +148,17 @@ export class CatalogueService {
 
         if (!entry.blueprint) {
             const fullPath = Blueprint.getPath(this.nodesRoot, blueprintId, "blueprint");
+            const startedAt = performance.now();
 
             try {
                 const module = await import(fullPath);
                 entry.blueprint = (module.Blueprint ?? null) as Blueprint | null;
+
+                if (this.preloadDepth === 0)
+                    this.log.info("lazy loaded blueprint", { blueprintId, ms: performance.now() - startedAt });
             }
             catch (error) {
-                console.error(`[CatalogueService] Failed to load blueprint '${blueprintId}':`, error);
+                this.log.error("failed to load blueprint", { blueprintId, error });
                 return null;
             }
         }

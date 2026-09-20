@@ -11,6 +11,8 @@ import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 const PROXY_CONNECT_TIMEOUT_MS = 15_000;
 
 
+const log = System.log.withContext("Proxy");
+
 export const buildAgent = (config: NetworkProxy.Config): NetworkProxy.Agent => {
 
     const url = NetworkProxy.toUrl(config);
@@ -97,11 +99,11 @@ export function createProxyAPI(
             if (config)
                 agent = buildAgent(config);
             else
-                System.log.warning("proxy credential unusable — node will connect directly", { instanceId });
+                log.warning("proxy credential unusable — node will connect directly", { instanceId });
         }
         catch (err) {
             // Never surface the cause: a decrypt/parse failure can carry credential material.
-            System.log.error("proxy credential failed to resolve — node will connect directly", { instanceId });
+            log.error("proxy credential failed to resolve — node will connect directly", { instanceId });
         }
 
         agents.set(instanceId, agent);

@@ -1,11 +1,15 @@
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
 import type { AggexEngine } from "./index";
 import { bounded } from "../utils";
+import { System } from "@pretzel-graph/shared/system";
 
 const HOOK_TIMEOUT_MS = 10_000;
 
 // Lets this engine's nodes finish what they hold once its workflow run ends.
 export class LifecycleEffectService {
+
+    private readonly log = System.log.withContext("Lifecycle");
+
 
     constructor(private readonly engine: AggexEngine) {}
 
@@ -23,10 +27,10 @@ export class LifecycleEffectService {
                 const result = await bounded(instance.workflowEnding(outcome), HOOK_TIMEOUT_MS);
 
                 if (result === 'timeout')
-                    console.error(`[Lifecycle] Ending hook timed out after ${HOOK_TIMEOUT_MS}ms in workflow ${workflowId}`);
+                    this.log.error("ending hook timed out", { workflowId, ms: HOOK_TIMEOUT_MS });
             }
             catch (error) {
-                console.error(`[Lifecycle] Ending hook failed in workflow ${workflowId}:`, error);
+                this.log.error("ending hook failed", { workflowId, error });
             }
         }));
     }

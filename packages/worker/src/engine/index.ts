@@ -51,6 +51,9 @@ export interface AggexHooks {
 // first-class and a node can execute many times in one run.
 export class AggexEngine {
 
+    private readonly log = System.log.withContext("Engine");
+
+
     /** Abort reason marking an intentional "execute up until this point" stop (vs a real termination). */
     public static readonly STOP_AT_TARGET_REASON = "stop_at_target";
 
@@ -254,7 +257,7 @@ export class AggexEngine {
             // (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
             const fields = nodeInstance.evaluateFieldValues(inputs);
 
-            System.log.debug("node executing", {
+            this.log.debug("node executing", {
                 nodeId:         wfNode.id,
                 dataDependency: dataDependency ?? "OR",
                 signals:        [...signals],
@@ -340,7 +343,7 @@ export class AggexEngine {
             nodeDepMap[depId] = resolved;
         })
 
-        System.log.debug("node waiting on dependencies", {
+        this.log.debug("node waiting on dependencies", {
             nodeId:     wfNode.id,
             arrived:    [...arrivedSignals],
             resolution: nodeDepMap,
@@ -371,7 +374,7 @@ export class AggexEngine {
         vertexId: Vertex.Id,
         error:    unknown,
     ) {
-        System.log.error("node errored (reached S2)", {
+        this.log.error("node errored (reached S2)", {
             nodeId: vertexId,
             error:  error instanceof Error ? error.message : String(error),
         });
