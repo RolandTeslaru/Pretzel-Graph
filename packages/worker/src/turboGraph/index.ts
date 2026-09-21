@@ -184,6 +184,16 @@ export class TurboGraph {
                 break;
             }
 
+            case "gateway": {
+
+                const instance = executionCtx.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
+
+                if (instance)
+                    await instance.handleIgniter(igniter);
+
+                break;
+            }
+
             case "chat_message": {
 
                 await broadcast();

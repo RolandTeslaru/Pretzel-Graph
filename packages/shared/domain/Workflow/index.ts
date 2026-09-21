@@ -8,7 +8,7 @@ import * as CacheMod from "./cache"
 import * as RepairMod from "./repair"
 import { WorkflowId, FolderId, ListingId } from "./ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
-import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs, toBlueprint as _toBlueprint } from "./resolvers"
+import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs, toBlueprint as _toBlueprint, collectCredentialInstanceIds as _collectCredentialInstanceIds } from "./resolvers"
 
 export namespace Workflow {
     export const Id = WorkflowId
@@ -40,6 +40,9 @@ export namespace Workflow {
 
     // A workflow served as a node, assembled onto a base blueprint.
     export const toBlueprint = _toBlueprint
+
+    // Every credential instance the workflow references, dependencies included. Impl in ./resolvers.
+    export const collectCredentialInstanceIds = _collectCredentialInstanceIds
 
     export const Schema = z.object({
         id:           WorkflowId,

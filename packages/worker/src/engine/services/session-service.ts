@@ -1,5 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Vertex } from "../S2/graph";
+import { Vertex } from "../../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Execution } from "@pretzel-graph/shared/domain";
@@ -7,7 +7,7 @@ import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { System } from "@pretzel-graph/shared/system";
-import type { AggexEngine } from "./index";
+import type { AggexEngine } from "../index";
 import { ExecutionContext } from "../execution-context";
 
 type NodeEntry = { wfNode: Workflow.Node.Raw; instance: RuntimeNode<Blueprint> };

@@ -12,7 +12,7 @@ const SUBWORKFLOW_EXECUTE_BLUEPRINT_ID = "Core.SubWorkflow.Execute" as Blueprint
 export type NodeConstructor = {
     new(
         nodeId: Workflow.Node.Id,
-        context: RuntimeNode.ExecutionContext,
+        context: RuntimeNode.Context,
     ): RuntimeNode<any, any>;
 };
 
@@ -241,9 +241,22 @@ export class CatalogueService {
 
 
 
-    // Sync read of what is already loaded; this is what nodes reach through catalogueAPI.
+    // Sync read of what is already loaded.
     public getCachedBlueprint(id: Blueprint.Id): Blueprint | undefined {
         return this.registry.get(id)?.blueprint ?? undefined;
+    }
+
+
+
+
+    // The blueprint a node resolved to: its base, or the derivative its field values selected.
+    public getNodeBlueprint(wfNode: Workflow.Node.Raw): Blueprint {
+        const blueprint = this.getCachedBlueprint(wfNode.reconciledBlueprintId ?? wfNode.blueprintId);
+
+        if (!blueprint)
+            throw new Error(`Blueprint not resolved for node ${wfNode.id} (${wfNode.blueprintId}) — catalogue cache not warmed`);
+
+        return blueprint;
     }
 
 

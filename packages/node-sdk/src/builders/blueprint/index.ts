@@ -3,6 +3,7 @@ import type { Port }               from "@pretzel-graph/shared/domain/Foundation
 import type { Field }              from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { CredentialTemplate } from "../credential";
+import type { Gateway }            from "@pretzel-graph/shared/domain";
 import { NetworkProxyCredential }  from "../../credentials/networkProxy";
 import { StandardFields }          from "../standardFields";
 import type { DefineBlueprintReturn, ConditionKey, DerivativeBody, ToolContribution } from "./types";
@@ -36,6 +37,7 @@ export function defineBlueprint<
     inputs:           TInputs;
     outputs:          TOutputs;
     webhooks?:        TWebhooks;
+    gatewayEvents?:   readonly Gateway.Trigger[];
     toolCompatible?:  TToolCompatible;
     proxyCompatible?: boolean;
     igniter?:         boolean;
@@ -86,6 +88,7 @@ export function defineBlueprint<
         inputs:          definition.inputs,
         outputs:         definition.outputs,
         webhooks:        definition.webhooks,
+        gatewayEvents:   definition.gatewayEvents,
         toolCompatible:  definition.toolCompatible as TToolCompatible,
         proxyCompatible: definition.proxyCompatible,
         igniter:         definition.igniter,

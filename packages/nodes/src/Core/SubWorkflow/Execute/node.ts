@@ -16,7 +16,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
      *  as they fire — suppress automatic fan-out so the engine doesn't double-signal. */
     protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.NONE
 
-    private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
+    private subEnvironment!: ReturnType<RuntimeNode.Context["subWorkflowAPI"]["createEnv"]>;
     private subExecutionCtx!: ExecutionContext;
 
     /** Author-written `$metrics` rollups from the sub-workflow, read back after the sub-run. */
@@ -67,7 +67,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         this.subEnvironment = this.context.subWorkflowAPI.createEnv();
 
-        const enclosingNodeAPI: RuntimeNode.ExecutionContext["enclosingNodeAPI"] = {
+        const enclosingNodeAPI: RuntimeNode.Context["enclosingNodeAPI"] = {
             writePort: (outputId, value) => {
                 this.context.portAPI.write(this.nodeId, outputId, value);
             },

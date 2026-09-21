@@ -3,7 +3,7 @@ import { Job as BullJob } from 'bullmq';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { AggexEngine, AggexHooks } from 'src/engine';
-import { FlightRecorderService } from '../../engine/flight-recorder-service';
+import { FlightRecorderService } from '../../engine/services/flight-recorder-service';
 import { TurboGraph } from '../../turboGraph';
 import { createInternalClient } from '../../turboGraph/http';
 import { AirlockService } from '../../airlock';

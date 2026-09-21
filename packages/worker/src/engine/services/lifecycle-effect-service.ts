@@ -1,6 +1,6 @@
 import type { RuntimeNode } from "@pretzel-graph/node-sdk";
-import type { AggexEngine } from "./index";
-import { bounded } from "../utils";
+import type { AggexEngine } from "../index";
+import { bounded } from "../../utils";
 import { System } from "@pretzel-graph/shared/system";
 
 const HOOK_TIMEOUT_MS = 10_000;

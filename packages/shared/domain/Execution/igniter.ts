@@ -3,6 +3,7 @@ import { Workflow } from "../Workflow"
 import { supabaseTimestamp } from "../zod-utils"
 import { Chat } from "../Chat"
 import { Port } from "../Foundations/Port"
+import { Gateway } from "../Gateway"
 
 // ─── Igniter ──────────────────────────────────────────────────────────────
 // What kicked off the execution. Replaces the old Trigger + Igniter split.
@@ -61,6 +62,12 @@ export namespace Igniter {
         }),
     })
 
+    export const GatewayEvent = Base.extend({
+        variant: z.literal("gateway"),
+        nodeId: Workflow.Node.Id,
+        payload: Gateway.Event.Schema,
+    })
+
     export const Scheduled = Base.extend({
         variant: z.literal("scheduled"),
         scheduleId:  z.string().optional(),
@@ -79,6 +86,7 @@ export namespace Igniter {
         SubWorkflow,
         ChatMessage,
         Webhook,
+        GatewayEvent,
         Scheduled,
         Sdk,
     ])
@@ -91,6 +99,7 @@ export namespace Igniter {
         "sub_workflow",
         "chat_message",
         "webhook",
+        "gateway",
         "scheduled",
         "sdk",
     ])

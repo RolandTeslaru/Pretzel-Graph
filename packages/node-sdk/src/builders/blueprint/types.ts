@@ -4,17 +4,18 @@ import type { Field }              from "@pretzel-graph/shared/domain/Foundation
 import type { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { Derivative }         from "@pretzel-graph/shared/domain/Foundations/Blueprint/derivative";
 import type { CredentialTemplate } from "../credential";
+import type { Gateway }             from "@pretzel-graph/shared/domain";
 import { StandardFields }          from "../standardFields";
 
 
 export type ReservedDefinitionKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
-    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks"
+    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayEvents"
     | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope"
 
 export const RESERVED_DEFINITION_KEYS: ReadonlySet<string> = new Set<ReservedDefinitionKey>([
     "id", "displayName", "description", "icon", "accent", "iconColor",
-    "fields", "inputs", "outputs", "credentials", "webhooks",
+    "fields", "inputs", "outputs", "credentials", "webhooks", "gatewayEvents",
     "toolCompatible", "proxyCompatible", "igniter", "passive", "flags", "itemScope",
 ])
 
@@ -46,6 +47,7 @@ export type DefineBlueprintReturn<
     readonly inputs:           TInputs;
     readonly outputs:          TOutputs;
     readonly webhooks?:        TWebhooks;
+    readonly gatewayEvents?:   readonly Gateway.Trigger[];
     readonly toolCompatible:   TToolCompatible;
     readonly proxyCompatible?: boolean;
     readonly igniter?:         boolean;

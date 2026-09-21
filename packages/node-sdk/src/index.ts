@@ -1,5 +1,7 @@
 export { RuntimeNode } from "./node";
-export type { CatalogueAPI, ConnectionAPI } from "./node/apis";
+export { GatewaySocket } from "./connections/gateway-socket";
+export type { ConnectionAPI } from "./apis";
+export type { HostContext, NodeContext, SocketContext } from "./contexts";
 export type { CompilationContext } from "./compiler-context";
 export * from "./types";
 export * from "./builders/index";
@@ -9,7 +11,6 @@ export { HTTP } from "./domain/http";
 export { NetworkProxy } from "./domain/networkProxy";
 export { googleOAuth2Provider } from "./credentials/oauth2/google";
 export { Synthesizer } from "./synthesizer";
-export { mapFieldValues } from "./utils/mapFieldValues";
 export { jsonSchemaToZod } from "./utils/jsonSchemaToZod";
 export { toPgCreds } from "./db/postgres";
 export type { PostgresCreds } from "./db/postgres";

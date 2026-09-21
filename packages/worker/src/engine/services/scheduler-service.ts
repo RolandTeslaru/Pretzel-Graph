@@ -1,6 +1,6 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Vertex } from "../S2/graph";
-import type { AggexEngine } from "./index";
+import { Vertex } from "../../S2/graph";
+import type { AggexEngine } from "../index";
 
 /**
  * The single typed boundary to S2's override surface (`s2Engine.overrides.*`).

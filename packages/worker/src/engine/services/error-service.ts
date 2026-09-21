@@ -1,5 +1,5 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Vertex } from "../S2/graph";
+import { Vertex } from "../../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
@@ -9,8 +9,8 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { AggexExecutionError, UncaughtRuntimeNodeError, CyclicalRuntimeNodeError } from "src/errors";
 import { AirlockTerminationError } from "src/airlock";
 import { System } from "@pretzel-graph/shared/system";
-import type { AggexEngine } from "./index";
-import { frameworkFields } from "./framework-fields";
+import type { AggexEngine } from "../index";
+import { frameworkFields } from "../framework-fields";
 import { ExecutionContext } from "../execution-context";
 
 /**

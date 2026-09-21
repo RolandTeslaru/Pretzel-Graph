@@ -1,7 +1,7 @@
 import { Execution } from "@pretzel-graph/shared/domain"
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port"
-import { Vertex } from "../S2/graph"
+import { Vertex } from "../../S2/graph"
 import type { ExecutionContext } from "../execution-context"
 
 export class FlightRecorderService {

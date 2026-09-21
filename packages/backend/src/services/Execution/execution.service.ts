@@ -12,7 +12,7 @@ import { RealtimeService } from '../Realtime/realtime.service';
 import { PermissionService } from '../Permission/permission.service';
 import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
-import { VaultRepository } from '../Vault/vault.repository';
+import { VaultService } from '../Vault/vault.service';
 import { WorkbenchRepository } from '../Workbench/workbench.repository';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
@@ -38,7 +38,7 @@ export class ExecutionService {
         private readonly ownership:           PermissionService,
         private readonly executionRepository: ExecutionRepository,
         private readonly chatDatabase:        ChatDatabase,
-        private readonly vaultRepository:     VaultRepository,
+        private readonly vault:               VaultService,
         private readonly workbenchRepository: WorkbenchRepository,
         private readonly shelf:               ShelfService,
         
@@ -250,9 +250,8 @@ export class ExecutionService {
         let workerStarted: Promise<boolean>;
 
         try {
-            const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
-            const instances = await this.vaultRepository.credentialInstance.listByIds(Principal.SELF, [...credentialInstanceIds]);
-            const credentialInstances = Object.fromEntries(instances.map(i => [i.id, i])) as Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
+            const credentialInstanceIds = Workflow.collectCredentialInstanceIds(workflowData);
+            const credentialInstances = await this.vault.credentialInstance.mapByIds(Principal.SELF, [...credentialInstanceIds]);
 
             const queueItem: Execution.Queue.Item = {
                 execution,
@@ -567,29 +566,4 @@ export class ExecutionService {
     }
 
 
-}
-
-
-function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Credential.Instance.Id> {
-    const ids = new Set<Vault.Credential.Instance.Id>();
-    for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
-        for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
-            ids.add(instanceId);
-        
-    for (const dep of Object.values(workflowData.dependencies)) {
-        switch (dep.kind) {
-            case "draftWorkflow":
-            case "publishedWorkflow":
-            case "listing":
-                collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
-                break;
-
-            case "skill":
-                break;
-
-            default:
-                dep satisfies never;
-        }
-    }
-    return ids;
 }

@@ -1,7 +1,7 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Execution } from "@pretzel-graph/shared/domain";
-import type { AggexEngine } from "./index";
+import type { AggexEngine } from "../index";
 import { ExecutionContext } from "../execution-context";
 
 /**

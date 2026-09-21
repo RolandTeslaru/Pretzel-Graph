@@ -22,7 +22,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatOpenRouter;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
 
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.openRouterApi.blob);

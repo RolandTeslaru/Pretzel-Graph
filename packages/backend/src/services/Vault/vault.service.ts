@@ -30,6 +30,21 @@ export class VaultService {
     };
 
     public readonly credentialInstance = {
+        // Loads the instances a run or a socket needs, keyed by id. Service-principal only:
+        // there is no human behind the call, and the ids come from stored workflow or
+        // connection data rather than from a request.
+        mapByIds: async (
+            principal: Principal.Service,
+            ids: Vault.Credential.Instance.Id[],
+        ): Promise<Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>> => {
+            const rows = await this.vaultRepository.credentialInstance.listByIds(principal, ids);
+
+            return Object.fromEntries(rows.map(row => [row.id, row])) as Record<
+                Vault.Credential.Instance.Id,
+                Vault.Credential.Instance
+            >;
+        },
+
         list: async (
             principal: Principal.User,
         ): Promise<Vault.API.CredentialInstance.List.Response> => {

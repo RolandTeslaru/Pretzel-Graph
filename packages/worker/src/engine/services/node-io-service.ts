@@ -1,12 +1,12 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Vertex } from "../S2/graph";
+import { Vertex } from "../../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Execution } from "@pretzel-graph/shared/domain";
 import { Synthesizer } from "@pretzel-graph/node-sdk";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { AggexExecutionError } from "src/errors";
-import type { AggexEngine } from "./index";
+import type { AggexEngine } from "../index";
 import { ExecutionContext } from "../execution-context";
 
 /**

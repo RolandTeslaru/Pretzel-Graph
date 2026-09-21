@@ -4,6 +4,7 @@ import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
 import { ActivePublicationService } from '../../ActivePublication/active-publication.service';
 import { ExecutionService } from '../../Execution/execution.service';
+import { ShelfService } from '../../Shelf/shelf.service';
 import { System } from '@pretzel-graph/shared/system';
 
 export interface InboundRequest {
@@ -20,12 +21,13 @@ export class IgniterService {
     private readonly log = System.log.withContext("Igniter");
 
     constructor(
-        private readonly publishedWorkflows: ActivePublicationService,
+        private readonly activePublications: ActivePublicationService,
         private readonly executions: ExecutionService,
+        private readonly shelf: ShelfService,
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
-        const publication = this.publishedWorkflows.get(req.workflowId as unknown as Workflow.Id);
+        const publication = this.activePublications.get(req.workflowId as unknown as Workflow.Id);
         if (!publication) {
             throw new NotFoundException(`No active webhook registered for workflow ${req.workflowId}`);
         }
@@ -72,11 +74,10 @@ export class IgniterService {
         method: Webhook.Method,
     ) {
         for (const [nodeId, node] of Object.entries(publication.workflow_data.nodes)) {
-            // @ts-expect-error TODO: node.webhooks not defined yet
-            if (!node.webhooks?.length) continue;
+            const blueprint = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
+            if (!blueprint.webhooks?.length) continue;
             const staticValues = publication.workflow_data.staticValues[node.id] ?? {};
-            // @ts-expect-error TODO: node.webhooks not defined yet
-            for (const webhook of node.webhooks) {
+            for (const webhook of blueprint.webhooks) {
                 const resolved = resolveWebhook(webhook, node, staticValues);
                 if (resolved.path === path && resolved.method === method) {
                     return { nodeId, webhook: resolved };

@@ -175,6 +175,12 @@ export const BUNDLE_DRAWERS = {
       "Integrations.Anthropic.ClaudeCode"
     ]
   },
+  discord: {
+    displayName: "Discord",
+    id: "discord",
+    icon: "MessagesSquare",
+    blueprintIds: ["Integrations.Discord.OnMessage"]
+  },
   google: {
     displayName: "Google",
     id: "google",

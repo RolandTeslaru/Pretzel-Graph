@@ -20,6 +20,7 @@ const IgniterIconMap = {
     sub_workflow: SystemIcons.Layers,
     chat_message: SystemIcons.MessageSquare,
     webhook: SystemIcons.Webhook,
+    gateway: SystemIcons.WebSocket,
     scheduled: SystemIcons.Clock,
     sdk: SystemIcons.Braces,
 } satisfies Record<Execution.Igniter.Variant, ComponentType<BaseIconProps>>

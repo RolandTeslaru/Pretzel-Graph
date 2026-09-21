@@ -9,7 +9,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private retriever: TavilySearchAPIRetriever;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.tavilyApi.blob);
         const { maxResults, searchDepth, includeAnswer } = this.fieldValues;

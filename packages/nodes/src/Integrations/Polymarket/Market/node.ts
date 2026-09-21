@@ -208,7 +208,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private readonly polymarket:  PolymarketPublicSDK;
     private readonly gammaClient: PolymarketGammaClient;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
         this.polymarket  = new PolymarketPublicSDK(this.httpClientFactory);
         this.gammaClient = new PolymarketGammaClient(this.httpClientFactory);

@@ -81,7 +81,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private clients!: UniswapClients;
     private readonly tradeApi: HTTP.Client;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
 
         const { privateKey, apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.uniswapApi.blob);

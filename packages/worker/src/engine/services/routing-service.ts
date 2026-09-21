@@ -1,9 +1,9 @@
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { Vertex } from "../S2/graph";
+import { Vertex } from "../../S2/graph";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import type { AggexEngine } from "./index";
-import { frameworkFields } from "./framework-fields";
+import type { AggexEngine } from "../index";
+import { frameworkFields } from "../framework-fields";
 import { ExecutionContext } from "../execution-context";
 
 /**

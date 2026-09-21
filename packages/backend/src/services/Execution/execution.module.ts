@@ -5,13 +5,13 @@ import { ExecutionService } from './execution.service';
 import { ExecutionReconciler } from './execution.reconciler';
 import { ExecutionRepository } from './execution.repository';
 import { ChatDatabase } from '../Chat/chat.database';
-import { VaultRepository } from '../Vault/vault.repository';
 import { Execution } from '@pretzel-graph/shared/domain';
 import { RealtimeModule } from '../Realtime/realtime.module';
 import { CloudModule } from '../Cloud/cloud.module';
 import { WorkerModule } from '../Worker/worker.module';
 import { WorkbenchModule } from '../Workbench/workbench.module';
 import { ShelfModule } from '../Shelf/shelf.module';
+import { VaultModule } from '../Vault/vault.module';
 
 @Module({
     imports: [
@@ -21,9 +21,10 @@ import { ShelfModule } from '../Shelf/shelf.module';
         forwardRef(() => WorkerModule),
         WorkbenchModule,
         ShelfModule,
+        VaultModule,
     ],
     controllers: [ExecutionController],
-    providers: [ExecutionService, ExecutionReconciler, ExecutionRepository, ChatDatabase, VaultRepository],
+    providers: [ExecutionService, ExecutionReconciler, ExecutionRepository, ChatDatabase],
     exports: [ExecutionService],
 })
 export class ExecutionModule {}

@@ -27,7 +27,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly client: ReturnType<typeof createMassiveClient>;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
         const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.massiveApi.blob);
         this.client = createMassiveClient(this.httpClientFactory, requireMassiveApiKey(apiKey));

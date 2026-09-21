@@ -5,6 +5,7 @@ import { Port } from "../Foundations/Port";
 import type { Node } from "./node";
 import type { Workflow } from "./index";
 import type { Dependency } from "../Dependency";
+import type { Vault } from "../Vault";
 import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
@@ -168,4 +169,33 @@ function mergeFieldsById(
             fieldsById.set(field.id, field);
 
     return [...fieldsById.values()];
+}
+
+
+// Every credential instance a workflow references, including the ones inside its
+// sub-workflow dependencies — what the backend loads before queueing a run.
+export function collectCredentialInstanceIds(data: Workflow.Data): Set<Vault.Credential.Instance.Id> {
+    const ids = new Set<Vault.Credential.Instance.Id>();
+
+    for (const nodeMap of Object.values(data.credentialInstanceIds))
+        for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
+            ids.add(instanceId);
+
+    for (const dependency of Object.values(data.dependencies)) {
+        switch (dependency.kind) {
+            case "draftWorkflow":
+            case "publishedWorkflow":
+            case "listing":
+                collectCredentialInstanceIds(dependency.workflow_data).forEach(id => ids.add(id));
+                break;
+
+            case "skill":
+                break;
+
+            default:
+                dependency satisfies never;
+        }
+    }
+
+    return ids;
 }

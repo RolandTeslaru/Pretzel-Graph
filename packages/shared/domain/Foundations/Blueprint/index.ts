@@ -3,6 +3,7 @@ import { Port } from "../Port"
 import { Field } from "../Field"
 import { Webhook } from "../../Webhook"
 import { Vault } from "../../Vault"
+import { Gateway } from "../../Gateway"
 import * as DerivativeMod from "./derivative"
 
 // ============================================
@@ -113,6 +114,7 @@ export namespace Blueprint {
         inputs:    z.array(Port.Input.Schema).readonly(),
         outputs:   z.array(Port.Output.Schema).readonly(),
         webhooks:  z.array(Webhook.Schema).readonly().optional(),
+        gatewayEvents: z.array(Gateway.Trigger.Schema).readonly().optional(),
         // Input port id whose array is iterated for this node's item-scoped fields.
         itemScope: z.string().optional(),
         // Conditional structure, folded by Blueprint.derive. Present on base blueprints only —

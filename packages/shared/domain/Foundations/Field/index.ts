@@ -515,6 +515,29 @@ export namespace Field {
 
 
 
+    // Joins a resolved blueprint or connection's fields against stored values, falling back to
+    // each field's initialValue. Callers that know the shape pass it as T.
+    export function mapValuesToIds<T = Record<Field.Id, Field.Value>>(
+        fields:       readonly Field[],
+        staticValues: Record<Field.Id, Field.Value>,
+    ): T {
+        const resolved: Record<Field.Id, Field.Value> = {};
+
+        for (const field of fields) {
+            const fieldId = field.id as Field.Id;
+
+            if (fieldId in staticValues)
+                resolved[fieldId] = staticValues[fieldId] as Field.Value;
+            else
+                resolved[fieldId] = field.initialValue as Field.Value;
+        }
+
+        return resolved as T;
+    }
+
+
+
+
     // Extracts a field's literal ID without widening it to string.
     export type IdOf<TField> =
         TField extends { readonly __literalId?: infer TId extends string }

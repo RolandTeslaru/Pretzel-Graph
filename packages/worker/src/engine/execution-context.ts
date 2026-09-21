@@ -5,10 +5,11 @@ import type { AggexEngine } from "../engine";
 import { S2Graph, Vertex } from "../S2/graph";
 import type { AirlockService } from "../airlock";
 import { createExecutionAPIs } from "../turboGraph/apis";
+import { System } from "@pretzel-graph/shared/system";
 import type { CatalogueService } from "../catalogue";
 
 export type ExecutionAPIs = Pick<
-    RuntimeNode.ExecutionContext,
+    RuntimeNode.Context,
     | "portAPI"
     | "propagationAPI"
     | "instanceRegistryAPI"
@@ -17,7 +18,6 @@ export type ExecutionAPIs = Pick<
     | "subWorkflowAPI"
     | "dependencyAPI"
     | "credentialsAPI"
-    | "catalogueAPI"
     | "connectionAPI"
     | "abortAPI"
     | "realtimeAPI"
@@ -30,7 +30,7 @@ export type ExecutionAPIs = Pick<
     | "consultationAPI"
 >;
 
-export class ExecutionContext implements RuntimeNode.ExecutionContext {
+export class ExecutionContext implements RuntimeNode.Context {
 
     private readonly execution: Execution;
 
@@ -42,6 +42,8 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     readonly airlock:      AirlockService;
 
     workflowCache!: Workflow.Cache;
+
+    readonly log = System.log.withContext("Execution");
 
     readonly compiledGraph = new S2Graph();
     readonly activeNodes   = new Set<Workflow.Node.Id | Vertex.Id>();
@@ -60,7 +62,6 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     readonly subWorkflowAPI!:      ExecutionAPIs["subWorkflowAPI"];
     readonly dependencyAPI!:       ExecutionAPIs["dependencyAPI"];
     readonly credentialsAPI!:      ExecutionAPIs["credentialsAPI"];
-    readonly catalogueAPI!:        ExecutionAPIs["catalogueAPI"];
     readonly connectionAPI!:       ExecutionAPIs["connectionAPI"];
     readonly abortAPI!:            ExecutionAPIs["abortAPI"];
     readonly realtimeAPI!:         ExecutionAPIs["realtimeAPI"];
@@ -71,7 +72,7 @@ export class ExecutionContext implements RuntimeNode.ExecutionContext {
     readonly agentToolBridgeAPI!:  ExecutionAPIs["agentToolBridgeAPI"];
     readonly internalAPI!:         ExecutionAPIs["internalAPI"];
     readonly consultationAPI!:     ExecutionAPIs["consultationAPI"];
-    readonly enclosingNodeAPI?:    RuntimeNode.ExecutionContext["enclosingNodeAPI"];
+    readonly enclosingNodeAPI?:    RuntimeNode.Context["enclosingNodeAPI"];
 
     constructor(
         engine:  AggexEngine,
@@ -125,6 +126,6 @@ export namespace ExecutionContext {
         internalAPI:         HTTP.Client;
         catalogue:           CatalogueService;
         connectionAPI:       ConnectionAPI;
-        enclosingNodeAPI?:   RuntimeNode.ExecutionContext["enclosingNodeAPI"];
+        enclosingNodeAPI?:   RuntimeNode.Context["enclosingNodeAPI"];
     }
 }

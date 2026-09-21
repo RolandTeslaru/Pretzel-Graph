@@ -11,17 +11,17 @@ import { AggexExecutionError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { FlightRecorderService } from "./flight-recorder-service";
-import { RoutingService } from "./routing-service";
-import { SchedulerService } from "./scheduler-service";
-import { PropagationService } from "./propagation-service";
-import { NodeIOService } from "./node-io-service";
-import { ErrorService } from "./error-service";
-import { SessionService } from "./session-service";
-import { LifecycleEffectService } from "./lifecycle-effect-service";
+import { FlightRecorderService } from "./services/flight-recorder-service";
+import { RoutingService } from "./services/routing-service";
+import { SchedulerService } from "./services/scheduler-service";
+import { PropagationService } from "./services/propagation-service";
+import { NodeIOService } from "./services/node-io-service";
+import { ErrorService } from "./services/error-service";
+import { SessionService } from "./services/session-service";
+import { LifecycleEffectService } from "./services/lifecycle-effect-service";
 import { System } from "@pretzel-graph/shared/system";
 import { frameworkFields } from "./framework-fields";
-import { ExecutionContext } from "../execution-context";
+import { ExecutionContext } from "./execution-context";
 
 
 export interface AggexHooks {

@@ -20,7 +20,7 @@ export class AgentToolBridgeService {
     private starting: Promise<void> | null = null;
     private port: number | null = null;
 
-    public createAPI(abortSignal: AbortSignal): RuntimeNode.ExecutionContext["agentToolBridgeAPI"] {
+    public createAPI(abortSignal: AbortSignal): RuntimeNode.Context["agentToolBridgeAPI"] {
         return {
             bind: (tools, options) => this.bind(tools, abortSignal, options),
         };

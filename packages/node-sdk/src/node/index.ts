@@ -5,7 +5,6 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field"
-import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
 import type { ExecutionContext as ExecutionContextType } from "./context";
 import type {
@@ -68,7 +67,7 @@ export abstract class RuntimeNode<
         const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
 
-        this.fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        this.fieldValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
         this.credentials = this.mapCredentials();
     }
 
@@ -126,7 +125,7 @@ export abstract class RuntimeNode<
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
         const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
-        const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        const fieldValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
 
         const evaluated: Record<Field.Id, unknown> = { ...fieldValues };
 
@@ -215,7 +214,7 @@ export abstract class RuntimeNode<
         const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
         // Resolve raw value + expression mode once per field, reused across every iteration.
-        const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        const rawValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
         const meta      = new Map<Field.Id, { raw: unknown, isExpression: boolean }>();
 
         // Indexed dynamically by field id: InferFieldValues is a union once a blueprint has
