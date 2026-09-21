@@ -14,6 +14,7 @@ FEATURES.md
 .DS_Store
 *.swp
 packages/backend/assets/blueprint_index.json
+packages/backend/assets/gateway_definitions_index.json
 
 # cognee / enola code-analysis output
 .enola/

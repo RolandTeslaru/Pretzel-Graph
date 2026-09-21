@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Vault } from '@pretzel-graph/shared/domain';
+import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { VaultRepository } from './vault.repository';
 import { OAuthService } from './OAuth/oauth.service';
+import { RealtimeService } from '../Realtime/realtime.service';
 import { getCredentialTemplate, loadCredentialTemplates } from './templates';
 import { Encryption } from '@pretzel-graph/shared/server/vault/encryption';
 
@@ -11,6 +13,7 @@ export class VaultService {
     constructor(
         private readonly vaultRepository: VaultRepository,
         private readonly oauth:           OAuthService,
+        private readonly realtime:        RealtimeService,
     ) {}
 
     public readonly credentialTemplate = {
@@ -98,8 +101,22 @@ export class VaultService {
             principal: Principal.User,
             req: Vault.API.CredentialInstance.Update.Request,
         ): Promise<Vault.API.CredentialInstance.Update.Response> => {
+            const existing = await this.vaultRepository.credentialInstance.getById(principal, req.id);
+            const current  = Encryption.decryptBlob(existing.blob);
             const blob     = Encryption.encryptValues(req.fieldValues);
             const instance = await this.vaultRepository.credentialInstance.update(principal, req.id, req.name, blob);
+
+            const changedFields = Field.getChangedIds(current, req.fieldValues);
+
+            if (changedFields.length > 0) {
+                this.realtime.emitSignal<Vault.Credential.Signal.BlobChanged>({
+                    channel:      Vault.Credential.Signal.getChannel(req.id, 'blob-changed'),
+                    type:         'blob-changed',
+                    credentialId: req.id,
+                    changedFields,
+                });
+            }
+
             return { instance };
         },
     };

@@ -10,6 +10,13 @@ export namespace Field {
     export const Value = z.any();
     export type Value = z.infer<typeof Value>
 
+    // Ids whose value differs between two value records, including added and removed ones.
+    export const getChangedIds = (before: Record<Id, Value>, after: Record<Id, Value>): Id[] => {
+        const ids = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<Id>;
+
+        return [...ids].filter(id => JSON.stringify(before[id]) !== JSON.stringify(after[id]));
+    }
+
     export const Base = z.object({
         id: Field.Id,
         advanced: z.boolean(),
