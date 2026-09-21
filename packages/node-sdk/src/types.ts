@@ -432,9 +432,14 @@ export type InferCredentialValues<C> = 0 extends (1 & C) ? any
  * `credentialsAPI.getDecryptedValue(socket.credential.blob)` infers the right value shape.
  */
 export type InferCredential<D> = 0 extends (1 & D) ? any
-    : D extends { credential: infer T extends object }
-    ? Omit<Vault.Credential.Instance, "blob"> & { readonly blob: Vault.Credential.Instance.EncryptedBlob<T> }
-    : null;
+    : D extends { __baseCredential?: infer B; __branchCredential?: infer R }
+        // Only the base declares one: always present. A branch can add one: present or null.
+        ? [NonNullable<R>] extends [never]
+            ? [NonNullable<B>] extends [never] ? null : TypedCredentialInstance<NonNullable<B>>
+            : TypedCredentialInstance<NonNullable<B | R>> | null
+        : null;
+
+type TypedCredentialInstance<T> = Omit<Vault.Credential.Instance, "blob"> & { readonly blob: Vault.Credential.Instance.EncryptedBlob<T> }
 
 
 export type InferCredentials<D> = 0 extends (1 & D) ? any

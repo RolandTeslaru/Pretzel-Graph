@@ -7,5 +7,5 @@ export const Definition = defineConnection({
     fields: [
         
     ],
-    credential: DiscordBot
+    credentials: [DiscordBot],
 })

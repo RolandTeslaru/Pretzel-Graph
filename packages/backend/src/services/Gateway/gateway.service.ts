@@ -9,6 +9,7 @@ import { System } from '@pretzel-graph/shared/system';
 import { Principal } from '@/domain/Principal';
 import { GatewayRepository } from './gateway.repository';
 import { RealtimeService } from '../Realtime/realtime.service';
+import { VaultRepository } from '../Vault/vault.repository';
 
 const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../../nodes/src');
 
@@ -42,6 +43,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
     constructor(
         private readonly repository: GatewayRepository,
         private readonly realtime:   RealtimeService,
+        private readonly vault:      VaultRepository,
     ) {}
 
     public readonly definition = {
@@ -64,12 +66,9 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             req: Gateway.API.Connection.Create.Request,
         ): Promise<Gateway.API.Connection.Create.Response> => {
             const definition = this.definition.get(req.definition_id);
+            const template   = Gateway.Definition.getCredentialTemplate(definition, req.field_values ?? {});
 
-            if (definition.credential && !req.credential_id)
-                throw new BadRequestException(`${definition.displayName} needs a credential`);
-
-            if (!definition.credential && req.credential_id)
-                throw new BadRequestException(`${definition.displayName} takes no credential`);
+            await this.checkCredential(principal, definition, template, req.credential_id ?? null);
 
             if (!this.socketConstructors.has(req.definition_id))
                 throw new BadRequestException(`No socket is loaded for ${req.definition_id}`);
@@ -102,10 +101,19 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             if (!hasChanges)
                 return existing;
 
-            if (req.credential_id && !this.definition.get(existing.definitionId).credential)
-                throw new BadRequestException('This connection takes no credential');
+            const definition = this.definition.get(existing.definitionId);
+            const template   = Gateway.Definition.getCredentialTemplate(definition, req.field_values ?? existing.fieldValues);
 
-            const connection = await this.repository.update(principal, req);
+            let credentialId = req.credential_id;
+
+            if (credentialId !== undefined)
+                await this.checkCredential(principal, definition, template, credentialId);
+
+            // The field values now call for a different credential, or none; the old one is detached.
+            else if (existing.credential && existing.credential.template_id !== template?.id)
+                credentialId = null;
+
+            const connection = await this.repository.update(principal, { ...req, credential_id: credentialId });
 
             const credentialChanged = existing.credential?.id !== connection.credential?.id;
             const fieldsChanged     = Field.getChangedIds(existing.fieldValues, connection.fieldValues).length > 0;
@@ -145,6 +153,11 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             let socket: GatewaySocket<Gateway.Definition> | undefined;
 
             try {
+                const template = Gateway.Definition.getCredentialTemplate(this.definition.get(connection.definitionId), connection.fieldValues);
+
+                if (template && !connection.credential)
+                    throw new Error(`Needs a ${template.displayName} credential`);
+
                 socket = this.instantiate(connection);
 
                 await socket.connect();
@@ -205,6 +218,35 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             return pending;
         },
     };
+
+
+
+
+    // Rejects a credential that does not match what the field values call for.
+    private async checkCredential(
+        principal:    Principal.User,
+        definition:   Gateway.Definition,
+        template:     Vault.Credential.Template | null,
+        credentialId: Vault.Credential.Instance.Id | null,
+    ): Promise<void> {
+        if (!template) {
+            if (credentialId)
+                throw new BadRequestException(`${definition.displayName} takes no credential here`);
+
+            return;
+        }
+
+        if (!credentialId)
+            throw new BadRequestException(`${definition.displayName} needs a ${template.displayName} credential`);
+
+        const instance = await this.vault.credentialInstance.getById(principal, credentialId).catch(() => null);
+
+        if (!instance)
+            throw new NotFoundException('Credential not found');
+
+        if (instance.template_id !== template.id)
+            throw new BadRequestException(`${definition.displayName} needs a ${template.displayName} credential`);
+    }
 
 
 

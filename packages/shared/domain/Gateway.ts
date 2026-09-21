@@ -6,11 +6,12 @@ import { ExecutionId } from './Execution/ids';
 import { NodeId, WorkflowId } from './Workflow/ids';
 import { Field } from './Foundations/Field';
 import { Realtime } from './Realtime';
+import { Derivable } from './Foundations/Derivable';
 // Imported directly: the Library index would close an import cycle back through Blueprint.
 import { Folder as FolderD } from './Library/folder';
 
 export namespace Gateway {
-    export const Provider = z.enum(['discord']);
+    export const Provider = z.enum(['discord', 'websocket']);
     export type Provider = z.infer<typeof Provider>;
 
     // Declared in code by defineConnection, paired with a GatewaySocket.
@@ -18,15 +19,29 @@ export namespace Gateway {
         export const Id = z.string().brand('Gateway.Definition.Id');
         export type Id = z.infer<typeof Id>;
 
-        export const Schema = z.object({
+        // Fields, credentials and branches come from Derivable; field values pick the credential.
+        export const Schema = Derivable.Schema.extend({
             id:          Id,
             displayName: z.string(),
             description: z.string().optional(),
             icon:        z.string(),
-            // Absent when the socket needs no secrets.
-            credential:  Vault.Credential.Template.Schema.optional(),
-            fields:      z.array(Field.Schema).readonly(),
         });
+
+        export const derive = Derivable.derive
+
+        // The credential template the given field values call for, or null when they call for none.
+        export const getCredentialTemplate = (
+            definition:  Gateway.Definition,
+            fieldValues: Record<Field.Id, Field.Value>,
+        ): Vault.Credential.Template | null => {
+            const { derived } = Derivable.derive(definition, fieldValues);
+            const templates   = derived.credentials ?? [];
+
+            if (templates.length > 1)
+                throw new Error(`${definition.id} derives ${templates.length} credentials; a connection takes at most one`);
+
+            return templates[0] ?? null;
+        };
     }
     export type Definition = z.infer<typeof Definition.Schema>;
 
@@ -93,7 +108,8 @@ export namespace Gateway {
                     id:            Gateway.Connection.Id,
                     folder_id:     FolderD.Id.optional(),
                     name:          z.string().min(1).max(128).optional(),
-                    credential_id: Vault.Credential.Instance.Id.optional(),
+                    // Null detaches the credential.
+                    credential_id: Vault.Credential.Instance.Id.nullable().optional(),
                     field_values:  z.record(Field.Id, Field.Value).optional(),
                 });
                 export type Request  = z.infer<typeof Request>;
@@ -158,7 +174,18 @@ export namespace Gateway {
                 createdAt:    z.string(),
             });
 
-            export const Schema = DiscordMessage;
+            export const WebSocketMessage = z.object({
+                provider:   z.literal('websocket'),
+                type:       z.literal('message'),
+                // Parsed JSON when the connection reads JSON, the raw text otherwise.
+                data:       z.json(),
+                receivedAt: z.string(),
+            });
+
+            export const Schema = z.discriminatedUnion('provider', [
+                DiscordMessage,
+                WebSocketMessage,
+            ]);
         }
         export type Event = z.infer<typeof Event.Schema>;
     }
