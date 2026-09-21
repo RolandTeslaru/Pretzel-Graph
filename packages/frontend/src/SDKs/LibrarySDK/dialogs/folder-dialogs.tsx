@@ -5,7 +5,7 @@ import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-grap
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
-import type { Library } from '@pretzel-graph/shared/domain'
+import { SystemError, type Library } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
 import { FolderIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 
@@ -166,7 +166,13 @@ export function openDeleteFolderDialog(folder: Library.Folder) {
             {...props}
             type='danger'
             onApprove={async () => {
-                await LibrarySDK.actions.folder.delete(folder.id)
+                try {
+                    await LibrarySDK.actions.folder.delete(folder.id)
+                }
+                catch (err) {
+                    toast.error(SystemError.fromUnknown(err).message)
+                }
+
                 DialogSDK.actions.pop(dialogId)
             }}
             onCancel={() => DialogSDK.actions.pop(dialogId)}

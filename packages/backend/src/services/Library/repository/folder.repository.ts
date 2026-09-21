@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Library, Skill } from '@pretzel-graph/shared/domain';
+import { Gateway, Library, Skill } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
@@ -70,6 +70,27 @@ export class FolderRepository extends Repository {
         }
 
         return false;
+    }
+
+    // Every connection in the folder or any folder below it; each one blocks the folder's delete.
+    @Transactional('user')
+    @ZodReturn(Gateway.Connection.Id.array())
+    public async listNestedConnectionIds(principal: Principal.User, id: Library.Folder.Id): Promise<Gateway.Connection.Id[]> {
+        const rows = await this.trx
+            .withRecursive('subtree(id)', db => db
+                .selectFrom('folders')
+                .select('id')
+                .where('id', '=', id)
+                .unionAll(db
+                    .selectFrom('folders')
+                    .innerJoin('subtree', 'subtree.id', 'folders.parent_folder_id')
+                    .select('folders.id')))
+            .selectFrom('connections')
+            .innerJoin('subtree', 'subtree.id', 'connections.folder_id')
+            .select('connections.id')
+            .execute();
+
+        return rows.map(row => row.id);
     }
 
     @Transactional('user')

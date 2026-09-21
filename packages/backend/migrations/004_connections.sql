@@ -25,7 +25,7 @@ alter table only connections add constraint connections_pkey primary key (id);
 alter table only connections add constraint connections_credential_id_key unique (credential_id);
 
 alter table only connections
-    add constraint connections_folder_id_fkey foreign key (folder_id) references folders(id) on delete cascade;
+    add constraint connections_folder_id_fkey foreign key (folder_id) references folders(id) on delete restrict;
 
 alter table only connections
     add constraint connections_credential_id_fkey foreign key (credential_id) references credential_instance(id) on delete restrict;
