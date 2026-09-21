@@ -6,14 +6,14 @@ import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection"
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field"
 import { Synthesizer } from "../synthesizer";
-import type { ExecutionContext as ExecutionContextType } from "./context";
+import type { NodeContext } from "../contexts/node";
 import type {
     AgentToolBinding             as AgentToolBindingType,
     RealtimeAPI                  as RealtimeAPIType,
     RealtimeScope                as RealtimeScopeType,
     UnstampedConsultationRequest as UnstampedConsultationRequestType,
     ExecutionOutcome             as ExecutionOutcomeType,
-} from "./apis";
+} from "../apis";
 import type { HTTP } from "../domain/http";
 
 export abstract class RuntimeNode<
@@ -62,7 +62,7 @@ export abstract class RuntimeNode<
 
     constructor(
         public readonly nodeId: Workflow.Node.Id,
-        protected readonly context: RuntimeNode.ExecutionContext
+        protected readonly context: RuntimeNode.Context
     ) {
         const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
@@ -74,8 +74,8 @@ export abstract class RuntimeNode<
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
         const nodeCredIds = Object.entries(
-                                this.context.workflowData.credentialInstanceIds[this.nodeId] ?? {}
-                            )as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]
+                                this.context.workflowQueryAPI.getCredentialIds(this.nodeId)
+                            ) as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]
 
         const result: Record<string, Vault.Credential.Instance> = {};
 
@@ -487,7 +487,7 @@ export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
 
-    export type ExecutionContext = ExecutionContextType;
+    export type Context = NodeContext;
     export type AgentToolBinding = AgentToolBindingType;
     export type RealtimeAPI      = RealtimeAPIType;
     export type RealtimeScope    = RealtimeScopeType;
