@@ -6,6 +6,7 @@ import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { Gateway } from "@pretzel-graph/shared/domain";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { _createGatewayActions_, type _GatewaySDKActions } from "./actions";
+import { _gatewaySelectors_, type _GatewaySDKSelectors } from "./selectors";
 
 const CONNECTIONS_STALE_TIME = 30_000
 const DEFINITIONS_STALE_TIME = Infinity
@@ -50,7 +51,7 @@ export class GatewaySDKImpl extends BaseSDK<GatewaySDK.State> {
         },
     }
 
-    public readonly selectors: GatewaySDK.Selectors = {}
+    public readonly selectors: GatewaySDK.Selectors = _gatewaySelectors_
 
     public handleOnEvent = (event: Gateway.Event) => {
         switch (event.type) {
@@ -74,5 +75,5 @@ export namespace GatewaySDK {
     }
 
     export type Actions   = _GatewaySDKActions
-    export type Selectors = {}
+    export type Selectors = _GatewaySDKSelectors
 }

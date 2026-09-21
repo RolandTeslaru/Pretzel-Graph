@@ -11,7 +11,9 @@ export type _GatewaySDKActions = {
         list:   () => Promise<Gateway.Connection[]>
         create: (req: Gateway.API.Connection.Create.Request) => Promise<Gateway.Connection>
         update: (req: Gateway.API.Connection.Update.Request) => Promise<Gateway.Connection>
-        reconnect: (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
+        connect:    (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
+        disconnect: (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
+        reconnect:  (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
         upsert: (connection: Gateway.Connection) => void
     }
 }
@@ -79,6 +81,30 @@ export function _createGatewayActions_(sdk: GatewaySDKImpl): _GatewaySDKActions 
                 } catch (err) {
                     console.error('GatewaySDK.connection.update failed', err)
                     toast.error('Failed to update connection')
+                    throw err
+                }
+            },
+
+            connect: async (id) => {
+                try {
+                    const connection = await Gateway.API.Connection.connect(api, id)
+                    upsert(connection)
+                    return connection
+                } catch (err) {
+                    console.error('GatewaySDK.connection.connect failed', err)
+                    toast.error('Failed to turn the connection on')
+                    throw err
+                }
+            },
+
+            disconnect: async (id) => {
+                try {
+                    const connection = await Gateway.API.Connection.disconnect(api, id)
+                    upsert(connection)
+                    return connection
+                } catch (err) {
+                    console.error('GatewaySDK.connection.disconnect failed', err)
+                    toast.error('Failed to turn the connection off')
                     throw err
                 }
             },

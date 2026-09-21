@@ -1,29 +1,28 @@
 import { memo } from "react";
 import { Select } from "@pretzel-graph/standard-ui/foundations/select";
 import { Button } from "@pretzel-graph/standard-ui/foundations";
-import { VaultSDK } from "@/SDKs/VaultSDK/sdk";
+import { VaultSDK } from "../sdk";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
-import { WorkbenchSDK } from "../../sdk";
-import { CredentialFormDialog } from "@/SDKs/VaultSDK/ui/CredentialForm";
-import type { Vault, Workflow } from "@pretzel-graph/shared/domain";
+import { CredentialFormDialog } from "./CredentialForm";
+import type { Vault } from "@pretzel-graph/shared/domain";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import FloatContainer from "@/components/FloatContainer";
 
+// Picks a credential instance of one template; whoever renders it owns where the choice is stored.
 interface Props {
     credentialTemplate: Vault.Credential.Template;
-    nodeId: Workflow.Node.Id;
-    showTitle?: boolean;
+    instanceId:         Vault.Credential.Instance.Id | null;
+    setInstance:        (instanceId: Vault.Credential.Instance.Id | null) => void;
+    // Highlights the picker, e.g. when a required credential is missing.
+    issue?:             boolean;
+    showTitle?:         boolean;
 }
 
 export const CredentialPicker = memo(
-    ({ credentialTemplate, nodeId, showTitle = true }: Props) => {
+    ({ credentialTemplate, instanceId, setInstance, issue = false, showTitle = true }: Props) => {
         const [instances] = VaultSDK.useWith(
             (s) => s.selectors.byTemplateId(s, credentialTemplate.id),
             [VaultSDK.query.instances],
-        );
-        const [instanceId, setInstance, issue] = WorkbenchSDK.useCredential(
-            nodeId,
-            credentialTemplate.id,
         );
 
         const openAddDialog = () => {

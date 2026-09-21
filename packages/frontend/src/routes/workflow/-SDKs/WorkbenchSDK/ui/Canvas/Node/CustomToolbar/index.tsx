@@ -7,7 +7,7 @@ import { OptionsDropdown } from './OptionsDropdown'
 import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 import { PROXY_TEMPLATE_ID } from '../../../NodePanel/proxy'
-import { CredentialPicker } from '../../../CredentialsRenderer/CredentialPicker'
+import { CredentialRenderer } from '../../../CredentialsRenderer';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 
 interface Props {
@@ -134,7 +134,7 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
             >
                 <div className='flex flex-col gap-2 h-full pt-3'>
                     <p className='text-xs font-medium text-muted-foreground '>Select a Network Proxy Credential</p>
-                    <CredentialPicker credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
+                    <CredentialRenderer credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
 
                     <div className='flex flex-row justify-between mt-auto'>
                         <Button variant='ghost-destructive' size='sm' className='rounded-full'

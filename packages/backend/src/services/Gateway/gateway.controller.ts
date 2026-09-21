@@ -41,9 +41,27 @@ export class GatewayController {
         return this.gatewayService.connection.update(principal, { id, ...body });
     }
 
+    @Post('connections/:id/connect')
+    @HttpCode(200)
+    async connectSocket(
+        @AuthenticatedUser() principal: Principal.User,
+        @Param('id') id: Gateway.Connection.Id,
+    ): Promise<Gateway.API.Connection.Connect.Response> {
+        return this.gatewayService.socket.connect(principal, id);
+    }
+
+    @Post('connections/:id/disconnect')
+    @HttpCode(200)
+    async disconnectSocket(
+        @AuthenticatedUser() principal: Principal.User,
+        @Param('id') id: Gateway.Connection.Id,
+    ): Promise<Gateway.API.Connection.Disconnect.Response> {
+        return this.gatewayService.socket.disconnect(principal, id);
+    }
+
     @Post('connections/:id/reconnect')
     @HttpCode(200)
-    async reconnectConnection(
+    async reconnectSocket(
         @AuthenticatedUser() principal: Principal.User,
         @Param('id') id: Gateway.Connection.Id,
     ): Promise<Gateway.API.Connection.Reconnect.Response> {

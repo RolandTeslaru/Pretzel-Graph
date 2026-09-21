@@ -116,6 +116,14 @@ export namespace Gateway {
                 export type Response = Gateway.Connection;
             }
 
+            export namespace Connect {
+                export type Response = Gateway.Connection;
+            }
+
+            export namespace Disconnect {
+                export type Response = Gateway.Connection;
+            }
+
             export namespace Reconnect {
                 export type Response = Gateway.Connection;
             }
@@ -133,6 +141,16 @@ export namespace Gateway {
             export async function update(api: AxiosInstance, req: Update.Request): Promise<Update.Response> {
                 const { id, ...body } = req;
                 const { data } = await api.patch<Update.Response>(`/api/gateway/connections/${id}`, body);
+                return data;
+            }
+
+            export async function connect(api: AxiosInstance, id: Gateway.Connection.Id): Promise<Connect.Response> {
+                const { data } = await api.post<Connect.Response>(`/api/gateway/connections/${id}/connect`);
+                return data;
+            }
+
+            export async function disconnect(api: AxiosInstance, id: Gateway.Connection.Id): Promise<Disconnect.Response> {
+                const { data } = await api.post<Disconnect.Response>(`/api/gateway/connections/${id}/disconnect`);
                 return data;
             }
 

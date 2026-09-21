@@ -77,7 +77,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
 
             this.emitUpserted(connection);
 
-            void this.socket.connect(connection);
+            void this.open(connection);
 
             return connection;
         },
@@ -148,38 +148,21 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
     };
 
     public readonly socket = {
-        // Builds a socket from the row, connects it and records how it went; never rejects, so callers can void it.
-        connect: async (connection: Gateway.Connection): Promise<void> => {
-            let socket: GatewaySocket<Gateway.Definition> | undefined;
+        // Turns the connection on: marks it pending and opens its socket; already on is a no-op.
+        connect: async (
+            principal: Principal.User | Principal.Service,
+            id: Gateway.Connection.Id,
+        ): Promise<Gateway.Connection> => {
+            const connection = await this.repository.getById(principal, id);
 
-            try {
-                const template = Gateway.Definition.getCredentialTemplate(this.definition.get(connection.definitionId), connection.fieldValues);
+            if (connection.status === 'pending' || connection.status === 'active')
+                return connection;
 
-                if (template && !connection.credential)
-                    throw new Error(`Needs a ${template.displayName} credential`);
+            const pending = await this.writeStatus(principal, id, 'pending', null);
 
-                socket = this.instantiate(connection);
+            void this.open(pending);
 
-                await socket.connect();
-
-                // Replaced or disconnected while connecting; the newer state owns the status.
-                if (this.sockets.get(connection.id) !== socket)
-                    return;
-
-                await this.writeStatus(Principal.SELF, connection.id, 'active', null);
-            }
-            catch (error) {
-                if (socket && this.sockets.get(connection.id) !== socket)
-                    return;
-
-                const message = (error as Error).message;
-
-                this.log.error(`Connection ${connection.id} failed to connect: ${message}`);
-
-                await this.writeStatus(Principal.SELF, connection.id, 'failed', message).catch(writeError =>
-                    this.log.error(`Failed to record status for connection ${connection.id}: ${(writeError as Error).message}`),
-                );
-            }
+            return pending;
         },
 
         disconnect: async (
@@ -213,11 +196,57 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
 
             const pending = await this.writeStatus(principal, id, 'pending', null);
 
-            void this.socket.connect(pending);
+            void this.open(pending);
 
             return pending;
         },
     };
+
+
+
+
+    // Builds a socket from the row, connects it and records how it went; never rejects, so callers can void it.
+    private async open(connection: Gateway.Connection): Promise<void> {
+        let socket: GatewaySocket<Gateway.Definition> | undefined;
+
+        try {
+            const template = Gateway.Definition.getCredentialTemplate(this.definition.get(connection.definitionId), connection.fieldValues);
+
+            if (template && !connection.credential)
+                throw new Error(`Needs a ${template.displayName} credential`);
+
+            socket = this.instantiate(connection);
+
+            await socket.connect();
+
+            // Replaced or disconnected while connecting; the newer state owns the status.
+            if (this.sockets.get(connection.id) !== socket)
+                return;
+
+            await this.writeStatus(Principal.SELF, connection.id, 'active', null);
+        }
+        catch (error) {
+            if (socket && this.sockets.get(connection.id) !== socket)
+                return;
+
+            // A socket that never connected is not live; drop it so the map only holds live ones.
+            if (socket) {
+                this.sockets.delete(connection.id);
+
+                socket.disconnect().catch(disconnectError =>
+                    this.log.error(`Connection ${connection.id} failed to disconnect: ${(disconnectError as Error).message}`),
+                );
+            }
+
+            const message = (error as Error).message;
+
+            this.log.error(`Connection ${connection.id} failed to connect: ${message}`);
+
+            await this.writeStatus(Principal.SELF, connection.id, 'failed', message).catch(writeError =>
+                this.log.error(`Failed to record status for connection ${connection.id}: ${(writeError as Error).message}`),
+            );
+        }
+    }
 
 
 
@@ -370,7 +399,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         const connections = await this.repository.listAllEnabled(Principal.SELF);
 
         for (const connection of connections)
-            void this.socket.connect(connection);
+            void this.open(connection);
 
         this.log.info(`Connecting ${connections.length} connections`);
     }

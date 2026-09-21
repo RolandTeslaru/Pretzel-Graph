@@ -1,5 +1,5 @@
 import { WorkbenchSDK } from '../../sdk'
-import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker'
+import { CredentialRenderer } from '../CredentialsRenderer';
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 
 export const CredentialsSettings = () => {
@@ -27,7 +27,7 @@ export const CredentialsSettings = () => {
                             <span className='text-xs font-medium'>{ui.displayName}</span>
                         </div>
                         {credentials.map(cred => (
-                            <CredentialPicker key={cred.id} credentialTemplate={cred} nodeId={node.id} />
+                            <CredentialRenderer key={cred.id} credentialTemplate={cred} nodeId={node.id} />
                         ))}
                     </div>
                 )

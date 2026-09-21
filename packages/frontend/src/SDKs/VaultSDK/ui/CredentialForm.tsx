@@ -1,9 +1,8 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { AlertDialog, Button, Dialog, Form, Input, ScrollArea, Select, Spinner, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Dialog, Form, Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { VaultSDK } from '../sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import type { Vault } from '@pretzel-graph/shared/domain'
@@ -11,6 +10,7 @@ import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { VaultGlyph } from '@pretzel-graph/standard-ui/brands/vaultGlyph'
 import { awaitOAuthConnection, openOAuthPopup } from '../oauthPopup'
+import { DerivableForm, derivableResolver, getDefaultFieldValues } from '@/components/DerivableForm'
 
 interface UpdateProps {
     instanceId: Vault.Credential.Instance.Id
@@ -55,54 +55,6 @@ export const CredentialFormDialog = ({ credentialTemplate, onCreated, updateProp
     </DialogSDK.SplitTemplate>
 )
 
-type CredentialField = Vault.Credential.Template['fields'][number]
-
-const createFieldSchema = (field: CredentialField) => {
-    switch (field.variant) {
-        case 'Boolean':
-            return z.boolean()
-
-        case 'Integer':
-        case 'Float':
-            return field.required
-                ? z.number()
-                : z.union([z.number(), z.literal('')])
-
-        case 'MultiOption':
-            return z.string().refine(
-                value =>
-                    (!field.required && value === '') ||
-                    field.options.some(option => option.value === value),
-                `Select a valid ${field.displayName}`,
-            )
-
-        default:
-            return field.required
-                ? z.string().min(1, `${field.displayName} is required`)
-                : z.string()
-    }
-}
-
-const getFieldDefaultValue = (field: CredentialField) => {
-    switch (field.variant) {
-        case 'Boolean':
-            return field.initialValue ?? false
-
-        case 'Integer':
-        case 'Float':
-            return field.initialValue ?? (field.required ? 0 : '')
-
-        case 'MultiOption':
-            return field.initialValue ?? ''
-
-        case 'String':
-            return field.initialValue ?? ''
-
-        default:
-            return ''
-    }
-}
-
 export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: Props) => {
 
     // The footer sits outside <form> (it's pinned over the scroll area), so Save links back by id.
@@ -117,36 +69,27 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
     const isOAuth = credentialTemplate.auth?.kind === 'oauth2'
 
     // Once connected, the form fields are replaced by a Reconnect button.
-    const formFields = isOAuth && updateProps ? [] : credentialTemplate.fields
+    const formTemplate = useMemo(
+        () => isOAuth && updateProps ? { ...credentialTemplate, fields: [] } : credentialTemplate,
+        [credentialTemplate, isOAuth, updateProps],
+    )
 
-    const schema = useMemo(() => z.object({
-        // An OAuth credential can take its name from the connected account.
+    // An OAuth credential can take its name from the connected account.
+    const nameSchema = useMemo(() => z.object({
         name: isOAuth ? z.string().trim() : z.string().trim().min(1, 'Name is required'),
-        fields: z.object(
-            Object.fromEntries(
-                formFields.map(field => [
-                    field.id,
-                    createFieldSchema(field),
-                ]),
-            ),
-        ),
-    }), [isOAuth, formFields])
+    }), [isOAuth])
 
-    type Values = z.infer<typeof schema>
-
-    const getDefaultValues = (): Values => ({
-        name: '',
-        fields: Object.fromEntries(
-            formFields.map(field => [
-                field.id,
-                getFieldDefaultValue(field),
-            ]),
-        ) as Values['fields'],
-    })
+    type Values = {
+        name:        string
+        fieldValues: Record<string, unknown>
+    }
 
     const form = useForm<Values>({
-        resolver: zodResolver(schema),
-        defaultValues: getDefaultValues(),
+        resolver: derivableResolver(formTemplate, nameSchema),
+        defaultValues: {
+            name:        '',
+            fieldValues: getDefaultFieldValues(formTemplate),
+        },
     })
 
     useEffect(() => {
@@ -163,11 +106,11 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                     const revealedAccountLabel = fieldValues['accountLabel' as keyof Vault.Credential.Instance.DecryptedValues]
 
                     setAccountLabel(typeof revealedAccountLabel === 'string' ? revealedAccountLabel : null)
-                    form.reset({ name, fields: {} as Values['fields'] })
+                    form.reset({ name, fieldValues: {} })
                     return
                 }
 
-                form.reset({ name, fields: fieldValues as Values['fields'] })
+                form.reset({ name, fieldValues })
             })
             .catch(() => {})
             .finally(() => setIsLoadingValues(false))
@@ -221,7 +164,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
             const instanceId = await connect(() => VaultSDK.actions.oauth.start({
                 templateId:  credentialTemplate.id,
                 name:        values.name,
-                fieldValues: values.fields,
+                fieldValues: values.fieldValues as Vault.Credential.Instance.DecryptedValues,
             }))
 
             if (!instanceId)
@@ -248,7 +191,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                 await VaultSDK.actions.instance.update.values({
                     id: updateProps.instanceId,
                     name: values.name,
-                    fieldValues: values.fields,
+                    fieldValues: values.fieldValues as Vault.Credential.Instance.DecryptedValues,
                 })
                 toast.success(`${credentialTemplate.displayName} credential updated`)
                 updateProps.onUpdateComplete?.(updateProps.instanceId)
@@ -256,7 +199,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                 const instance = await VaultSDK.actions.instance.create({
                     name: values.name,
                     templateId: credentialTemplate.id,
-                    fieldValues: values.fields,
+                    fieldValues: values.fieldValues as Vault.Credential.Instance.DecryptedValues,
                 })
                 toast.success(`${credentialTemplate.displayName} credential saved`)
                 onCreated?.(instance.id)
@@ -326,63 +269,7 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
                             </Form.Item>
                         )} />
 
-                        {formFields.map(f => (
-                            <Form.Field key={f.id} control={form.control} name={`fields.${f.id}`} render={({ field }) => (
-                                <Form.Item>
-                                    <Form.Label>
-                                        {f.displayName}
-                                        {f.required && <span className='ml-1 text-destructive'>*</span>}
-                                    </Form.Label>
-                                    <Form.Control>
-                                        {f.variant === 'Boolean' ? (
-                                            <Switch
-                                                checked={Boolean(field.value)}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        ) : (f.variant === 'Integer' || f.variant === 'Float') ? (
-                                            <Input
-                                                type='number'
-                                                value={(field.value ?? '') as number | ''}
-                                                onChange={e => field.onChange(e.target.value === '' ? '' : e.target.valueAsNumber)}
-                                                onBlur={field.onBlur}
-                                                name={field.name}
-                                                ref={field.ref}
-                                                placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
-                                            />
-                                        ) : f.variant === 'MultiOption' ? (
-                                            <Select.Root
-                                                value={field.value as string}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <Select.Trigger aria-invalid={Boolean(form.formState.errors.fields?.[f.id])}>
-                                                    <Select.Value placeholder={f.placeholder ?? `Select ${f.displayName}`} />
-                                                </Select.Trigger>
-                                                <Select.Content size='sm'>
-                                                    {f.options.map(option => (
-                                                        <Select.Item
-                                                            key={option.value}
-                                                            value={option.value}
-                                                            description={option.description}
-                                                        >
-                                                            {option.displayName ?? option.value}
-                                                        </Select.Item>
-                                                    ))}
-                                                </Select.Content>
-                                            </Select.Root>
-                                        ) : (
-                                            <Input
-                                                {...field}
-                                                value={field.value as string}
-                                                type={f.variant === 'Password' ? 'password' : 'text'}
-                                                placeholder={'placeholder' in f ? (f.placeholder as string) : undefined}
-                                                autoComplete='new-password'
-                                            />
-                                        )}
-                                    </Form.Control>
-                                    <Form.Message />
-                                </Form.Item>
-                            )} />
-                        ))}
+                        <DerivableForm derivable={formTemplate} control={form.control} />
 
                         {isOAuth && !updateProps && (
                             <div className='flex flex-col gap-1.5'>
