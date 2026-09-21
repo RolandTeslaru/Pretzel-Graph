@@ -10,20 +10,25 @@ export abstract class GatewaySocket<
 
 > {
     // The definition's fields joined against the connection row's stored values.
-    public readonly fieldValues!: InferFieldValues<T_Definition>;
+    public readonly fieldValues: InferFieldValues<T_Definition>;
 
     // The credential instance bound to this connection.
-    public readonly credential!: InferCredential<T_Definition>;
+    public readonly credential: InferCredential<T_Definition>;
 
-    public readonly connection!: Gateway.Connection
+    public readonly connection: Gateway.Connection
 
     constructor (
         protected readonly ctx: SocketContext
     ){
-        this.fieldValues = ctx.connection.fieldValues as InferFieldValues<T_Definition>,
-        this.credential = ctx.connection.credential as InferCredential<T_Definition>
-        this.connection = ctx.connection
+        this.fieldValues = ctx.connection.fieldValues as InferFieldValues<T_Definition>
+        this.credential  = ctx.connection.credential as InferCredential<T_Definition>
+        this.connection  = ctx.connection
     }
+
+    public abstract connect(): Promise<void>
+
+    // The instance is discarded afterwards; the next connect builds a new one.
+    public abstract disconnect(): Promise<void>
 
     protected abstract dispatchEvent(...args: any): void
 }

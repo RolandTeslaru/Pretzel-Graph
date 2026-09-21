@@ -1,12 +1,12 @@
 -- Connections: a user's saved gateway connection, created in the library from a definition.
--- One row is one live socket, so a credential backs at most one connection.
+-- One row is one live socket, so a credential backs at most one connection; definitions without secrets store none.
 
 create table connections (
     id            uuid default gen_random_uuid() not null,
     folder_id     uuid not null,
     definition_id text not null,
     name          text not null,
-    credential_id uuid not null,
+    credential_id uuid,
     field_values  jsonb default '{}'::jsonb not null,
     status        text default 'pending' not null,
     error         text,

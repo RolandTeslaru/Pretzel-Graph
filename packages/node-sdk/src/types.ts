@@ -432,9 +432,9 @@ export type InferCredentialValues<C> = 0 extends (1 & C) ? any
  * `credentialsAPI.getDecryptedValue(socket.credential.blob)` infers the right value shape.
  */
 export type InferCredential<D> = 0 extends (1 & D) ? any
-    : D extends { credential: infer T }
+    : D extends { credential: infer T extends object }
     ? Omit<Vault.Credential.Instance, "blob"> & { readonly blob: Vault.Credential.Instance.EncryptedBlob<T> }
-    : never;
+    : null;
 
 
 export type InferCredentials<D> = 0 extends (1 & D) ? any

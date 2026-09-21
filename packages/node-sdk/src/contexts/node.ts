@@ -15,6 +15,7 @@ import type {
 } from "../apis";
 import type { HTTP } from "../domain/http";
 import type { NetworkProxy } from "../domain/networkProxy";
+import type { ConnectionAPI } from "../apis/resources";
 import type { HostContext } from "./host";
 
 // What a firing node sees. Deliberately narrower than the worker's ExecutionContext: the engine's
@@ -28,6 +29,7 @@ export interface NodeContext extends HostContext {
 
     readonly workflowId:          Workflow.Id,
 
+    readonly connectionAPI:       ConnectionAPI,
     readonly realtimeAPI:         RealtimeAPI,
     readonly airlockAPI:          Airlock.API,
     readonly abortAPI:            AbortAPI,

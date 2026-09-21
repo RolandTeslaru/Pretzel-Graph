@@ -9,35 +9,37 @@ const DEFAULT_ICON = "WebSocket"
 // it in the library; a node references one by id.
 export type ConnectionDefinition<
     TId extends string = string,
-    TFields extends readonly Field[] = readonly Field[]
+    TFields extends readonly Field[] = readonly Field[],
+    TCredential extends CredentialTemplate | undefined = CredentialTemplate | undefined
 > = {
     readonly id: TId & Gateway.Definition.Id
     readonly __literalId?: TId
     readonly displayName: string
     readonly description?: string
     readonly icon: string
-    // Secrets live on the credential; everything else the socket opens with lives in `fields`.
-    readonly credential: CredentialTemplate
+    // Secrets live on the credential, when the socket needs any; everything else lives in `fields`.
+    readonly credential: TCredential
     readonly fields: TFields
 }
 
 export function defineConnection<
     const TId extends string,
-    const TFields extends readonly Field[]
+    const TFields extends readonly Field[],
+    const TCredential extends CredentialTemplate | undefined = undefined
 >(config: {
     id: TId
     displayName: string
     description?: string
     icon?: string
-    credential: CredentialTemplate
+    credential?: TCredential
     fields: TFields
-}): ConnectionDefinition<TId, TFields> {
+}): ConnectionDefinition<TId, TFields, TCredential> {
     return {
         id: config.id as TId & Gateway.Definition.Id,
         displayName: config.displayName,
         description: config.description,
         icon: config.icon ?? DEFAULT_ICON,
-        credential: config.credential,
+        credential: config.credential as TCredential,
         fields: config.fields,
     }
 }

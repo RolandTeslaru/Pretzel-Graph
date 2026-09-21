@@ -232,7 +232,7 @@ export namespace DB {
             folder_id:     Library.Folder.Id,
             definition_id: Gateway.Definition.Id,
             name:          z.string(),
-            credential_id: Vault.Credential.Instance.Id,
+            credential_id: Vault.Credential.Instance.Id.nullable(),
             field_values:  z.record(Foundations.Field.Id, Foundations.Field.Value),
             status:        Gateway.Connection.Status.default('pending'),
             error:         z.string().nullable(),
@@ -243,7 +243,7 @@ export namespace DB {
 
         // The only toDomain that takes more than a row: the domain holds the credential the
         // row only references.
-        export const toDomain = (row: Row, credential: Vault.Credential.Instance) =>
+        export const toDomain = (row: Row, credential: Vault.Credential.Instance | null) =>
             Gateway.Connection.Schema.parse({
                 id:           row.id,
                 folderId:     row.folder_id,
@@ -263,7 +263,7 @@ export namespace DB {
             folder_id:     connection.folderId,
             definition_id: connection.definitionId,
             name:          connection.name,
-            credential_id: connection.credential.id,
+            credential_id: connection.credential?.id ?? null,
             field_values:  connection.fieldValues,
             status:        connection.status,
             error:         connection.error,

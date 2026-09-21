@@ -23,7 +23,6 @@ export class DiscordSocket extends GatewaySocket<typeof Definition> {
         return this._client
     }
 
-    private listeners: Set<Gateway.Listener> = new Set()
 
     
     public async connect(){
@@ -37,11 +36,20 @@ export class DiscordSocket extends GatewaySocket<typeof Definition> {
     
         this.client.on(DiscordEvents.MessageCreate, msg => this.dispatchEvent(msg))
         this.client.on(DiscordEvents.Error, error => this.log.error(`Discord connection ${this.connection.id} failed: ${error.message}`))
-        await this.client.login()
+        // discord.js resumes recoverable closes itself; this fires only once it has stopped trying.
+        this.client.on(DiscordEvents.ShardDisconnect, event => this.ctx.fail(new Error(`Discord closed the connection (code ${event.code})`)))
+        const { botToken } = this.ctx.credentialsAPI.getDecryptedValue(this.credential.blob)
+
+        await this.client.login(botToken)
+    }
+
+    public async disconnect(){
+        await this._client?.destroy()
+        this._client = null
     }
 
     public dispatchEvent(message: Message){
-        const event = Gateway.Event.Schema.parse({
+        const event = Gateway.Socket.Event.Schema.parse({
             provider:      'discord',
             type:          'message',
             messageId:     message.id,
@@ -54,15 +62,9 @@ export class DiscordSocket extends GatewaySocket<typeof Definition> {
             createdAt:     message.createdAt.toISOString(),
         });
 
-        for (const listener of this.listeners){
-            listener(event)
-        }
-    }
-
-    public subscribe(callback: () => {}){
-        this.listeners.add(callback)
-
-        return () => { this.listeners.delete(callback) }
+        this.ctx.dispatch(event)
     }
 
 }
+
+export { DiscordSocket as Socket }

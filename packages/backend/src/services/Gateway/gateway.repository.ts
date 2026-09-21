@@ -46,10 +46,24 @@ export class GatewayRepository extends Repository {
         return this.withCredentials(rows);
     }
 
-    @Transactional('user')
+    @Transactional('service')
+    @ZodReturn(Gateway.Connection.Schema.array())
+    public async listAllEnabled(
+        principal: Principal.Service,
+    ): Promise<Gateway.Connection[]> {
+        const rows = await this.trx
+            .selectFrom('connections')
+            .selectAll()
+            .where('status', '!=', 'inactive')
+            .execute();
+
+        return this.withCredentials(rows);
+    }
+
+    @Transactional('user', 'service')
     @ZodReturn(Gateway.Connection.Schema)
     public async getById(
-        principal: Principal.User,
+        principal: Principal.User | Principal.Service,
         id: Gateway.Connection.Id,
     ): Promise<Gateway.Connection> {
         const row = await this.trx
@@ -128,18 +142,22 @@ export class GatewayRepository extends Repository {
 
     // One credential query for any number of rows, rather than one per connection.
     private async withCredentials(rows: DB.Connection.Row[]): Promise<Gateway.Connection[]> {
-        if (!rows.length)
-            return [];
+        const credentialIds = rows.flatMap(row => row.credential_id ? [row.credential_id] : []);
 
-        const credentials = await this.trx
-            .selectFrom('credential_instance')
-            .selectAll()
-            .where('id', 'in', rows.map(row => row.credential_id))
-            .execute();
+        const credentials = credentialIds.length
+            ? await this.trx
+                .selectFrom('credential_instance')
+                .selectAll()
+                .where('id', 'in', credentialIds)
+                .execute()
+            : [];
 
         const byId = new Map(credentials.map(row => [row.id, DB.CredentialInstance.toDomain(row)]));
 
         return rows.map(row => {
+            if (!row.credential_id)
+                return DB.Connection.toDomain(row, null);
+
             const credential = byId.get(row.credential_id);
 
             if (!credential)

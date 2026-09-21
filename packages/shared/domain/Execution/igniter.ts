@@ -65,7 +65,7 @@ export namespace Igniter {
     export const GatewayEvent = Base.extend({
         variant: z.literal("gateway"),
         nodeId: Workflow.Node.Id,
-        payload: Gateway.Event.Schema,
+        payload: Gateway.Socket.Event.Schema,
     })
 
     export const Scheduled = Base.extend({
