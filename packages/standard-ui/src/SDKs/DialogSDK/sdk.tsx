@@ -42,6 +42,15 @@ function useAnimationDelay(): React.CSSProperties {
     return {}
 }
 
+// Shadow lives on a pseudo-element that fades with the surfaces, so the wrapper only animates transform.
+const SPLIT_SHELL = `
+    rounded-2xl flex flex-row
+    before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit]
+    before:shadow-2xl before:shadow-neutral-500/60 dark:before:shadow-black/60
+    data-[state=open]:before:animate-[dialog-fade-in_150ms_ease-in-out_300ms_both]
+    data-[state=closed]:before:animate-[dialog-fade-out_150ms_ease-in-out_both]
+` + " "
+
 const SplitHeader: DialogSDK.SplitTemplate.Header = ({ children }) => (
     <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
         {children}
@@ -275,7 +284,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
                     }}
                     darkenBackground={index === 0}
-                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
+                    className={SPLIT_SHELL + className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
@@ -315,7 +324,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
                     }}
                     darkenBackground={index === 0}
-                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
+                    className={SPLIT_SHELL + className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
@@ -365,7 +374,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         transform: `translate(-50%, -50%) translateY(${y_offset}px) scale(${finalScale})`,
                     }}
                     darkenBackground={index === 0}
-                    className={"rounded-2xl shadow-2xl shadow-neutral-500/60 dark:shadow-black/60 flex flex-row " + className}
+                    className={SPLIT_SHELL + className}
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
