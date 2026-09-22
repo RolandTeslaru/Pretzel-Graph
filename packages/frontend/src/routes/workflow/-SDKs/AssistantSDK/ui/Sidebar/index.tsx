@@ -2,7 +2,6 @@ import { memo, useEffect } from 'react'
 import { AssistantSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import AssistantPanel from '../ConversationArea'
-import AssistantAurora from '../AssistantAurora'
 import ConversationRoot from '../ConversationRoot'
 import { Conversation } from '@/components/Conversation'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -30,7 +29,6 @@ const AssistantSidebar = () => {
                             </Conversation.Actions>
                         </Conversation.Header>
                         <AssistantPanel />
-                        <AssistantAurora />
                     </ConversationRoot>
                 </StackSDK.Template>
             ))

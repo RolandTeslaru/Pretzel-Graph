@@ -4,7 +4,6 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AssistantSDK } from '../../sdk'
 import AssistantPanel from '../ConversationArea'
 import AssistantList from './AssistantList'
-import AssistantAurora from '../AssistantAurora'
 import { Conversation } from '@/components/Conversation'
 import ConversationRoot from '../ConversationRoot'
 
@@ -23,7 +22,6 @@ const FullscreenAssistant = (props: DialogSDK.TemplateProps) => (
         <Dialog.Title className='hidden'>Assistant</Dialog.Title>
         <Dialog.Description className='hidden'>Chat with the workflow assistant</Dialog.Description>
 
-        <AssistantAurora />
         <ConversationRoot>
             <Header />
             <AssistantPanel />
