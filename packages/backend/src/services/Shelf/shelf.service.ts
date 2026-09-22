@@ -3,7 +3,8 @@ import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domai
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { Loader } from '@pretzel-graph/node-sdk';
+import type { GatewayFilters, Loader } from '@pretzel-graph/node-sdk';
+import type { ZodType } from 'zod';
 import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -11,8 +12,10 @@ import { System } from '@pretzel-graph/shared/system';
 
 const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../../nodes/src');
 
+// What a node class can carry that the backend reads without running the node.
 type LoadableNode = {
-    loaders?: Record<Field.ResourceLoader.LoaderId, Loader.Fn>;
+    loaders?:        Record<Field.ResourceLoader.LoaderId, Loader.Fn>;
+    gatewayFilters?: GatewayFilters<Blueprint, ZodType>;
 };
 
 // Read once and held for the process; index changes arrive via a backend restart.
@@ -36,32 +39,48 @@ export class ShelfService {
     constructor(private readonly cloud: CloudService) {}
 
 
-    // Resource loaders are static members on the node class, so the module has to be imported.
+    // Loaders and gateway filters are static members on the node class, so the module has to be imported.
+    private async getNodeClass(blueprintId: Blueprint.Id): Promise<LoadableNode | null> {
+        const cached = this.loadableNodes.get(blueprintId);
+
+        if (cached)
+            return cached;
+
+        let module: { Node?: unknown };
+
+        try {
+            module = await import(Blueprint.getPath(NODES_ROOT, blueprintId, 'node'));
+        }
+        catch {
+            return null;
+        }
+
+        const NodeClass = (module.Node ?? undefined) as LoadableNode | undefined;
+
+        if (!NodeClass)
+            return null;
+
+        this.loadableNodes.set(blueprintId, NodeClass);
+
+        return NodeClass;
+    }
+
+
     async getLoader(
         blueprintId: Blueprint.Id,
         loaderId: Field.ResourceLoader.LoaderId,
     ): Promise<Loader.Fn | null> {
-        let NodeClass = this.loadableNodes.get(blueprintId);
+        const NodeClass = await this.getNodeClass(blueprintId);
 
-        if (!NodeClass) {
-            let module: { Node?: unknown };
+        return NodeClass?.loaders?.[loaderId] ?? null;
+    }
 
-            try {
-                module = await import(Blueprint.getPath(NODES_ROOT, blueprintId, 'node'));
-            }
-            catch {
-                return null;
-            }
 
-            NodeClass = (module.Node ?? undefined) as LoadableNode | undefined;
+    // The node's event schema and its filters; an event the schema rejects never reaches one.
+    async getGatewayFilters(blueprintId: Blueprint.Id): Promise<GatewayFilters<Blueprint, ZodType> | null> {
+        const NodeClass = await this.getNodeClass(blueprintId);
 
-            if (!NodeClass)
-                return null;
-
-            this.loadableNodes.set(blueprintId, NodeClass);
-        }
-
-        return NodeClass.loaders?.[loaderId] ?? null;
+        return NodeClass?.gatewayFilters ?? null;
     }
 
     // The extended shelf blueprints, fetched from the registry once and kept for the process.

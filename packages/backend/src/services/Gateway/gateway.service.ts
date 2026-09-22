@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+    OnApplicationBootstrap,
+    OnModuleDestroy,
+    OnModuleInit,
+} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { GatewaySocket, SocketContext } from '@pretzel-graph/node-sdk';
@@ -27,7 +34,7 @@ function getDefinitions(): Record<Gateway.Definition.Id, Gateway.Definition> {
 }
 
 @Injectable()
-export class GatewayService implements OnModuleInit, OnModuleDestroy {
+export class GatewayService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy {
 
     private readonly log = System.log.withContext("Gateway");
 
@@ -482,7 +489,9 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         );
 
         await this.loadSocketConstructors();
+    }
 
+    public async onApplicationBootstrap(): Promise<void> {
         await this.connectEnabled().catch(error =>
             this.log.error(`Failed to connect connections on boot: ${(error as Error).message}`),
         );
