@@ -4,7 +4,7 @@ export const Blueprint = defineBlueprint({
     id:          'Integrations.Discord.OnMessage',
     displayName: 'Discord On Message',
     description: 'Starts the workflow when the connected Discord bot receives a message.',
-    icon:        'MessagesSquare',
+    icon:        'Discord',
     accent:      'utility',
     igniter:     true,
     fields: [

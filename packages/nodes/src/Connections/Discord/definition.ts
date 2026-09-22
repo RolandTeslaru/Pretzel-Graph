@@ -4,6 +4,7 @@ import { DiscordBot } from "@pretzel-graph/nodes/Credentials";
 export const Definition = defineConnection({
     id: "Connections.Discord",
     displayName: "Discord",
+    icon: "Discord",
     fields: [
         
     ],

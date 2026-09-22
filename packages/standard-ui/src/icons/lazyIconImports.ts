@@ -2,6 +2,7 @@
 export const lazyIconsMapping = {
   Alpaca: () => import("./integrations/Alpaca"),
   Anthropic: () => import("./integrations/Anthropic"),
+  Discord: () => import("./integrations/Discord"),
   Gmail: () => import("./integrations/Gmail"),
   Google: () => import("./integrations/Google"),
   GoogleCalendar: () => import("./integrations/GoogleCalendar"),
