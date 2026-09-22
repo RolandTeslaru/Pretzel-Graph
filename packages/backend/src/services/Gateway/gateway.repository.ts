@@ -120,6 +120,14 @@ export class GatewayRepository extends Repository {
         return connection;
     }
 
+    @Transactional('user')
+    public async delete(principal: Principal.User, id: Gateway.Connection.Id): Promise<void> {
+        await this.trx
+            .deleteFrom('connections')
+            .where('id', '=', id)
+            .execute();
+    }
+
     @Transactional('user', 'service')
     @ZodReturn(Gateway.Connection.Schema)
     public async setStatus(

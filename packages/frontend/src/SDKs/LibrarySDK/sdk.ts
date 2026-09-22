@@ -9,13 +9,23 @@ import { shallow } from "zustand/shallow";
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
 import { _createLibraryDialogs_, type _LibrarySDKDialogs } from './dialogs';
+import { GatewaySDK } from '@/SDKs/GatewaySDK/sdk';
+import { rebuildTree } from './actions/tree';
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
-    constructor() { super() }
+    constructor() {
+        super()
+
+        // Connections live in GatewaySDK and appear in the tree, so it rebuilds whenever they change.
+        GatewaySDK.subscribe((state, previous) => {
+            if (state.connections !== previous.connections)
+                rebuildTree(this)
+        })
+    }
 
     public readonly useStore = createWithEqualityFn<LibrarySDK.State>()(
         immer(() => ({

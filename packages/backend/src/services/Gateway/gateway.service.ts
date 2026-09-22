@@ -126,6 +126,29 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             return connection;
         },
 
+        // Closes the socket, forgets its listeners, then deletes the row.
+        delete: async (
+            principal: Principal.User,
+            id: Gateway.Connection.Id,
+        ): Promise<Gateway.API.Connection.Remove.Response> => {
+            const socket = this.sockets.get(id);
+
+            this.sockets.delete(id);
+            this.listeners.delete(id);
+
+            await socket?.disconnect();
+
+            await this.repository.delete(principal, id);
+
+            this.realtime.emitEvent<Gateway.Event.ConnectionRemoved>({
+                channel:      Gateway.Event.getChannel(),
+                type:         'gateway:connection:removed',
+                connectionId: id,
+            });
+
+            return { ok: true };
+        },
+
         // Hears every event the connection's socket delivers, across reconnects; returns its own removal.
         subscribe: (id: Gateway.Connection.Id, listener: Gateway.Listener): () => void => {
             if (!this.listeners.has(id))

@@ -5,6 +5,7 @@ export const Definition = defineConnection({
     id: "Connections.WebSocket",
     displayName: "WebSocket",
     description: "Listens to any WebSocket server.",
+    icon: "WebSocket",
     fields: [
         defineField.String("url", "URL", {
             required: true,

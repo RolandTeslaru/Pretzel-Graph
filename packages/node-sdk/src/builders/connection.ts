@@ -6,7 +6,7 @@ import type { ConditionKey } from "./blueprint/types"
 import { compileDerivatives, stampDiscriminants } from "./blueprint/derivatives"
 
 // SystemIcons key, resolved by IconRenderer.
-const DEFAULT_ICON = "WebSocket"
+const DEFAULT_ICON = "GatewayConnection"
 
 // What a condition key contributes on a connection: fields and at most one credential.
 export type ConnectionBody = {

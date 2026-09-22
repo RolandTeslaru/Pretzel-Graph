@@ -11,6 +11,8 @@ export type _GatewaySDKActions = {
         list:   () => Promise<Gateway.Connection[]>
         create: (req: Gateway.API.Connection.Create.Request) => Promise<Gateway.Connection>
         update: (req: Gateway.API.Connection.Update.Request) => Promise<Gateway.Connection>
+        remove:     (id: Gateway.Connection.Id) => Promise<void>
+        forget:     (id: Gateway.Connection.Id) => void
         connect:    (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
         disconnect: (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
         reconnect:  (id: Gateway.Connection.Id) => Promise<Gateway.Connection>
@@ -23,6 +25,10 @@ export function _createGatewayActions_(sdk: GatewaySDKImpl): _GatewaySDKActions 
 
     const upsert = (connection: Gateway.Connection) => {
         setState(s => { s.connections[connection.id] = connection })
+    }
+
+    const forget = (id: Gateway.Connection.Id) => {
+        setState(s => { delete s.connections[id] })
     }
 
     return {
@@ -84,6 +90,19 @@ export function _createGatewayActions_(sdk: GatewaySDKImpl): _GatewaySDKActions 
                     throw err
                 }
             },
+
+            remove: async (id) => {
+                try {
+                    await Gateway.API.Connection.remove(api, id)
+                    forget(id)
+                } catch (err) {
+                    console.error('GatewaySDK.connection.remove failed', err)
+                    toast.error('Failed to delete connection')
+                    throw err
+                }
+            },
+
+            forget,
 
             connect: async (id) => {
                 try {

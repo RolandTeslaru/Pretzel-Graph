@@ -116,6 +116,10 @@ export namespace Gateway {
                 export type Response = Gateway.Connection;
             }
 
+            export namespace Remove {
+                export type Response = { ok: true };
+            }
+
             export namespace Connect {
                 export type Response = Gateway.Connection;
             }
@@ -141,6 +145,11 @@ export namespace Gateway {
             export async function update(api: AxiosInstance, req: Update.Request): Promise<Update.Response> {
                 const { id, ...body } = req;
                 const { data } = await api.patch<Update.Response>(`/api/gateway/connections/${id}`, body);
+                return data;
+            }
+
+            export async function remove(api: AxiosInstance, id: Gateway.Connection.Id): Promise<Remove.Response> {
+                const { data } = await api.delete<Remove.Response>(`/api/gateway/connections/${id}`);
                 return data;
             }
 
@@ -233,8 +242,18 @@ export namespace Gateway {
         }
         export type ConnectionUpserted = z.infer<typeof ConnectionUpserted.Schema>;
 
+        // A deleted connection has no row left to carry, only its id.
+        export namespace ConnectionRemoved {
+            export const Schema = Base.extend({
+                type:         z.literal('gateway:connection:removed'),
+                connectionId: Connection.Id,
+            });
+        }
+        export type ConnectionRemoved = z.infer<typeof ConnectionRemoved.Schema>;
+
         export const Schema = z.discriminatedUnion('type', [
             ConnectionUpserted.Schema,
+            ConnectionRemoved.Schema,
         ]);
     }
     export type Event = z.infer<typeof Event.Schema>;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { Gateway } from '@pretzel-graph/shared/domain';
 import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { AuthenticatedUser } from '@/decorators/principal';
@@ -39,6 +39,14 @@ export class GatewayController {
         @ZodBody(Gateway.API.Connection.Update.Request.omit({ id: true })) body: Omit<Gateway.API.Connection.Update.Request, 'id'>,
     ): Promise<Gateway.API.Connection.Update.Response> {
         return this.gatewayService.connection.update(principal, { id, ...body });
+    }
+
+    @Delete('connections/:id')
+    async deleteConnection(
+        @AuthenticatedUser() principal: Principal.User,
+        @Param('id') id: Gateway.Connection.Id,
+    ): Promise<Gateway.API.Connection.Remove.Response> {
+        return this.gatewayService.connection.delete(principal, id);
     }
 
     @Post('connections/:id/connect')

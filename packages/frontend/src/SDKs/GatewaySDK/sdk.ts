@@ -59,8 +59,12 @@ export class GatewaySDKImpl extends BaseSDK<GatewaySDK.State> {
                 this.actions.connection.upsert(event.connection);
                 break;
 
+            case 'gateway:connection:removed':
+                this.actions.connection.forget(event.connectionId);
+                break;
+
             default:
-                event.type satisfies never;
+                event satisfies never;
         }
     }
 }

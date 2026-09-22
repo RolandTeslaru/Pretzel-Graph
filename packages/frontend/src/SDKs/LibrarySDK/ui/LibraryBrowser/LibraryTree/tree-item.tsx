@@ -4,7 +4,9 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { LibrarySDK } from '../../../sdk'
 import type { FileSystemNodeData } from '../../../actions'
-import { Skill, type Library, type Workflow } from '@pretzel-graph/shared/domain'
+import { Skill, type Gateway, type Library, type Workflow } from '@pretzel-graph/shared/domain'
+import { GatewaySDK } from '@/SDKs/GatewaySDK/sdk'
+import { ConnectionDot } from '@/SDKs/GatewaySDK/ui/ConnectionStatus'
 import { VersionControlSDK } from '@/SDKs/VersionControlSDK'
 import classNames from 'classnames'
 import { sizeStyles, type FileSystemTreeSize } from './sizes'
@@ -42,7 +44,16 @@ export function TreeItem({
         ? (key.slice('skill:'.length) as Skill.Id)
         : undefined
 
+    const connectionId = key.startsWith('connection:')
+        ? (key.slice('connection:'.length) as Gateway.Connection.Id)
+        : undefined
+
     const skill = LibrarySDK.useStore((s) => (skillId ? s.skillMetas[skillId] : undefined))
+
+    const connection = GatewaySDK.useStore((s) => (connectionId ? s.connections[connectionId] : undefined))
+    const connectionIcon = GatewaySDK.useStore((s) => (
+        connection ? s.definitions[connection.definitionId]?.icon ?? 'GatewayConnection' : 'GatewayConnection'
+    ))
 
     const item       = getItem(workflowId, skillId)
     const isDisabled = item !== undefined && (isItemDisabled?.(item) ?? false)
@@ -50,6 +61,9 @@ export function TreeItem({
     const handleClick = () => {
         if (folderId)
             return onFolderClick?.(folderId)
+
+        if (connection)
+            return LibrarySDK.dialogs.openEditConnection({ connection })
 
         if (item && !isDisabled)
             onItemClick?.(item)
@@ -82,8 +96,8 @@ export function TreeItem({
                 isHidden && 'opacity-50',
                 isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
             )}
-            data-library-item={folderId ? 'folder' : workflowId ? 'workflow' : skillId ? 'skill' : undefined}
-            data-library-id={folderId ?? workflowId ?? skillId}
+            data-library-item={folderId ? 'folder' : workflowId ? 'workflow' : skillId ? 'skill' : connectionId ? 'connection' : undefined}
+            data-library-id={folderId ?? workflowId ?? skillId ?? connectionId}
             onClick={handleClick}
         >
             <Tree.IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} elbow={isFolder} size={size} />
@@ -97,7 +111,12 @@ export function TreeItem({
             ) : (
                 <></>
             )}
-            {skillId ? (
+            {connectionId ? (
+                <IconRenderer
+                    name={connectionIcon}
+                    className={classNames('mr-1 shrink-0 text-primary', styles.icon)}
+                />
+            ) : skillId ? (
                 <IconRenderer
                     name={skill?.icon ?? Skill.DEFAULT_ICON}
                     className={classNames('mr-1 shrink-0', styles.icon)}
@@ -109,6 +128,9 @@ export function TreeItem({
             <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
             {hasActiveWorkflow ? (
                 <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />
+            ) : null}
+            {connection ? (
+                <ConnectionDot status={connection.status} className='my-auto ml-1' />
             ) : null}
         </div>
     )
