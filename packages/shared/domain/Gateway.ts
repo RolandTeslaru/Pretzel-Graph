@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Vault } from './Vault';
 import type { AxiosInstance } from 'axios';
-import { Consultation } from './Consultation';
+import { Consultation as ConsultationModule } from './Consultation';
 import { ExecutionId } from './Execution/ids';
 import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './ids';
 import { Field } from './Foundations/Field';
@@ -234,17 +234,22 @@ export namespace Gateway {
     export type Event = z.infer<typeof Event.Schema>;
 
     export namespace Test {
-        export namespace ConsultationContract {
-            export const Variant = Consultation.variant('gateway:event');
+        export namespace Consultation {
 
-            export const Request = Consultation.Request.extend({
+            // Namespaced: ConsultationModule.Variant is an open registry shared with every
+            // other consulting node, so a bare tag would be free to collide.
+            export const Variant = ConsultationModule.variant('gateway:event');
+
+            // Node → backend: park this run until the connection delivers a matching event.
+            export const Request = ConsultationModule.Request.extend({
                 variant:      z.literal(Variant),
                 connectionId: Connection.Id,
                 listenerId:   Listener.Id,
             });
             export type Request = z.infer<typeof Request>;
 
-            export const Answer = Consultation.Answer.extend({
+            // Backend → node: the first event that passed the listener's filter.
+            export const Answer = ConsultationModule.Answer.extend({
                 variant: z.literal(Variant),
                 event:   Socket.Event,
             });
@@ -259,7 +264,7 @@ export namespace Gateway {
                     listenerId:           Listener.Id,
                     timeoutMs:            z.number(),
                     executionId:          ExecutionId,
-                    consultationId:       Consultation.Id,
+                    consultationId:       ConsultationModule.Id,
                 });
                 export type Body = z.infer<typeof Body>;
 

@@ -17,6 +17,13 @@ export type CurrentExecutionObserver = {
     /** The attached execution left view, swapped out or cleared — tear down here. */
     onDetach?: (execution: Execution, meta: { reason: "swapped" | "cleared" }) => void
 
+    /**
+     * The attached execution changed without becoming a different one — a session patch,
+     * a status move, anything. Fires before the status callbacks below, so a handler can
+     * compare `previous` itself rather than subscribing to the store separately.
+     */
+    onUpdate?: (execution: Execution, previous: Execution) => void
+
     /** Any status change. Fires first, before the specific edge below. */
     onStatusChange?: (execution: Execution, from: Execution.Status) => void
     /** Entered `running` from anything but `paused` — the run began. */
@@ -69,8 +76,10 @@ export function observeCurrentExecution(
             return;
         }
 
-        if (!next || !prev)
+        if (!next || !prev || next === prev)
             return;
+
+        observer.onUpdate?.(next, prev);
 
         const to   = next.status;
         const from = prev.status;

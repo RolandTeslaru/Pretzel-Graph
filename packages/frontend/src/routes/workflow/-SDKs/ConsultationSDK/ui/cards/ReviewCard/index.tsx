@@ -1,6 +1,7 @@
 import { HumanReview } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from "../../../../ExecutionSDK/sdk";
-import { ConsultationSDK } from "../../../sdk";
+import type { ConsultationSDK } from "../../../sdk";
+import { ConsultationTemplate } from "../../../ui/Template";
 import { ConfirmationCard } from "./variants/ConfirmationCard";
 import { ChoiceCard } from "./variants/ChoiceCard";
 import { FormCard } from "./variants/FormCard";
@@ -18,7 +19,7 @@ export interface ReviewCardProps extends ConsultationSDK.TemplateProps {
 // plays the exit, after the session has already dropped it.
 export const ReviewCard = ({ request, ...templateProps }: ReviewCardProps) => {
     return (
-        <ConsultationSDK.Template
+        <ConsultationTemplate
             {...templateProps}
             timeout={{
                 createdAt: request.startedAt,
@@ -36,6 +37,6 @@ export const ReviewCard = ({ request, ...templateProps }: ReviewCardProps) => {
                 {request.variant === HumanReview.Variant.Choice  && <ChoiceCard request={request as ChoiceRequest} />}
                 {request.variant === HumanReview.Variant.Form    && <FormCard request={request as FormRequest} />}
             </div>
-        </ConsultationSDK.Template>
+        </ConsultationTemplate>
     )
 }

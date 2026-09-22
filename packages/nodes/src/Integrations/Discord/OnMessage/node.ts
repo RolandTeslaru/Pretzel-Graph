@@ -37,11 +37,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             throw new Error('Pick a Discord connection before running this node');
 
         const answer = await this.context.consultationAPI.consult({
-            requestSchema: Gateway.Test.ConsultationContract.Request,
-            answerSchema:  Gateway.Test.ConsultationContract.Answer,
+            requestSchema: Gateway.Test.Consultation.Request,
+            answerSchema:  Gateway.Test.Consultation.Answer,
             request: {
                 nodeId:       this.nodeId,
-                variant:      Gateway.Test.ConsultationContract.Variant,
+                variant:      Gateway.Test.Consultation.Variant,
                 timeoutMs:    this.fieldValues.testTimeoutMs,
                 connectionId: connection.id,
                 listenerId:   'message' as Gateway.Listener.Id,
