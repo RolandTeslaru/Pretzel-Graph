@@ -40,6 +40,10 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
 
             case 'skill':
                 return !accepted.skill
+
+            // A connection is live, never a snapshot, so it is never a dependency.
+            case 'connection':
+                return true
         }
     }
 
@@ -55,6 +59,9 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
 
             case 'skill':
                 return attach({ kind: 'skill', id: item.id })
+
+            case 'connection':
+                return
         }
     }
 

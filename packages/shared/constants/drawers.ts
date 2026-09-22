@@ -53,6 +53,7 @@ export const CORE_DRAWERS = {
         "Core.Developer.ErrorThrower",
         "Core.Developer.ResourceLoaderTest",
         "Core.Developer.DerivativeTest",
+        "Core.Developer.LibraryRefTest",
         "Core.Developer.DependencyFieldTest",
         "Core.Developer.DependencyReader",
       ],

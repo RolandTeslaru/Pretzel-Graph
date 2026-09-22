@@ -29,5 +29,11 @@ export type FolderId = z.infer<typeof FolderId>;
 export const SkillId = z.uuid().brand("SkillId");
 export type SkillId = z.infer<typeof SkillId>;
 
+export const ConnectionId = z.uuid().brand("Gateway.Connection.Id");
+export type ConnectionId = z.infer<typeof ConnectionId>;
+
+export const ConnectionDefinitionId = z.string().brand("Gateway.Definition.Id");
+export type ConnectionDefinitionId = z.infer<typeof ConnectionDefinitionId>;
+
 // Reserved field id of the workflow dependency that shapes a node and decides what it runs.
 export const SHAPE_DEPENDENCY_FIELD_ID = "__shape_dependency__" as Field.Id;

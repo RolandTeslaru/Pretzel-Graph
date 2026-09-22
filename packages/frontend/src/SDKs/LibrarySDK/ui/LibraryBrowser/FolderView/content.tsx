@@ -149,7 +149,7 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
                         }
                         <div className={classNames('grid', styles.grid)}>
                             {filteredConnections.map((c) => (
-                                <ConnectionItem key={c.id} connection={c} size={size} onClick={() => LibrarySDK.dialogs.openEditConnection({ connection: c })} />
+                                <ConnectionItem key={c.id} connection={c} size={size} {...itemProps({ type: 'connection', id: c.id })} />
                             ))}
                         </div>
                     </div>

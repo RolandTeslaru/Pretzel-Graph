@@ -8,10 +8,11 @@ import { sizeStyles, type ItemSize } from './sizes'
 interface ConnectionCardProps {
     connection: Gateway.Connection
     size?: ItemSize
+    disabled?: boolean
     onClick?: () => void
 }
 
-export function ConnectionItem({ connection, size = 'default', onClick }: ConnectionCardProps) {
+export function ConnectionItem({ connection, size = 'default', disabled = false, onClick }: ConnectionCardProps) {
 
     const styles = sizeStyles[size]
 
@@ -21,10 +22,11 @@ export function ConnectionItem({ connection, size = 'default', onClick }: Connec
         <div
             data-library-item='connection'
             data-library-id={connection.id}
-            onClick={onClick}
+            onClick={disabled ? undefined : onClick}
             className={classNames(
-                'group flex gap-1 relative m-auto select-none rounded-md cursor-pointer hover:bg-accent/30',
+                'group flex gap-1 relative m-auto select-none rounded-md',
                 styles.card,
+                disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-accent/30',
             )}
         >
             <div className='rounded-md p-1 flex flex-col gap-1 m-auto w-auto h-auto '>

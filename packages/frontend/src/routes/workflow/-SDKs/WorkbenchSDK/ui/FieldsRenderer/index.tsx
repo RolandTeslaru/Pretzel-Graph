@@ -18,6 +18,7 @@ import { CalendarRangeField } from './CalendarRange'
 import { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 import { WorkflowIdSelectorField } from './WorkflowIdSelector'
 import { DependencyField } from './Dependency'
+import { LibraryRefField } from './LibraryRef'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -36,6 +37,7 @@ export { CalendarRangeField } from './CalendarRange'
 export { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 export { WorkflowIdSelectorField } from './WorkflowIdSelector'
 export { DependencyField } from './Dependency'
+export { LibraryRefField } from './LibraryRef'
 
 // ── Dispatcher ──────────────────────────────────────────────
 
@@ -66,6 +68,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     CalendarDateTimeRange: CalendarDateTimeRangeField,
     WorkflowIdSelector: WorkflowIdSelectorField,
     Dependency: DependencyField,
+    LibraryRef: LibraryRefField,
 }
 
 /** Renders the appropriate field component based on variant */

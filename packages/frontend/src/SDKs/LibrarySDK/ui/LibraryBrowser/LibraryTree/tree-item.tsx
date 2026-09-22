@@ -55,15 +55,13 @@ export function TreeItem({
         connection ? s.definitions[connection.definitionId]?.icon ?? 'GatewayConnection' : 'GatewayConnection'
     ))
 
-    const item       = getItem(workflowId, skillId)
+    const item       = getItem(workflowId, skillId, connectionId)
     const isDisabled = item !== undefined && (isItemDisabled?.(item) ?? false)
 
     const handleClick = () => {
         if (folderId)
             return onFolderClick?.(folderId)
 
-        if (connection)
-            return LibrarySDK.dialogs.openEditConnection({ connection })
 
         if (item && !isDisabled)
             onItemClick?.(item)
@@ -137,12 +135,15 @@ export function TreeItem({
 }
 
 // The library item a row stands for; folder rows have none.
-function getItem(workflowId?: Workflow.Id, skillId?: Skill.Id): LibrarySDK.Item | undefined {
+function getItem(workflowId?: Workflow.Id, skillId?: Skill.Id, connectionId?: Gateway.Connection.Id): LibrarySDK.Item | undefined {
     if (workflowId)
         return { type: 'workflow', id: workflowId }
 
     if (skillId)
         return { type: 'skill', id: skillId }
+
+    if (connectionId)
+        return { type: 'connection', id: connectionId }
 
     return undefined
 }

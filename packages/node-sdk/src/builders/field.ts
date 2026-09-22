@@ -1,4 +1,5 @@
 import type { Dependency as DependencyD } from "@pretzel-graph/shared/domain";
+import type { Library as LibraryD } from "@pretzel-graph/shared/domain";
 import { Foundations } from "@pretzel-graph/shared/domain";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -445,6 +446,24 @@ export namespace defineField {
             ...buildOnly(options.only),
         };
     }
+
+    /** Points a node at a live library item — a workflow, folder, skill or connection — of the kinds it accepts. */
+    export function LibraryRef<T_Id extends string, T_Required extends boolean = false>(
+        id: T_Id, displayName: string, options: {
+        accepts:       LibraryD.Ref.Kind[];
+        definitionId?: string;
+        initialValue?: LibraryD.Ref | null;
+    } & BaseOptions<T_Required>,
+    ): T_Return<T_Id, "LibraryRef", Field.LibraryRef, T_Required> {
+        return {
+            ...buildBase(id, displayName, options),
+            variant:      "LibraryRef",
+            accepts:      options.accepts,
+            definitionId: options.definitionId as Field.LibraryRef["definitionId"],
+            initialValue: options.initialValue ?? null,
+        };
+    }
+
 
     /** Points a node at one of the workflow's embedded dependency snapshots, of the kinds it accepts. */
     export function Dependency<T_Id extends string, T_Required extends boolean = false>(

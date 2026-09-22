@@ -2,7 +2,7 @@ import { immer } from "zustand/middleware/immer";
 import { _createLibraryActions_, type _LibrarySDKActions } from "./actions";
 import { _createLibrarySelectors_, type _LibrarySDKSelectors } from "./selectors";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
-import { Workflow, Library, Skill } from "@pretzel-graph/shared/domain";
+import { Workflow, Library, Skill, type Gateway } from "@pretzel-graph/shared/domain";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
@@ -92,8 +92,9 @@ export namespace LibrarySDK {
 
     // A library entry the browser opens or picks on click.
     export type Item =
-        | { type: 'workflow'; id: Workflow.Id }
-        | { type: 'skill';    id: Skill.Id }
+        | { type: 'workflow';   id: Workflow.Id }
+        | { type: 'skill';      id: Skill.Id }
+        | { type: 'connection'; id: Gateway.Connection.Id }
 
     export type Selectors = _LibrarySDKSelectors
     export type Actions = _LibrarySDKActions

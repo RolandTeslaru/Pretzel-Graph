@@ -1,6 +1,8 @@
 import { z } from "zod"
 import { Port } from "../Port"
 import { Ref } from "../../Dependency/ref"
+import { Ref as LibraryRefMod } from "../../Library/ref"
+import { ConnectionDefinitionId } from "../../Workflow/ids"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
@@ -56,6 +58,7 @@ export namespace Field {
         "CalendarDateTimeRange",
         "WorkflowIdSelector",
         "Dependency",
+        "LibraryRef",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -454,6 +457,19 @@ export namespace Field {
 
     export interface Dependency extends z.infer<typeof Dependency.Schema> { }
 
+    // A node's pointer at a library item, limited to the kinds it accepts. Live, never snapshotted.
+    export namespace LibraryRef {
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("LibraryRef"),
+            accepts:      z.array(LibraryRefMod.Kind),
+            // Connections only: narrows the picker to one connection type.
+            definitionId: ConnectionDefinitionId.optional(),
+            initialValue: LibraryRefMod.Schema.nullable(),
+        })
+    }
+
+    export interface LibraryRef extends z.infer<typeof LibraryRef.Schema> { }
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -492,6 +508,7 @@ export namespace Field {
         CalendarDateTimeRange.Schema,
         WorkflowIdSelector,
         Dependency.Schema,
+        LibraryRef.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;

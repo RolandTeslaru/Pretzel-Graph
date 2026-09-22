@@ -3,7 +3,7 @@ import { Vault } from './Vault';
 import type { AxiosInstance } from 'axios';
 import { Consultation } from './Consultation';
 import { ExecutionId } from './Execution/ids';
-import { NodeId, WorkflowId } from './Workflow/ids';
+import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './Workflow/ids';
 import { Field } from './Foundations/Field';
 import { Realtime } from './Realtime';
 import { Derivable } from './Foundations/Derivable';
@@ -16,8 +16,8 @@ export namespace Gateway {
 
     // Declared in code by defineConnection, paired with a GatewaySocket.
     export namespace Definition {
-        export const Id = z.string().brand('Gateway.Definition.Id');
-        export type Id = z.infer<typeof Id>;
+        export const Id = ConnectionDefinitionId;
+        export type Id = ConnectionDefinitionId;
 
         // Fields, credentials and branches come from Derivable; field values pick the credential.
         export const Schema = Derivable.Schema.extend({
@@ -50,8 +50,8 @@ export namespace Gateway {
 
     // What a user creates in the library; one row, one socket.
     export namespace Connection {
-        export const Id = z.uuid().brand('Gateway.Connection.Id');
-        export type Id = z.infer<typeof Id>;
+        export const Id = ConnectionId;
+        export type Id = ConnectionId;
 
         // pending until its socket reports; active once connected; inactive when turned off.
         export const Status = z.enum(['pending', 'active', 'inactive', 'failed']);
