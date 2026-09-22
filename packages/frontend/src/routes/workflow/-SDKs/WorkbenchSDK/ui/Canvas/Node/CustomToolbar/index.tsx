@@ -121,17 +121,17 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                 sidebarClassName='w-[270px]'
                 contentClassName='w-[400px]'
                 sidebarRenderer={() => (
-                    <>
-                        <div className='flex flex-row gap-2'>
-                            <SystemIcons.NetworkProxy className='size-6' strokeWidth={2}/>
-                            <Dialog.Title className='text-sm font-semibold my-auto'>Network Proxy</Dialog.Title>
-                        </div>
-                        <Dialog.Description className='text-xs text-muted-foreground pt-1'>
+                    <DialogSDK.SplitTemplate.Header>
+                        <DialogSDK.SplitTemplate.Icon icon={SystemIcons.NetworkProxy} />
+                        <DialogSDK.SplitTemplate.Title>Network Proxy</DialogSDK.SplitTemplate.Title>
+                        <DialogSDK.SplitTemplate.Description>
                             Route this node's outbound requests through a proxy.
-                        </Dialog.Description>
-                    </>
+                        </DialogSDK.SplitTemplate.Description>
+                    </DialogSDK.SplitTemplate.Header>
                 )}
             >
+                <Dialog.Title className='hidden'>Network Proxy</Dialog.Title>
+                <Dialog.Description className='hidden'>Route this node's outbound requests through a proxy</Dialog.Description>
                 <div className='flex flex-col gap-2 h-full pt-3'>
                     <p className='text-xs font-medium text-muted-foreground '>Select a Network Proxy Credential</p>
                     <CredentialRenderer credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />

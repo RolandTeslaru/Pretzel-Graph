@@ -73,18 +73,17 @@ export function openListingManagerDialog(workflowId: Workflow.Id) {
             sidebarClassName='w-[350px]'
             contentClassName='w-[400px]'
             sidebarRenderer={() => (
-                <>
-                    <div className='flex flex-row gap-2'>
-                        <SystemIcons.Globe className='size-6 text-blue-500' strokeWidth={2} />
-                        <Dialog.Title className='text-sm font-semibold my-auto'>Public Listing</Dialog.Title>
-                    </div>
-                    <Dialog.Description className='text-xs text-muted-foreground pt-1'>
-                        Share this workflow on the public repository, where anyone with its
-                        listing id can embed the active version as a sub-workflow.
-                    </Dialog.Description>
-                </>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.Globe} />
+                    <DialogSDK.SplitTemplate.Title>Public Listing</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
+                        Share this workflow on the public repository, where anyone with its listing id can embed the active version as a sub-workflow.
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Public Listing</Dialog.Title>
+            <Dialog.Description className='hidden'>Share this workflow on the public repository</Dialog.Description>
             <ListingManagerContent workflowId={workflowId} dialogId={dialogId} />
         </DialogSDK.SplitTemplate>
     ))

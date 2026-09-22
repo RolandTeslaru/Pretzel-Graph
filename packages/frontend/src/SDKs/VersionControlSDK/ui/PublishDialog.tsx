@@ -15,16 +15,13 @@ export function openPublishDialog() {
             sidebarClassName="w-[300px]"
             contentClassName="w-[450px]"
             sidebarRenderer={() => (
-                <div className="flex flex-col gap-2 ">
-                    <div className="flex flex-row items-center gap-2">
-                        <SystemIcons.History className="size-5 shrink-0" />
-                        <p className="text-md font-semibold text-foreground">Version Control</p>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.History} />
+                    <DialogSDK.SplitTemplate.Title>Version Control</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Creates a versioned snapshot of the current workflow state.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
             <PublishDialogContent />

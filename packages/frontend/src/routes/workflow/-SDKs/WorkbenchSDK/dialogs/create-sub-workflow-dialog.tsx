@@ -27,18 +27,17 @@ export function openCreateSubWorkflowDialog(nodeIds: Workflow.Node.Id[], edgeIds
             sidebarClassName='w-[260px]'
             contentClassName='w-[400px]'
             sidebarRenderer={() => (
-                <div className='flex flex-col gap-2'>
-                    <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.Graph className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Create Sub-Workflow</p>
-                    </div>
-
-                    <p className='text-xs text-muted-foreground'>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.Graph} />
+                    <DialogSDK.SplitTemplate.Title>Create Sub-Workflow</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Extract the selected nodes into a new reusable sub-workflow.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Create Sub-Workflow</Dialog.Title>
+            <Dialog.Description className='hidden'>Extract the selected nodes into a new sub-workflow</Dialog.Description>
             <CreateSubWorkflowContent dialogId={id} nodeIds={nodeIds} edgeIds={edgeIds} />
         </DialogSDK.SplitTemplate>
     ))
@@ -80,7 +79,7 @@ const CreateSubWorkflowContent = ({ dialogId, nodeIds, edgeIds }: Props) => {
                         )}
                     />
                     <Dialog.Footer className='mt-auto h-auto'>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Button type='button' variant='ghost' onClick={() => DialogSDK.actions.pop(dialogId)}>
                             Cancel
                         </Button>
                         <Button type='submit'>

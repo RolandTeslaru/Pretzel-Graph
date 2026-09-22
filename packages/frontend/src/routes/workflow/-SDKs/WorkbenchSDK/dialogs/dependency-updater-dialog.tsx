@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Dialog, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -22,18 +22,17 @@ export function openDependencyUpdaterDialog(updates: Dependency.Update[], title:
             sidebarClassName='w-[260px]'
             contentClassName='p-0! relative'
             sidebarRenderer={() => (
-                <div className='flex flex-col gap-2'>
-                    <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.ArrowBigUpDash className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Dependency Updater</p>
-                    </div>
-
-                    <p className='text-xs text-muted-foreground'>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.ArrowBigUpDash} />
+                    <DialogSDK.SplitTemplate.Title>Dependency Updater</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Dependencies are embeded in this workflow. Updating them replaces the snapshots.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Dependency Updater</Dialog.Title>
+            <Dialog.Description className='hidden'>Update the dependencies embedded in this workflow</Dialog.Description>
             <DependencyUpdaterContent dialogId={DIALOG_ID} title={title} updates={updates} />
         </DialogSDK.SplitTemplate>
     ))
@@ -76,7 +75,7 @@ const DependencyUpdaterContent = ({ dialogId, title, updates }: Props) => {
             {/* Footer */}
             <div className='pointer-events-none absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 w-full flex'>
                 <div className='ml-auto gap-2 flex'>
-                    <Button type='button' variant='outline' className='pointer-events-auto rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                    <Button type='button' variant='ghost' className='pointer-events-auto rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
                         Close
                     </Button>
                     <Button type='button' className='pointer-events-auto rounded-full' onClick={updateAll} disabled={isUpdatingAll}>

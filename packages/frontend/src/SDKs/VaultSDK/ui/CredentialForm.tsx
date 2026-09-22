@@ -31,14 +31,13 @@ export const CredentialFormDialog = ({ credentialTemplate, onCreated, updateProp
         contentClassName='p-0! relative'
         sidebarClassName='w-[270px]'
         sidebarRenderer={() => (
-            <div className='flex flex-col gap-2'>
-                <div className='flex flex-row items-center gap-2'>
-                    <VaultGlyph className='size-10 shrink-0' />
-                    <p className='text-lg font-semibold text-foreground'>Vault</p>
-                </div>
-
-                <p className='text-xs text-muted-foreground'>Stores and manages credentials securely.</p>
-            </div>
+            <DialogSDK.SplitTemplate.Header>
+                <DialogSDK.SplitTemplate.Icon icon={VaultGlyph} />
+                <DialogSDK.SplitTemplate.Title>Vault</DialogSDK.SplitTemplate.Title>
+                <DialogSDK.SplitTemplate.Description>
+                    Stores and manages credentials securely.
+                </DialogSDK.SplitTemplate.Description>
+            </DialogSDK.SplitTemplate.Header>
         )}
     >
         <Dialog.Title className='hidden'>

@@ -22,18 +22,17 @@ export function openEditInputPortDialog(nodeId: Workflow.Node.Id, port: Port.Inp
             sidebarClassName='w-[260px]'
             contentClassName='w-[420px]'
             sidebarRenderer={() => (
-                <div className='flex flex-col gap-2'>
-                    <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.SquarePen className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Edit Input Port</p>
-                    </div>
-
-                    <p className='text-xs text-muted-foreground'>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.SquarePen} />
+                    <DialogSDK.SplitTemplate.Title>Edit Input Port</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Change this input port's ID, name, or type.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Edit Input Port</Dialog.Title>
+            <Dialog.Description className='hidden'>Change this input port's ID, name, or type</Dialog.Description>
             <EditInputPortContent nodeId={nodeId} port={port} dialogId={id} />
         </DialogSDK.SplitTemplate>
     ))

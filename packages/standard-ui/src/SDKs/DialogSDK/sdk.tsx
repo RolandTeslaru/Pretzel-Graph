@@ -42,6 +42,28 @@ function useAnimationDelay(): React.CSSProperties {
     return {}
 }
 
+const SplitHeader: DialogSDK.SplitTemplate.Header = ({ children }) => (
+    <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+        {children}
+    </div>
+)
+
+const SplitIcon: DialogSDK.SplitTemplate.Icon = ({ icon: Icon }) => (
+    <Icon className="size-6 shrink-0" />
+)
+
+const SplitTitle: DialogSDK.SplitTemplate.Title = ({ children }) => (
+    <h2 className="text-base font-semibold text-foreground">
+        {children}
+    </h2>
+)
+
+const SplitDescription: DialogSDK.SplitTemplate.Description = ({ children }) => (
+    <p className="col-span-2 text-xs text-muted-foreground">
+        {children}
+    </p>
+)
+
 @SDK("Dialog")
 export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
 
@@ -233,7 +255,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
         )
     }
 
-    public readonly SplitTemplate: DialogSDK.SplitTemplate = ({ children, sidebarClassName, contentClassName, sidebarRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
+    public readonly SplitTemplate: DialogSDK.SplitTemplate = Object.assign(({ children, sidebarClassName, contentClassName, sidebarRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }: DialogSDK.SplitTemplate.Props) => {
         const delayStyle = useAnimationDelay();
         const scale_offset = (index - (dialogsSize - 1)) * 8;
         const y_offset = (index - (dialogsSize - 1)) * 40;
@@ -257,7 +279,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-lg border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-lg border border-border/50 min-w-[200px] pb-4 px-6 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {sidebarRenderer()}
                     </div>
                     <div className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-lg flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
@@ -266,7 +288,12 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                 </Dialog.Content>
             </Dialog.Root>
         )
-    }
+    }, {
+        Header:      SplitHeader,
+        Icon:        SplitIcon,
+        Title:       SplitTitle,
+        Description: SplitDescription,
+    })
 
     public readonly TripleSplitTemplate: DialogSDK.TripleSplitTemplate = ({ children, leftSidebarClassName, rightSidebarClassName, contentClassName, leftSidebarRenderer, rightSidebarRenderer, surfaceStyle, entry, dialogsSize, index, className, dismissible = true }) => {
         const delayStyle = useAnimationDelay();
@@ -454,11 +481,23 @@ export namespace DialogSDK {
     export type Template = React.FC<TemplateProps>
     export type AlertTemplate = React.FC<AlertTemplateProps>
     export type UnstyledTemplate = React.FC<TemplateProps>
-    export type SplitTemplate = React.FC<TemplateProps & {
-        sidebarRenderer: () => React.ReactNode
-        sidebarClassName?: string
-        contentClassName?: string
-    }>
+    export type SplitTemplate = React.FC<SplitTemplate.Props> & {
+        Header:      SplitTemplate.Header
+        Icon:        SplitTemplate.Icon
+        Title:       SplitTemplate.Title
+        Description: SplitTemplate.Description
+    }
+    export namespace SplitTemplate {
+        export type Props = TemplateProps & {
+            sidebarRenderer: () => React.ReactNode
+            sidebarClassName?: string
+            contentClassName?: string
+        }
+        export type Header = React.FC<{ children: React.ReactNode }>
+        export type Icon = React.FC<{ icon: React.FC<React.SVGProps<SVGSVGElement>> }>
+        export type Title = React.FC<{ children: React.ReactNode }>
+        export type Description = React.FC<{ children: React.ReactNode }>
+    }
     export type TripleSplitTemplate = React.FC<TemplateProps & {
         leftSidebarRenderer: () => React.ReactNode
         rightSidebarRenderer: () => React.ReactNode

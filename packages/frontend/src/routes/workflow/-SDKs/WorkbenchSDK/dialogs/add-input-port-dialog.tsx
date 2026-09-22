@@ -21,18 +21,17 @@ export function openAddInputPortDialog(nodeId: Workflow.Node.Id) {
             sidebarClassName='w-[260px]'
             contentClassName='w-[420px]'
             sidebarRenderer={() => (
-                <div className='flex flex-col gap-2'>
-                    <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.LogIn className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Add Input Port</p>
-                    </div>
-
-                    <p className='text-xs text-muted-foreground'>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.LogIn} />
+                    <DialogSDK.SplitTemplate.Title>Add Input Port</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Define a new input port on this node.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Add Input Port</Dialog.Title>
+            <Dialog.Description className='hidden'>Define a new input port on this node</Dialog.Description>
             <AddInputPortContent nodeId={nodeId} dialogId={id} />
         </DialogSDK.SplitTemplate>
     ))
@@ -127,7 +126,7 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                     )} />
 
                     <Dialog.Footer>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Button type='button' variant='ghost' onClick={() => DialogSDK.actions.pop(dialogId)}>
                             Cancel
                         </Button>
                         <Button type='submit'>

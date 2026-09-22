@@ -26,16 +26,15 @@ export const ConnectionFormDialog = ({ definition, folderId, connection, onCreat
     <DialogSDK.SplitTemplate
         {...templateProps}
         contentClassName='p-0! relative'
-        sidebarClassName='w-[270px]'
+        sidebarClassName='w-[320px]'
         sidebarRenderer={() => (
-            <div className='flex flex-col gap-2'>
-                <div className='flex flex-row items-center gap-2'>
-                    <SystemIcons.GatewayConnection className='size-10 shrink-0' />
-                    <p className='text-lg font-semibold text-foreground'>Gateway Connection</p>
-                </div>
-
-                <p className='text-xs text-muted-foreground'>Keeps a live connection to a service open, so workflows can react to its events as they happen.</p>
-            </div>
+            <DialogSDK.SplitTemplate.Header>
+                <DialogSDK.SplitTemplate.Icon icon={SystemIcons.GatewayConnection} />
+                <DialogSDK.SplitTemplate.Title>Gateway Manager</DialogSDK.SplitTemplate.Title>
+                <DialogSDK.SplitTemplate.Description>
+                    Keeps and manages live websocket connections to other services.
+                </DialogSDK.SplitTemplate.Description>
+            </DialogSDK.SplitTemplate.Header>
         )}
     >
         <Dialog.Title className='hidden'>
@@ -240,7 +239,7 @@ interface SocketButtonProps {
 }
 
 const SocketButton = ({ action, label, pendingAction, disabled, onClick }: SocketButtonProps) => (
-    <Button type='button' variant='outline' className='pointer-events-auto rounded-full' disabled={disabled} onClick={() => onClick(action)}>
+    <Button type='button' variant='ghost' className='pointer-events-auto rounded-full' disabled={disabled} onClick={() => onClick(action)}>
         {pendingAction === action && <Spinner className='mr-2 h-4 w-4' />}
         {label}
     </Button>
