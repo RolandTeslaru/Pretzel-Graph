@@ -82,8 +82,14 @@ LibraryRefField.displayName = 'LibraryRefField'
 
 // What the ref points at right now: its name, its icon, and a connection's status.
 function useTarget(value: Library.Ref | null, definitionId?: Foundations.Field.LibraryRef['definitionId']) {
-    const connection = GatewaySDK.useStore(s => value?.kind === 'connection' ? s.connections[value.id] : undefined)
-    const definitionIcon = GatewaySDK.useStore(s => definitionId ? s.definitions[definitionId]?.icon : undefined)
+    // The editor route loads workflows and skills; connections come from the gateway.
+    const [[connection, definitionIcon]] = GatewaySDK.useWith(
+        s => [
+            value?.kind === 'connection' ? s.connections[value.id] : undefined,
+            definitionId ? s.definitions[definitionId]?.icon : undefined,
+        ] as const,
+        [GatewaySDK.query.connections, GatewaySDK.query.definitions],
+    )
 
     const libraryName = LibrarySDK.useStore(s => {
         switch (value?.kind) {

@@ -1,5 +1,6 @@
 import { RuntimeNode, defineGatewayFilters, type InferOutputs } from '@pretzel-graph/node-sdk';
 import { Gateway, type Execution, type Library } from '@pretzel-graph/shared/domain';
+import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { Discord } from '../../../Connections/Discord/events';
 import { Blueprint } from './blueprint';
 
@@ -46,13 +47,16 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 connectionId: connection.id,
                 listenerId:   'message' as Gateway.Listener.Id,
             },
+            // The backend runs this node's own filter, so it needs what the filter reads.
             onOpen: request => Gateway.Test.API.register(this.context.internalAPI.raw, {
-                workflowId:   this.context.workflowId,
-                nodeId:       this.nodeId,
-                connectionId: connection.id,
-                listenerId:   'message' as Gateway.Listener.Id,
-                timeoutMs:    this.fieldValues.testTimeoutMs,
-                executionId:  this.context.executionId,
+                workflowId:     this.context.workflowId,
+                nodeId:         this.nodeId,
+                blueprintId:    Blueprint.id,
+                fieldValues:    this.fieldValues as Record<Field.Id, Field.Value>,
+                connectionId:   connection.id,
+                listenerId:     'message' as Gateway.Listener.Id,
+                timeoutMs:      this.fieldValues.testTimeoutMs,
+                executionId:    this.context.executionId,
                 consultationId: request.id,
             }).then(() => {}),
         });

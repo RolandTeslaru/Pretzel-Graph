@@ -259,12 +259,15 @@ export namespace Gateway {
         export namespace API {
             export namespace Register {
                 export const Body = z.object({
-                    nodeId:               NodeId,
-                    connectionId:         Connection.Id,
-                    listenerId:           Listener.Id,
-                    timeoutMs:            z.number(),
-                    executionId:          ExecutionId,
-                    consultationId:       ConsultationModule.Id,
+                    nodeId:         NodeId,
+                    blueprintId:    z.string(),
+                    // The node's own values, so the backend runs the same filter a published run would.
+                    fieldValues:    z.record(Field.Id, Field.Value),
+                    connectionId:   Connection.Id,
+                    listenerId:     Listener.Id,
+                    timeoutMs:      z.number(),
+                    executionId:    ExecutionId,
+                    consultationId: ConsultationModule.Id,
                 });
                 export type Body = z.infer<typeof Body>;
 
