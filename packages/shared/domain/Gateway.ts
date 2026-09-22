@@ -11,9 +11,6 @@ import { Derivable } from './Foundations/Derivable';
 import { Folder as FolderD } from './Library/folder';
 
 export namespace Gateway {
-    export const Provider = z.enum(['discord', 'websocket']);
-    export type Provider = z.infer<typeof Provider>;
-
     // Declared in code by defineConnection, paired with a GatewaySocket.
     export namespace Definition {
         export const Id = ConnectionDefinitionId;
@@ -170,55 +167,33 @@ export namespace Gateway {
         }
     }
 
-    export namespace Trigger {
-        export const Id = z.string().brand('Gateway.Trigger.Id');
+    // A blueprint's declaration that one of its fields points at a connection it listens to.
+    export namespace Listener {
+        export const Id = z.string().brand('Gateway.Listener.Id');
         export type Id = z.infer<typeof Id>;
 
         export const Schema = z.object({
-            id:                    Id,
-            provider:              Provider,
-            event:                 z.literal('message'),
-            credential:            Vault.Credential.Template.Schema,
-            directMessagesOnly:    z.boolean().default(true),
-            ignoreBotMessages:     z.boolean().default(true),
+            id: Id,
+            // The LibraryRef field holding the connection this listener subscribes to.
+            refFieldId: Field.Id,
+            // Key of the static filter on the node class; defaults to the listener's id.
+            filter:     z.string(),
         });
+
+        // Subscribed to a connection rather than a socket, so it hears every socket the connection opens.
+        export type Fn = (event: Socket.Event) => void
     }
-    export type Trigger = z.infer<typeof Trigger.Schema>;
+    export type Listener = z.infer<typeof Listener.Schema>;
 
     // What a socket delivers to the workflows listening on it.
     export namespace Socket {
-        export namespace Event {
-            export const DiscordMessage = z.object({
-                provider:     z.literal('discord'),
-                type:         z.literal('message'),
-                messageId:    z.string(),
-                channelId:    z.string(),
-                authorId:     z.string(),
-                authorName:   z.string(),
-                authorIsBot:  z.boolean(),
-                content:      z.string(),
-                directMessage:z.boolean(),
-                createdAt:    z.string(),
-            });
-
-            export const WebSocketMessage = z.object({
-                provider:   z.literal('websocket'),
-                type:       z.literal('message'),
-                // Parsed JSON when the connection reads JSON, the raw text otherwise.
-                data:       z.json(),
-                receivedAt: z.string(),
-            });
-
-            export const Schema = z.discriminatedUnion('provider', [
-                DiscordMessage,
-                WebSocketMessage,
-            ]);
-        }
-        export type Event = z.infer<typeof Event.Schema>;
+        // Each connection extends this with its own events; a node's filters validate them.
+        export const Event = z.looseObject({
+            provider: z.string(),
+            type:     z.string(),
+        });
+        export type Event = z.infer<typeof Event>;
     }
-
-    // Subscribed to a connection rather than a socket, so it hears every socket the connection opens.
-    export type Listener = (event: Socket.Event) => void
 
     // Emitted by the backend whenever a connection changes.
     export namespace Event {
@@ -263,15 +238,15 @@ export namespace Gateway {
             export const Variant = Consultation.variant('gateway:event');
 
             export const Request = Consultation.Request.extend({
-                variant:  z.literal(Variant),
-                provider: Provider,
-                triggerId: Trigger.Id,
+                variant:      z.literal(Variant),
+                connectionId: Connection.Id,
+                listenerId:   Listener.Id,
             });
             export type Request = z.infer<typeof Request>;
 
             export const Answer = Consultation.Answer.extend({
                 variant: z.literal(Variant),
-                event:   Socket.Event.Schema,
+                event:   Socket.Event,
             });
             export type Answer = z.infer<typeof Answer>;
         }
@@ -280,8 +255,8 @@ export namespace Gateway {
             export namespace Register {
                 export const Body = z.object({
                     nodeId:               NodeId,
-                    triggerId:            Trigger.Id,
-                    credentialInstanceId: Vault.Credential.Instance.Id,
+                    connectionId:         Connection.Id,
+                    listenerId:           Listener.Id,
                     timeoutMs:            z.number(),
                     executionId:          ExecutionId,
                     consultationId:       Consultation.Id,

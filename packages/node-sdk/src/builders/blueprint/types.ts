@@ -10,12 +10,12 @@ import { StandardFields }          from "../standardFields";
 
 export type ReservedDefinitionKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
-    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayEvents"
+    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayListeners"
     | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope"
 
 export const RESERVED_DEFINITION_KEYS: ReadonlySet<string> = new Set<ReservedDefinitionKey>([
     "id", "displayName", "description", "icon", "accent", "iconColor",
-    "fields", "inputs", "outputs", "credentials", "webhooks", "gatewayEvents",
+    "fields", "inputs", "outputs", "credentials", "webhooks", "gatewayListeners",
     "toolCompatible", "proxyCompatible", "igniter", "passive", "flags", "itemScope",
 ])
 
@@ -47,7 +47,7 @@ export type DefineBlueprintReturn<
     readonly inputs:           TInputs;
     readonly outputs:          TOutputs;
     readonly webhooks?:        TWebhooks;
-    readonly gatewayEvents?:   readonly Gateway.Trigger[];
+    readonly gatewayListeners?: readonly Gateway.Listener[];
     readonly toolCompatible:   TToolCompatible;
     readonly proxyCompatible?: boolean;
     readonly igniter?:         boolean;

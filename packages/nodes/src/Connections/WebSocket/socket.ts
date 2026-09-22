@@ -1,7 +1,7 @@
 import WebSocket, { type RawData } from 'ws';
-import { Gateway } from '@pretzel-graph/shared/domain';
 import { GatewaySocket } from '@pretzel-graph/node-sdk';
 import { Definition } from './definition';
+import { WebSocketConnection } from './events';
 
 // Waits before each reopen after a drop; once they run out the connection is reported failed.
 const RETRY_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 16_000];
@@ -149,14 +149,12 @@ export class WebSocketSocket extends GatewaySocket<typeof Definition> {
             }
         }
 
-        const event = Gateway.Socket.Event.Schema.parse({
+        this.ctx.dispatch(WebSocketConnection.Event.Message.parse({
             provider:   'websocket',
             type:       'message',
             data,
             receivedAt: new Date().toISOString(),
-        })
-
-        this.ctx.dispatch(event)
+        }))
     }
 }
 

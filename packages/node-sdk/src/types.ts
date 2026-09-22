@@ -31,7 +31,7 @@ type FlatFieldValues<D> = D extends { fields: infer T }
 
 type StructuralKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
-    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayEvents"
+    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayListeners"
     | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope" | "ui"
     | "replaces" | "__tool"
 

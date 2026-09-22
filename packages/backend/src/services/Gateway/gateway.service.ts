@@ -38,7 +38,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
     private readonly sockets = new Map<Gateway.Connection.Id, GatewaySocket<Gateway.Definition>>();
 
     // Listeners per connection; they outlive any one socket.
-    private readonly listeners = new Map<Gateway.Connection.Id, Set<Gateway.Listener>>();
+    private readonly listeners = new Map<Gateway.Connection.Id, Set<Gateway.Listener.Fn>>();
 
     constructor(
         private readonly repository: GatewayRepository,
@@ -153,7 +153,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
         },
 
         // Hears every event the connection's socket delivers, across reconnects; returns its own removal.
-        subscribe: (id: Gateway.Connection.Id, listener: Gateway.Listener): () => void => {
+        subscribe: (id: Gateway.Connection.Id, listener: Gateway.Listener.Fn): () => void => {
             if (!this.listeners.has(id))
                 this.listeners.set(id, new Set());
 

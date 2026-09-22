@@ -37,7 +37,7 @@ export function defineBlueprint<
     inputs:           TInputs;
     outputs:          TOutputs;
     webhooks?:        TWebhooks;
-    gatewayEvents?:   readonly Gateway.Trigger[];
+    gatewayListeners?: readonly Gateway.Listener[];
     toolCompatible?:  TToolCompatible;
     proxyCompatible?: boolean;
     igniter?:         boolean;
@@ -53,6 +53,17 @@ export function defineBlueprint<
     // itemScope is a free string — validate it names a real input port at module load.
     if (definition.itemScope !== undefined && !definition.inputs.some(i => (i.id as string) === definition.itemScope))
         throw new Error(`defineBlueprint(${definition.id}): itemScope "${definition.itemScope}" is not a declared input port id`);
+
+    // A listener's refFieldId must name a declared LibraryRef field that accepts connections.
+    for (const listener of definition.gatewayListeners ?? []) {
+        const field = definition.fields.find(f => (f.id as string) === (listener.refFieldId as string));
+
+        if (!field)
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener "${listener.id}" points at "${listener.refFieldId}", which is not a declared field`);
+
+        if (field.variant !== "LibraryRef" || !field.accepts.includes("connection"))
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener "${listener.id}" points at "${listener.refFieldId}", which is not a LibraryRef field accepting connections`);
+    }
 
     const baseFields = [
         ...definition.fields,
@@ -88,7 +99,7 @@ export function defineBlueprint<
         inputs:          definition.inputs,
         outputs:         definition.outputs,
         webhooks:        definition.webhooks,
-        gatewayEvents:   definition.gatewayEvents,
+        gatewayListeners: definition.gatewayListeners,
         toolCompatible:  definition.toolCompatible as TToolCompatible,
         proxyCompatible: definition.proxyCompatible,
         igniter:         definition.igniter,
