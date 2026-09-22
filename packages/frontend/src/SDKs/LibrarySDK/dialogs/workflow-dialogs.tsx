@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Dialog, Form, Input } from '@pretzel-graph/standard-ui/foundations'
 import { Switch } from '@pretzel-graph/standard-ui/foundations/switch'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -89,11 +89,10 @@ function CreateWorkflowContent({ dialogId, folder_id }: { dialogId: string; fold
                         </Form.Item>
                     )} />
                     <Dialog.Footer>
-                        <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                        <Dialog.Cancel>Cancel</Dialog.Cancel>
+                        <Dialog.Action type="submit" loading={form.formState.isSubmitting}>
                             Create
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>
@@ -175,11 +174,10 @@ function EditWorkflowContent({ dialogId, workflow }: { dialogId: string; workflo
                         )} />
                     </div>
                     <Dialog.Footer>
-                        <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                        <Dialog.Cancel>Cancel</Dialog.Cancel>
+                        <Dialog.Action type="submit" loading={form.formState.isSubmitting}>
                             Save
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>

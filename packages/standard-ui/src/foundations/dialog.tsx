@@ -5,6 +5,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import type { ComponentProps, FC } from "react"
 import { cn } from "../utils/cn"
 import classNames from "classnames"
+import { ScrollArea } from "./scrollArea"
+import { Button, type ButtonProps } from "./button"
 
 namespace DialogComponents {
   export type Root = FC<ComponentProps<typeof DialogPrimitive.Root>>
@@ -23,6 +25,19 @@ namespace DialogComponents {
   export type Footer = FC<React.HTMLAttributes<HTMLDivElement>>
   export type Title = FC<ComponentProps<typeof DialogPrimitive.Title>>
   export type Description = FC<ComponentProps<typeof DialogPrimitive.Description>>
+  export type FloatingHeader = FC<{
+    title: React.ReactNode
+    icon?: React.ReactNode
+    children?: React.ReactNode
+  }>
+  export type MaskedScrollArea = FC<{
+    className?: string
+    children?: React.ReactNode
+    scroll?: boolean
+  }>
+  export type FloatingFooter = FC<{ children?: React.ReactNode }>
+  export type Action = FC<ComponentProps<"button"> & ButtonProps>
+  export type Cancel = FC<ComponentProps<"button"> & ButtonProps>
 }
 
 
@@ -145,6 +160,56 @@ function Description({
   )
 }
 
+const SCROLL_MASK = "[mask-image:linear-gradient(to_bottom,transparent_0,black_80px,black_calc(100%_-_80px),transparent_100%)]"
+
+const FloatingHeader: DialogComponents.FloatingHeader = ({ title, icon, children }) => (
+  <div className="pointer-events-none absolute top-0 left-0 z-90 w-full flex flex-row items-center gap-2 px-4 pt-5 pb-4">
+    {icon && (
+      <span className="flex shrink-0 [&>*]:size-5">
+        {icon}
+      </span>
+    )}
+    <Title className="text-sm font-semibold text-foreground">
+      {title}
+    </Title>
+    {children}
+  </div>
+)
+
+const MaskedScrollArea: DialogComponents.MaskedScrollArea = ({ className, children, scroll = true }) => {
+  if (!scroll) {
+    return (
+      <div className={cn("h-full", SCROLL_MASK, className)}>
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <ScrollArea.Root className={cn(SCROLL_MASK, className)}>
+      <div className="relative min-h-full pt-16 pb-20 px-4 flex flex-col gap-3">
+        {children}
+      </div>
+    </ScrollArea.Root>
+  )
+}
+
+const FloatingFooter: DialogComponents.FloatingFooter = ({ children }) => (
+  <div className="pointer-events-none absolute bottom-0 left-0 right-0 w-full flex flex-row justify-end gap-2 px-4 pt-2 pb-4 [&>*]:pointer-events-auto">
+    {children}
+  </div>
+)
+
+const Action: DialogComponents.Action = ({ className, ...rest }) => (
+  <Button className={cn("rounded-full", className)} {...rest} />
+)
+
+const Cancel: DialogComponents.Cancel = ({ className, variant = "ghost", type = "button", ...rest }) => (
+  <DialogPrimitive.Close asChild>
+    <Button type={type} variant={variant} className={cn("rounded-full", className)} {...rest} />
+  </DialogPrimitive.Close>
+)
+
 export const Dialog = {
   Root,
   Trigger,
@@ -156,4 +221,9 @@ export const Dialog = {
   Footer,
   Title,
   Description,
+  FloatingHeader,
+  MaskedScrollArea,
+  FloatingFooter,
+  Action,
+  Cancel,
 }

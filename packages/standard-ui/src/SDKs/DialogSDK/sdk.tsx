@@ -48,8 +48,8 @@ const SplitHeader: DialogSDK.SplitTemplate.Header = ({ children }) => (
     </div>
 )
 
-const SplitIcon: DialogSDK.SplitTemplate.Icon = ({ icon: Icon }) => (
-    <Icon className="size-6 shrink-0" />
+const SplitIcon: DialogSDK.SplitTemplate.Icon = ({ icon: Icon, size = "default" }) => (
+    <Icon className={cn("shrink-0", size === "lg" ? "size-10" : "size-6")} />
 )
 
 const SplitTitle: DialogSDK.SplitTemplate.Title = ({ children }) => (
@@ -282,7 +282,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     <div className={"bg-card/50 rounded-l-2xl backdrop-blur-lg border border-border/50 min-w-[200px] pb-4 px-6 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {sidebarRenderer()}
                     </div>
-                    <div className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-lg flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"relative bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-lg flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
                 </Dialog.Content>
@@ -494,7 +494,10 @@ export namespace DialogSDK {
             contentClassName?: string
         }
         export type Header = React.FC<{ children: React.ReactNode }>
-        export type Icon = React.FC<{ icon: React.FC<React.SVGProps<SVGSVGElement>> }>
+        export type Icon = React.FC<{
+            icon: React.FC<React.SVGProps<SVGSVGElement>>
+            size?: "default" | "lg"
+        }>
         export type Title = React.FC<{ children: React.ReactNode }>
         export type Description = React.FC<{ children: React.ReactNode }>
     }

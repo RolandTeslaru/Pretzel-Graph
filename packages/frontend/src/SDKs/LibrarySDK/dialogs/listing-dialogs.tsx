@@ -137,9 +137,9 @@ const ListingManagerContent = ({ workflowId, dialogId }: { workflowId: Workflow.
             )}
 
             <div className='flex flex-row justify-end mt-auto'>
-                <Button size='sm' className='rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                <Dialog.Action size='sm' onClick={() => DialogSDK.actions.pop(dialogId)}>
                     Done
-                </Button>
+                </Dialog.Action>
             </div>
         </div>
     )

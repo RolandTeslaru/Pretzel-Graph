@@ -79,12 +79,12 @@ const CreateSubWorkflowContent = ({ dialogId, nodeIds, edgeIds }: Props) => {
                         )}
                     />
                     <Dialog.Footer className='mt-auto h-auto'>
-                        <Button type='button' variant='ghost' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Dialog.Cancel>
                             Cancel
-                        </Button>
-                        <Button type='submit'>
+                        </Dialog.Cancel>
+                        <Dialog.Action type='submit'>
                             Choose Folder
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Button, Dialog, Form, Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { Dialog, Form, Input } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -25,7 +25,7 @@ interface Props {
 export const ConnectionFormDialog = ({ definition, folderId, connection, onCreated, onUpdated, ...templateProps }: Props & DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
         {...templateProps}
-        contentClassName='p-0! relative'
+        contentClassName='p-0!'
         sidebarClassName='w-[320px]'
         sidebarRenderer={() => (
             <DialogSDK.SplitTemplate.Header>
@@ -37,9 +37,6 @@ export const ConnectionFormDialog = ({ definition, folderId, connection, onCreat
             </DialogSDK.SplitTemplate.Header>
         )}
     >
-        <Dialog.Title className='hidden'>
-            {connection ? `Edit ${connection.name}` : `Add a ${definition.displayName} connection`}
-        </Dialog.Title>
         <Dialog.Description className='hidden'>
             {connection ? `Edit this ${definition.displayName} connection` : `Add a new ${definition.displayName} connection`}
         </Dialog.Description>
@@ -149,18 +146,16 @@ export const ConnectionForm = ({ definition, folderId, connection, onCreated, on
 
     return (
         <>
-            {/* Header */}
-            <div className='pointer-events-none absolute top-0 w-full left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
-                <IconRenderer name={definition.icon} className='size-5' />
-                <p className='text-sm font-semibold text-foreground'>
-                    {connection ? `Edit ${definition.displayName} connection` : `Add a ${definition.displayName} connection`}
-                </p>
+            <Dialog.FloatingHeader
+                icon={<IconRenderer name={definition.icon} />}
+                title={connection ? `Edit ${definition.displayName} connection` : `Add a ${definition.displayName} connection`}
+            >
                 {live && <ConnectionStatus status={live.status} className='ml-auto text-xs' />}
-            </div>
-            {/* Content */}
-            <ScrollArea.Root className="h-[500px] w-[500px] [mask-image:linear-gradient(to_bottom,transparent_0,black_80px,black_calc(100%_-_80px),transparent_100%)]">
+            </Dialog.FloatingHeader>
+
+            <Dialog.MaskedScrollArea className='h-[500px] w-[500px]'>
                 <Form.Root {...form}>
-                    <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='relative min-h-full pt-16 pb-20 flex flex-col gap-3 px-4' autoComplete='off'>
+                    <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3' autoComplete='off'>
 
                         {live?.status === 'failed' && live.error && (
                             <div className='rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive'>
@@ -206,26 +201,22 @@ export const ConnectionForm = ({ definition, folderId, connection, onCreated, on
 
                     </form>
                 </Form.Root>
-            </ScrollArea.Root>
+            </Dialog.MaskedScrollArea>
 
-            {/* Footer */}
-            <div className='pointer-events-none absolute bottom-0 left-0 right-0 pt-2 px-4 pb-4 mt-auto w-full flex'>
-                <div className='ml-auto gap-2 flex'>
-                    {live?.status === 'inactive' && (
-                        <SocketButton action='connect' label='Connect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
-                    )}
-                    {live?.status === 'failed' && (
-                        <SocketButton action='reconnect' label='Reconnect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
-                    )}
-                    {live && live.status !== 'inactive' && (
-                        <SocketButton action='disconnect' label='Disconnect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
-                    )}
-                    <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={isBusy}>
-                        {form.formState.isSubmitting && <Spinner className='mr-2 h-4 w-4' />}
-                        {connection ? 'Save' : 'Add'}
-                    </Button>
-                </div>
-            </div>
+            <Dialog.FloatingFooter>
+                {live?.status === 'inactive' && (
+                    <SocketButton action='connect' label='Connect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
+                )}
+                {live?.status === 'failed' && (
+                    <SocketButton action='reconnect' label='Reconnect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
+                )}
+                {live && live.status !== 'inactive' && (
+                    <SocketButton action='disconnect' label='Disconnect' pendingAction={pendingAction} disabled={isBusy} onClick={runSocketAction} />
+                )}
+                <Dialog.Action type='submit' form={formId} loading={form.formState.isSubmitting} disabled={isBusy}>
+                    {connection ? 'Save' : 'Add'}
+                </Dialog.Action>
+            </Dialog.FloatingFooter>
         </>
     )
 }
@@ -239,8 +230,7 @@ interface SocketButtonProps {
 }
 
 const SocketButton = ({ action, label, pendingAction, disabled, onClick }: SocketButtonProps) => (
-    <Button type='button' variant='ghost' className='pointer-events-auto rounded-full' disabled={disabled} onClick={() => onClick(action)}>
-        {pendingAction === action && <Spinner className='mr-2 h-4 w-4' />}
+    <Dialog.Action type='button' variant='ghost' loading={pendingAction === action} disabled={disabled} onClick={() => onClick(action)}>
         {label}
-    </Button>
+    </Dialog.Action>
 )

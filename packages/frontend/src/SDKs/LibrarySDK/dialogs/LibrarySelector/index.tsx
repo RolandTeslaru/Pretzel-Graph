@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Dialog } from '@pretzel-graph/standard-ui/foundations'
+import { Dialog } from '@pretzel-graph/standard-ui/foundations'
 import { Library } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -117,10 +117,10 @@ const LibrarySelectorDialog = ({ dialogProps, accept, initialCwd, onSelect, quer
                     </div>
                     {accepts('folder') && (
                         <div className='absolute z-20 bottom-2 right-2'>
-                            <Button size='sm' onClick={handleSelectFolder}>
-                                <SystemIcons.FolderOpen className='size-4' />
+                            <Dialog.Action size='sm' onClick={handleSelectFolder}>
+                                <SystemIcons.FolderOpen />
                                 Select "{cwdName}"
-                            </Button>
+                            </Dialog.Action>
                         </div>
                     )}
                 </div>

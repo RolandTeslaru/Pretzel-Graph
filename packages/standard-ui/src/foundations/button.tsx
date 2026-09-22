@@ -2,6 +2,7 @@ import * as React from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn"
+import { Spinner } from "./spinner"
 
 
 export const buttonVariants = cva(
@@ -165,6 +166,7 @@ export interface ButtonProps {
   size?: VariantProps<typeof buttonVariants>["size"];
   asChild?: boolean;
   shouldBounce?: boolean;
+  loading?: boolean;
 }
 
 function Button({
@@ -173,6 +175,9 @@ function Button({
   size = "default",
   asChild = false,
   shouldBounce = true,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<"button"> & ButtonProps) {
   const Comp = asChild ? Slot : "button";
@@ -185,9 +190,11 @@ function Button({
           shouldBounce && "active:scale-[0.95]",
         )
       }
+      disabled={disabled || loading}
       {...props}
     >
-      <Slottable>{props.children}</Slottable>
+      {loading && <Spinner elementClassName="fill-current!" />}
+      <Slottable>{children}</Slottable>
     </Comp>
   );
 }

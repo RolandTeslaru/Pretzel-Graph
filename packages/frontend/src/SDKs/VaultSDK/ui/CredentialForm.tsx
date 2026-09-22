@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { AlertDialog, Button, Dialog, Form, Input, ScrollArea, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
 import { VaultSDK } from '../sdk'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import type { Vault } from '@pretzel-graph/shared/domain'
@@ -28,21 +28,18 @@ interface Props {
 export const CredentialFormDialog = ({ credentialTemplate, onCreated, updateProps, ...templateProps }: Props & DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
         {...templateProps}
-        contentClassName='p-0! relative'
-        sidebarClassName='w-[270px]'
+        contentClassName='p-0!'
+        sidebarClassName='w-[280px]'
         sidebarRenderer={() => (
             <DialogSDK.SplitTemplate.Header>
-                <DialogSDK.SplitTemplate.Icon icon={VaultGlyph} />
-                <DialogSDK.SplitTemplate.Title>Vault</DialogSDK.SplitTemplate.Title>
+                <DialogSDK.SplitTemplate.Icon icon={VaultGlyph} size="lg" />
+                <DialogSDK.SplitTemplate.Title>Vault Manager</DialogSDK.SplitTemplate.Title>
                 <DialogSDK.SplitTemplate.Description>
                     Stores and manages credentials securely.
                 </DialogSDK.SplitTemplate.Description>
             </DialogSDK.SplitTemplate.Header>
         )}
     >
-        <Dialog.Title className='hidden'>
-            {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
-        </Dialog.Title>
         <Dialog.Description className='hidden'>
             {updateProps ? 'Edit this credential' : `Add a new ${credentialTemplate.displayName} credential`}
         </Dialog.Description>
@@ -241,17 +238,14 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
 
     return (
         <>
-            {/* Header */}
-            <div className='pointer-events-none absolute top-0 w-full left-0 z-90 flex flex-row gap-2 items-center px-4 pt-6 pb-4'>
-                <IconRenderer name={credentialTemplate.icon ?? ""} className='size-5' />
-                <p className='text-sm font-semibold text-foreground'>
-                    {updateProps ? 'Edit' : 'Add'} {credentialTemplate.displayName} Credentials
-                </p>
-            </div>
-            {/* Content */}
-            <ScrollArea.Root className="h-[500px]  w-[500px] [mask-image:linear-gradient(to_bottom,transparent_0,transparent_0px,black_80px)]">
+            <Dialog.FloatingHeader
+                icon={<IconRenderer name={credentialTemplate.icon ?? ""} />}
+                title={`${updateProps ? 'Edit' : 'Add'} ${credentialTemplate.displayName} Credentials`}
+            />
+
+            <Dialog.MaskedScrollArea className='h-[500px] w-[500px]'>
                 <Form.Root {...form}>
-                    <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='relative min-h-full pt-16 pb-20 flex flex-col gap-3 px-4' autoComplete='off'>
+                    <form id={formId} onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3' autoComplete='off'>
 
                         <Form.Field control={form.control} name='name' render={({ field }) => (
                             <Form.Item>
@@ -312,23 +306,18 @@ export const CredentialForm = ({ credentialTemplate, onCreated, updateProps }: P
 
                     </form>
                 </Form.Root>
-            </ScrollArea.Root>
+            </Dialog.MaskedScrollArea>
 
-            {/* Footer */}
-            <div className='pointer-events-none absolute bottom-0 left-0 right-0 pt-2 px-4 pb-4 pt-2 mt-auto w-full flex'>
-                <div className='ml-auto gap-2 flex'>
-                    {updateProps ? (
-                        <Button type='button' variant='ghost-destructive' className='pointer-events-auto rounded-full' onClick={onRemove} disabled={isRemoving || form.formState.isSubmitting}>
-                            {isRemoving && <Spinner className='mr-2 h-4 w-4' />}
-                            Remove
-                        </Button>
-                    ) : <div />}
-                    <Button type='submit' form={formId} className='pointer-events-auto rounded-full' disabled={form.formState.isSubmitting || isLoadingValues || isRemoving || isConnecting}>
-                        {(form.formState.isSubmitting || isConnecting) && <Spinner className='mr-2 h-4 w-4' />}
-                        {isOAuth && !updateProps ? `Connect with ${credentialTemplate.displayName}` : 'Save'}
-                    </Button>
-                </div>
-            </div>
+            <Dialog.FloatingFooter>
+                {updateProps && (
+                    <Dialog.Action variant='ghost-destructive' onClick={onRemove} loading={isRemoving} disabled={form.formState.isSubmitting}>
+                        Remove
+                    </Dialog.Action>
+                )}
+                <Dialog.Action type='submit' form={formId} loading={form.formState.isSubmitting || isConnecting} disabled={isLoadingValues || isRemoving}>
+                    {isOAuth && !updateProps ? `Connect with ${credentialTemplate.displayName}` : 'Save'}
+                </Dialog.Action>
+            </Dialog.FloatingFooter>
         </>
     )
 }

@@ -137,16 +137,12 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                     <CredentialRenderer credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
 
                     <div className='flex flex-row justify-between mt-auto'>
-                        <Button variant='ghost-destructive' size='sm' className='rounded-full'
-                            onClick={() => setProxyInstance(null)}
-                        >
+                        <Dialog.Action variant='ghost-destructive' size='sm' onClick={() => setProxyInstance(null)}>
                             Remove Proxy
-                        </Button>
-                        <Button size='sm' className='rounded-full'
-                            onClick={() => DialogSDK.actions.pop(dialogId)}
-                        >
+                        </Dialog.Action>
+                        <Dialog.Action size='sm' onClick={() => DialogSDK.actions.pop(dialogId)}>
                             Done
-                        </Button>
+                        </Dialog.Action>
                     </div>
                 </div>
             </DialogSDK.SplitTemplate>

@@ -126,12 +126,12 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                     )} />
 
                     <Dialog.Footer>
-                        <Button type='button' variant='ghost' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Dialog.Cancel>
                             Cancel
-                        </Button>
-                        <Button type='submit'>
+                        </Dialog.Cancel>
+                        <Dialog.Action type='submit'>
                             Add
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>

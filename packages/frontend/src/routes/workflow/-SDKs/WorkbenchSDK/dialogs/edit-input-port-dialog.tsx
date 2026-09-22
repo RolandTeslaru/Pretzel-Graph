@@ -138,12 +138,12 @@ const EditInputPortContent = ({ nodeId, port, dialogId }: Props) => {
                     )} />
 
                     <Dialog.Footer>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Dialog.Cancel>
                             Cancel
-                        </Button>
-                        <Button type='submit'>
+                        </Dialog.Cancel>
+                        <Dialog.Action type='submit'>
                             Save
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>

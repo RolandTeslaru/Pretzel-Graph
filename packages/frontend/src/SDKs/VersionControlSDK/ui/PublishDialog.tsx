@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Button, Dialog, Input, Label, Spinner, Textarea } from "@pretzel-graph/standard-ui/foundations"
+import { Dialog, Input, Label, Textarea } from "@pretzel-graph/standard-ui/foundations"
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
 import { VersionControlSDK } from "../sdk"
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk"
@@ -97,13 +97,10 @@ function PublishDialogContent() {
                 </div>
 
                 <Dialog.Footer>
-                    <Button type="submit" disabled={isLoading || !name.trim()} className="rounded-full">
-                        {isLoading
-                            ? <Spinner className="mr-2 h-4 w-4" />
-                            : <SystemIcons.CloudUpload className="mr-2 size-4" />
-                        }
+                    <Dialog.Action type="submit" loading={isLoading} disabled={!name.trim()}>
+                        {!isLoading && <SystemIcons.CloudUpload />}
                         Publish
-                    </Button>
+                    </Dialog.Action>
                 </Dialog.Footer>
             </form>
         </div>
