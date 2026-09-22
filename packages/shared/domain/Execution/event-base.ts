@@ -1,6 +1,6 @@
 import z from "zod"
 import { Realtime } from "../Realtime"
-import { WorkflowId } from "../Workflow/ids"
+import { WorkflowId } from "../ids"
 import { ExecutionId } from "./ids"
 
 // ─── Outbound base ────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ import { ExecutionId } from "./ids"
 //
 // Split out of event.ts, which reaches Consultation through session.ts — so the
 // domains extending this cannot import event.ts without closing a cycle. Kept a
-// leaf: zod, Realtime, and the two id modules only. Note ../Workflow/ids rather
+// leaf: zod, Realtime, and the two id modules only. Note ../ids rather
 // than the Workflow barrel, which reaches back here through Workflow/node.ts.
 
 export const Channel = Realtime.Channel.brand("ExecutionChannel")

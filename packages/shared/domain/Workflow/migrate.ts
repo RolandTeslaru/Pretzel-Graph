@@ -5,7 +5,7 @@
 //
 // Structural relocations only; blueprint-dependent fixes such as `reconciledBlueprintId` come from Workflow.Repair.
 
-import { SHAPE_DEPENDENCY_FIELD_ID, isListingId } from "./ids";
+import { SHAPE_DEPENDENCY_FIELD_ID, isListingId } from "../ids";
 
 export const WORKFLOW_DATA_VERSION = 6;
 

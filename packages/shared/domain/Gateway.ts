@@ -3,7 +3,7 @@ import { Vault } from './Vault';
 import type { AxiosInstance } from 'axios';
 import { Consultation } from './Consultation';
 import { ExecutionId } from './Execution/ids';
-import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './Workflow/ids';
+import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './ids';
 import { Field } from './Foundations/Field';
 import { Realtime } from './Realtime';
 import { Derivable } from './Foundations/Derivable';

@@ -6,7 +6,7 @@ import type { Node } from "./node";
 import type { Workflow } from "./index";
 import type { Dependency } from "../Dependency";
 import type { Vault } from "../Vault";
-import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
+import { SHAPE_DEPENDENCY_FIELD_ID } from "../ids";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
 

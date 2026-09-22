@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ListingId, SkillId, WorkflowId } from "../Workflow/ids"
+import { ListingId, SkillId, WorkflowId } from "../ids"
 
 // Pointers from a node's fields into the workflow's embedded dependency snapshots.
 export namespace Ref {

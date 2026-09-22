@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ConnectionId, FolderId, SkillId, WorkflowId } from "../Workflow/ids"
+import { ConnectionId, FolderId, SkillId, WorkflowId } from "../ids"
 
 // A live pointer at something the library browses. Unlike Dependency.Ref nothing is
 // snapshotted: the target keeps changing, and deleting it affects whoever points at it.

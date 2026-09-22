@@ -6,7 +6,7 @@ import * as EdgeMod from "./edge"
 import * as DataMod from "./data"
 import * as CacheMod from "./cache"
 import * as RepairMod from "./repair"
-import { WorkflowId, FolderId, ListingId } from "./ids"
+import { WorkflowId, FolderId, ListingId } from "../ids"
 import { WORKFLOW_DATA_VERSION } from "./migrate"
 import { extractExposedInputs as _extractExposedInputs, extractExposedOutputs as _extractExposedOutputs, toBlueprint as _toBlueprint, collectCredentialInstanceIds as _collectCredentialInstanceIds } from "./resolvers"
 

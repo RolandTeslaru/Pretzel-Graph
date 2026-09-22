@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { Port } from "../Foundations/Port";
-import { EdgeId, NodeId } from "./ids";
+import { EdgeId, NodeId } from "../ids";
 
 
 export namespace Edge {

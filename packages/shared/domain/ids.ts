@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { Field } from "../Foundations/Field";
+import type { Field } from "./Foundations/Field";
 
 export const WorkflowId = z.uuid().brand("WorkflowId");
 export type WorkflowId = z.infer<typeof WorkflowId>;

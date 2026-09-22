@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ListingId, PublicationId, SkillId, WorkflowId } from "../Workflow/ids";
+import { ListingId, PublicationId, SkillId, WorkflowId } from "../ids";
 import * as RefMod from "./ref";
 import { Skill as SkillD } from "../Skill";
 import { Data } from "../Workflow/data";

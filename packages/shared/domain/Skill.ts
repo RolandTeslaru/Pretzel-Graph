@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { SkillId, FolderId } from "./Workflow/ids"
+import { SkillId, FolderId } from "./ids"
 
 export namespace Skill {
     export const Id = SkillId

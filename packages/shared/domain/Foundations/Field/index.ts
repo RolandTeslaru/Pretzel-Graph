@@ -2,7 +2,7 @@ import { z } from "zod"
 import { Port } from "../Port"
 import { Ref } from "../../Dependency/ref"
 import { Ref as LibraryRefMod } from "../../Library/ref"
-import { ConnectionDefinitionId } from "../../Workflow/ids"
+import { ConnectionDefinitionId } from "../../ids"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
