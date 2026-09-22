@@ -184,7 +184,7 @@ export class TurboGraph {
                 break;
             }
 
-            case "gateway": {
+            case "gateway_event": {
 
                 const instance = executionCtx.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
 

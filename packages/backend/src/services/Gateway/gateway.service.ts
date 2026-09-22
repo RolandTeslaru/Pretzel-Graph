@@ -132,6 +132,7 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             id: Gateway.Connection.Id,
         ): Promise<Gateway.API.Connection.Remove.Response> => {
             const socket = this.sockets.get(id);
+            const name   = socket?.connection.name ?? id;
 
             this.sockets.delete(id);
             this.listeners.delete(id);
@@ -139,6 +140,8 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             await socket?.disconnect();
 
             await this.repository.delete(principal, id);
+
+            this.log.info(`Deleted ${name} (${id})`);
 
             this.realtime.emitEvent<Gateway.Event.ConnectionRemoved>({
                 channel:      Gateway.Event.getChannel(),
@@ -183,6 +186,8 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
 
             const pending = await this.writeStatus(principal, id, 'pending', null);
 
+            this.log.info(`Connecting ${pending.name} (${id})`);
+
             void this.open(pending);
 
             return pending;
@@ -198,7 +203,11 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
 
             await socket?.disconnect();
 
-            return this.writeStatus(principal, id, 'inactive', null);
+            const connection = await this.writeStatus(principal, id, 'inactive', null);
+
+            this.log.info(`Disconnected ${connection.name} (${id})`);
+
+            return connection;
         },
 
         // Replaces the socket with one built from the current row; a turned-off connection is refused.
@@ -216,6 +225,8 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             this.sockets.delete(id);
 
             await socket?.disconnect();
+
+            this.log.info(`Reconnecting ${connection.name} (${id})`);
 
             const pending = await this.writeStatus(principal, id, 'pending', null);
 
@@ -245,6 +256,8 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
             // Replaced or disconnected while connecting; the newer state owns the status.
             if (this.sockets.get(connection.id) !== socket)
                 return;
+
+            this.log.info(`Connected ${connection.name} (${connection.id})`);
 
             await this.writeStatus(Principal.SELF, connection.id, 'active', null);
         }
@@ -356,7 +369,11 @@ export class GatewayService implements OnModuleInit, OnModuleDestroy {
 
 
     private dispatch(id: Gateway.Connection.Id, event: Gateway.Socket.Event): void {
-        for (const listener of this.listeners.get(id) ?? []) {
+        const listeners = this.listeners.get(id);
+
+        this.log.info('socket event', { connectionId: id, provider: event.provider, type: event.type, listeners: listeners?.size ?? 0 });
+
+        for (const listener of listeners ?? []) {
             try {
                 listener(event);
             }

@@ -93,6 +93,7 @@ export const CredentialPicker = memo(
                     {instanceId ? (
                         <FloatContainer className="shadow-sm! rounded-md! shadow-black/10!">
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="icon-xxs"
                                 className="my-auto"
@@ -101,6 +102,7 @@ export const CredentialPicker = memo(
                                 <SystemIcons.SquarePen/>
                             </Button>
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="icon-xxs"
                                 className="text-destructive my-auto"
@@ -109,6 +111,7 @@ export const CredentialPicker = memo(
                                 <SystemIcons.Trash />
                             </Button>
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="icon-xxs"
                                 className="my-auto"
@@ -118,7 +121,7 @@ export const CredentialPicker = memo(
                             </Button>
                         </FloatContainer>
                     ) : (
-                        <Button variant="input" size="sm" onClick={openAddDialog}>
+                        <Button type="button" variant="input" size="sm" onClick={openAddDialog}>
                             <SystemIcons.Plus /> Add
                         </Button>
                     )}

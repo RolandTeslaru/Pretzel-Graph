@@ -63,7 +63,7 @@ export namespace Igniter {
     })
 
     export const GatewayEvent = Base.extend({
-        variant: z.literal("gateway"),
+        variant: z.literal("gateway_event"),
         nodeId: Workflow.Node.Id,
         payload: Gateway.Socket.Event.Schema,
     })
@@ -99,7 +99,7 @@ export namespace Igniter {
         "sub_workflow",
         "chat_message",
         "webhook",
-        "gateway",
+        "gateway_event",
         "scheduled",
         "sdk",
     ])
