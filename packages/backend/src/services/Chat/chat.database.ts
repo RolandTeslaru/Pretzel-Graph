@@ -36,7 +36,7 @@ class ChatMethods {
     async upsertByExternalKey(
         trx: DB.Transaction<'user' | 'service'>,
         workflowId: Workflow.Id,
-        externalKey: string,
+        externalKey: Chat.ExternalKey,
         name = 'New Chat',
     ): Promise<Chat> {
         const row = await trx

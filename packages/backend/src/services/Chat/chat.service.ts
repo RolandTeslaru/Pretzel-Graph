@@ -14,7 +14,7 @@ export class ChatService {
     // acting user: a gateway event belongs to the workflow, not to whoever published it.
     async appendByExternalKey(
         workflowId:  Workflow.Id,
-        externalKey: string,
+        externalKey: Chat.ExternalKey,
         messages:    Chat.Message[],
     ): Promise<Chat.Id> {
         return DB.asService('gateway recorder appending to a chat', async (trx) => {

@@ -9,10 +9,14 @@ export function defineGatewayListener(config: { refFieldId: string }): Gateway.L
     return { refFieldId: config.refFieldId as Field.Id };
 }
 
+// The socket context, with this blueprint's field values in place of the untyped record.
+export type GatewayContext<T_Blueprint extends Blueprint> =
+    Omit<Gateway.Socket.Context, 'fieldValues'> & { readonly fieldValues: InferFieldValues<T_Blueprint> };
+
 // Decides whether one event is worth starting a run for; it runs per event, ahead of any execution.
 export type GatewayFilter<T_Blueprint extends Blueprint, T_Event> = (
-    event: T_Event,
-    context: { fieldValues: InferFieldValues<T_Blueprint> },
+    event:   T_Event,
+    context: GatewayContext<T_Blueprint>,
 ) => boolean;
 
 // A node's filter, with the schema every event is parsed against before it is called.
@@ -39,20 +43,6 @@ export function defineGatewayFilter<T_Blueprint extends Blueprint>() {
 }
 
 
-// What a recorder is handed: the node's field values, the connection the event came from, and a
-// chat scoped to the workflow. No credentials — a recorder records, it does not call the provider.
-export type GatewayRecorderContext<T_Blueprint extends Blueprint> = {
-    readonly fieldValues:  InferFieldValues<T_Blueprint>
-    readonly connectionId: Gateway.Connection.Id
-    // The definition's provider, so a recorder never writes its own name into a key.
-    readonly provider:     string
-    readonly chatAPI: {
-        // Appends to the workflow's chat for `externalKey`, opening it on the first event.
-        append(externalKey: string, messages: Chat.Message[]): Promise<Chat.Id>
-    }
-    readonly log: (message: string) => void
-};
-
 /**
  * Records an event that passed the filter, whether or not it starts a run.
  *
@@ -62,7 +52,7 @@ export type GatewayRecorderContext<T_Blueprint extends Blueprint> = {
  */
 export type GatewayRecorder<T_Blueprint extends Blueprint, T_Event> = (
     event:   T_Event,
-    context: GatewayRecorderContext<T_Blueprint>,
+    context: GatewayContext<T_Blueprint>,
 ) => Promise<Chat.Id | void>;
 
 export type GatewayRecorders<T_Blueprint extends Blueprint, T_Schema extends ZodType> = {

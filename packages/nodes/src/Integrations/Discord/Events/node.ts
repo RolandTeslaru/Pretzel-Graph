@@ -1,45 +1,16 @@
-import { RuntimeNode, defineGatewayFilter, defineGatewayRecorder, type InferOutputs } from '@pretzel-graph/node-sdk';
-import { Chat, Gateway, type Execution, type Library } from '@pretzel-graph/shared/domain';
+import { RuntimeNode, type InferOutputs } from '@pretzel-graph/node-sdk';
+import { Gateway, type Execution, type Library } from '@pretzel-graph/shared/domain';
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { Discord } from '../domain';
 import { Blueprint } from './blueprint';
+import { gatewayFilter } from './filter';
+import { gatewayRecorder } from './recorder';
 
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    // Runs in the backend, per event, before any execution exists.
-    static gatewayFilter = defineGatewayFilter<typeof Blueprint>()(Discord.Event.Schema,
-        (event, { fieldValues }) => {
-            if (event.type !== 'messageCreate')
-                return false;
+    static gatewayFilter = gatewayFilter;
 
-            if (!fieldValues.allowBotMessages && event.author.bot)
-                return false;
-
-            return !fieldValues.directMessagesOnly || Boolean(event.directMessage);
-        },
-    );
-
-    /**
-     * Records every message the filter passed, whether or not it starts a run.
-     *
-     * The key comes from the connection's own provider, so the node never writes "discord" into it,
-     * and the chat id it returns is what the run reads its history from.
-     */
-    static gatewayRecorder = defineGatewayRecorder<typeof Blueprint>()(Discord.Event.Schema,
-        async (event, { fieldValues, connectionId, provider, chatAPI }) => {
-            if (event.type !== 'messageCreate' || fieldValues.conversation === 'none')
-                return;
-
-            const subject = fieldValues.conversation === 'user' ? event.author.id : event.channelId;
-
-            return chatAPI.append(Chat.createExternalKey(provider, connectionId, subject), [{
-                id:      Chat.Message.Id.parse(crypto.randomUUID()),
-                role:    'human',
-                content: event.content,
-                data:    { name: event.author.name, additional_kwargs: { messageId: event.messageId } },
-            }]);
-        },
-    );
+    static gatewayRecorder = gatewayRecorder;
 
     private event: Gateway.Socket.Event | null = null;
 
@@ -68,7 +39,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             request: {
                 nodeId:       this.nodeId,
                 variant:      Gateway.Test.Consultation.Variant,
-                timeoutMs:    this.fieldValues.testTimeoutMs,
+                timeoutMs:    this.fieldValues.test_timeout_ms,
                 connectionId: connection.id,
             },
             // The backend runs this node's own filter, so it needs what the filter reads.
@@ -78,7 +49,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 blueprintId:    Blueprint.id,
                 fieldValues:    this.fieldValues as Record<Field.Id, Field.Value>,
                 connectionId:   connection.id,
-                timeoutMs:      this.fieldValues.testTimeoutMs,
+                timeoutMs:      this.fieldValues.test_timeout_ms,
                 executionId:    this.context.executionId,
                 consultationId: request.id,
             }).then(() => {}),

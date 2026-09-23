@@ -3,7 +3,7 @@ import { ChatSchema, externalKey } from "./chat"
 import * as MessageMod from "./message"
 import * as EventMod from "./event"
 import * as ApiMod from "./api"
-import { ChatId, createId as createChatId } from "./ids"
+import { ChatExternalKey, ChatId, createId as createChatId } from "./ids"
 
 export namespace Chat {
 
@@ -15,6 +15,9 @@ export namespace Chat {
     export import ToolCall      = MessageMod.ToolCall
     export import UsageMetadata = MessageMod.UsageMetadata
     export import Message       = MessageMod.Message
+
+    export const ExternalKey = ChatExternalKey
+    export type ExternalKey = ChatExternalKey
 
     export const Schema = ChatSchema
 

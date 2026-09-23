@@ -5,6 +5,8 @@ import { Consultation as ConsultationModule } from './Consultation';
 import { ExecutionId } from './Execution/ids';
 import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './ids';
 import { Field } from './Foundations/Field';
+// Type-only: a runtime import would close a cycle back through Workflow.
+import type { Chat } from './Chat';
 import { Realtime } from './Realtime';
 import { Derivable } from './Foundations/Derivable';
 // Imported directly: the Library index would close an import cycle back through Blueprint.
@@ -183,6 +185,23 @@ export namespace Gateway {
 
     // What a socket delivers to the workflows listening on it.
     export namespace Socket {
+        /**
+         * What a node's filter and recorder are both handed for one event.
+         *
+         * No credentials: neither calls the provider. `chatAPI` is for a recorder keeping a
+         * conversation; a filter runs per event ahead of any execution and has no business writing.
+         */
+        export interface Context {
+            readonly fieldValues: Record<Field.Id, Field.Value>
+            readonly connection:  Connection
+            readonly definition:  Definition
+            readonly chatAPI: {
+                // Appends to the workflow's chat for `externalKey`, opening it on the first event.
+                append(externalKey: Chat.ExternalKey, messages: Chat.Message[]): Promise<Chat.Id>
+            }
+            readonly log: (message: string) => void
+        }
+
         // Each connection extends this with its own events; a node's filters validate them.
         export const Event = z.looseObject({
             type: z.string(),

@@ -52,10 +52,10 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
   const isIgniter   = hyNode.blueprint.igniter ?? false
   const isPassive   = hyNode.blueprint.passive ?? false
 
-  const hasNoInputPorts = hyNode.inputs.length === 0
+  const canAddInputPort = WorkbenchSDK.useDocument(d => d.selectors.node.ports.canAddInput(d, hyNode.id))
   
   // Igniters and passive nodes never take inputs, so they get no offer to add one.
-  const showAddInputPortBtn = !isIgniter && !isPassive && hyNode.outputs.length == 0 && hyNode.inputs.length == 0
+  const showAddInputPortBtn = canAddInputPort && hyNode.outputs.length === 0
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
@@ -106,7 +106,7 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         </div>
       }
 
-      {hasNoInputPorts && 
+      {canAddInputPort &&
         <Button  variant={"input"} size="icon-sm" className='absolute -left-10 top-1/2 -translate-y-1/2'
           onClick={() => {
             WorkbenchSDK.dialogs.openAddInputPort(hyNode.id)

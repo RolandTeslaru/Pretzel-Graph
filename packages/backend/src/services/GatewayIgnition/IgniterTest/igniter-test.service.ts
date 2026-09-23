@@ -6,9 +6,10 @@ import { System } from '@pretzel-graph/shared/system';
 import { createRedisClient } from '@/utils/redis';
 import { GatewayService } from '../../Gateway/gateway.service';
 import { ShelfService } from '../../Shelf/shelf.service';
+import { ChatService } from '../../Chat/chat.service';
 
 // The blueprint-typed filter, read back with the field values the node sent.
-type Filter = (event: unknown, context: { fieldValues: Record<Field.Id, Field.Value> }) => boolean;
+type Filter = (event: unknown, context: Gateway.Socket.Context) => boolean;
 
 interface TestRegistration {
     workflowId:  Workflow.Id;
@@ -28,6 +29,7 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
     constructor(
         private readonly gateways: GatewayService,
         private readonly shelf:    ShelfService,
+        private readonly chats:    ChatService,
     ) {}
 
     public async register(workflowId: Workflow.Id, body: Gateway.Test.API.Register.Body): Promise<void> {
@@ -51,6 +53,23 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
         if (!gateway || !filter)
             throw new BadRequestException(`${blueprintId} has no gateway filter`);
 
+        const connection = this.gateways.connection.getOpen(body.connectionId);
+
+        if (!connection)
+            throw new BadRequestException('That connection is not connected');
+
+        // The same context a published run gets, so a draft run filters on identical inputs.
+        const context: Gateway.Socket.Context = {
+            fieldValues: body.fieldValues as never,
+            connection,
+            definition:  this.gateways.definition.get(connection.definitionId),
+            chatAPI: {
+                append: (externalKey, messages) =>
+                    this.chats.appendByExternalKey(workflowId, externalKey, messages),
+            },
+            log: message => this.log.info(message),
+        };
+
         this.deregister(body.consultationId);
 
         const unsubscribe = this.gateways.connection.subscribe(body.connectionId, event => {
@@ -59,7 +78,7 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
             if (!parsed.success)
                 return;
 
-            if (!filter(parsed.data, { fieldValues: body.fieldValues }))
+            if (!filter(parsed.data, context))
                 return;
 
             void this.answer(body, event);

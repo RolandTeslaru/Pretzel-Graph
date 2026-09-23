@@ -17,6 +17,8 @@ export interface PortGroup {
 export interface NodePortSelectors {
     getInputs:    (document: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Input[]
     getOutputs:   (document: Document, nodeId: Workflow.Node.Id) => Foundations.Port.Output[]
+    /** Whether the editor should offer a hand-added input port for this node. */
+    canAddInput:  (document: Document, nodeId: Workflow.Node.Id) => boolean
     /** One port group on a node: its live slots, the blueprint ports it grows from, and the slots added so far. */
     getGroup:     (document: Document, nodeId: Workflow.Node.Id, groupId: string) => PortGroup
     // Input port id to the edge connected to it.
@@ -29,6 +31,19 @@ export const nodePortSelectors: NodePortSelectors = {
     },
     getOutputs: (d, nodeId) => {
         return d.cache.resolvedShape[nodeId]?.outputs ?? [];
+    },
+    canAddInput: (d, nodeId) => {
+        const blueprint = d.selectors.node.getBlueprint(d, nodeId);
+        if (!blueprint || blueprint.igniter || blueprint.passive)
+            return false;
+
+        if (
+            blueprint.id === "Core.SubWorkflow.ExposeInputPort"
+            || blueprint.id === "Core.SubWorkflow.ExposeOutputPort"
+        )
+            return false;
+
+        return d.selectors.node.ports.getInputs(d, nodeId).length === 0;
     },
     getGroup: (d, nodeId, groupId) => {
         const node      = d.data.nodes[nodeId];

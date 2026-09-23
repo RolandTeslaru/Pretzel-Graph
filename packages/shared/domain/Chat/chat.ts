@@ -1,7 +1,7 @@
 import z from "zod"
 import { Workflow } from "../Workflow"
 import { supabaseTimestamp } from "../zod-utils"
-import { ChatId } from "./ids"
+import { ChatExternalKey, ChatId } from "./ids"
 
 /**
  * Names a chat by where it came from, for one a gateway event opened rather than the editor.
@@ -10,13 +10,13 @@ import { ChatId } from "./ids"
  * bots on the same channel keep separate conversations.
  */
 export const externalKey = (provider: string, connectionId: string, providerChatId: string) =>
-    `${provider}:${connectionId}:${providerChatId}`
+    `${provider}:${connectionId}:${providerChatId}` as ChatExternalKey
 
 export const ChatSchema = z.object({
     id: ChatId,
     name: z.string(),
     workflow_id: Workflow.Id,
-    external_key: z.string().nullable(),
+    external_key: ChatExternalKey.nullable(),
     created_at: supabaseTimestamp,
     updated_at: supabaseTimestamp,
 })

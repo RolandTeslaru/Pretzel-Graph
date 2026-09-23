@@ -172,7 +172,7 @@ export namespace DB {
             name:        z.string(),
             attachments: z.unknown().nullable(),
             // Where the chat came from, for one opened by a gateway event rather than in the editor.
-            external_key: z.string().nullable(),
+            external_key: ChatD.ExternalKey.nullable(),
             created_at:  supabaseTimestamp,
             updated_at:  supabaseTimestamp,
         });

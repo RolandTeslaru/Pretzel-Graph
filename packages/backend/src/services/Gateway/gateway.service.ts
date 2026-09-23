@@ -160,12 +160,9 @@ export class GatewayService implements OnModuleInit, OnApplicationBootstrap, OnM
         },
 
         // Hears every event the connection's socket delivers, across reconnects; returns its own removal.
-        // The provider behind an open socket, for callers with no principal to read the row with.
-        getProvider: (id: Gateway.Connection.Id): string | null => {
-            const connection = this.sockets.get(id)?.connection;
-
-            return connection ? this.definition.get(connection.definitionId).provider : null;
-        },
+        // What an open socket was built from, for callers with no principal to read the row with.
+        getOpen: (id: Gateway.Connection.Id): Gateway.Connection | null =>
+            this.sockets.get(id)?.connection ?? null,
 
         subscribe: (id: Gateway.Connection.Id, listener: Gateway.Listener.Fn): () => void => {
             if (!this.listeners.has(id))

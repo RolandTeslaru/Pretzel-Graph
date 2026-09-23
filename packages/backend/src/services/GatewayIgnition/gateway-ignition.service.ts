@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Execution, Gateway, Library, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Chat, Execution, Gateway, Library, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { System } from '@pretzel-graph/shared/system';
@@ -8,32 +8,33 @@ import {
     ActivePublicationChange,
     ActivePublicationService,
 } from '../ActivePublication/active-publication.service';
+import { ChatService } from '../Chat/chat.service';
 import { ExecutionService } from '../Execution/execution.service';
 import { GatewayService } from '../Gateway/gateway.service';
 import { ShelfService } from '../Shelf/shelf.service';
 
-interface Registration {
-    publication: VersionControl.Publication;
-    nodeId:      Workflow.Node.Id;
-    schema:      ZodType;
-    filter:      (
-        event: unknown,
-        context: { fieldValues: Record<Field.Id, Field.Value> },
-    ) => boolean;
-    fieldValues: Record<Field.Id, Field.Value>;
-}
-
-interface PendingRegistration {
+// A published node that listens to a connection, with everything an event needs to be handled.
+interface ListeningNode {
+    publication:  VersionControl.Publication;
+    nodeId:       Workflow.Node.Id;
     connectionId: Gateway.Connection.Id;
-    registration: Registration;
+    schema:       ZodType;
+    filter:       (
+        event:   unknown,
+        context: Gateway.Socket.Context,
+    ) => boolean;
+    // Absent when the node records nothing; an event then starts a run without opening a chat.
+    recorder?:    (
+        event:   unknown,
+        context: Gateway.Socket.Context,
+    ) => Promise<Chat.Id | void>;
+    fieldValues:  Record<Field.Id, Field.Value>;
 }
 
 @Injectable()
 export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     private readonly log = System.log.withContext('GatewayIgnition');
     private readonly subscriptions = new Map<Workflow.Id, (() => void)[]>();
-    private readonly registrationGenerations = new Map<Workflow.Id, number>();
-    private nextRegistrationGeneration = 0;
     private unsubscribeFromPublications: (() => void) | null = null;
 
     constructor(
@@ -41,6 +42,7 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
         private readonly gateways: GatewayService,
         private readonly shelf: ShelfService,
         private readonly executions: ExecutionService,
+        private readonly chats: ChatService,
     ) {}
 
     public async onModuleInit(): Promise<void> {
@@ -50,7 +52,7 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
 
         const publications = this.activePublications.list();
         const results = await Promise.allSettled(
-            publications.map(publication => this.register(publication)),
+            publications.map(publication => this.registerPublication(publication)),
         );
 
         for (const [index, result] of results.entries()) {
@@ -64,7 +66,6 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     public onModuleDestroy(): void {
         this.unsubscribeFromPublications?.();
         this.unsubscribeFromPublications = null;
-        this.registrationGenerations.clear();
 
         for (const workflowId of this.subscriptions.keys())
             this.unregister(workflowId);
@@ -76,16 +77,13 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             return;
         }
 
-        await this.register(change.publication);
+        await this.registerPublication(change.publication);
     }
 
-    private async register(publication: VersionControl.Publication): Promise<void> {
-        const generation = ++this.nextRegistrationGeneration;
-
-        this.registrationGenerations.set(publication.workflow_id, generation);
+    private async registerPublication(publication: VersionControl.Publication): Promise<void> {
         this.clearSubscriptions(publication.workflow_id);
 
-        const pending: PendingRegistration[] = [];
+        const listeningNodes: ListeningNode[] = [];
 
         for (const node of Object.values(publication.workflow_data.nodes)) {
             if (node.isDisabled)
@@ -95,58 +93,47 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             const base = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
             const blueprint = Blueprint.derive(base, staticValues).blueprint;
 
-            if (!blueprint.gatewayListeners?.length)
+            const listener = blueprint.gatewayListener;
+
+            if (!listener)
                 continue;
 
-            const filters = await this.shelf.getGatewayFilters(node.blueprintId);
+            const filtering = await this.shelf.getGatewayFilter(node.blueprintId);
 
-            if (!filters)
-                throw new Error(`Node ${node.blueprintId} declares gateway listeners but no gateway filters`);
+            if (!filtering)
+                throw new Error(`Node ${node.blueprintId} declares a gateway listener but no gateway filter`);
+
+            // A node records only if it declares a recorder; filtering alone is enough to ignite.
+            const recorder = await this.shelf.getGatewayRecorder(node.blueprintId);
 
             const fieldValues = Field.mapValuesToIds(blueprint.fields, staticValues);
 
-            for (const listener of blueprint.gatewayListeners) {
-                const filter = filters.filters[listener.filter];
+            const ref = fieldValues[listener.refFieldId];
 
-                if (!filter)
-                    throw new Error(
-                        `Node ${node.blueprintId} gateway listener ${listener.id} names missing filter ${listener.filter}`,
-                    );
+            if (ref == null)
+                continue;
 
-                const ref = fieldValues[listener.refFieldId];
+            const connectionRef = Library.Ref.Connection.Schema.safeParse(ref);
 
-                if (ref == null)
-                    continue;
+            if (!connectionRef.success)
+                throw new Error(`Node ${node.id} gateway listener does not reference a connection`);
 
-                const connectionRef = Library.Ref.Connection.Schema.safeParse(ref);
-
-                if (!connectionRef.success)
-                    throw new Error(
-                        `Node ${node.id} gateway listener ${listener.id} does not reference a connection`,
-                    );
-
-                pending.push({
-                    connectionId: connectionRef.data.id,
-                    registration: {
-                        publication,
-                        nodeId: node.id,
-                        schema: filters.schema,
-                        filter: filter as Registration['filter'],
-                        fieldValues,
-                    },
-                });
-            }
+            listeningNodes.push({
+                publication,
+                nodeId:       node.id,
+                connectionId: connectionRef.data.id,
+                schema:       filtering.schema,
+                filter:       filtering.filter as ListeningNode['filter'],
+                recorder:     recorder?.recorder as ListeningNode['recorder'],
+                fieldValues,
+            });
         }
 
-        // A newer publication change or removal won while node classes were loading.
-        if (this.registrationGenerations.get(publication.workflow_id) !== generation)
-            return;
-
-        const unsubscribers = pending.map(({ connectionId, registration }) =>
-            this.gateways.connection.subscribe(connectionId, event => {
-                void this.handle(registration, event).catch(error =>
+        const unsubscribers = listeningNodes.map(node =>
+            this.gateways.connection.subscribe(node.connectionId, event => {
+                void this.handleSocketEvent(node, event).catch(error =>
                     this.log.error(
-                        `Gateway event failed for workflow ${publication.workflow_id} node ${registration.nodeId}: ${String(error)}`,
+                        `Gateway event failed for workflow ${publication.workflow_id} node ${node.nodeId}: ${String(error)}`,
                     ),
                 );
             }),
@@ -155,15 +142,12 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
         if (unsubscribers.length)
             this.subscriptions.set(publication.workflow_id, unsubscribers);
 
-        this.registrationGenerations.delete(publication.workflow_id);
-
         this.log.info(
             `Registered ${unsubscribers.length} gateway listeners for workflow ${publication.workflow_id}`,
         );
     }
 
     private unregister(workflowId: Workflow.Id): void {
-        this.registrationGenerations.delete(workflowId);
         this.clearSubscriptions(workflowId);
     }
 
@@ -179,29 +163,80 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
         this.subscriptions.delete(workflowId);
     }
 
-    private async handle(registration: Registration, event: Gateway.Socket.Event): Promise<void> {
-        const parsed = registration.schema.safeParse(event);
+    private async handleSocketEvent(node: ListeningNode, event: Gateway.Socket.Event): Promise<void> {
+        const parsed = node.schema.safeParse(event);
 
         if (!parsed.success)
             return;
 
-        if (!registration.filter(parsed.data, { fieldValues: registration.fieldValues }))
+        const context = this.createContext(node);
+
+        if (!context)
             return;
+
+        if (!node.filter(parsed.data, context))
+            return;
+
+        // Recorded before the run starts, so an execution never reads a history missing the event
+        // that triggered it — and so the events that start no run are still there when one does.
+        const chatId = await this.record(node, parsed.data, context);
 
         const igniter: Execution.Igniter = {
             variant: 'gateway_event',
-            nodeId: registration.nodeId,
+            nodeId: node.nodeId,
             payload: Gateway.Socket.Event.parse(parsed.data),
+            ...(chatId ? { chat_id: chatId } : {}),
         };
 
         const { execution } = await this.executions.runFromService({
-            workflowId: registration.publication.workflow_id,
-            workflowData: registration.publication.workflow_data,
+            workflowId: node.publication.workflow_id,
+            workflowData: node.publication.workflow_data,
             igniter,
         }, 'gateway');
 
         this.log.info(
-            `Triggered workflow=${registration.publication.workflow_id} publication=${registration.publication.id} executionId=${execution.id}`,
+            `Triggered workflow=${node.publication.workflow_id} publication=${node.publication.id} executionId=${execution.id}`,
         );
+    }
+
+
+    // A recorder that throws loses its event, never the run: the workflow still fires.
+    // What the filter and the recorder both read. Null once the connection's socket is gone, which
+    // is also when there is nothing left to handle.
+    private createContext(node: ListeningNode): Gateway.Socket.Context | null {
+        const connection = this.gateways.connection.getOpen(node.connectionId);
+
+        if (!connection)
+            return null;
+
+        return {
+            fieldValues: node.fieldValues as never,
+            connection,
+            definition:  this.gateways.definition.get(connection.definitionId),
+            chatAPI: {
+                append: (externalKey, messages) =>
+                    this.chats.appendByExternalKey(node.publication.workflow_id, externalKey, messages),
+            },
+            log: message => this.log.info(message),
+        };
+    }
+
+    private async record(
+        node:    ListeningNode,
+        event:   unknown,
+        context: Gateway.Socket.Context,
+    ): Promise<Chat.Id | null> {
+        if (!node.recorder)
+            return null;
+
+        try {
+            const chatId = await node.recorder(event, context);
+
+            return chatId ?? null;
+        }
+        catch (error) {
+            this.log.error(`Recorder for node ${node.nodeId} failed: ${(error as Error).message}`);
+            return null;
+        }
     }
 }
