@@ -51,7 +51,6 @@ export const Blueprint = defineBlueprint({
                     { value: 'pins',  displayName: 'Pins'  },
                 ],
                 initialValue: 'send',
-                variant:      'tab',
             }),
         ],
 
