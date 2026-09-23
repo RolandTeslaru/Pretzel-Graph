@@ -16,6 +16,7 @@ import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import Tipped from '@/components/Tipped';
+import { Button } from '@pretzel-graph/standard-ui/foundations';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const nodeId = props.id as Workflow.Node.Id;
@@ -45,13 +46,14 @@ export default CanvasNode
 const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
-  const hasUpdate     = WorkbenchSDK.useDocument(d => d.selectors.node.dependency.hasUpdates(d, hyNode.id))
 
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled
   const isIgniter   = hyNode.blueprint.igniter ?? false
   const isPassive   = hyNode.blueprint.passive ?? false
 
+  const hasNoInputPorts = hyNode.inputs.length === 0
+  
   // Igniters and passive nodes never take inputs, so they get no offer to add one.
   const showAddInputPortBtn = !isIgniter && !isPassive && hyNode.outputs.length == 0 && hyNode.inputs.length == 0
 
@@ -104,6 +106,16 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         </div>
       }
 
+      {hasNoInputPorts && 
+        <Button  variant={"input"} size="icon-sm" className='absolute -left-10 top-1/2 -translate-y-1/2'
+          onClick={() => {
+            WorkbenchSDK.dialogs.openAddInputPort(hyNode.id)
+          }}
+        >
+          <SystemIcons.Plus />
+        </Button>
+      }
+
       <div className={cn(
           "animate-in fade-in-0 duration-200 ease-out transition-colors",
           "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
@@ -113,7 +125,7 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={hyNode.id}
       >
-        <NodeHeader executionStatus={executionStatus} hyNode={hyNode} hasUpdate={hasUpdate} />
+        <NodeHeader executionStatus={executionStatus} hyNode={hyNode}/>
 
         {!isMinimized &&
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'

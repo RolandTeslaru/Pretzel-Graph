@@ -4,14 +4,17 @@ import MinimizedHandles from './MinimizedHandles';
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer';
 import StatusIndicator from './StatusIndicator';
 import type { NodeUI } from '@pretzel-graph/shared/domain/Workbench/Document';
+import { WorkbenchSDK } from '../../../../sdk';
 
 interface Props {
   hyNode: Workflow.Node.Hydrated
   executionStatus: Execution.Session.NodeStatus
-  hasUpdate: boolean
 }
 
-export const NodeHeader: React.FC<Props> = ({ hyNode, executionStatus, hasUpdate }) => {
+export const NodeHeader: React.FC<Props> = ({ hyNode, executionStatus }) => {
+  const hasUpdate = WorkbenchSDK.useDocument(d => d.selectors.node.dependency.hasUpdates(d, hyNode.id))
+
+
   const { ui, id: nodeId } = hyNode;
   const isMinimized = ui.isMinimized;
   const isFlipped = ui.isFlipped;
