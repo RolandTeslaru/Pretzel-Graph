@@ -240,7 +240,7 @@ const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
 
   // A node that listens to a connection runs off an event, so the entry shows what starts it.
   const listensToGateway = ShelfSDK.useStore((s) =>
-    Boolean(blueprintId && s.blueprints[blueprintId]?.gatewayListeners?.length),
+    Boolean(blueprintId && s.blueprints[blueprintId]?.gatewayListener),
   );
 
   return (

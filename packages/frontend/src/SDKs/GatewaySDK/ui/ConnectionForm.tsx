@@ -163,23 +163,6 @@ export const ConnectionForm = ({ definition, folderId, connection, onCreated, on
                             </div>
                         )}
 
-                        <Form.Field control={form.control} name='name' render={({ field }) => (
-                            <Form.Item>
-                                <Form.Label>Name</Form.Label>
-                                <Form.Control>
-                                    <Input
-                                        {...field}
-                                        placeholder={`e.g. My ${definition.displayName} connection`}
-                                        autoFocus
-                                        autoComplete='off'
-                                    />
-                                </Form.Control>
-                                <Form.Message />
-                            </Form.Item>
-                        )} />
-
-                        <DerivableForm derivable={definition} control={form.control} />
-
                         {credentialTemplate && (
                             <Form.Field control={form.control} name='credential_id' render={({ field, fieldState }) => (
                                 <Form.Item>
@@ -198,6 +181,25 @@ export const ConnectionForm = ({ definition, folderId, connection, onCreated, on
                                 </Form.Item>
                             )} />
                         )}
+
+                        <Form.Field control={form.control} name='name' render={({ field }) => (
+                            <Form.Item>
+                                <Form.Label>Name</Form.Label>
+                                <Form.Control>
+                                    <Input
+                                        {...field}
+                                        placeholder={`e.g. My ${definition.displayName} connection`}
+                                        autoFocus
+                                        autoComplete='off'
+                                    />
+                                </Form.Control>
+                                <Form.Message />
+                            </Form.Item>
+                        )} />
+
+                        <DerivableForm derivable={definition} control={form.control} />
+
+                     
 
                     </form>
                 </Form.Root>

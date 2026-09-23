@@ -166,6 +166,30 @@ export function buildTools(discord: DiscordAPI) {
     );
 
 
+    const sendDM = tool(
+        async ({ user_id, content }) => {
+            try {
+                const channelId = await discord.openDM(user_id);
+
+                const message = await discord.sendMessage(channelId, { content, suppressMentions: true });
+
+                return JSON.stringify({ id: message.id, channel_id: channelId, sent: true });
+            }
+            catch (error) {
+                throw describeDiscordError(error, 'sending a direct message');
+            }
+        },
+        {
+            name:        'discord_send_dm',
+            description: 'Send a direct message to a Discord user, opening the DM if there is not one already. Returns the DM channel id, which the other message tools take. Fails if the user shares no server with the bot or has DMs from server members turned off.',
+            schema: z.object({
+                user_id: z.string().describe('User id, from a message\'s author_id or discord_search_members.'),
+                content: z.string().max(2000).describe('The message text, at most 2000 characters.'),
+            }),
+        },
+    );
+
+
     const react = tool(
         async ({ channel_id, message_id, emoji, remove }) => {
             try {
@@ -387,6 +411,7 @@ export function buildTools(discord: DiscordAPI) {
 
         write_tools: [
             sendMessage,
+            sendDM,
             react,
             editMessage,
             pinMessage,

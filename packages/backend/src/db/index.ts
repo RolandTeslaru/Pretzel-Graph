@@ -171,6 +171,8 @@ export namespace DB {
             workflow_id: WorkflowD.Id,
             name:        z.string(),
             attachments: z.unknown().nullable(),
+            // Where the chat came from, for one opened by a gateway event rather than in the editor.
+            external_key: z.string().nullable(),
             created_at:  supabaseTimestamp,
             updated_at:  supabaseTimestamp,
         });

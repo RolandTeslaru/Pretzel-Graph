@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "nodemon -w src -e ts,json --exec ts-node -r tsconfig-paths/register src/main.ts",
+    "dev": "nodemon -w src -w ../node-sdk/src -w ../nodes/src -w ../shared -e ts,json --exec ts-node -r tsconfig-paths/register src/main.ts",
     "build": "rm -rf dist && tsc",
     "start": "node dist/main.js"
   },

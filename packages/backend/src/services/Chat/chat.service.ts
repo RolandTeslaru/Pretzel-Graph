@@ -10,6 +10,22 @@ export class ChatService {
         private readonly database: ChatDatabase,
     ) {}
 
+    // Appends to the workflow's chat for `externalKey`, opening it on the first event. Runs with no
+    // acting user: a gateway event belongs to the workflow, not to whoever published it.
+    async appendByExternalKey(
+        workflowId:  Workflow.Id,
+        externalKey: string,
+        messages:    Chat.Message[],
+    ): Promise<Chat.Id> {
+        return DB.asService('gateway recorder appending to a chat', async (trx) => {
+            const chat = await this.database.chat.upsertByExternalKey(trx, workflowId, externalKey);
+
+            await this.database.message.add(trx, chat.id, messages);
+
+            return chat.id;
+        });
+    }
+
     // The FK rejects a workflow that does not exist.
     async create(
         principal:   Principal.User,

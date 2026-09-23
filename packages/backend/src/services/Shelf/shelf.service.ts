@@ -3,7 +3,7 @@ import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domai
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import type { GatewayFilters, Loader } from '@pretzel-graph/node-sdk';
+import type { GatewayFilters, GatewayRecorders, Loader } from '@pretzel-graph/node-sdk';
 import type { ZodType } from 'zod';
 import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
@@ -15,7 +15,8 @@ const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../.
 // What a node class can carry that the backend reads without running the node.
 type LoadableNode = {
     loaders?:        Record<Field.ResourceLoader.LoaderId, Loader.Fn>;
-    gatewayFilters?: GatewayFilters<Blueprint, ZodType>;
+    gatewayFilter?: GatewayFilters<Blueprint, ZodType>;
+    gatewayRecorder?: GatewayRecorders<Blueprint, ZodType>;
 };
 
 // Read once and held for the process; index changes arrive via a backend restart.
@@ -76,11 +77,19 @@ export class ShelfService {
     }
 
 
-    // The node's event schema and its filters; an event the schema rejects never reaches one.
-    async getGatewayFilters(blueprintId: Blueprint.Id): Promise<GatewayFilters<Blueprint, ZodType> | null> {
+    // The node's event schema and its filter; an event the schema rejects never reaches it.
+    async getGatewayFilter(blueprintId: Blueprint.Id): Promise<GatewayFilters<Blueprint, ZodType> | null> {
         const NodeClass = await this.getNodeClass(blueprintId);
 
-        return NodeClass?.gatewayFilters ?? null;
+        return NodeClass?.gatewayFilter ?? null;
+    }
+
+
+    // What the node does with an event that passed its filter, run whether or not one starts a run.
+    async getGatewayRecorder(blueprintId: Blueprint.Id): Promise<GatewayRecorders<Blueprint, ZodType> | null> {
+        const NodeClass = await this.getNodeClass(blueprintId);
+
+        return NodeClass?.gatewayRecorder ?? null;
     }
 
     // The extended shelf blueprints, fetched from the registry once and kept for the process.

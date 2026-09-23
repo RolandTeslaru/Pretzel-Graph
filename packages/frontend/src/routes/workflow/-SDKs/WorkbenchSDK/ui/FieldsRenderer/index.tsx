@@ -12,6 +12,7 @@ import { ScriptField } from './Script'
 import { ConditionField } from './Condition'
 import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
+import { ListField } from './List'
 import { VariadicField } from './Variadic'
 import { ResourceLoaderField } from './ResourceLoader'
 import { CalendarRangeField } from './CalendarRange'
@@ -33,6 +34,7 @@ export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
 export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
+export { ListField } from './List'
 export { CalendarRangeField } from './CalendarRange'
 export { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 export { WorkflowIdSelectorField } from './WorkflowIdSelector'
@@ -60,6 +62,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     File: FileField,
     Script: ScriptField,
     Json: JsonField,
+    List: ListField,
     Condition: ConditionField,
     CaseList: CaseListField,
     Variadic: VariadicField,

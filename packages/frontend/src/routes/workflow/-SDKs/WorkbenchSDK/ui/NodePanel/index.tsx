@@ -98,7 +98,18 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
         const executionStrategyFields: Foundations.Field[] = []
 
         hyNode.fields.forEach(field => {
-            if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
+            if (
+                hyNode.blueprint.igniter
+                && (field.id === "signalDependency" || field.id === "dataDependency")
+            )
+                return
+
+            if (
+                field.id === "signalDependency"
+                || field.id === "dataDependency"
+                || field.id === "onErrorStrategy"
+                || field.id === "test_timeout_ms"
+            ) {
                 executionStrategyFields.push(field)
                 return
             }

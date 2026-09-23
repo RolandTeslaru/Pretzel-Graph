@@ -99,6 +99,19 @@ export class DiscordAPI {
     }
 
 
+    // Discord has no send-to-user endpoint; a DM is a channel, and this returns the existing one
+    // when the bot already has it open.
+    async openDM(userId: string): Promise<string> {
+
+        const channel = await this.rest.post(
+            Routes.userChannels(),
+            { body: { recipient_id: userId } },
+        ) as APIChannel;
+
+        return channel.id;
+    }
+
+
     // ─── Channels ─────────────────────────────────────────────────────────
 
     async getChannel(channelId: string): Promise<APIChannel> {

@@ -34,10 +34,10 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
         const blueprintId = body.blueprintId as Blueprint.Id;
         const base        = this.shelf.getBlueprint({ blueprintId }).blueprint;
         const blueprint   = Blueprint.derive(base, body.fieldValues).blueprint;
-        const listener    = blueprint.gatewayListeners?.find(candidate => candidate.id === body.listenerId);
+        const listener    = blueprint.gatewayListener;
 
         if (!listener)
-            throw new BadRequestException(`${blueprintId} declares no gateway listener "${body.listenerId}"`);
+            throw new BadRequestException(`${blueprintId} declares no gateway listener`);
 
         // The body names the connection to listen to; it may only be the one the node points at.
         const ref = Library.Ref.Connection.Schema.safeParse(body.fieldValues[listener.refFieldId]);
@@ -45,11 +45,11 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
         if (!ref.success || ref.data.id !== body.connectionId)
             throw new ForbiddenException('The connection does not match the one this node points at');
 
-        const gateway = await this.shelf.getGatewayFilters(blueprintId);
-        const filter  = gateway?.filters[listener.filter] as Filter | undefined;
+        const gateway = await this.shelf.getGatewayFilter(blueprintId);
+        const filter  = gateway?.filter as Filter | undefined;
 
         if (!gateway || !filter)
-            throw new BadRequestException(`${blueprintId} has no gateway filter "${listener.filter}"`);
+            throw new BadRequestException(`${blueprintId} has no gateway filter`);
 
         this.deregister(body.consultationId);
 

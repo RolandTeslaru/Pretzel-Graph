@@ -150,7 +150,6 @@ export class WebSocketSocket extends GatewaySocket<typeof Definition> {
         }
 
         this.ctx.dispatch(WebSocketConnection.Event.Message.parse({
-            provider:   'websocket',
             type:       'message',
             data,
             receivedAt: new Date().toISOString(),

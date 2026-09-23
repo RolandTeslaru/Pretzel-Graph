@@ -33,6 +33,7 @@ export type ConnectionDefinition<
 > = {
     readonly id: TId & Gateway.Definition.Id
     readonly __literalId?: TId
+    readonly provider: string
     readonly displayName: string
     readonly description?: string
     readonly icon: string
@@ -100,6 +101,7 @@ export function defineConnection<
 
     return {
         id: definition.id as TId & Gateway.Definition.Id,
+        provider: definition.provider as string,
         displayName: definition.displayName,
         description: definition.description,
         icon: definition.icon ?? DEFAULT_ICON,

@@ -123,6 +123,7 @@ export namespace Field {
     export const Boolean = Field.Base.extend({
         variant: configLiteral("Boolean"),
         initialValue: z.boolean(),
+        appearance: z.enum(["switch", "checkbox"]).optional(),
         isExpressionInitially: z.boolean().optional(),
         only: z.enum(["static", "expression"]).optional(),
     })
@@ -139,6 +140,8 @@ export namespace Field {
             })
         ),
         kind: z.enum(["select", "tab"]).default("select"),
+        // A select long enough to need filtering; ignored by the tab kind.
+        search: z.boolean().optional(),
         isExpressionInitially: z.boolean().optional(),
         only: z.enum(["static", "expression"]).optional(),
     })

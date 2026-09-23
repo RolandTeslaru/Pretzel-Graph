@@ -24,16 +24,7 @@ export const DerivableForm = <V extends FormValues>({ derivable, control }: Prop
                     defaultValue={getFieldDefaultValue(definition) as never}
                     shouldUnregister
                     render={({ field, fieldState }) => (
-                        <Form.Item>
-                            <Form.Label>
-                                {definition.displayName}
-                                {definition.required && <span className='ml-1 text-destructive'>*</span>}
-                            </Form.Label>
-                            <Form.Control>
-                                <FieldInput {...field} definition={definition} invalid={Boolean(fieldState.error)} />
-                            </Form.Control>
-                            <Form.Message />
-                        </Form.Item>
+                        <FieldInput {...field} definition={definition} invalid={Boolean(fieldState.error)} />
                     )}
                 />
             ))}

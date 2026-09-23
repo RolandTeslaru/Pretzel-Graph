@@ -4,7 +4,6 @@ import { Gateway } from '@pretzel-graph/shared/domain';
 export namespace WebSocketConnection {
     export namespace Event {
         export const Message = Gateway.Socket.Event.extend({
-            provider:   z.literal('websocket'),
             type:       z.literal('message'),
             // Parsed JSON when the connection reads JSON, the raw text otherwise.
             data:       z.json(),

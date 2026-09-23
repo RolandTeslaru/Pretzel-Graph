@@ -3,6 +3,7 @@ import { WebSocketToken } from "@pretzel-graph/nodes/Credentials";
 
 export const Definition = defineConnection({
     id: "Connections.WebSocket",
+    provider: "websocket",
     displayName: "WebSocket",
     description: "Listens to any WebSocket server.",
     icon: "WebSocket",

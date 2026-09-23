@@ -22,6 +22,15 @@ export const Blueprint = defineBlueprint({
             initialValue: false,
             tooltip:      "Also start on messages sent by other bots. This connection's own messages never start a run.",
         }),
+        defineField.MultiOption('conversation', 'Conversation', {
+            options: [
+                { value: 'none',    displayName: 'None',    description: 'Record nothing; the event only starts the run.' },
+                { value: 'channel', displayName: 'Channel', description: 'One conversation per channel, shared by everyone in it.' },
+                { value: 'user',    displayName: 'User',    description: 'One conversation per person, across every channel.' },
+            ],
+            initialValue: 'none',
+            tooltip:      'Where a message is recorded, so the workflow can read the history it belongs to.',
+        }),
         defineField.Integer('testTimeoutMs', 'Test Timeout (ms)', {
             initialValue: 30_000,
             min:          10_000,
@@ -35,7 +44,5 @@ export const Blueprint = defineBlueprint({
             tooltip: 'The normalized Discord message event.',
         }),
     ],
-    gatewayListeners: [
-        defineGatewayListener({ id: 'message', refFieldId: 'connection' }),
-    ],
+    gatewayListener: defineGatewayListener({ refFieldId: 'connection' }),
 });

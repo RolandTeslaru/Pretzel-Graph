@@ -19,6 +19,8 @@ export namespace Gateway {
         // Fields, credentials and branches come from Derivable; field values pick the credential.
         export const Schema = Derivable.Schema.extend({
             id:          Id,
+            // The service behind the socket, e.g. "discord". Named once here rather than on every event.
+            provider:    z.string(),
             displayName: z.string(),
             description: z.string().optional(),
             icon:        z.string(),
@@ -169,15 +171,9 @@ export namespace Gateway {
 
     // A blueprint's declaration that one of its fields points at a connection it listens to.
     export namespace Listener {
-        export const Id = z.string().brand('Gateway.Listener.Id');
-        export type Id = z.infer<typeof Id>;
-
         export const Schema = z.object({
-            id: Id,
             // The LibraryRef field holding the connection this listener subscribes to.
             refFieldId: Field.Id,
-            // Key of the static filter on the node class; defaults to the listener's id.
-            filter:     z.string(),
         });
 
         // Subscribed to a connection rather than a socket, so it hears every socket the connection opens.
@@ -189,8 +185,7 @@ export namespace Gateway {
     export namespace Socket {
         // Each connection extends this with its own events; a node's filters validate them.
         export const Event = z.looseObject({
-            provider: z.string(),
-            type:     z.string(),
+            type: z.string(),
         });
         export type Event = z.infer<typeof Event>;
     }
@@ -244,11 +239,10 @@ export namespace Gateway {
             export const Request = ConsultationModule.Request.extend({
                 variant:      z.literal(Variant),
                 connectionId: Connection.Id,
-                listenerId:   Listener.Id,
             });
             export type Request = z.infer<typeof Request>;
 
-            // Backend → node: the first event that passed the listener's filter.
+            // Backend → node: the first event that passed the node's filter.
             export const Answer = ConsultationModule.Answer.extend({
                 variant: z.literal(Variant),
                 event:   Socket.Event,
@@ -264,7 +258,6 @@ export namespace Gateway {
                     // The node's own values, so the backend runs the same filter a published run would.
                     fieldValues:    z.record(Field.Id, Field.Value),
                     connectionId:   Connection.Id,
-                    listenerId:     Listener.Id,
                     timeoutMs:      z.number(),
                     executionId:    ExecutionId,
                     consultationId: ConsultationModule.Id,

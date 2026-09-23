@@ -29,6 +29,32 @@ class ChatMethods {
         return Chat.Schema.parse(row);
     }
 
+    // The chat a gateway event belongs to, opened on the first event and reused after that. Two
+    // events arriving together race to insert, so the conflict clause decides rather than a read.
+    @AllowedDatabaseRoles("user", "service")
+    @ZodReturn(Chat.Schema)
+    async upsertByExternalKey(
+        trx: DB.Transaction<'user' | 'service'>,
+        workflowId: Workflow.Id,
+        externalKey: string,
+        name = 'New Chat',
+    ): Promise<Chat> {
+        const row = await trx
+            .insertInto('chats')
+            .values({
+                workflow_id:  workflowId,
+                external_key: externalKey,
+                name,
+            })
+            .onConflict(conflict => conflict
+                .columns(['workflow_id', 'external_key'])
+                .doUpdateSet({ updated_at: new Date().toISOString() }))
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return Chat.Schema.parse(row);
+    }
+
     @AllowedDatabaseRoles("user")
     @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
     async get(
@@ -134,9 +160,9 @@ class ChatMethods {
 @DatabaseClass
 class MessageMethods {
 
-    @AllowedDatabaseRoles("user", "delegate")
+    @AllowedDatabaseRoles("user", "delegate", "service")
     async add(
-        trx: DB.Transaction<'user' | 'delegate'>,
+        trx: DB.Transaction<'user' | 'delegate' | 'service'>,
         chatId: Chat.Id,
         messages: Chat.Message[],
     ): Promise<void> {

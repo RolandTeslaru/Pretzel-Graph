@@ -9,13 +9,14 @@ import { StandardFields }          from "../standardFields";
 
 
 export type ReservedDefinitionKey =
-    | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
-    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayListeners"
+    // `provider` belongs to connection definitions, which share this derivative compiler.
+    | "id" | "provider" | "displayName" | "description" | "icon" | "accent" | "iconColor"
+    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayListener"
     | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope"
 
 export const RESERVED_DEFINITION_KEYS: ReadonlySet<string> = new Set<ReservedDefinitionKey>([
-    "id", "displayName", "description", "icon", "accent", "iconColor",
-    "fields", "inputs", "outputs", "credentials", "webhooks", "gatewayListeners",
+    "id", "provider", "displayName", "description", "icon", "accent", "iconColor",
+    "fields", "inputs", "outputs", "credentials", "webhooks", "gatewayListener",
     "toolCompatible", "proxyCompatible", "igniter", "passive", "flags", "itemScope",
 ])
 
@@ -47,7 +48,7 @@ export type DefineBlueprintReturn<
     readonly inputs:           TInputs;
     readonly outputs:          TOutputs;
     readonly webhooks?:        TWebhooks;
-    readonly gatewayListeners?: readonly Gateway.Listener[];
+    readonly gatewayListener?: Gateway.Listener;
     readonly toolCompatible:   TToolCompatible;
     readonly proxyCompatible?: boolean;
     readonly igniter?:         boolean;

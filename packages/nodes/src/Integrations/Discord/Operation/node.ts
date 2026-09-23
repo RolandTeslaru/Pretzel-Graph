@@ -76,18 +76,24 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         fields:  Extract<typeof this.fieldValues, { resource: 'message' }>,
     ): Promise<Partial<InferOutputs<typeof Blueprint>>> {
 
-        if (fields.message_action === 'send')
+        if (fields.message_action === 'send') {
+
+            const channelId = fields.send_target === 'user'
+                ? await discord.openDM(fields.send_user_id)
+                : fields.send_channel_id;
+
             return {
-                message: await discord.sendMessage(fields.channel_id, {
+                message: await discord.sendMessage(channelId, {
                     content:          fields.send_content,
-                    replyToId:        fields.send_reply_to_id || undefined,
+                    replyToId:        fields.send_target === 'channel' ? fields.send_reply_to_id || undefined : undefined,
                     suppressMentions: fields.send_suppress_mentions,
                 }),
             };
+        }
 
         if (fields.message_action === 'fetch')
             return {
-                messages: await discord.fetchMessages(fields.channel_id, {
+                messages: await discord.fetchMessages(fields.fetch_channel_id, {
                     limit:    fields.fetch_limit,
                     anchor:   fields.fetch_anchor,
                     anchorId: fields.fetch_anchor === 'latest' ? undefined : fields.fetch_anchor_id,
@@ -97,7 +103,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         if (fields.message_action === 'edit')
             return {
                 edited_message: await discord.editMessage(
-                    fields.channel_id,
+                    fields.edit_channel_id,
                     fields.edit_message_id,
                     fields.edit_content,
                 ),
@@ -105,7 +111,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         if (fields.message_action === 'react') {
             await discord.react(
-                fields.channel_id,
+                fields.react_channel_id,
                 fields.react_message_id,
                 fields.react_emoji,
                 fields.react_remove,
@@ -115,11 +121,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
         }
 
         if (fields.message_action === 'pin') {
-            await discord.pin(fields.channel_id, fields.pin_message_id, fields.pin_unpin);
+            await discord.pin(fields.pin_channel_id, fields.pin_message_id, fields.pin_unpin);
 
             return {};
         }
 
-        return { pinned_messages: await discord.listPins(fields.channel_id) };
+        return { pinned_messages: await discord.listPins(fields.pins_channel_id) };
     }
 }

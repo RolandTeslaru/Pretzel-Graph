@@ -1,5 +1,5 @@
 import z from "zod"
-import { ChatSchema } from "./chat"
+import { ChatSchema, externalKey } from "./chat"
 import * as MessageMod from "./message"
 import * as EventMod from "./event"
 import * as ApiMod from "./api"
@@ -17,6 +17,8 @@ export namespace Chat {
     export import Message       = MessageMod.Message
 
     export const Schema = ChatSchema
+
+    export const createExternalKey = externalKey
 
     export import Event = EventMod.Event
     export import API   = ApiMod.API

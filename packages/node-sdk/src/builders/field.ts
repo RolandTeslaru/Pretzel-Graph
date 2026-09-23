@@ -174,6 +174,7 @@ export namespace defineField {
     export function Boolean<T_Id extends string, T_Required extends boolean = false, const T_ItemScoped extends boolean = false>(
         id: T_Id, displayName: string, options: {
         initialValue?: boolean;
+        appearance?: "switch" | "checkbox";
         isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped> = {},
     ): T_Return<T_Id, "Boolean", Field.Boolean, T_Required> & ItemScopedFlag<T_ItemScoped> {
@@ -181,6 +182,7 @@ export namespace defineField {
             ...buildBase(id, displayName, options),
             variant: "Boolean",
             initialValue: options.initialValue ?? false,
+            ...(options.appearance ? { appearance: options.appearance } : {}),
             ...buildIsExpression(options.isExpressionInitially),
             ...buildOnly(options.only),
         } as T_Return<T_Id, "Boolean", Field.Boolean, T_Required> & ItemScopedFlag<T_ItemScoped>;
@@ -206,6 +208,7 @@ export namespace defineField {
         initialValue: TOptions[number]["value"];
         options: TOptions;
         variant?: "select" | "tab";
+        search?: boolean;
         isExpressionInitially?: boolean; only?: "static" | "expression";
     } & BaseOptions<T_Required, T_ItemScoped>
     ): T_Return<T_Id, "MultiOption", Field.MultiOption, T_Required> & ItemScopedFlag<T_ItemScoped> & {
@@ -218,6 +221,7 @@ export namespace defineField {
             initialValue: options.initialValue,
             options: options.options as unknown as Field.MultiOption["options"],
             kind: options.variant ?? "select",
+            ...(options.search ? { search: true } : {}),
             ...buildIsExpression(options.isExpressionInitially),
             ...buildOnly(options.only),
         } as unknown as T_Return<T_Id, "MultiOption", Field.MultiOption, T_Required> & ItemScopedFlag<T_ItemScoped> & {

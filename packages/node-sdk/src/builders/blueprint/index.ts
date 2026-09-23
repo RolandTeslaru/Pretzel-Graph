@@ -37,7 +37,7 @@ export function defineBlueprint<
     inputs:           TInputs;
     outputs:          TOutputs;
     webhooks?:        TWebhooks;
-    gatewayListeners?: readonly Gateway.Listener[];
+    gatewayListener?: Gateway.Listener;
     toolCompatible?:  TToolCompatible;
     proxyCompatible?: boolean;
     igniter?:         boolean;
@@ -54,15 +54,16 @@ export function defineBlueprint<
     if (definition.itemScope !== undefined && !definition.inputs.some(i => (i.id as string) === definition.itemScope))
         throw new Error(`defineBlueprint(${definition.id}): itemScope "${definition.itemScope}" is not a declared input port id`);
 
-    // A listener's refFieldId must name a declared LibraryRef field that accepts connections.
-    for (const listener of definition.gatewayListeners ?? []) {
-        const field = definition.fields.find(f => (f.id as string) === (listener.refFieldId as string));
+    // The listener's refFieldId must name a declared LibraryRef field that accepts connections.
+    if (definition.gatewayListener) {
+        const refFieldId = definition.gatewayListener.refFieldId as string;
+        const field      = definition.fields.find(f => (f.id as string) === refFieldId);
 
         if (!field)
-            throw new Error(`defineBlueprint(${definition.id}): gateway listener "${listener.id}" points at "${listener.refFieldId}", which is not a declared field`);
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener points at "${refFieldId}", which is not a declared field`);
 
         if (field.variant !== "LibraryRef" || !field.accepts.includes("connection"))
-            throw new Error(`defineBlueprint(${definition.id}): gateway listener "${listener.id}" points at "${listener.refFieldId}", which is not a LibraryRef field accepting connections`);
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener points at "${refFieldId}", which is not a LibraryRef field accepting connections`);
     }
 
     const baseFields = [
@@ -99,7 +100,7 @@ export function defineBlueprint<
         inputs:          definition.inputs,
         outputs:         definition.outputs,
         webhooks:        definition.webhooks,
-        gatewayListeners: definition.gatewayListeners,
+        gatewayListener: definition.gatewayListener,
         toolCompatible:  definition.toolCompatible as TToolCompatible,
         proxyCompatible: definition.proxyCompatible,
         igniter:         definition.igniter,

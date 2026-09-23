@@ -5,8 +5,8 @@ import { DiscordBot } from '@pretzel-graph/nodes/Credentials';
 /**
  * Two axes: the resource, then what you do to it.
  *
- * Field ids are unique across the whole tree, so shared ids sit on the highest branch that covers
- * them — `channel_id` is declared once for every message action rather than per leaf.
+ * Field ids are unique across the whole tree, so each action declares its own channel field rather
+ * than sharing one — a send addressed to a user opens a DM and has no channel to name.
  */
 export const Blueprint = defineBlueprint({
     id:             'Integrations.Discord.Operation',
@@ -37,10 +37,6 @@ export const Blueprint = defineBlueprint({
 
     'resource==message': {
         fields: [
-            defineField.String('channel_id', 'Channel ID', {
-                required: true,
-                tooltip:  'The channel to act in. A Discord event carries this as channelId.',
-            }),
             defineField.MultiOption('message_action', 'Action', {
                 options: [
                     { value: 'send',  displayName: 'Send'  },
@@ -56,20 +52,47 @@ export const Blueprint = defineBlueprint({
 
         'message_action==send': {
             fields: [
-                defineField.String('send_content', 'Content', { required: true, multiline: true }),
-                defineField.String('send_reply_to_id', 'Reply To', {
-                    tooltip: 'Message id to reply to. Leave empty to post a new message.',
+                defineField.MultiOption('send_target', 'To', {
+                    options: [
+                        { value: 'channel', displayName: 'Channel', description: 'Post in a channel, or in a DM you already have the id for.' },
+                        { value: 'user',    displayName: 'User',    description: 'Open a DM with a user and post there.' },
+                    ],
+                    initialValue: 'channel',
+                    variant:      'tab',
                 }),
+                defineField.String('send_content', 'Content', { required: true, multiline: true }),
                 defineField.Boolean('send_suppress_mentions', 'Suppress Mentions', {
                     initialValue: true,
                     tooltip:      'Blocks @everyone, @here and role pings. User mentions still notify.',
                 }),
             ],
             outputs: [defineOutput.Data('message', 'Message')],
+
+            'send_target==channel': {
+                fields: [
+                    defineField.String('send_channel_id', 'Channel ID', {
+                        required: true,
+                        tooltip:  'A Discord event carries this as channelId, and a DM is a channel like any other.',
+                    }),
+                    defineField.String('send_reply_to_id', 'Reply To', {
+                        tooltip: 'Message id to reply to. Leave empty to post a new message.',
+                    }),
+                ],
+            },
+
+            'send_target==user': {
+                fields: [
+                    defineField.String('send_user_id', 'User ID', {
+                        required: true,
+                        tooltip:  'Opens the DM channel with this user, reusing it if one already exists.',
+                    }),
+                ],
+            },
         },
 
         'message_action==fetch': {
             fields: [
+                defineField.String('fetch_channel_id', 'Channel ID', { required: true }),
                 defineField.Integer('fetch_limit', 'Limit', { initialValue: 50, min: 1, max: 100 }),
                 defineField.MultiOption('fetch_anchor', 'From', {
                     options: [
@@ -93,6 +116,7 @@ export const Blueprint = defineBlueprint({
 
         'message_action==edit': {
             fields: [
+                defineField.String('edit_channel_id', 'Channel ID', { required: true }),
                 defineField.String('edit_message_id', 'Message ID', { required: true }),
                 defineField.String('edit_content', 'Content', { required: true, multiline: true }),
             ],
@@ -101,6 +125,7 @@ export const Blueprint = defineBlueprint({
 
         'message_action==react': {
             fields: [
+                defineField.String('react_channel_id', 'Channel ID', { required: true }),
                 defineField.String('react_message_id', 'Message ID', { required: true }),
                 defineField.String('react_emoji', 'Emoji', {
                     required:    true,
@@ -113,12 +138,14 @@ export const Blueprint = defineBlueprint({
 
         'message_action==pin': {
             fields: [
+                defineField.String('pin_channel_id', 'Channel ID', { required: true }),
                 defineField.String('pin_message_id', 'Message ID', { required: true }),
                 defineField.Boolean('pin_unpin', 'Unpin', { initialValue: false }),
             ],
         },
 
         'message_action==pins': {
+            fields:  [defineField.String('pins_channel_id', 'Channel ID', { required: true })],
             outputs: [defineOutput.DataList('pinned_messages', 'Pinned')],
         },
     },

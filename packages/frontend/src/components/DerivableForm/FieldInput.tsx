@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ControllerRenderProps, FieldValues as FormValues } from 'react-hook-form'
-import { Input, Select, Switch } from '@pretzel-graph/standard-ui/foundations'
+import { Checkbox, Form, Input, Select, Switch } from '@pretzel-graph/standard-ui/foundations'
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field'
 
 type Props = ControllerRenderProps<FormValues, string> & {
@@ -11,10 +11,70 @@ type Props = ControllerRenderProps<FormValues, string> & {
 const placeholderFor = (definition: Field) =>
     'placeholder' in definition ? (definition.placeholder as string | undefined) : undefined
 
+// One labelled field; a checkbox sits before its label, a switch after it, every other variant below it.
+export const FieldInput = (props: Props) => {
+    if (props.definition.variant === 'Boolean' && props.definition.appearance === 'checkbox') {
+        return (
+            <Form.Item>
+                <div className='flex items-center gap-2'>
+                    <Form.Control>
+                        <FieldControl {...props} />
+                    </Form.Control>
+                    <FieldLabel definition={props.definition} />
+                </div>
+                <Form.Message />
+            </Form.Item>
+        )
+    }
+
+    if (props.definition.variant === 'Boolean') {
+        return (
+            <Form.Item>
+                <div className='flex items-center justify-between gap-3'>
+                    <FieldLabel definition={props.definition} />
+                    <Form.Control>
+                        <FieldControl {...props} />
+                    </Form.Control>
+                </div>
+                <Form.Message />
+            </Form.Item>
+        )
+    }
+
+    return (
+        <Form.Item>
+            <FieldLabel definition={props.definition} />
+            <Form.Control>
+                <FieldControl {...props} />
+            </Form.Control>
+            <Form.Message />
+        </Form.Item>
+    )
+}
+
+
+const FieldLabel = ({ definition }: { definition: Field }) => (
+    <Form.Label>
+        {definition.displayName}
+        {definition.required && <span className='ml-1 text-destructive'>*</span>}
+    </Form.Label>
+)
+
+
 // The input for one field, chosen by its variant.
-export const FieldInput = ({ definition, invalid, ref, ...field }: Props) => {
+const FieldControl = ({ definition, invalid, ref, ...field }: Props) => {
     switch (definition.variant) {
         case 'Boolean':
+            if (definition.appearance === 'checkbox') {
+                return (
+                    <Checkbox
+                        className='shadow-none!'
+                        checked={Boolean(field.value)}
+                        onCheckedChange={checked => field.onChange(checked === true)}
+                    />
+                )
+            }
+
             return (
                 <Switch
                     checked={Boolean(field.value)}
