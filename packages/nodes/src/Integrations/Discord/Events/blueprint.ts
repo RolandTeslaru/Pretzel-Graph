@@ -1,8 +1,8 @@
 import { defineBlueprint, defineField, defineGatewayListener, defineOutput } from '@pretzel-graph/node-sdk';
 
 export const Blueprint = defineBlueprint({
-    id:          'Integrations.Discord.OnMessage',
-    displayName: 'Discord On Message',
+    id:          'Integrations.Discord.Events',
+    displayName: 'Discord Events',
     description: 'Starts the workflow when the connected Discord bot receives a message.',
     icon:        'Discord',
     accent:      'utility',

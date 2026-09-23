@@ -180,7 +180,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Discord",
     id: "discord",
     icon: "Discord",
-    blueprintIds: ["Integrations.Discord.OnMessage"]
+    blueprintIds: ["Integrations.Discord.Events", "Integrations.Discord.Operation"]
   },
   google: {
     displayName: "Google",
