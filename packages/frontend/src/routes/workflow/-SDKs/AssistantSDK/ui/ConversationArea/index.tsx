@@ -23,7 +23,6 @@ const AssistantPanel: React.FC = () => {
             <Conversation.PromptInput
                 onSend={(content) => AssistantSDK.actions.message.send({ content })}
                 placeholder={isIncomplete ? undefined : "Ask the assistant..."}
-                disabled={isIncomplete}
                 notice={isIncomplete && <FinishSetupButton />}
             >
                 <Conversation.SendButton />
