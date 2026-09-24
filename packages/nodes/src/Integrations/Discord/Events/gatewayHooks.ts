@@ -134,29 +134,15 @@ export const gatewayHooks = defineGatewayHooks<typeof Blueprint>()(Discord.Event
     },
 
     /**
-     * Records every message the filter passed, whether or not it starts a run.
+     * Hands the run the chat its conversation belongs to.
      *
-     * The scope is deterministic and unique per conversation — which is exactly what a chat's
-     * external key has to be, so it serves as one.
+     * An empty append opens the chat on the first event and writes nothing, so the workflow is the
+     * only thing that puts messages in it.
      */
-    recorder: async (event, scope, { fieldValues, chatAPI }) => {
-        if (fieldValues.conversation_scope === 'none' || event.type !== 'messageCreate')
-            return;
-
-        await chatAPI.append(Chat.ExternalKey.parse(scope), [{
-            id:      Chat.Message.Id.parse(crypto.randomUUID()),
-            role:    'human',
-            content: event.content,
-            data:    { name: event.author.name, additional_kwargs: { messageId: event.messageId } },
-        }]);
-    },
-
     igniter: async (_event, scope, { fieldValues, chatAPI }) => {
         if (fieldValues.conversation_scope === 'none')
             return {};
 
-        const chatId = await chatAPI.findIdByExternalKey(Chat.ExternalKey.parse(scope));
-
-        return chatId ? { chat_id: chatId } : {};
+        return { chat_id: await chatAPI.append(Chat.ExternalKey.parse(scope), []) };
     },
 });
