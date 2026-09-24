@@ -1,5 +1,6 @@
 import { defineConnection, defineField } from "@pretzel-graph/node-sdk";
 import { DiscordBot } from "@pretzel-graph/nodes/Credentials";
+import { Discord } from "@pretzel-graph/nodes/Integrations/Discord/domain";
 
 // Intents decide which events Discord pushes down the socket. They do not affect REST calls, and an
 // event nothing listens to still costs nothing, so the defaults cover messages and little else.
@@ -8,7 +9,7 @@ const intent = (id: string, displayName: string, tooltip: string, on = false, ad
 
 export const Definition = defineConnection({
     id: "Connections.Discord",
-    provider: "discord",
+    provider: Discord.PROVIDER,
     displayName: "Discord",
     description: "Listens to a Discord bot's messages.",
     icon: "Discord",

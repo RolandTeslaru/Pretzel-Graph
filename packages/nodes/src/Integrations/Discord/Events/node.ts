@@ -1,16 +1,13 @@
 import { RuntimeNode, type InferOutputs } from '@pretzel-graph/node-sdk';
 import { Gateway, type Execution, type Library } from '@pretzel-graph/shared/domain';
 import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
-import { Discord } from '../domain';
 import { Blueprint } from './blueprint';
-import { gatewayFilter } from './filter';
-import { gatewayRecorder } from './recorder';
+import { gatewayHooks } from './gatewayHooks';
+
 
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    static gatewayFilter = gatewayFilter;
-
-    static gatewayRecorder = gatewayRecorder;
+    public static gatewayHooks = gatewayHooks;
 
     private event: Gateway.Socket.Event | null = null;
 

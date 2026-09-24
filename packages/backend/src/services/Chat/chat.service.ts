@@ -10,7 +10,7 @@ export class ChatService {
         private readonly database: ChatDatabase,
     ) {}
 
-    // Appends to the workflow's chat for `externalKey`, opening it on the first event. Runs with no
+    // Appends to the workflow's chat for `externalKey`, opening it on the first write. Runs with no
     // acting user: a gateway event belongs to the workflow, not to whoever published it.
     async appendByExternalKey(
         workflowId:  Workflow.Id,
@@ -26,6 +26,19 @@ export class ChatService {
         });
     }
 
+    // The chat opened under an external key, or null before its first write.
+    async findIdByExternalKey(
+        workflowId:  Workflow.Id,
+        externalKey: Chat.ExternalKey,
+    ): Promise<Chat.Id | null> {
+        const chat = await DB.asService(
+            'gateway hook resolving a chat for an igniter',
+            (trx) => this.database.chat.findByExternalKey(trx, workflowId, externalKey),
+        );
+
+        return chat?.id ?? null;
+    }
+
     // The FK rejects a workflow that does not exist.
     async create(
         principal:   Principal.User,
@@ -39,15 +52,16 @@ export class ChatService {
         return { chat };
     }
 
-    // chatId is a proposed id — the row may not exist yet.
+    // chatId is a proposed id — the row may not exist yet. A service principal leaves it ownerless.
     async ensure(
-        principal:   Principal.User,
+        principal:   Principal.User | Principal.Service,
         workflow_id: Workflow.Id,
         payload:     Chat.API.Ensure.Request
     ): Promise<Chat.API.Ensure.Response> {
         const { chatId, name } = payload;
+        const createdBy = principal.type === 'user' ? principal.userId : null;
 
-        const chat = await DB.asUser(principal, (trx) => this.database.chat.ensure(trx, principal.userId, chatId, workflow_id, name));
+        const chat = await DB.asUser({ userId: createdBy }, (trx) => this.database.chat.ensure(trx, createdBy, chatId, workflow_id, name));
         return { chat };
     }
 

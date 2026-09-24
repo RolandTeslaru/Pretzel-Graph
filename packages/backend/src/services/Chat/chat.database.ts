@@ -55,6 +55,23 @@ class ChatMethods {
         return Chat.Schema.parse(row);
     }
 
+    @AllowedDatabaseRoles("user", "service")
+    @ZodReturn(Chat.Schema.nullable())
+    async findByExternalKey(
+        trx: DB.Transaction<'user' | 'service'>,
+        workflowId: Workflow.Id,
+        externalKey: Chat.ExternalKey,
+    ): Promise<Chat | null> {
+        const row = await trx
+            .selectFrom('chats')
+            .selectAll()
+            .where('workflow_id', '=', workflowId)
+            .where('external_key', '=', externalKey)
+            .executeTakeFirst();
+
+        return row ? Chat.Schema.parse(row) : null;
+    }
+
     @AllowedDatabaseRoles("user")
     @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
     async get(

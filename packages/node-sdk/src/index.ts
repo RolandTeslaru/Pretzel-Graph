@@ -1,6 +1,6 @@
 export { RuntimeNode } from "./node";
 export { GatewaySocket } from "./connections/gateway-socket";
-export type { GatewayFilter, GatewayFilters, GatewayRecorder, GatewayRecorders, GatewayContext } from "./builders/gateway";
+export type { GatewayHooks, GatewayContext } from "./builders/gateway";
 export type { ConnectionAPI } from "./apis";
 export type { HostContext, NodeContext, SocketContext } from "./contexts";
 export type { CompilationContext } from "./compiler-context";

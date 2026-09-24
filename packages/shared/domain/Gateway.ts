@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, type ZodType } from 'zod';
 import { Vault } from './Vault';
 import type { AxiosInstance } from 'axios';
 import { Consultation as ConsultationModule } from './Consultation';
@@ -7,6 +7,8 @@ import { ConnectionDefinitionId, ConnectionId, NodeId, WorkflowId } from './ids'
 import { Field } from './Foundations/Field';
 // Type-only: a runtime import would close a cycle back through Workflow.
 import type { Chat } from './Chat';
+// Type-only: the igniter hook contributes a few of its properties.
+import type { Execution as ExecutionMod } from './Execution';
 import { Realtime } from './Realtime';
 import { Derivable } from './Foundations/Derivable';
 // Imported directly: the Library index would close an import cycle back through Blueprint.
@@ -174,30 +176,59 @@ export namespace Gateway {
     // A blueprint's declaration that one of its fields points at a connection it listens to.
     export namespace Listener {
         export const Schema = z.object({
-            // The LibraryRef field holding the connection this listener subscribes to.
             refFieldId: Field.Id,
         });
 
-        // Subscribed to a connection rather than a socket, so it hears every socket the connection opens.
+        // On the connection, not the socket, so it survives a reconnect.
         export type Fn = (event: Socket.Event) => void
     }
     export type Listener = z.infer<typeof Listener.Schema>;
 
     // What a socket delivers to the workflows listening on it.
     export namespace Socket {
+        // Names the ongoing thing an event belongs to, the same way every time.
+        export const ScopeFingerprint = z.string().brand('Gateway.Socket.ScopeFingerprint');
+        export type ScopeFingerprint = z.infer<typeof ScopeFingerprint>;
+
+        export const createScope = (provider: string, connectionId: Connection.Id, ...parts: string[]) =>
+            [provider, connectionId, ...parts].join(':') as ScopeFingerprint;
+
         /**
-         * What a node's filter and recorder are both handed for one event.
+         * What an event does when a run for the same fingerprint is already going.
          *
-         * No credentials: neither calls the provider. `chatAPI` is for a recorder keeping a
-         * conversation; a filter runs per event ahead of any execution and has no business writing.
+         * Recording is never gated, so a dropped event is still in the conversation when the next
+         * run reads it.
          */
+        export const IgnitionPolicy = z.enum(['every_event', 'one_at_a_time', 'catch_up']);
+        export type IgnitionPolicy = z.infer<typeof IgnitionPolicy>;
+
+        /**
+         * What a node does with its connection's events, with the blueprint erased.
+         *
+         * The node-sdk states the same shape with this blueprint's field values in place of the
+         * record, so a node author writes typed hooks and the backend calls untyped ones.
+         */
+        export interface Hooks {
+            schema:    ZodType
+            scope?:    (event: unknown, context: Context) => ScopeFingerprint | null
+            filter:    (event: unknown, scope: ScopeFingerprint, context: Context) => boolean
+            recorder?: (event: unknown, scope: ScopeFingerprint, context: Context) => Promise<void>
+            igniter?:  (
+                event:   unknown,
+                scope:   ScopeFingerprint,
+                context: Context,
+            ) => Promise<Pick<ExecutionMod.Igniter, 'record' | 'debug' | 'chat_id' | 'inputs'>>
+        }
+
+        // What a node's hooks are handed for one event.
         export interface Context {
             readonly fieldValues: Record<Field.Id, Field.Value>
             readonly connection:  Connection
             readonly definition:  Definition
             readonly chatAPI: {
-                // Appends to the workflow's chat for `externalKey`, opening it on the first event.
+                // Opens the chat on the first write.
                 append(externalKey: Chat.ExternalKey, messages: Chat.Message[]): Promise<Chat.Id>
+                findIdByExternalKey(externalKey: Chat.ExternalKey): Promise<Chat.Id | null>
             }
             readonly log: (message: string) => void
         }
@@ -214,7 +245,6 @@ export namespace Gateway {
         export const Channel = Realtime.Channel.brand('Gateway.Event.Channel');
         export type Channel = z.infer<typeof Channel>;
 
-        // One channel for the whole workspace, held by the library for the session.
         export const getChannel = () => 'gateway' as Channel;
 
         export const Base = Realtime.Event.Base.extend({
@@ -222,7 +252,6 @@ export namespace Gateway {
         });
         export type Base = z.infer<typeof Base>;
 
-        // Carries the whole connection, so a subscriber upserts without a follow-up read.
         export namespace ConnectionUpserted {
             export const Schema = Base.extend({
                 type:       z.literal('gateway:connection:upserted'),

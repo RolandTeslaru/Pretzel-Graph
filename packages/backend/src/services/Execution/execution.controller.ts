@@ -1,5 +1,7 @@
 import { Controller, Post, UseGuards, Req, HttpCode } from '@nestjs/common';
 import { ExecutionService } from './execution.service';
+import { ExecutionDataService } from './execution.data.service';
+import { ExecutionRecordingService } from './execution.recording.service';
 import { Execution, Workflow } from '@pretzel-graph/shared/domain';
 import { MemberAuthGuard } from '../../auth/member-auth.guard';
 import { MemberOrDelegateGuard } from '../../auth/member-or-delegate.guard';
@@ -12,7 +14,11 @@ import { ZodBody, ZodParam } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 
 @Controller('execution')
 export class ExecutionController {
-    constructor(private readonly executionService: ExecutionService) {}
+    constructor(
+        private readonly executionService: ExecutionService,
+        private readonly dataService:      ExecutionDataService,
+        private readonly recordingService: ExecutionRecordingService,
+    ) {}
 
     // Declared before :workflowId/run, which also matches "internal/run" with
     // workflowId = "internal". Routes resolve in declaration order.
@@ -110,7 +116,7 @@ export class ExecutionController {
     async update(
         @ZodBody(Execution.API.Update.Request) body: Execution.API.Update.Request,
     ) {
-        return this.executionService.update(body);
+        return this.dataService.update(body);
     }
 
     @Post(':workflowId/meta/list')
@@ -120,7 +126,7 @@ export class ExecutionController {
         @AuthenticatedUser() principal: Principal.User,
         @WorkflowIdParam() workflowId: Workflow.Id,
     ) {
-        return this.executionService.meta.list(principal, workflowId);
+        return this.dataService.meta.list(principal, workflowId);
     }
 
     // Unscoped by design, like :executionId/get — an RLS-covered read.
@@ -131,7 +137,7 @@ export class ExecutionController {
         @AuthenticatedUser() principal: Principal.User,
         @ZodParam('executionId', Execution.Id) executionId: Execution.Id,
     ) {
-        return this.executionService.meta.get(principal, executionId);
+        return this.dataService.meta.get(principal, executionId);
     }
 
     @Post('meta/list-active')
@@ -139,7 +145,7 @@ export class ExecutionController {
     @MinRole('admin')
     @HttpCode(200)
     async metaListActive(@AuthenticatedUser() principal: Principal.User) {
-        return this.executionService.meta.listActive(principal);
+        return this.dataService.meta.listActive(principal);
     }
 
     // Unscoped by design: the read runs through RLS, which already confines it to the
@@ -151,7 +157,7 @@ export class ExecutionController {
         @AuthenticatedUser() principal: Principal.User,
         @ZodParam('executionId', Execution.Id) executionId: Execution.Id,
     ) {
-        return this.executionService.get(principal, executionId);
+        return this.dataService.get(principal, executionId);
     }
 
 
@@ -173,6 +179,6 @@ export class ExecutionController {
     async recordingGetLive(
         @ExecutionIdParam() executionId: Execution.Id,
     ) {
-        return this.executionService.recording.getLive(executionId);
+        return this.recordingService.getLive(executionId);
     }
 }

@@ -1,4 +1,4 @@
-import type { Chat, Gateway } from "@pretzel-graph/shared/domain";
+import type { Chat, Execution, Gateway } from "@pretzel-graph/shared/domain";
 import type { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import type { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { z, ZodType } from "zod";
@@ -13,66 +13,48 @@ export function defineGatewayListener(config: { refFieldId: string }): Gateway.L
 export type GatewayContext<T_Blueprint extends Blueprint> =
     Omit<Gateway.Socket.Context, 'fieldValues'> & { readonly fieldValues: InferFieldValues<T_Blueprint> };
 
-// Decides whether one event is worth starting a run for; it runs per event, ahead of any execution.
-export type GatewayFilter<T_Blueprint extends Blueprint, T_Event> = (
-    event:   T_Event,
-    context: GatewayContext<T_Blueprint>,
-) => boolean;
-
-// A node's filter, with the schema every event is parsed against before it is called.
-export type GatewayFilters<T_Blueprint extends Blueprint, T_Schema extends ZodType> = {
+/**
+ * Everything a node does with the events of the connection it listens to.
+ *
+ * `Gateway.Socket.Hooks` with this blueprint's field values in place of the untyped record, and
+ * the event typed by the schema the three share.
+ */
+export type GatewayHooks<T_Blueprint extends Blueprint, T_Schema extends ZodType> = {
     readonly schema: T_Schema
-    readonly filter: GatewayFilter<T_Blueprint, z.infer<T_Schema>>
+
+    readonly scope?: (
+        event:   z.infer<T_Schema>,
+        context: GatewayContext<T_Blueprint>,
+    ) => Gateway.Socket.ScopeFingerprint | null
+
+    readonly filter: (
+        event:   z.infer<T_Schema>,
+        scope:   Gateway.Socket.ScopeFingerprint,
+        context: GatewayContext<T_Blueprint>,
+    ) => boolean
+
+    readonly recorder?: (
+        event:   z.infer<T_Schema>,
+        scope:   Gateway.Socket.ScopeFingerprint,
+        context: GatewayContext<T_Blueprint>,
+    ) => Promise<void>
+
+    readonly igniter?: (
+        event:   z.infer<T_Schema>,
+        scope:   Gateway.Socket.ScopeFingerprint,
+        context: GatewayContext<T_Blueprint>,
+    ) => Promise<Pick<Execution.Igniter, 'record' | 'debug' | 'chat_id' | 'inputs'>>
 };
 
 /**
- * The schema both types each filter's event and validates it, so an event it rejects never
- * reaches a filter. Curried because static members cannot reference a class type parameter.
+ * Curried because a static member cannot reference its own class's type parameter.
  *
  * @example
- * static gatewayFilter = defineGatewayFilter<typeof Blueprint>()(
- *     Discord.Event.Schema,
- *     (event, { fieldValues }) => !event.author.bot,
- * );
+ * static gatewayHooks = defineGatewayHooks<typeof Blueprint>()(Discord.Event.Schema, { scope, filter, recorder, igniter });
  */
-export function defineGatewayFilter<T_Blueprint extends Blueprint>() {
+export function defineGatewayHooks<T_Blueprint extends Blueprint>() {
     return <T_Schema extends ZodType>(
         schema: T_Schema,
-        filter: GatewayFilter<T_Blueprint, z.infer<T_Schema>>,
-    ) => ({ schema, filter });
-}
-
-
-/**
- * Records an event that passed the filter, whether or not it starts a run.
- *
- * Three messages in a burst are three recorder calls and one execution, so the two the agent did
- * not fire on are still in the chat when it reads its history. The chat id it returns becomes the
- * igniter's `chat_id`.
- */
-export type GatewayRecorder<T_Blueprint extends Blueprint, T_Event> = (
-    event:   T_Event,
-    context: GatewayContext<T_Blueprint>,
-) => Promise<Chat.Id | void>;
-
-export type GatewayRecorders<T_Blueprint extends Blueprint, T_Schema extends ZodType> = {
-    readonly schema:   T_Schema
-    readonly recorder: GatewayRecorder<T_Blueprint, z.infer<T_Schema>>
-};
-
-/**
- * Curried for the same reason as `defineGatewayFilter`: a static member cannot reference the
- * class's own type parameter.
- *
- * @example
- * static gatewayRecorder = defineGatewayRecorder<typeof Blueprint>()(
- *     Discord.Event.Schema,
- *     async (event, { chatAPI }) => chatAPI.append(key, [message]),
- * );
- */
-export function defineGatewayRecorder<T_Blueprint extends Blueprint>() {
-    return <T_Schema extends ZodType>(
-        schema:   T_Schema,
-        recorder: GatewayRecorder<T_Blueprint, z.infer<T_Schema>>,
-    ) => ({ schema, recorder });
+        hooks: Omit<GatewayHooks<T_Blueprint, T_Schema>, 'schema'>,
+    ): GatewayHooks<T_Blueprint, T_Schema> => ({ schema, ...hooks });
 }

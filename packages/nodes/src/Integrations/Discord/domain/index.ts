@@ -8,6 +8,27 @@ import { Gateway } from '@pretzel-graph/shared/domain';
  * only the socket can answer them: both depend on which bot this connection is.
  */
 export namespace Discord {
+
+    // Named once here; the connection definition declares the same word.
+    export const PROVIDER = 'discord';
+
+    /**
+     * Fingerprints a Discord conversation, narrowing by whichever parts are given.
+     *
+     * Leave a part out and it drops from the key: no channel and no user is the whole connection,
+     * a channel alone is everyone in it, a channel with a user is that person in that channel.
+     */
+    export const createScope = (
+        connectionId: Gateway.Connection.Id,
+        channelId?:   string,
+        userId?:      string,
+    ) => Gateway.Socket.createScope(
+        PROVIDER,
+        connectionId,
+        ...(channelId ? ['channel', channelId] : []),
+        ...(userId ? ['user', userId] : []),
+    );
+
     export namespace Event {
 
         const Base = Gateway.Socket.Event.extend({

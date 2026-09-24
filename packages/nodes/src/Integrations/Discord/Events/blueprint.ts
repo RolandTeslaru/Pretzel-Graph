@@ -55,6 +55,27 @@ export const Blueprint = defineBlueprint({
             tooltip:      'Which Discord event starts this workflow. The connection must have the intent for it.',
         }),
 
+        defineField.MultiOption('origin', 'Origin', {
+            options: [
+                { value: 'any',    displayName: 'Any' },
+                { value: 'dm',     displayName: 'Direct Messages' },
+                { value: 'server', displayName: 'Servers' },
+            ],
+            initialValue: 'dm',
+            tooltip:      'Where an event has to come from. Server-only events ignore this.',
+        }),
+
+        defineField.MultiOption('conversation_scope', 'Conversation Scope', {
+            options: [
+                { value: 'none',             displayName: 'None',             description: 'Record nothing; the event only starts the run.' },
+                { value: 'shared',           displayName: 'Shared',           description: 'One conversation for the whole connection.' },
+                { value: 'channel',          displayName: 'Channel',          description: 'One per channel, shared by everyone in it. A DM is a channel.' },
+                { value: 'channel_and_user', displayName: 'Channel and User', description: 'One per person per channel.' },
+            ],
+            initialValue: 'channel',
+            tooltip:      'Which conversation an event is recorded in, and what runs are serialised against.',
+        }),
+
         // Declared once for every event: almost all of them carry a server, a channel and a user.
         defineField.List('server_ids', 'Server IDs', {
             only:    'static',
@@ -89,30 +110,13 @@ export const Blueprint = defineBlueprint({
 
     'event==messageCreate': {
         fields: [
-            defineField.MultiOption('scope', 'Scope', {
-                options: [
-                    { value: 'any',    displayName: 'Any' },
-                    { value: 'dm',     displayName: 'Direct Messages' },
-                    { value: 'server', displayName: 'Servers' },
-                ],
-                initialValue: 'dm',
-            }),
             defineField.Boolean('allow_bot_messages', 'Allow Bot Messages', {
                 initialValue: false,
                 tooltip:      "Also start on messages from other bots. This connection's own messages never start a run.",
             }),
-            defineField.MultiOption('conversation', 'Conversation', {
-                options: [
-                    { value: 'none',    displayName: 'None',    description: 'Record nothing; the event only starts the run.' },
-                    { value: 'channel', displayName: 'Channel', description: 'One conversation per channel, shared by everyone in it.' },
-                    { value: 'user',    displayName: 'User',    description: 'One conversation per person, across every channel.' },
-                ],
-                initialValue: 'none',
-                tooltip:      'Where a message is recorded, so the workflow can read the history it belongs to.',
-            }),
         ],
 
-        'scope==server': {
+        'origin==server': {
             fields: [
                 defineField.Boolean('require_mention', 'Only When Mentioned', {
                     initialValue: true,
