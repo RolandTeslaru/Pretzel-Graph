@@ -51,6 +51,8 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
   const isDisabled  = hyNode.isDisabled
   const isIgniter   = hyNode.blueprint.igniter ?? false
   const isPassive   = hyNode.blueprint.passive ?? false
+  const listensToGateway = Boolean(hyNode.blueprint.gatewayListener)
+  const hasWebhooks = Boolean(hyNode.blueprint.webhooks?.length)
 
   const canAddInputPort = WorkbenchSDK.useDocument(d => d.selectors.node.ports.canAddInput(d, hyNode.id))
   
@@ -81,16 +83,38 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         </NodeToolbar>
       )}
 
-      {isIgniter && 
-        <div className='absolute top-1 -left-8'>
-          <Tipped label={
-            <div className='max-w-[220px]'>
-              <p className='font-semibold'>Igniter Node</p>
-              <p className='text-xs opacity-70'>A run can start from this node. Pick it as the entry point when you launch.</p>
-            </div>
-          }>
-            <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
-          </Tipped>
+      {(isIgniter || listensToGateway || hasWebhooks) &&
+        <div className='absolute top-1 right-full mr-2 flex items-center gap-1'>
+          {isIgniter &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Igniter Node</p>
+                <p className='text-xs opacity-70'>A run can start from this node. Pick it as the entry point when you launch.</p>
+              </div>
+            }>
+              <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
+            </Tipped>
+          }
+          {listensToGateway &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Gateway Listener</p>
+                <p className='text-xs opacity-70'>Listens for events from a persistent connection.</p>
+              </div>
+            }>
+              <SystemIcons.ChevronsLeftRightEllipsis className='size-6 text-cyan-400 '/>
+            </Tipped>
+          }
+          {hasWebhooks &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Webhook Listener</p>
+                <p className='text-xs opacity-70'>Receives events through an HTTP webhook.</p>
+              </div>
+            }>
+              <SystemIcons.Webhook className='size-6 text-cyan-400'/>
+            </Tipped>
+          }
         </div>
       }
       {isPassive && 

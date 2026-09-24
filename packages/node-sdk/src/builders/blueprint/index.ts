@@ -66,9 +66,13 @@ export function defineBlueprint<
             throw new Error(`defineBlueprint(${definition.id}): gateway listener points at "${refFieldId}", which is not a LibraryRef field accepting connections`);
     }
 
+    // A blueprint may restate a standard field to change its default, and then it owns it — the
+    // framework copy would otherwise be a second field with the same id.
+    const declaredIds = new Set(definition.fields.map(field => String(field.id)));
+
     const baseFields = [
         ...definition.fields,
-        ...StandardFields.StandardNode,
+        ...StandardFields.StandardNode.filter(field => !declaredIds.has(String(field.id))),
     ] as const;
 
     const withTool = (
