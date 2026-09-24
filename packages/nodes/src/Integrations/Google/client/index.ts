@@ -1,4 +1,5 @@
-export { GoogleClient, bareHTTP }   from "./common"
+export { GoogleClient }             from "./common"
+export { bareHTTP }                 from "../../../utils"
 export type { AccessTokenGetter }   from "./common"
 export { GoogleGmailClient }        from "./Gmail"
 export { GoogleSheetsClient }       from "./Sheets"

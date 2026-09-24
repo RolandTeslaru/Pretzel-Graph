@@ -182,6 +182,12 @@ export const BUNDLE_DRAWERS = {
     icon: "Discord",
     blueprintIds: ["Integrations.Discord.Events", "Integrations.Discord.Operation"]
   },
+  slack: {
+    displayName: "Slack",
+    id: "slack",
+    icon: "Slack",
+    blueprintIds: ["Integrations.Slack.Events", "Integrations.Slack.Operation"]
+  },
   google: {
     displayName: "Google",
     id: "google",

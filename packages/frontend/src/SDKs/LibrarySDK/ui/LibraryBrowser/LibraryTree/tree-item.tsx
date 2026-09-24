@@ -91,45 +91,46 @@ export function TreeItem({
                 'flex items-center pr-1 pl-1 rounded-md select-none',
                 styles.row,
                 isSelected ? 'bg-accent' : 'hover:bg-accent/50',
-                isHidden && 'opacity-50',
-                isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
+                isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
             )}
             data-library-item={folderId ? 'folder' : workflowId ? 'workflow' : skillId ? 'skill' : connectionId ? 'connection' : undefined}
             data-library-id={folderId ?? workflowId ?? skillId ?? connectionId}
             onClick={handleClick}
         >
             <Tree.IndentGuides level={level} ancestorIsLast={branch.ancestorIsLast} isLastSibling={isLastSibling} elbow={isFolder} size={size} />
-            {!isLeaf ? (
-                <span className='shrink-0' onClick={handleToggle}>
-                    <SystemIcons.ChevronRight
-                        className={classNames('text-muted-foreground transition-transform duration-150', styles.icon)}
-                        style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            <div className={classNames('flex min-w-0 flex-1 items-center', isHidden && 'opacity-50', isDisabled && 'opacity-40')}>
+                {!isLeaf ? (
+                    <span className='shrink-0' onClick={handleToggle}>
+                        <SystemIcons.ChevronRight
+                            className={classNames('text-muted-foreground transition-transform duration-150', styles.icon)}
+                            style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                        />
+                    </span>
+                ) : (
+                    <></>
+                )}
+                {connectionId ? (
+                    <IconRenderer
+                        name={connectionIcon}
+                        className={classNames('mr-1 shrink-0 text-primary', styles.icon)}
                     />
-                </span>
-            ) : (
-                <></>
-            )}
-            {connectionId ? (
-                <IconRenderer
-                    name={connectionIcon}
-                    className={classNames('mr-1 shrink-0 text-primary', styles.icon)}
-                />
-            ) : skillId ? (
-                <IconRenderer
-                    name={skill?.icon ?? Skill.DEFAULT_ICON}
-                    className={classNames('mr-1 shrink-0', styles.icon)}
-                    style={{ color: `var(--${skill?.accent ?? Skill.DEFAULT_ACCENT})` }}
-                />
-            ) : (
-                <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
-            )}
-            <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
-            {hasActiveWorkflow ? (
-                <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />
-            ) : null}
-            {connection ? (
-                <ConnectionDot status={connection.status} className='my-auto ml-1' />
-            ) : null}
+                ) : skillId ? (
+                    <IconRenderer
+                        name={skill?.icon ?? Skill.DEFAULT_ICON}
+                        className={classNames('mr-1 shrink-0', styles.icon)}
+                        style={{ color: `var(--${skill?.accent ?? Skill.DEFAULT_ACCENT})` }}
+                    />
+                ) : (
+                    <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
+                )}
+                <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
+                {hasActiveWorkflow ? (
+                    <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />
+                ) : null}
+                {connection ? (
+                    <ConnectionDot status={connection.status} className='my-auto ml-1' />
+                ) : null}
+            </div>
         </div>
     )
 }
