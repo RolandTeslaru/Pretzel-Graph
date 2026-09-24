@@ -2,7 +2,7 @@ import type { Port } from "../Foundations/Port";
 import type { Field } from "../Foundations/Field";
 import type { Vault } from "../Vault";
 import type { Edge } from "./edge";
-import type { NodeId, EdgeId } from "./ids";
+import type { NodeId, EdgeId } from "../ids";
 
 export interface Cache {
 

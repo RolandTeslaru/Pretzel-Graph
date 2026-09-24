@@ -15,6 +15,9 @@ export type PortBranchMeta = {
     // root branch can render the value instead of "[object Object]" from the meta itself.
     isLeafValue?: boolean
     leafValue?: unknown
+    hasData?: boolean
+    onRemove?: () => void
+    onEdit?: () => void
 }
 
 // Compact one-line preview for a port-root leaf value. Arrays read as a count ("0 items"),
@@ -84,8 +87,10 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
     const variant = isPortRoot ? branch.data?.variant : undefined
 
     // Port roots show a one-line summary of their stashed value; nested leaves show the raw value.
+    const isEmptyPort = isPortRoot && branch.data?.hasData === false
+
     let value: string | null = null
-    if (isPortRoot && branch.data?.isLeafValue)
+    if (isPortRoot && !isEmptyPort && branch.data?.isLeafValue)
         value = formatLeafValue(branch.data.leafValue)
     else if (!isPortRoot && isLeaf && branch.data !== undefined)
         value = String(branch.data)
@@ -108,6 +113,8 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
             )}
 
             <span className="whitespace-nowrap text-[11px] font-medium text-foreground">{label}</span>
+
+            {isEmptyPort && <span className="ml-auto pl-1 italic text-muted-foreground/60 text-[11px]">no data</span>}
 
             {value !== null && <ValuePreview label={label} value={value} breadcrumbs={[label]} />}
 
@@ -134,6 +141,40 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
                     <SystemIcons.Copy className="size-3 hidden group-hover:flex" />
                 </Button>
             }
+
+            {isPortRoot && branch.data?.onEdit &&
+                <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    className="ml-1"
+                    aria-label={`Edit ${label}`}
+                    title="Edit port"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        branch.data?.onEdit?.()
+                    }}
+                >
+                    <SystemIcons.SquarePen className="size-3 hidden group-hover:flex" />
+                </Button>
+            }
+
+            {isPortRoot && branch.data?.onRemove &&
+                <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    className="ml-1"
+                    aria-label={`Remove ${label}`}
+                    title="Remove port"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        branch.data?.onRemove?.()
+                    }}
+                >
+                    <SystemIcons.X className="size-3 hidden group-hover:flex" />
+                </Button>
+            }
         </div>
     )
 }
@@ -141,9 +182,11 @@ export function PortBranchRenderer({ branch, level, isExpanded, isLeaf, isLastSi
 
 
 interface Props {
-    ports: Array<{ id: string; displayName?: string; variant: Foundations.Port.Variant }>
+    ports: Array<{ id: string; displayName?: string; variant: Foundations.Port.Variant; isAddedByUser?: boolean }>
     projections: Execution.Session["node_output_projections"]
     emptyMessage: string
+    onRemovePort?: (portId: string) => void
+    onEditPort?: (portId: string) => void
 }
 
 
@@ -151,14 +194,32 @@ export function PortProjectionsView({
     ports,
     projections,
     emptyMessage,
+    onRemovePort,
+    onEditPort,
 }: Props) {
-    const branchData = useMemo(
-        () => Object.fromEntries(ports.map(p => [p.id, { displayName: p.displayName, variant: p.variant }])),
-        [ports]
-    )
-    const root = useMemo(() => projectionsToDummyTree(projections, branchData), [projections, branchData])
+    const root = useMemo(() => {
+        const ordered: Record<string, unknown> = {}
+        const branchData: Record<string, PortBranchMeta> = {}
 
-    if (Object.keys(projections).length === 0)
+        for (const port of ports) {
+            const hasData = port.id in projections
+            ordered[port.id] = hasData ? projections[port.id as keyof typeof projections] : undefined
+            const onRemove = onRemovePort && port.isAddedByUser ? () => onRemovePort(port.id) : undefined
+            const onEdit = onEditPort && port.isAddedByUser ? () => onEditPort(port.id) : undefined
+            branchData[port.id] = { displayName: port.displayName, variant: port.variant, hasData, onRemove, onEdit }
+        }
+
+        for (const [key, value] of Object.entries(projections)) {
+            if (key in ordered)
+                continue
+            ordered[key] = value
+            branchData[key] = { hasData: true }
+        }
+
+        return projectionsToDummyTree(ordered as Record<string, Record<string, unknown>>, branchData)
+    }, [ports, projections, onRemovePort, onEditPort])
+
+    if (ports.length === 0 && Object.keys(projections).length === 0)
         return <div className='mt-2 text-xs text-muted-foreground px-1'>{emptyMessage}</div>
 
     return <Tree root={root} renderBranch={PortBranchRenderer} />

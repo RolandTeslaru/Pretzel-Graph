@@ -1,12 +1,14 @@
 import { useState, type MouseEvent, type ReactNode } from 'react'
 import { ContextMenu } from '@pretzel-graph/standard-ui/foundations'
-import type { Library } from '@pretzel-graph/shared/domain'
+import type { Gateway, Library } from '@pretzel-graph/shared/domain'
 import { useLibraryBrowser } from '../root'
 import { LibrarySDK } from '@/SDKs/LibrarySDK/sdk'
 import { FolderMenuItems } from './folder'
 import { WorkflowMenuItems } from './workflow'
 import { SkillMenuItems } from './skill'
 import { BackgroundMenuItems } from './background'
+import { ConnectionMenuItems } from './connection'
+import { GatewaySDK } from '@/SDKs/GatewaySDK/sdk'
 
 export function LibraryContextMenu({ children }: { children: ReactNode }) {
     const [target, setTarget] = useState<LibraryContextMenu.Target | null>(null)
@@ -57,11 +59,19 @@ function TargetMenuItems({ target }: { target: LibraryContextMenu.Target }) {
 
             case 'skill':
                 return s.skillMetas[target.id]
+
+            case 'connection':
+                return undefined
         }
     })
 
+    const connection = GatewaySDK.useStore((s) => (target.type === 'connection' ? s.connections[target.id] : undefined))
+
     if (target.type === 'background')
         return <BackgroundMenuItems cwd={cwd} />
+
+    if (target.type === 'connection')
+        return connection ? <ConnectionMenuItems connection={connection} /> : null
 
     if (!entity)
         return null
@@ -85,5 +95,6 @@ export namespace LibraryContextMenu {
     export type Target =
         | LibrarySDK.Item
         | { type: 'folder'; id: Library.Folder.Id }
+        | { type: 'connection'; id: Gateway.Connection.Id }
         | { type: 'background' }
 }

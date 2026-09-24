@@ -1,7 +1,7 @@
 import type { AxiosInstance } from "axios"
 import { z } from "zod"
 import { Dependency } from "./Dependency"
-import { WorkflowId } from "./Workflow/ids"
+import { WorkflowId } from "./ids"
 
 // The sources a dependency is taken from: draft and published workflows, and listings.
 export namespace Resource {

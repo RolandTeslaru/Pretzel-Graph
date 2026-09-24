@@ -37,7 +37,7 @@ The engine layering is deliberate: **S2Engine is a domain-agnostic scheduler**; 
 
 1. Create an `S2Graph` and add the `__START__` vertex.
 2. Build the execution context + all the node-facing APIs (`portAPI`, `propagationAPI`, `schedulerAPI`, `instanceRegistryAPI`, `workflowQueryAPI`, `subWorkflowAPI`, `dependencyAPI`, `credentialsAPI`) — each delegates into `AggexEngine` with the engine execution context.
-3. **Per node** (`prepareNode`): resolve the `RuntimeNode` class via `CatalogueService.getNode(blueprintId)` (by blueprint-id → path convention; dependency nodes fall back to `Core.SubWorkflow.Execute`), `new` it, call `onCompile`, `graph.addVertex`, `engine.registerNode`, and set the vertex's **signal strategy** from the node's `signalDependency` field (default `AND`).
+3. **Per node** (`prepareNode`): resolve the `RuntimeNode` class through the worker's injected `CatalogueService` (by blueprint-id → path convention; dependency nodes fall back to `Core.SubWorkflow.Execute`), `new` it, call `onCompile`, `graph.addVertex`, `engine.registerNode`, and set the vertex's **signal strategy** from the node's `signalDependency` field (default `AND`).
 4. **Edges → dependencies**: for every non-disabled edge, `graph.addDependency(source → target)`. This builds `dependenciesMap`/`dependentsMap`.
 5. **Start nodes** (`findStartNodes`): nodes with **no incoming edges** and **not `IS_PASSIVE`** → `graph.addDependency(__START__ → node)`. (No start nodes ⇒ compile error.)
 6. **Igniter**: a `webhook` igniter calls `triggerWebhook` on the target node; a `chat_message` igniter calls `handleIgniter` on every node instance.
@@ -91,7 +91,7 @@ Each vertex owns an **`accumulatedSignals`** set (which source vertices have sig
 | `onVertexFired` | `onNodeFired` | Incoming edges → `completed`, outgoing edges → `preparing` (only for `"all"` propagation); `node_status: running`; emit `node:started`. |
 | `onVertexExecute` | `onNodeExecuted` | **Runs the node** (see below). Returns the downstream signal set per propagation strategy. |
 | `onVertexCompleted` | `onNodeCompleted` | Outgoing edges → `waiting` (+`runCount`; router → only taken branches; none → skip); `node_status: completed`; emit `node:completed` with projected output; honor pause. |
-| `onVertexWaiting` | `onNodeWaiting` | `node_status: waiting`; emit `node:waiting`; call `instance.wait(partialInputs, depResolutionMap, partialFields)` so the node can react to partial inputs. |
+| `onVertexWaiting` | `onNodeWaiting` | `node_status: waiting`; emit `node:waiting`. Field expressions are not evaluated until the data gate opens and the node executes. |
 | `onVertexError` | `onNodeError` | Wrap error, `node_status: failed`, emit `node:error`. **An error rejects the S2 promise — the whole execution terminates** (there is no per-node `continueOnFail` today). |
 | `canVertexRun` | `canNodeRun` | The **data-dependency** gate (below). |
 

@@ -1,5 +1,11 @@
-import { Assistant } from "@pretzel-graph/shared/domain";
+import { Assistant, Chat, Execution, SystemError, Validation, Workbench, Workflow } from "@pretzel-graph/shared/domain";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
+import { toast } from "sonner";
+import { api } from "@/SDKs/ApiInterceptorSDK";
+import { router } from "@/main";
+import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
+import { WorkbenchSDK } from "../WorkbenchSDK/sdk";
+import { deriveChatName } from "../ChatSDK/actions";
 import type { AssistantSDKImpl } from "./sdk";
 import FullscreenAssistant from "./ui/Fullscreen";
 
@@ -7,76 +13,179 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
     return {
         message: {
             upsert: (message) => sdk.setState(s => sdk.reducers.upsertMessage(s, message)),
-            appendContent: (messageId, content) =>
-                sdk.setState(s => sdk.reducers.appendContent(s, messageId, content)),
-            setContent: (messageId, content) => sdk.setState(s => {
-                const msg = s.messagesRecord[messageId];
-                if (msg) msg.content = content;
-            }),
-            finaliseStreaming: (messageId) => sdk.setState(s => {
-                const msg = s.messagesRecord[messageId] as Assistant.Message.AI | undefined;
-                if (msg) msg.data.isProcessing = false;
-            }),
+
             send: async ({ content }) => {
-                const assistantId = sdk.state.currentAssistantId;
+                if (sdk.state.executionId || sdk.state.setupStatus !== "ready")
+                    return
 
-                const humanMessage: Assistant.Message.Human = {
-                    id: Assistant.Message.createId(),
-                    assistant_id: assistantId,
-                    role: "human",
+                const chatId  = sdk.state.currentChatId
+                const message: Chat.Message.Human = {
+                    id:      Chat.Message.createId(),
+                    role:    "human",
                     content,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                };
-                sdk.actions.message.upsert(humanMessage);
+                }
 
-                // TODO: wire up to the assistant backend / streaming endpoint.
-                const aiMessage: Assistant.Message.AI = {
-                    id: Assistant.Message.createId(),
-                    assistant_id: assistantId,
-                    role: "ai",
-                    content: "",
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    data: { isProcessing: true },
-                };
-                sdk.actions.message.upsert(aiMessage);
+                const abortController = new AbortController()
+
+                try {
+                    if (!sdk.state.currentChat) {
+                        const { chat } = await Chat.API.ensure(api, Assistant.WORKFLOW_ID, { chatId, name: deriveChatName(content) })
+
+                        sdk.setState(s => { s.currentChat = chat })
+                        void sdk.invalidate(sdk.query.threads())
+                    }
+
+                    sdk.actions.message.upsert(message)
+
+                    // The assistant edits the saved workflow, so pending edits must land first.
+                    await WorkbenchSDK.actions.commit()
+
+                    if (WorkbenchSDK.document.isDirty)
+                        throw new Error("Could not save the workflow before asking the assistant.")
+
+                    const context: Assistant.Context = { workflowId: WorkbenchSDK.document.workflowId }
+                    const executionId = Execution.createId()
+
+                    sdk.setState(s => { s.executionId = executionId })
+
+                    // Listening before the run starts, so a fast run cannot settle unseen.
+                    const settled = RealtimeSDK.awaitEvent(
+                        Execution.Event.getChannel(executionId),
+                        Execution.Event.TERMINAL,
+                        0,
+                        abortController.signal,
+                    )
+
+                    // Rejects with AbortError when the run fails to start; nothing awaits it then.
+                    settled.catch(() => undefined)
+
+                    await Execution.API.run(api, Assistant.WORKFLOW_ID, {
+                        executionId,
+                        igniter: {
+                            variant: "chat_message",
+                            chat_id: chatId,
+                            message,
+                            inputs:  { [Assistant.CONTEXT_PORT_ID]: context },
+                        },
+                    })
+
+                    await settled
+                }
+                catch (err) {
+                    toast.error(SystemError.messageFrom(err))
+                    console.error("Failed to send message to the assistant", err)
+                }
+                finally {
+                    abortController.abort()
+                    sdk.setState(s => { s.executionId = null })
+                }
+            },
+
+            stop: async () => {
+                const executionId = sdk.state.executionId
+
+                if (!executionId)
+                    return
+
+                const { success } = await Execution.API.terminate(api, executionId)
+
+                if (!success)
+                    toast.error("Failed to stop the assistant")
             },
         },
 
         thread: {
-            new: () => sdk.setState(s => {
-                s.currentAssistantId = Assistant.createId();
-                s.messages = [];
-                s.messagesRecord = {};
-            }),
-            clear: () => sdk.setState(s => {
-                s.messages = [];
-                s.messagesRecord = {};
-            }),
-            select: (assistantId) => sdk.setState(s => {
-                // TODO: load messages for the selected assistant from the backend.
-                s.currentAssistantId = assistantId;
-                s.messages = [];
-                s.messagesRecord = {};
-            }),
-            erase: (assistantId) => sdk.setState(s => {
-                // TODO: erase the assistant on the backend.
-                delete s.assistants[assistantId];
-                if (s.currentAssistantId === assistantId) {
-                    s.currentAssistantId = Assistant.createId();
-                    s.messages = [];
-                    s.messagesRecord = {};
+            list: async () => {
+                const { chats } = await Chat.API.listByWorkflow(api, Assistant.WORKFLOW_ID)
+
+                return chats
+            },
+
+            load: async (chatId) => {
+                sdk.setState(s => {
+                    s.currentChatId = chatId
+                    s.currentChat   = null
+                    s.isLoading     = true
+                    sdk.reducers.resetMessages(s)
+                })
+
+                try {
+                    const { chat, messages } = await Chat.API.get(api, chatId)
+
+                    sdk.setState(s => {
+                        s.currentChat = chat
+                        messages.forEach(m => sdk.reducers.upsertMessage(s, m))
+                        s.isLoading = false
+                    })
                 }
+                catch (err) {
+                    sdk.setState(s => { s.isLoading = false })
+                    toast.error(SystemError.messageFrom(err))
+                    console.error("Failed to load assistant thread", err)
+                }
+            },
+
+            new: () => sdk.setState(s => {
+                s.currentChatId = Chat.createId()
+                s.currentChat   = null
+                sdk.reducers.resetMessages(s)
             }),
+
+            erase: async (chatId) => {
+                try {
+                    await Chat.API.erase(api, chatId)
+
+                    if (sdk.state.currentChatId === chatId)
+                        sdk.actions.thread.new()
+
+                    void sdk.invalidate(sdk.query.threads())
+                }
+                catch (err) {
+                    toast.error(SystemError.messageFrom(err))
+                    console.error("Failed to delete assistant thread", err)
+                }
+            },
+        },
+
+        setup: {
+            // Ready once the assistant workflow passes the same validation a run does.
+            check: async () => {
+                sdk.setState(s => { s.setupStatus = "checking" })
+
+                try {
+                    const { workflow, blueprints, repairs } = await Workbench.API.Workflow.get(api, { workflowId: Assistant.WORKFLOW_ID })
+
+                    const data     = Workflow.Repair.applyAll(workflow.data, repairs).data
+                    const document = Workbench.Document.create(Assistant.WORKFLOW_ID, data, blueprints)
+
+                    Workbench.Document.withCyclesRecompute(d => d.reducers.workflow.validate(d))(document)
+
+                    const isReady = !Validation.workflowHasIssues(document.issues)
+
+                    sdk.setState(s => { s.setupStatus = isReady ? "ready" : "incomplete" })
+                }
+                catch (err) {
+                    sdk.setState(s => { s.setupStatus = "incomplete" })
+                    console.error("Failed to check the assistant workflow", err)
+                }
+            },
+
+            open: () => {
+                if (DialogSDK.state.dialogs.has("fullscreen-assistant"))
+                    DialogSDK.actions.pop("fullscreen-assistant")
+
+                sdk.actions.ui.setSidebarVisibility(false)
+
+                void router.navigate({ to: '/workflow/$workflowid', params: { workflowid: Assistant.WORKFLOW_ID } })
+            },
         },
 
         ui: {
-            setSidebarVisibility: (show: boolean) => sdk.setState(s => {
-                s.isSidebarVisible = show;
+            setSidebarVisibility: (show) => sdk.setState(s => {
+                s.isSidebarVisible = show
             }),
             toggleSidebar: () => sdk.setState(s => {
-                s.isSidebarVisible = !s.isSidebarVisible;
+                s.isSidebarVisible = !s.isSidebarVisible
             }),
             openFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-assistant", (props) => (
@@ -84,35 +193,37 @@ export function createAssistantSDKActions(sdk: AssistantSDKImpl) {
                 ))
 
                 setTimeout(() => {
-                    sdk.actions.ui.setSidebarVisibility(false);
+                    sdk.actions.ui.setSidebarVisibility(false)
                 }, 500)
             },
             closeFullscreen: () => {
-                DialogSDK.actions.pop("fullscreen-assistant");
-                sdk.actions.ui.setSidebarVisibility(true);
+                DialogSDK.actions.pop("fullscreen-assistant")
+                sdk.actions.ui.setSidebarVisibility(true)
             },
         },
-    } satisfies AssistantSDKActions;
+    } satisfies AssistantSDKActions
 }
 
 export interface AssistantSDKActions {
     message: {
-        upsert: (message: Assistant.Message) => void
-        appendContent: (messageId: Assistant.Message.Id, content: string) => void
-        setContent: (messageId: Assistant.Message.Id, content: string) => void
-        finaliseStreaming: (messageId: Assistant.Message.Id) => void
-        send: (props: { content: string }) => Promise<void>
+        upsert: (message: Chat.Message) => void
+        send:   (props: { content: string }) => Promise<void>
+        stop:   () => Promise<void>
     }
     thread: {
-        new: () => void
-        clear: () => void
-        select: (assistantId: Assistant.Id) => void
-        erase: (assistantId: Assistant.Id) => void
+        list:  () => Promise<Chat[]>
+        load:  (chatId: Chat.Id) => Promise<void>
+        new:   () => void
+        erase: (chatId: Chat.Id) => Promise<void>
+    }
+    setup: {
+        check: () => Promise<void>
+        open:  () => void
     }
     ui: {
         setSidebarVisibility: (show: boolean) => void
-        toggleSidebar: () => void
-        openFullscreen: () => void
-        closeFullscreen: () => void
+        toggleSidebar:        () => void
+        openFullscreen:       () => void
+        closeFullscreen:      () => void
     }
 }

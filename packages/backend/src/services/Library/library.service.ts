@@ -59,6 +59,15 @@ export class LibraryService {
             if (id === Library.Folder.ROOT_ID)
                 throw new BadRequestException('The root folder cannot be deleted');
 
+            // Connections own live sockets, so they are never deleted along with a folder.
+            const connectionIds = await this.libraryRepository.folder.listNestedConnectionIds(principal, id);
+
+            if (connectionIds.length > 0) {
+                const noun = connectionIds.length === 1 ? 'connection' : 'connections';
+
+                throw new SystemError(SystemError.Code.CONFLICT, `Delete the ${connectionIds.length} ${noun} inside this folder first`);
+            }
+
             await this.libraryRepository.folder.delete(principal, id);
 
             return { ok: true };

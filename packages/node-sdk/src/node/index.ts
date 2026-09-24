@@ -5,16 +5,15 @@ import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Projection } from "@pretzel-graph/shared/domain/Foundations/Projection";
 import { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field"
-import { mapFieldValues } from "../utils/mapFieldValues";
 import { Synthesizer } from "../synthesizer";
-import type { ExecutionContext as ExecutionContextType } from "./context";
+import type { NodeContext } from "../contexts/node";
 import type {
     AgentToolBinding             as AgentToolBindingType,
     RealtimeAPI                  as RealtimeAPIType,
     RealtimeScope                as RealtimeScopeType,
     UnstampedConsultationRequest as UnstampedConsultationRequestType,
     ExecutionOutcome             as ExecutionOutcomeType,
-} from "./apis";
+} from "../apis";
 import type { HTTP } from "../domain/http";
 
 export abstract class RuntimeNode<
@@ -30,8 +29,6 @@ export abstract class RuntimeNode<
     /** Projected incoming-port bag from the last evaluateFieldValues pass — reused as `$in` when
      *  evaluating item-scoped fields, so per-item eval sees the same inputs as node-level eval. */
     private projectedIn: Record<Port.Input.Id, Projection> = {};
-
-    protected isWaiting: boolean = false;
 
     /** Read by the engine's error interception hook: if an incoming error envelope
      *  is found, a catching node materializes it to `onError` instead of re-propagating. */
@@ -63,20 +60,20 @@ export abstract class RuntimeNode<
 
     constructor(
         public readonly nodeId: Workflow.Node.Id,
-        protected readonly context: RuntimeNode.ExecutionContext
+        protected readonly context: RuntimeNode.Context
     ) {
         const fields       = this.context.workflowQueryAPI.getFields(this.nodeId);
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
 
-        this.fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        this.fieldValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
         this.credentials = this.mapCredentials();
     }
 
 
     private mapCredentials(): InferCredentials<T_Blueprint> {
         const nodeCredIds = Object.entries(
-                                this.context.workflowData.credentialInstanceIds[this.nodeId] ?? {}
-                            )as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]
+                                this.context.workflowQueryAPI.getCredentialIds(this.nodeId)
+                            ) as [Vault.Credential.Template.Id, Vault.Credential.Instance.Id][]
 
         const result: Record<string, Vault.Credential.Instance> = {};
 
@@ -101,7 +98,6 @@ export abstract class RuntimeNode<
         incoming: InferIncoming<T_Blueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
-        this.isWaiting = false;
         this.fieldValues = fields;
 
         return this.onRun(incoming);
@@ -126,7 +122,7 @@ export abstract class RuntimeNode<
         const staticValues = this.context.workflowQueryAPI.getStaticValues(this.nodeId);
         const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
-        const fieldValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        const fieldValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
 
         const evaluated: Record<Field.Id, unknown> = { ...fieldValues };
 
@@ -215,7 +211,7 @@ export abstract class RuntimeNode<
         const expressionOverrides = this.context.workflowQueryAPI.getExpressionTaggedFieldIds(this.nodeId);
 
         // Resolve raw value + expression mode once per field, reused across every iteration.
-        const rawValues = mapFieldValues<T_Blueprint>(fields, staticValues);
+        const rawValues = Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(fields, staticValues);
         const meta      = new Map<Field.Id, { raw: unknown, isExpression: boolean }>();
 
         // Indexed dynamically by field id: InferFieldValues is a union once a blueprint has
@@ -306,7 +302,6 @@ export abstract class RuntimeNode<
         incoming: InferIncoming<T_ToolBlueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<InferOutputs<T_ToolBlueprint>> {
-        this.isWaiting = false;
         this.fieldValues = fields;
         return this.onBuildTool(incoming);
     }
@@ -327,27 +322,6 @@ export abstract class RuntimeNode<
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         return this.onRun(incoming as never) as never;
     }
-
-
-
-
-
-    public async wait(
-        partialInputs: InferIncoming<T_Blueprint>,
-        dependencyResolutionMap: Record<Workflow.Node.Id, boolean>,
-        fields: InferFieldValues<T_Blueprint>,
-    ): Promise<void> {
-        this.isWaiting = true;
-        this.fieldValues = fields;
-        return this.onWait(partialInputs);
-    }
-
-
-
-
-    protected onWait(
-        incoming: InferIncoming<T_Blueprint>
-    ): Promise<void> | void {}
 
 
 
@@ -488,7 +462,7 @@ export namespace RuntimeNode {
     export type ConstructorProps = ConstructorParameters<typeof RuntimeNode>[0]
     export type CompileProps = Parameters<RuntimeNode<Blueprint>["compile"]>[0]
 
-    export type ExecutionContext = ExecutionContextType;
+    export type Context = NodeContext;
     export type AgentToolBinding = AgentToolBindingType;
     export type RealtimeAPI      = RealtimeAPIType;
     export type RealtimeScope    = RealtimeScopeType;

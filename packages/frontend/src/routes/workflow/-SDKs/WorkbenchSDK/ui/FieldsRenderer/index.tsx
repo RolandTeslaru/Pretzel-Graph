@@ -12,12 +12,14 @@ import { ScriptField } from './Script'
 import { ConditionField } from './Condition'
 import { CaseListField } from './CaseList'
 import { JsonField } from './Json'
+import { ListField } from './List'
 import { VariadicField } from './Variadic'
 import { ResourceLoaderField } from './ResourceLoader'
 import { CalendarRangeField } from './CalendarRange'
 import { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 import { WorkflowIdSelectorField } from './WorkflowIdSelector'
 import { DependencyField } from './Dependency'
+import { LibraryRefField } from './LibraryRef'
 
 export { FieldLabel } from './FieldLabel'
 export type { RendererProps } from './FieldLabel'
@@ -32,10 +34,12 @@ export { ScriptField } from './Script'
 export { ConditionField } from './Condition'
 export { CaseListField } from './CaseList'
 export { JsonField } from './Json'
+export { ListField } from './List'
 export { CalendarRangeField } from './CalendarRange'
 export { CalendarDateTimeRangeField } from './CalendarDateTimeRange'
 export { WorkflowIdSelectorField } from './WorkflowIdSelector'
 export { DependencyField } from './Dependency'
+export { LibraryRefField } from './LibraryRef'
 
 // ── Dispatcher ──────────────────────────────────────────────
 
@@ -58,6 +62,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     File: FileField,
     Script: ScriptField,
     Json: JsonField,
+    List: ListField,
     Condition: ConditionField,
     CaseList: CaseListField,
     Variadic: VariadicField,
@@ -66,6 +71,7 @@ export const FIELD_RENDERER_MAP: FieldRendererMapType = {
     CalendarDateTimeRange: CalendarDateTimeRangeField,
     WorkflowIdSelector: WorkflowIdSelectorField,
     Dependency: DependencyField,
+    LibraryRef: LibraryRefField,
 }
 
 /** Renders the appropriate field component based on variant */

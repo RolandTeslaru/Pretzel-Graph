@@ -1,23 +1,25 @@
-import { Library, type Skill } from '@pretzel-graph/shared/domain';
+import { Library, type Gateway, type Skill } from '@pretzel-graph/shared/domain';
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { LibrarySDK, LibrarySDKImpl } from '../sdk';
+import { GatewaySDK } from '@/SDKs/GatewaySDK/sdk';
 
 export type FileSystemNodeData = { name: string; hidden?: boolean }
 type FileNode = TreeDomain.Dummy.Branch<FileSystemNodeData>
 
-// Rebuilds the browser tree from the folders, workflows and skills in the store.
+// Rebuilds the browser tree from the folders, workflows and skills in the store, and the connections in GatewaySDK.
 export function rebuildTree(sdk: LibrarySDKImpl) {
     sdk.useStore.setState((s) => {
-        s.treeData = buildTreeData(s)
+        s.treeData = buildTreeData(s, GatewaySDK.state.connections)
     })
 }
 
-function buildTreeData(s: LibrarySDK.State): FileNode {
+function buildTreeData(s: LibrarySDK.State, connections: Record<Gateway.Connection.Id, Gateway.Connection>): FileNode {
     const { folders, workflowMetas, skillMetas, treeExpandedByFolderId, showHidden } = s;
 
     const childFoldersByParent = new Map<string, Library.Folder[]>()
     const workflowsByFolder = new Map<string, Library.WorkflowMeta[]>()
     const skillsByFolder = new Map<string, Skill.Meta[]>()
+    const connectionsByFolder = new Map<string, Gateway.Connection[]>()
 
     for (const folder of Object.values(folders)) {
         if (!folder.parent_folder_id) continue
@@ -42,6 +44,15 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
         skillsByFolder.set(skill.folder_id, list)
     }
 
+    for (const connection of Object.values(connections)) {
+        const list = connectionsByFolder.get(connection.folderId) ?? []
+        list.push(connection)
+        connectionsByFolder.set(connection.folderId, list)
+    }
+
+    for (const list of connectionsByFolder.values()) {
+        list.sort((a, b) => a.name.localeCompare(b.name))
+    }
     for (const list of childFoldersByParent.values()) {
         list.sort((a, b) => a.display_name.localeCompare(b.display_name))
     }
@@ -65,6 +76,8 @@ function buildTreeData(s: LibrarySDK.State): FileNode {
             }
         for (const skill of skillsByFolder.get(folder.id) ?? [])
             childBranches[`skill:${skill.id}`] = { data: { name: skill.name } }
+        for (const connection of connectionsByFolder.get(folder.id) ?? [])
+            childBranches[`connection:${connection.id}`] = { data: { name: connection.name } }
 
         return {
             data: {

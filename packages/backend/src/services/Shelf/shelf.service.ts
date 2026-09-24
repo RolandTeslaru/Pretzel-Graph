@@ -1,10 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Listing, Shelf, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { ALL_DRAWERS, SECTIONS } from '@pretzel-graph/shared/constants/drawers';
 import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
+import type { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
+import type { GatewayHooks, Loader } from '@pretzel-graph/node-sdk';
+import type { ZodType } from 'zod';
 import { CloudService } from '../Cloud/cloud.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { System } from '@pretzel-graph/shared/system';
+
+const NODES_ROOT = process.env.NODES_ROOT ?? path.resolve(__dirname, '../../../../nodes/src');
+
+// What a node class can carry that the backend reads without running the node.
+type LoadableNode = {
+    loaders?:        Record<Field.ResourceLoader.LoaderId, Loader.Fn>;
+    gatewayHooks?: GatewayHooks<Blueprint, ZodType>;
+};
 
 // Read once and held for the process; index changes arrive via a backend restart.
 let index: Shelf.Index | null = null;
@@ -18,12 +30,59 @@ function getCoreIndex(): Shelf.Index {
 @Injectable()
 export class ShelfService {
 
-    private readonly logger = new Logger(ShelfService.name);
+    private readonly log = System.log.withContext("Shelf");
 
     private extendedIndex: Record<Blueprint.Id, Blueprint> | null = null;
     private summaries:     Shelf.Catalogue.Summary[] | null       = null;
+    private readonly loadableNodes = new Map<Blueprint.Id, LoadableNode>();
 
     constructor(private readonly cloud: CloudService) {}
+
+
+    // Loaders and gateway filters are static members on the node class, so the module has to be imported.
+    private async getNodeClass(blueprintId: Blueprint.Id): Promise<LoadableNode | null> {
+        const cached = this.loadableNodes.get(blueprintId);
+
+        if (cached)
+            return cached;
+
+        let module: { Node?: unknown };
+
+        try {
+            module = await import(Blueprint.getPath(NODES_ROOT, blueprintId, 'node'));
+        }
+        catch {
+            return null;
+        }
+
+        const NodeClass = (module.Node ?? undefined) as LoadableNode | undefined;
+
+        if (!NodeClass)
+            return null;
+
+        this.loadableNodes.set(blueprintId, NodeClass);
+
+        return NodeClass;
+    }
+
+
+    async getLoader(
+        blueprintId: Blueprint.Id,
+        loaderId: Field.ResourceLoader.LoaderId,
+    ): Promise<Loader.Fn | null> {
+        const NodeClass = await this.getNodeClass(blueprintId);
+
+        return NodeClass?.loaders?.[loaderId] ?? null;
+    }
+
+
+    // What the node does with its connection's events: one schema, and the hooks it types.
+    async getGatewayHooks(blueprintId: Blueprint.Id): Promise<GatewayHooks<Blueprint, ZodType> | null> {
+        const NodeClass = await this.getNodeClass(blueprintId);
+
+        return NodeClass?.gatewayHooks ?? null;
+    }
+
 
     // The extended shelf blueprints, fetched from the registry once and kept for the process.
     async ensureExtendedShelfIndex(): Promise<Record<Blueprint.Id, Blueprint>> {
@@ -38,7 +97,7 @@ export class ShelfService {
         try {
             listings = await this.getPretzelOfficialListings();
         } catch (error) {
-            this.logger.warn(`Could not fetch the extended shelf: ${(error as Error).message}`);
+            this.log.warning(`Could not fetch the extended shelf: ${(error as Error).message}`);
             return {};
         }
 
@@ -87,7 +146,7 @@ export class ShelfService {
                 dependencyRef: { kind: 'listing', id: listing.id },
             });
         } catch (error) {
-            this.logger.warn(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);
+            this.log.warning(`Skipped extended shelf listing ${listing.id}: ${(error as Error).message}`);
             return null;
         }
     }
@@ -220,9 +279,14 @@ export class ShelfService {
         for (const failure of resolutionFailures) {
             for (const node of Object.values(data.nodes)) {
                 if (failure.code === "MISSING_BLUEPRINT") {
-                    // Dependency nodes may use a cosmetic blueprint id absent from the catalogue by design.
-                    if (Workbench.Document.selectors.node.dependency.getShapeRef({ data }, node.id) || node.blueprintId !== failure.blueprintId)
+                    if (node.blueprintId !== failure.blueprintId)
                         continue;
+
+                    // Dependency nodes with a cosmetic blueprint id fall back to the Execute container.
+                    if (Workbench.Document.selectors.node.dependency.getShapeRef({ data }, node.id)) {
+                        blueprints[node.blueprintId] = getCoreIndex().blueprints['Core.SubWorkflow.Execute' as Blueprint.Id];
+                        continue;
+                    }
 
                     repairs.push({
                         code:        "MISSING_BLUEPRINT",

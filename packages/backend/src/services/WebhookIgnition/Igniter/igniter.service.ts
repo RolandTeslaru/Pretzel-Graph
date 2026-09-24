@@ -1,9 +1,11 @@
-import { Injectable, Logger, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
+import { Injectable, NotFoundException, MethodNotAllowedException } from '@nestjs/common';
 import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
-import { PublishedWorkflowCacheService } from '../PublishedWorkflowCache/published-workflow-cache.service';
+import { ActivePublicationService } from '../../ActivePublication/active-publication.service';
 import { ExecutionService } from '../../Execution/execution.service';
+import { ShelfService } from '../../Shelf/shelf.service';
+import { System } from '@pretzel-graph/shared/system';
 
 export interface InboundRequest {
     workflowId: Webhook.WorkflowId;
@@ -16,15 +18,16 @@ export interface InboundRequest {
 
 @Injectable()
 export class IgniterService {
-    private readonly logger = new Logger(IgniterService.name);
+    private readonly log = System.log.withContext("Igniter");
 
     constructor(
-        private readonly publishedWorkflows: PublishedWorkflowCacheService,
+        private readonly activePublications: ActivePublicationService,
         private readonly executions: ExecutionService,
+        private readonly shelf: ShelfService,
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
-        const publication = this.publishedWorkflows.lookup(req.workflowId as unknown as Workflow.Id);
+        const publication = this.activePublications.get(req.workflowId as unknown as Workflow.Id);
         if (!publication) {
             throw new NotFoundException(`No active webhook registered for workflow ${req.workflowId}`);
         }
@@ -56,7 +59,7 @@ export class IgniterService {
 
         const { execution } = await this.executions.runFromService(payload, 'webhook');
 
-        this.logger.log(
+        this.log.info(
             `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,
         );
 
@@ -71,11 +74,10 @@ export class IgniterService {
         method: Webhook.Method,
     ) {
         for (const [nodeId, node] of Object.entries(publication.workflow_data.nodes)) {
-            // @ts-expect-error TODO: node.webhooks not defined yet
-            if (!node.webhooks?.length) continue;
+            const blueprint = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
+            if (!blueprint.webhooks?.length) continue;
             const staticValues = publication.workflow_data.staticValues[node.id] ?? {};
-            // @ts-expect-error TODO: node.webhooks not defined yet
-            for (const webhook of node.webhooks) {
+            for (const webhook of blueprint.webhooks) {
                 const resolved = resolveWebhook(webhook, node, staticValues);
                 if (resolved.path === path && resolved.method === method) {
                     return { nodeId, webhook: resolved };

@@ -31,7 +31,7 @@ type FlatFieldValues<D> = D extends { fields: infer T }
 
 type StructuralKey =
     | "id" | "displayName" | "description" | "icon" | "accent" | "iconColor"
-    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks"
+    | "fields" | "inputs" | "outputs" | "credentials" | "webhooks" | "gatewayListener"
     | "toolCompatible" | "proxyCompatible" | "igniter" | "passive" | "flags" | "itemScope" | "ui"
     | "replaces" | "__tool"
 
@@ -427,6 +427,21 @@ export type InferCredentialValues<C> = 0 extends (1 & C) ? any
  * `blob` phantom-branded with the template type so that
  * `credentialsAPI.getDecryptedValue(templateId)` returns a fully-typed record.
  */
+/**
+ * The single credential instance bound to a connection, phantom-typed by its template so
+ * `credentialsAPI.getDecryptedValue(socket.credential.blob)` infers the right value shape.
+ */
+export type InferCredential<D> = 0 extends (1 & D) ? any
+    : D extends { __baseCredential?: infer B; __branchCredential?: infer R }
+        // Only the base declares one: always present. A branch can add one: present or null.
+        ? [NonNullable<R>] extends [never]
+            ? [NonNullable<B>] extends [never] ? null : TypedCredentialInstance<NonNullable<B>>
+            : TypedCredentialInstance<NonNullable<B | R>> | null
+        : null;
+
+type TypedCredentialInstance<T> = Omit<Vault.Credential.Instance, "blob"> & { readonly blob: Vault.Credential.Instance.EncryptedBlob<T> }
+
+
 export type InferCredentials<D> = 0 extends (1 & D) ? any
     : D extends { credentials?: infer T }
     ? T extends readonly { id: string }[]

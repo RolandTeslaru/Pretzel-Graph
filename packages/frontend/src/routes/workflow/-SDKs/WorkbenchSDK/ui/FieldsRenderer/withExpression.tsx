@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { Workflow } from '@pretzel-graph/shared/domain'
-import { Button, Input, Tabs, Textarea } from '@pretzel-graph/standard-ui/foundations'
+import { Button, Input, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { WorkbenchSDK } from '../../sdk'
@@ -26,6 +26,7 @@ interface Props {
     className?: string
     children: React.ReactNode
     tabClassName?: string
+    togglePlacement?: 'overlay' | 'manual'
 }
 
 interface ExpressionContextValue {
@@ -38,6 +39,9 @@ interface ExpressionContextValue {
     node: Workflow.Node.Raw | null
     displayName: string
     itemScoped?: boolean
+    showToggle: boolean
+    isExpression: boolean
+    onToggleExpression: (isExpression: boolean) => void
 }
 
 const ExpressionContext = createContext<ExpressionContextValue | null>(null)
@@ -97,31 +101,43 @@ function ExpressionInput({ placeholder, className }: {
     )
 }
 
-export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, only, itemScoped, className, children, tabClassName }: Props) {
+function ExpressionToggle() {
+    const { showToggle, isExpression, onToggleExpression } = useExpressionContext()
+
+    if (!showToggle)
+        return null
+
+    return (
+        <Tabs.Root
+            value={isExpression ? 'expression' : 'static'}
+            onValueChange={(value) => onToggleExpression(value === 'expression')}
+        >
+            <Tabs.List variant="accent" size="xxs">
+                <Tabs.Trigger value='expression'>Expression</Tabs.Trigger>
+                <Tabs.Trigger value='static'>Static</Tabs.Trigger>
+            </Tabs.List>
+        </Tabs.Root>
+    )
+}
+
+export function WithExpression({ value, isExpression, onToggleExpression, onChange, onCommit, nodeId, displayName, reconcile, only, itemScoped, className, children, tabClassName, togglePlacement = 'overlay' }: Props) {
     const [isHovered, setIsHovered] = useState(false)
     const node = WorkbenchSDK.document.selectors.node.get(WorkbenchSDK.document, nodeId);
+    const showToggle = isHovered && !reconcile && !only
 
     const onCommitRef = useRef(onCommit)
     useEffect(() => { onCommitRef.current = onCommit }, [onCommit])
 
     return (
-        <ExpressionContext.Provider value={{ value, onChange, onCommitRef, node, displayName, itemScoped }}>
+        <ExpressionContext.Provider value={{ value, onChange, onCommitRef, node, displayName, itemScoped, showToggle, isExpression, onToggleExpression }}>
             <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={className + " w-full nodrag cursor-auto flex flex-col gap-1 relative"}
             >
-                {(isHovered && !reconcile && !only) && (
+                {togglePlacement === 'overlay' && showToggle && (
                     <div className={ 'absolute -top-1 right-0 flex flex-row items-center gap-1 z-10 ' +  (!isExpression && tabClassName)}>
-                        <Tabs.Root
-                            value={isExpression ? 'expression' : 'static'}
-                            onValueChange={(value) => onToggleExpression(value === 'expression')}
-                        >
-                            <Tabs.List variant="accent" size="xxs">
-                                <Tabs.Trigger value='expression'>Expression</Tabs.Trigger>
-                                <Tabs.Trigger value='static'>Static</Tabs.Trigger>
-                            </Tabs.List>
-                        </Tabs.Root>
+                        <ExpressionToggle />
                     </div>
                 )}
                 {children}
@@ -131,3 +147,4 @@ export function WithExpression({ value, isExpression, onToggleExpression, onChan
 }
 
 WithExpression.Input = ExpressionInput
+WithExpression.Toggle = ExpressionToggle

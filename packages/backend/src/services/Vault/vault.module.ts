@@ -8,8 +8,10 @@ import { OAuthState } from './OAuth/oauth.state';
 import { OAuthController } from './OAuth/oauth.controller';
 import { OAuthCallbackController } from './OAuth/oauth-callback.controller';
 import { InternalVaultController } from './internal-vault.controller';
+import { RealtimeModule } from '../Realtime/realtime.module';
 
 @Module({
+    imports:     [RealtimeModule],
     controllers: [VaultController, OAuthController, OAuthCallbackController, InternalVaultController],
     providers:   [VaultService, VaultRepository, OAuthService, OAuthProvider, OAuthState],
     exports:     [VaultService, VaultRepository, OAuthService],

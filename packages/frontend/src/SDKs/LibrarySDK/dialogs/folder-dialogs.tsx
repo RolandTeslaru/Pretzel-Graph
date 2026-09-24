@@ -1,11 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AlertDialog, Button, Dialog, Form, Input, Spinner } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Dialog, Form, Input } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
-import type { Library } from '@pretzel-graph/shared/domain'
+import { SystemError, type Library } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
 import { FolderIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 
@@ -83,11 +83,10 @@ function CreateFolderContent({ dialogId, parent_folder_id }: { dialogId: string;
                         </Form.Item>
                     )} />
                     <Dialog.Footer>
-                        <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                        <Dialog.Cancel>Cancel</Dialog.Cancel>
+                        <Dialog.Action type="submit" loading={form.formState.isSubmitting}>
                             Create
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>
@@ -146,11 +145,10 @@ function EditFolderContent({ dialogId, folder }: { dialogId: string; folder: Lib
                         </Form.Item>
                     )} />
                     <Dialog.Footer>
-                        <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                        <Dialog.Cancel>Cancel</Dialog.Cancel>
+                        <Dialog.Action type="submit" loading={form.formState.isSubmitting}>
                             Save
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>
@@ -166,7 +164,13 @@ export function openDeleteFolderDialog(folder: Library.Folder) {
             {...props}
             type='danger'
             onApprove={async () => {
-                await LibrarySDK.actions.folder.delete(folder.id)
+                try {
+                    await LibrarySDK.actions.folder.delete(folder.id)
+                }
+                catch (err) {
+                    toast.error(SystemError.fromUnknown(err).message)
+                }
+
                 DialogSDK.actions.pop(dialogId)
             }}
             onCancel={() => DialogSDK.actions.pop(dialogId)}

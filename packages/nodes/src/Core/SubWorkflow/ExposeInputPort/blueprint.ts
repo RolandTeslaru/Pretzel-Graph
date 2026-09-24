@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
         defineField.UniqueString("exposed_port_id", "Exposed Port ID", {
             prefix: "ExposedInputPort-",
             length: 5,
-            required: false,
+            required: true,
             only: "static"
         })
     ],

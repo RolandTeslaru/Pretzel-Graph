@@ -56,11 +56,18 @@ export namespace Event {
             nodeId: Workflow.Node.Id,
             portId: Foundations.Port.Input.Id,
         })
+        export const InputPortUpdated = Base.extend({
+            type:   z.literal("node:inputPortUpdated"),
+            nodeId: Workflow.Node.Id,
+            portId: Foundations.Port.Input.Id,
+            port:   Foundations.Port.Input.Schema,
+        })
         export type Created          = z.infer<typeof Created>
         export type Deleted          = z.infer<typeof Deleted>
         export type Moved            = z.infer<typeof Moved>
         export type InputPortAdded   = z.infer<typeof InputPortAdded>
         export type InputPortRemoved = z.infer<typeof InputPortRemoved>
+        export type InputPortUpdated = z.infer<typeof InputPortUpdated>
     }
 
     export namespace Edge {
@@ -97,7 +104,7 @@ export namespace Event {
     export const Schema = z.discriminatedUnion("type", [
         Workflow_.GlobalFieldsChanged,
         Lock.Acquired, Lock.Released,
-        Node.Created,  Node.Deleted, Node.Moved, Node.InputPortAdded, Node.InputPortRemoved,
+        Node.Created,  Node.Deleted, Node.Moved, Node.InputPortAdded, Node.InputPortRemoved, Node.InputPortUpdated,
         Edge.Created,  Edge.Deleted,
         Field.Set,
     ])

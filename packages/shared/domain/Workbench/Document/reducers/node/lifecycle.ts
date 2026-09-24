@@ -117,9 +117,14 @@ function applyDerivative(
         if (!oldOutputIds.has(output.id))
             result.outputs.added.push(output.id);
 
-    // Point the node at the resolved derivative; fields and ports now derive from it.
-    d.reducers.blueprint.registerAs(d, reconciledBlueprintId, blueprint);
-    node.reconciledBlueprintId = reconciledBlueprintId;
+    // A no-match fold resolves to the base id. Keep the original base registered there — it owns
+    // the derivative tree needed for a later switch back into a branch.
+    if (reconciledBlueprintId === node.blueprintId) {
+        delete node.reconciledBlueprintId;
+    } else {
+        d.reducers.blueprint.registerAs(d, reconciledBlueprintId, blueprint);
+        node.reconciledBlueprintId = reconciledBlueprintId;
+    }
     d.reducers.cache.resolvedShape.recreate(d, nodeId);
 
     // Seed from existing values, then fill gaps with initialValue

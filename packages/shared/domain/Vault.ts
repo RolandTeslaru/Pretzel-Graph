@@ -3,6 +3,7 @@ import type { AxiosInstance } from "axios"
 import { Auth as AuthDomain } from "./Auth";
 import { Workspace } from "./Workspace";
 import { Field } from "./Foundations/Field";
+import { Realtime } from "./Realtime";
 
 export namespace Vault {
 
@@ -119,6 +120,37 @@ export namespace Vault {
             export type DecryptedValues = z.infer<typeof DecryptedValues>
         }
         export type Instance = z.infer<typeof Instance.Schema>
+
+        // Emitted by the backend when a credential's secrets change; carries field names, never values.
+        export namespace Signal {
+            export const Channel = Realtime.Channel.brand("Vault.Credential.Signal.Channel")
+            export type Channel = z.infer<typeof Channel>
+
+            export const Action = z.enum(["blob-changed"])
+            export type Action = z.infer<typeof Action>
+
+            export const getChannel = (credentialId: Instance.Id, action: Action): Channel =>
+                `vault:credential:${credentialId}:${action}` as Channel
+
+            export const PATTERN_CHANNEL = "vault:credential:*" as Channel;
+
+            export const Base = Realtime.Signal.Base.extend({
+                credentialId: Instance.Id,
+            })
+
+            export namespace BlobChanged {
+                export const Schema = Base.extend({
+                    type:          z.literal("blob-changed"),
+                    changedFields: z.array(Field.Id),
+                })
+            }
+            export type BlobChanged = z.infer<typeof BlobChanged.Schema>
+
+            export const Schema = z.discriminatedUnion("type", [
+                BlobChanged.Schema,
+            ])
+        }
+        export type Signal = z.infer<typeof Signal.Schema>
     }
 
     // Declared after Credential because the payload names its ids.

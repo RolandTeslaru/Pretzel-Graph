@@ -1,18 +1,15 @@
 import { z } from "zod"
 import { Port } from "../Port"
 import { Field } from "../Field"
-import { Vault } from "../../Vault"
+import { Derivable } from "../Derivable"
 import type { Blueprint } from "./index"
 
 
 // A conditional contribution to a blueprint. Authored as an object key ("action==list") and
 // serialized as a parsed record, so no consumer ever re-parses the syntax.
-export interface Derivative {
-    readonly condition:     Derivative.Condition
-    readonly fields?:       readonly Field[]
+export interface Derivative extends Omit<Derivable.Branch, "replaces" | "_derivatives"> {
     readonly inputs?:       readonly Port.Input[]
     readonly outputs?:      readonly Port.Output[]
-    readonly credentials?:  readonly Vault.Credential.Template[]
     readonly ui?:           Partial<Blueprint["ui"]>
     /**
      * Members this branch replaces instead of appending to — e.g. tool mode, which swaps every
@@ -41,8 +38,8 @@ export interface Derivative {
 
 export namespace Derivative {
 
-    export const Id = z.string().brand("DerivativeId")
-    export type  Id = z.infer<typeof Id>
+    export const Id = Derivable.DerivativeId
+    export type  Id = Derivable.DerivativeId
 
     export class PathNotFoundError extends Error {
         public override readonly name = "BlueprintDerivativePathNotFoundError"
@@ -59,121 +56,42 @@ export namespace Derivative {
         }
     }
 
-    // Equality only. Relational operators make the matched set non-exhaustive, which the
-    // path-based identity and any future exhaustiveness check both depend on.
-    export const OPERATORS = ["==", "!="] as const
-    export type  Operator  = typeof OPERATORS[number]
+    export const OPERATORS = Derivable.OPERATORS
+    export type  Operator  = Derivable.Operator
 
-    // Segments of a derivativeId: "action==list/listAPI==data"
-    export const SEPARATOR = "/"
+    export const SEPARATOR = Derivable.SEPARATOR
 
     // Accumulating members. `ui` is excluded — it always overrides, key by key.
     export const MEMBERS = ["fields", "inputs", "outputs", "credentials"] as const
     export type  Member  = typeof MEMBERS[number]
 
-    export type Condition = {
-        readonly fieldId:  Field.Id
-        readonly operator: Operator
-        readonly value:    Field.Value
-    }
+    export type Condition = Derivable.Condition
 
     export const Condition = {
-        Schema: z.object({
-            fieldId:  Field.Id,
-            operator: z.enum(OPERATORS),
-            value:    z.any(),
-        }),
+        Schema: Derivable.Condition.Schema,
     }
 
-    export const Schema: z.ZodType<Derivative> = z.lazy(() => z.object({
-        condition:    Condition.Schema,
-        fields:       z.array(Field.Schema).readonly().optional(),
+    export const Schema: z.ZodType<Derivative> = z.lazy(() => Derivable.Branch.Base.extend({
         inputs:       z.array(Port.Input.Schema).readonly().optional(),
         outputs:      z.array(Port.Output.Schema).readonly().optional(),
-        credentials:  z.array(Vault.Credential.Template.Schema).readonly().optional(),
         ui:           z.record(z.string(), z.string()).optional(),
         replaces:     z.array(z.enum(MEMBERS)).readonly().optional(),
-        exclusive:    z.boolean().optional(),
         _derivatives: z.array(Schema).readonly().optional(),
-    }) as unknown as z.ZodType<Derivative>)
+    })) as unknown as z.ZodType<Derivative>
 
 
-    // "  action == list " -> { fieldId: "action", operator: "==", value: "list" }
-    const KEY_PATTERN = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*(==|!=)\s*(.+?)\s*$/
-
-    export const parseKey = (key: string): { fieldId: string; operator: Operator; value: string } | null => {
-        const match = KEY_PATTERN.exec(key)
-        if (!match)
-            return null
-
-        return {
-            fieldId:  match[1],
-            operator: match[2] as Operator,
-            value:    match[3],
-        }
-    }
-
-    export const formatToken = (condition: Condition): string =>
-        `${condition.fieldId}${condition.operator}${String(condition.value)}`
-
-    export const matches = (condition: Condition, current: Field.Value | undefined): boolean => {
-        const equal = current === condition.value
-        return condition.operator === "==" ? equal : !equal
-    }
+    export const parseKey    = Derivable.Condition.parseKey
+    export const formatToken = Derivable.Condition.formatToken
+    export const matches     = Derivable.Condition.matches
 }
 
 
-type Bucket = Record<Derivative.Member, unknown[]>
-
-type Accumulator = {
-    // Base + every appending branch.
-    appended:  Bucket
-    // Contributions from branches that declared `replaces` for that member.
-    replacing: Bucket
-    replaced:  Set<Derivative.Member>
-    ui:        Record<string, unknown>
-}
-
-const emptyBucket = (): Bucket => ({ fields: [], inputs: [], outputs: [], credentials: [] })
-
-const seed = (blueprint: Blueprint): Accumulator => ({
-    appended: {
-        fields:      [...blueprint.fields],
-        inputs:      [...blueprint.inputs],
-        outputs:     [...blueprint.outputs],
-        credentials: [...(blueprint.credentials ?? [])],
-    },
-    replacing: emptyBucket(),
-    replaced:  new Set(),
-    ui:        { ...blueprint.ui },
-})
-
-// fields/ports/credentials accumulate; ui overrides key by key, deepest match winning.
-const contribute = (accumulator: Accumulator, derivative: Derivative) => {
-    for (const member of Derivative.MEMBERS) {
-        const items = derivative[member] ?? []
-
-        if (derivative.replaces?.includes(member)) {
-            // Recorded even when empty — "replace with nothing" is a legitimate instruction.
-            accumulator.replaced.add(member)
-            accumulator.replacing[member].push(...items)
-            continue
-        }
-
-        accumulator.appended[member].push(...items)
-    }
-
+// ui overrides key by key, in walk order, deepest match winning.
+const applyUi = (ui: Record<string, unknown>, derivative: Derivative) => {
     for (const [key, value] of Object.entries(derivative.ui ?? {}))
         if (value !== undefined)
-            accumulator.ui[key] = value
+            ui[key] = value
 }
-
-// Second pass: a replaced member takes only the replacing contributions, so the outcome doesn't
-// depend on where the replacing branch sits among its siblings.
-const resolveMember = (accumulator: Accumulator, member: Derivative.Member) =>
-    accumulator.replaced.has(member)
-        ? accumulator.replacing[member]
-        : accumulator.appended[member]
 
 // Framework-owned fields outlive a `fields` replacement. Without this, a defineTool branch would
 // delete `isConvertedToTool` along with everything else and the editor could never toggle back.
@@ -181,13 +99,13 @@ const FRAMEWORK_FIELD_IDS: ReadonlySet<string> = new Set([
     "isConvertedToTool", "signalDependency", "dataDependency", "onErrorStrategy",
 ])
 
-const resolveFields = (blueprint: Blueprint, accumulator: Accumulator) => {
-    if (!accumulator.replaced.has("fields"))
-        return accumulator.appended.fields
+const resolveFields = (blueprint: Blueprint, folded: Derivable.Fold) => {
+    if (!folded.replaced.has("fields"))
+        return folded.appended.fields
 
     const framework = blueprint.fields.filter(field => FRAMEWORK_FIELD_IDS.has(String(field.id)))
 
-    return [...accumulator.replacing.fields, ...framework]
+    return [...folded.replacing.fields, ...framework]
 }
 
 // A Variadic field is a slot count: its template ports are repeated once per slot, with `{n}`
@@ -211,36 +129,33 @@ const slotCount = (field: Field.Variadic, value: unknown): number => {
     return Math.min(field.max ?? Infinity, Math.max(field.min ?? 0, count))
 }
 
-const generate = (accumulator: Accumulator, field: Field.Variadic, count: number) => {
+const generate = (folded: Derivable.Fold, field: Field.Variadic, count: number) => {
     const start = field.startIndex ?? 1
-
-    const bucketFor = (member: "inputs" | "outputs") =>
-        accumulator.replaced.has(member) ? accumulator.replacing[member] : accumulator.appended[member]
 
     for (let i = 0; i < count; i++) {
         const n = start + i
 
         for (const port of field.template.inputs ?? [])
-            bucketFor("inputs").push(stamp(port, n, field.id))
+            Derivable.resolve(folded, "inputs").push(stamp(port, n, field.id))
 
         for (const port of field.template.outputs ?? [])
-            bucketFor("outputs").push(stamp(port, n, field.id))
+            Derivable.resolve(folded, "outputs").push(stamp(port, n, field.id))
     }
 }
 
-const variadicFields = (blueprint: Blueprint, accumulator: Accumulator): Field.Variadic[] =>
-    (resolveFields(blueprint, accumulator) as Field[]).filter((f): f is Field.Variadic => f.variant === "Variadic")
+const variadicFields = (blueprint: Blueprint, folded: Derivable.Fold): Field.Variadic[] =>
+    (resolveFields(blueprint, folded) as Field[]).filter((f): f is Field.Variadic => f.variant === "Variadic")
 
-const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => {
+const assemble = (blueprint: Blueprint, folded: Derivable.Fold, ui: Record<string, unknown>): Blueprint => {
     const { _derivatives, ...rest } = blueprint as Blueprint & { _derivatives?: unknown }
 
     return {
         ...rest,
-        fields:      resolveFields(blueprint, accumulator),
-        inputs:      resolveMember(accumulator, "inputs"),
-        outputs:     resolveMember(accumulator, "outputs"),
-        credentials: resolveMember(accumulator, "credentials"),
-        ui:          accumulator.ui,
+        fields:      resolveFields(blueprint, folded),
+        inputs:      Derivable.resolve(folded, "inputs"),
+        outputs:     Derivable.resolve(folded, "outputs"),
+        credentials: Derivable.resolve(folded, "credentials"),
+        ui,
     } as unknown as Blueprint
 }
 
@@ -250,9 +165,10 @@ const assemble = (blueprint: Blueprint, accumulator: Accumulator): Blueprint => 
 const variantCache = new WeakMap<Blueprint, Map<string, Blueprint>>()
 
 const memoizedAssemble = (
-    blueprint:   Blueprint,
-    tokens:      readonly string[],
-    accumulator: Accumulator,
+    blueprint: Blueprint,
+    tokens:    readonly string[],
+    folded:    Derivable.Fold,
+    ui:        Record<string, unknown>,
 ): Blueprint => {
     const key = [...tokens].sort().join(Derivative.SEPARATOR)
 
@@ -264,7 +180,7 @@ const memoizedAssemble = (
 
     let variant = variants.get(key)
     if (!variant) {
-        variant = assemble(blueprint, accumulator)
+        variant = assemble(blueprint, folded, ui)
         variants.set(key, variant)
     }
 
@@ -273,100 +189,51 @@ const memoizedAssemble = (
 
 
 /**
- * Folds a blueprint's derivative tree against a node's field values.
+ * Folds a blueprint's derivative tree against a node's field values: the shared walk, plus ports,
+ * ui overrides and Variadic slot counts.
  *
  * Pure — never mutates `blueprint`, and strips `_derivatives` from the result so a derived
- * blueprint can't be derived again. Conditions fall back to the discriminant's `initialValue`,
- * which is what makes `derive(base, {})` return the correct default variant rather than the
- * bare base.
+ * blueprint can't be derived again.
  */
 export function derive(
     blueprint:   Blueprint,
     fieldValues: Partial<Record<Field.Id, Field.Value>>,
 ): { blueprint: Blueprint; derivativeId: Derivative.Id | null } {
 
-    const accumulator = seed(blueprint)
-    const path: string[] = []
-
-    const walk = (derivatives: readonly Derivative[] | undefined) => {
-
-        // The whole level is matched before anything contributes, so an exclusive branch wins
-        // wherever it sits among its siblings — the same order-independence `replaces` gets from
-        // being settled in a second pass.
-        const matched = (derivatives ?? []).filter(derivative => {
-            const { fieldId } = derivative.condition
-
-            // defineBlueprint guarantees the discriminant is declared at or above this level,
-            // and parents contribute before we recurse — so this lookup cannot miss. Both buckets
-            // are searched: replacement is settled in a second pass, after the walk.
-            const declared = [...accumulator.appended.fields, ...accumulator.replacing.fields]
-                .find(field => (field as Field).id === fieldId) as Field | undefined
-
-            return Derivative.matches(derivative.condition, fieldValues[fieldId] ?? declared?.initialValue)
-        })
-
-        const exclusive = matched.find(derivative => derivative.exclusive)
-
-        for (const derivative of exclusive ? [exclusive] : matched) {
-            contribute(accumulator, derivative)
-            path.push(Derivative.formatToken(derivative.condition))
-
-            walk(derivative._derivatives)
-        }
-    }
-
-    walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
+    const ui     = { ...blueprint.ui } as Record<string, unknown>
+    const folded = Derivable.fold(blueprint as unknown as Derivable, fieldValues, Derivative.MEMBERS, branch => applyUi(ui, branch as Derivative))
 
     // Slot counts fold after the branches, over whatever Variadic fields those left in place.
-    for (const field of variadicFields(blueprint, accumulator)) {
+    for (const field of variadicFields(blueprint, folded)) {
         const count = slotCount(field, fieldValues[field.id])
 
-        generate(accumulator, field, count)
-        path.push(`${field.id}==${count}`)
+        generate(folded, field, count)
+        folded.path.push(`${field.id}==${count}`)
     }
 
     return {
-        blueprint:    memoizedAssemble(blueprint, path, accumulator),
-        derivativeId: path.length ? path.join(Derivative.SEPARATOR) as Derivative.Id : null,
+        blueprint:    memoizedAssemble(blueprint, folded.path, folded, ui),
+        derivativeId: folded.path.length ? folded.path.join(Derivative.SEPARATOR) as Derivative.Id : null,
     }
 }
 
 
 /**
  * Replays a known derivativeId without needing the field values that produced it — for
- * reconstructing the exact variant an execution ran against.
- *
- * The id is a *set* of matched condition tokens, not a linear descent: several sibling branches
- * can match at the same level (a shape branch and tool mode, say), and derive() flattens them
- * into the same `/`-joined string as nested ones. So this re-walks the tree and takes any
- * derivative whose token is in the set, recursing only into the ones it took.
+ * reconstructing the exact variant an execution ran against. Tokens no branch claims may be
+ * Variadic slot counts.
  */
 export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id | string): Blueprint {
-    const accumulator = seed(blueprint)
-    const wanted      = new Set(String(derivativeId).split(Derivative.SEPARATOR).filter(Boolean))
-    const seen        = new Set<string>()
+    const ui = { ...blueprint.ui } as Record<string, unknown>
 
-    const walk = (derivatives: readonly Derivative[] | undefined) => {
-        for (const derivative of derivatives ?? []) {
-            const token = Derivative.formatToken(derivative.condition)
-            if (!wanted.has(token))
-                continue
+    const { fold: folded, unclaimed } = Derivable.foldByPath(
+        blueprint as unknown as Derivable, derivativeId, Derivative.MEMBERS, branch => applyUi(ui, branch as Derivative),
+    )
 
-            seen.add(token)
-            contribute(accumulator, derivative)
-            walk(derivative._derivatives)
-        }
-    }
+    const seen   = new Set(folded.path)
+    const fields = variadicFields(blueprint, folded)
 
-    walk((blueprint as Blueprint & { _derivatives?: readonly Derivative[] })._derivatives)
-
-    // Whatever the branches did not claim may be a slot count on a Variadic field.
-    const fields = variadicFields(blueprint, accumulator)
-
-    for (const token of wanted) {
-        if (seen.has(token))
-            continue
-
+    for (const token of unclaimed) {
         const match = VARIADIC_TOKEN.exec(token)
         const field = match && fields.find(f => f.id === match[1])
 
@@ -374,12 +241,12 @@ export function deriveByPath(blueprint: Blueprint, derivativeId: Derivative.Id |
             continue
 
         seen.add(token)
-        generate(accumulator, field, slotCount(field, Number(match![2])))
+        generate(folded, field, slotCount(field, Number(match![2])))
     }
 
-    const missing = [...wanted].filter(token => !seen.has(token))
+    const missing = unclaimed.filter(token => !seen.has(token))
     if (missing.length)
         throw new Derivative.PathNotFoundError(blueprint.id, missing)
 
-    return memoizedAssemble(blueprint, [...seen], accumulator)
+    return memoizedAssemble(blueprint, [...seen], folded, ui)
 }

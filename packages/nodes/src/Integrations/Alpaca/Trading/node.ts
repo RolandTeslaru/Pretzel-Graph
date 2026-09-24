@@ -141,7 +141,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context)
     }
 }

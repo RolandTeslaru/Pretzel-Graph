@@ -2,9 +2,12 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
 import { Realtime } from '@pretzel-graph/shared/domain/Realtime';
+import { System } from '@pretzel-graph/shared/system';
+import { z } from 'zod';
 
 @Injectable()
 export class RealtimeService implements OnModuleDestroy {
+    private readonly log = System.log.withContext("Realtime");
     private readonly redisSub = createRedisSubscriber('realtime.service');
     private readonly redisPub = createRedisClient('realtime.service.pub');
 
@@ -12,6 +15,9 @@ export class RealtimeService implements OnModuleDestroy {
 
     /** Standing subscriptions, unlike `waiters` which are one-shot and time out. */
     private readonly listeners = new Map<Realtime.Channel, Set<(event: Realtime.Event) => void>>();
+
+    /** Standing pattern subscriptions, keyed by the glob pattern. */
+    private readonly patternListeners = new Map<Realtime.Channel, Set<(message: unknown, channel: Realtime.Channel) => void>>();
 
     constructor() {
         this.redisSub.on('message', (channel: Realtime.Channel, msg: string) => {
@@ -28,6 +34,25 @@ export class RealtimeService implements OnModuleDestroy {
 
             for (const listener of channelListeners ?? [])
                 listener(event);
+        });
+
+        this.redisSub.on('pmessage', (pattern: Realtime.Channel, channel: Realtime.Channel, msg: string) => {
+            const listeners = this.patternListeners.get(pattern);
+
+            if (!listeners)
+                return;
+
+            let message: unknown;
+
+            try {
+                message = JSON.parse(msg);
+            }
+            catch {
+                return;
+            }
+
+            for (const listener of listeners)
+                listener(message, channel);
         });
     }
 
@@ -91,17 +116,17 @@ export class RealtimeService implements OnModuleDestroy {
         });
     }
 
-    /** A standing subscription for the life of the process; returns its own removal. */
-    public subscribe<T extends Realtime.Event>(
+    /** A standing subscription to one channel, for events or signals; returns its own removal. */
+    public subscribe<T extends Realtime.Event | Realtime.Signal>(
         channel: Realtime.Channel,
-        handler: (event: T) => void,
+        handler: (message: T) => void,
     ): () => void {
         if (!this.listeners.has(channel)) {
             this.listeners.set(channel, new Set());
             this.redisSub.subscribe(channel);
         }
 
-        const listener = handler as (event: Realtime.Event) => void;
+        const listener = handler as (message: Realtime.Event) => void;
 
         this.listeners.get(channel)!.add(listener);
 
@@ -116,6 +141,48 @@ export class RealtimeService implements OnModuleDestroy {
             if (channelListeners.size === 0 && !this.waiters.has(channel)) {
                 this.listeners.delete(channel);
                 this.redisSub.unsubscribe(channel);
+            }
+        };
+    }
+
+    /** A standing subscription to every channel matching a glob pattern, for events or signals; pass a schema to validate each message, or undefined to only cast. Returns its own removal. */
+    public psubscribe<T extends Realtime.Event | Realtime.Signal>(
+        pattern: Realtime.Channel,
+        schema: z.ZodType<T> | undefined,
+        handler: (message: T, channel: Realtime.Channel) => void,
+    ): () => void {
+        const listener = (message: unknown, channel: Realtime.Channel) => {
+            if (!schema)
+                return handler(message as T, channel);
+
+            const parsed = schema.safeParse(message);
+
+            if (!parsed.success) {
+                this.log.warning(`Ignored malformed message on ${pattern}: ${parsed.error.message}`);
+                return;
+            }
+
+            handler(parsed.data, channel);
+        };
+
+        if (!this.patternListeners.has(pattern)) {
+            this.patternListeners.set(pattern, new Set());
+            this.redisSub.psubscribe(pattern);
+        }
+
+        this.patternListeners.get(pattern)!.add(listener);
+
+        return () => {
+            const listeners = this.patternListeners.get(pattern);
+
+            if (!listeners)
+                return;
+
+            listeners.delete(listener);
+
+            if (listeners.size === 0) {
+                this.patternListeners.delete(pattern);
+                this.redisSub.punsubscribe(pattern);
             }
         };
     }

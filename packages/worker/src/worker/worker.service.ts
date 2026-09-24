@@ -8,8 +8,10 @@ import { Execution, Worker as WorkerD } from '@pretzel-graph/shared/domain';
 import { RealtimeService } from '../realtime/realtime.service';
 import { bounded } from '../utils';
 import { BookkeepingService } from './services/bookkeeping.service';
-import { ConnectionPoolService } from './services/connection-pool.service';
 import { QueueProcessorService } from './services/queue-processor.service';
+import { CatalogueService } from '../catalogue';
+import { ConnectionService } from '../connections';
+import { System } from '@pretzel-graph/shared/system';
 
 // Total budget ~10s, within the stop grace period.
 const CLOSE_TIMEOUT_MS   = 4_000;
@@ -35,6 +37,8 @@ const createRedisConnection = () =>
 @Injectable()
 export class WorkerService implements OnApplicationBootstrap, BeforeApplicationShutdown, OnApplicationShutdown {
 
+    private readonly log = System.log.withContext("Worker");
+
     private redisWorker = createRedisConnection();
 
     private bullWorker: BullWorker<Execution.Queue.Item> | null = null;
@@ -48,7 +52,8 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         private readonly realtime: RealtimeService,
         private readonly bookkeeping: BookkeepingService,
         private readonly queueProcessor: QueueProcessorService,
-        private readonly connectionPools: ConnectionPoolService,
+        private readonly catalogue: CatalogueService,
+        private readonly connections: ConnectionService,
     ) {}
 
 
@@ -64,9 +69,11 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
 
     public async onApplicationBootstrap(): Promise<void> {
+        await this.catalogue.preloadByNamespace("Core");
+
         await this.startConsuming();
 
-        console.log(`[Worker] Consuming ${Execution.Queue.ID} as ${WORKER_ID ?? 'an unnamed worker'}`);
+        this.log.info("consuming queue", { queue: Execution.Queue.ID, workerId: WORKER_ID ?? null });
 
         if (WORKER_ID) {
             this.removeLifecycleSubscription = this.realtime.subscribe<WorkerD.Signal>(
@@ -92,7 +99,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         if (running.length > 0) {
             await this.bullWorker.resume();
 
-            console.log(`[Worker] Sleep refused: ${running.length} execution(s) still running`);
+            this.log.warning("sleep refused, executions still running", { running: running.length });
 
             return false;
         }
@@ -114,7 +121,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         this.sleeping = true;
 
         try {
-            await this.connectionPools.purgeAll();
+            await this.connections.purgeAll();
 
             // Idle keep-alive sockets would be stale after a suspend.
             http.globalAgent.destroy();
@@ -122,7 +129,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
             await this.redisWorker.quit();
 
-            console.log('[Worker] Asleep: queue consumer closed, pools purged, redis released');
+            this.log.info("asleep: consumer closed, pools purged, redis released");
 
             this.watchForSuspend();
         }
@@ -145,14 +152,14 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
         if (!this.sleeping) {
             await this.bullWorker?.waitUntilReady();
 
-            console.log('[Worker] Already consuming; nothing to reopen');
+            this.log.debug("already consuming, nothing to reopen");
 
             return;
         }
 
         this.stopWatchingForSuspend();
 
-        console.log('[Worker] Waking: reopening realtime, redis and the queue consumer');
+        this.log.info("waking: reopening realtime, redis and the queue consumer");
 
         await this.realtime.reconnect();
 
@@ -162,7 +169,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
         this.sleeping = false;
 
-        console.log('[Worker] Awake: taking jobs again');
+        this.log.info("awake: taking jobs again");
     }
 
 
@@ -170,7 +177,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
     // Runs while realtime is still connected, so running executions can report their end.
     public async beforeApplicationShutdown(): Promise<void> {
-        console.log('[Worker] Shutting down: draining queue');
+        this.log.info("shutting down: draining queue");
 
         // Announce running executions before anything that can block.
         const executionIds = this.bookkeeping.getRunningExecutionIds();
@@ -225,7 +232,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
         void this.bullWorker.run().catch(error => {
             if (!this.sleeping)
-                console.error(`[Worker] Queue consumer stopped: ${error instanceof Error ? error.message : error}`);
+                this.log.error("queue consumer stopped", { error: error instanceof Error ? error.message : error });
         });
 
         await this.bullWorker.waitUntilReady();
@@ -242,7 +249,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
 
         const signal = parsed.data;
 
-        console.log(`[Worker] Received ${signal.type} (${signal.requestId})`);
+        this.log.info("received lifecycle signal", { type: signal.type, requestId: signal.requestId });
 
         this.queueTransition(() => this.handleLifecycleSignal(signal));
     }
@@ -256,7 +263,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
             .catch(() => {})
             .then(transition)
             .catch(error => {
-                console.error(`[Worker] Lifecycle transition failed: ${error instanceof Error ? error.message : error}`);
+                this.log.error("lifecycle transition failed", { error: error instanceof Error ? error.message : error });
             });
     }
 
@@ -282,9 +289,9 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
                 return;
 
             if (resumed)
-                console.log(`[Worker] Resumed after ${Math.round(gap / 1_000)}s frozen`);
+                this.log.info("resumed after suspend", { frozenSeconds: Math.round(gap / 1_000) });
             else
-                console.log(`[Worker] No suspend within ${SLEEP_LEASE_MS / 1_000}s; taking jobs again`);
+                this.log.info("no suspend within lease, taking jobs again", { leaseSeconds: SLEEP_LEASE_MS / 1_000 });
 
             this.stopWatchingForSuspend();
 
@@ -325,7 +332,7 @@ export class WorkerService implements OnApplicationBootstrap, BeforeApplicationS
                     requestId: signal.requestId,
                 } satisfies WorkerD.Event.Sleep.Ready);
 
-                console.log(`[Worker] Reported ready to sleep (${signal.requestId})`);
+                this.log.debug("reported ready to sleep", { requestId: signal.requestId });
 
                 break;
             }

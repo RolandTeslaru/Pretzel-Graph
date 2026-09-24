@@ -1,6 +1,6 @@
-import { memo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Select } from "@pretzel-graph/standard-ui/foundations/select"
-import { Tabs } from '@pretzel-graph/standard-ui/foundations'
+import { SearchInput, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { WorkbenchSDK } from '../../sdk'
 import { FieldLabel } from './FieldLabel'
 import type { RendererProps } from './FieldLabel'
@@ -8,6 +8,24 @@ import { WithExpression } from './withExpression'
 
 export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nodeId, className }) => {
     const [value, onChange, flush, issue, isExpression] = WorkbenchSDK.useField(nodeId, field);
+
+    const [query, setQuery] = useState('')
+
+    const hasSearch = field.search
+
+    // Matched on both halves: the display name is what is read, the value is what expressions use.
+    const matches = useMemo(() => {
+        const needle = query.trim().toLowerCase()
+
+        if (!hasSearch || !needle)
+            return null;
+
+        return new Set(field.options
+            .filter(option =>
+                option.value.toLowerCase().includes(needle)
+                || option.displayName?.toLowerCase().includes(needle))
+            .map(option => option.value))
+    }, [field.options, hasSearch, query])
 
     const expressionProps = {
         value: value as string,
@@ -51,14 +69,35 @@ export const MultiOptionField = memo<RendererProps<'MultiOption'>>(({ field, nod
                     <Select.Root
                         value={value as string}
                         onValueChange={(value) => { WorkbenchSDK.actions.field.setValue(nodeId, field, value) }}
+                        onOpenChange={open => { if (!open) setQuery('') }}
                     >
                         <Select.Trigger className={`w-full ${issue ? "border-2 border-destructive animate-border-ping ring-1 ring-destructive/50" : ""}`}>
                             <Select.Value placeholder={field.placeholder}/>
                         </Select.Trigger>
-                        <Select.Content size="sm">
+                        <Select.Content size="sm" className={hasSearch ? "pt-8" : ""}>
+                            {hasSearch &&
+                                // Radix moves focus to an item on every keystroke, so the box keeps its own.
+                                <div
+                                    className='z-10 fixed top-1 left-1 right-1'
+                                    onKeyDown={event => event.stopPropagation()}
+                                >
+                                    <SearchInput onSearch={setQuery} delay={0} autoFocus className='h-7 rounded-md!' />
+                                </div>
+                            }
                             {field.options.map((opt) => (
-                                <Select.Item key={opt.value} value={opt.value} description={opt.description}>{opt.displayName ?? opt.value}</Select.Item>
+                                // Hidden rather than removed: an item that unmounts takes the focus with it.
+                                <Select.Item
+                                    key={opt.value}
+                                    value={opt.value}
+                                    description={opt.description}
+                                    className={matches && !matches.has(opt.value) ? 'hidden' : ''}
+                                >
+                                    {opt.displayName ?? opt.value}
+                                </Select.Item>
                             ))}
+                            {matches && !matches.size &&
+                                <p className='px-2 py-1.5 text-xs text-muted-foreground'>No matches</p>
+                            }
                         </Select.Content>
                     </Select.Root>
                 </>

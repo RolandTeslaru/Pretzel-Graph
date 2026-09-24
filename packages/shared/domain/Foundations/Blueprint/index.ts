@@ -3,6 +3,7 @@ import { Port } from "../Port"
 import { Field } from "../Field"
 import { Webhook } from "../../Webhook"
 import { Vault } from "../../Vault"
+import { Gateway } from "../../Gateway"
 import * as DerivativeMod from "./derivative"
 
 // ============================================
@@ -71,6 +72,14 @@ export namespace Blueprint {
     export const extractBlueprintId = (id: Blueprint.ReconciledId | string): Blueprint.Id =>
         id.split(":")[0] as Blueprint.Id;
 
+    // Import path for one of a blueprint's modules: `Core.Text.Join` -> `<nodesRoot>/Core/Text/Join/node`.
+    export const getPath = (
+        nodesRoot   : string,
+        blueprintId : Blueprint.Id,
+        module      : "node" | "blueprint",
+    ): string =>
+        `${nodesRoot}/${blueprintId.replace(/\./g, "/")}/${module}`;
+
     export namespace Meta {
 
         export const Schema = z.object({
@@ -105,6 +114,7 @@ export namespace Blueprint {
         inputs:    z.array(Port.Input.Schema).readonly(),
         outputs:   z.array(Port.Output.Schema).readonly(),
         webhooks:  z.array(Webhook.Schema).readonly().optional(),
+        gatewayListener: Gateway.Listener.Schema.optional(),
         // Input port id whose array is iterated for this node's item-scoped fields.
         itemScope: z.string().optional(),
         // Conditional structure, folded by Blueprint.derive. Present on base blueprints only —

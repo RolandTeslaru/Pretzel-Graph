@@ -2,6 +2,8 @@ import z from "zod"
 import { Workflow } from "../Workflow"
 import { supabaseTimestamp } from "../zod-utils"
 import { Chat } from "../Chat"
+import { Port } from "../Foundations/Port"
+import { Gateway } from "../Gateway"
 
 // ─── Igniter ──────────────────────────────────────────────────────────────
 // What kicked off the execution. Replaces the old Trigger + Igniter split.
@@ -12,6 +14,8 @@ export namespace Igniter {
         record: z.boolean().optional(),
         debug: z.boolean().optional(),
         chat_id: Chat.Id.optional(),
+        // Values for the workflow's exposed input ports, keyed by exposed port id.
+        inputs: z.record(Port.Input.Id, z.unknown()).optional(),
     })
 
     export const WorkbenchManual = Base.extend({
@@ -58,6 +62,12 @@ export namespace Igniter {
         }),
     })
 
+    export const GatewayEvent = Base.extend({
+        variant: z.literal("gateway_event"),
+        nodeId: Workflow.Node.Id,
+        payload: Gateway.Socket.Event,
+    })
+
     export const Scheduled = Base.extend({
         variant: z.literal("scheduled"),
         scheduleId:  z.string().optional(),
@@ -67,7 +77,6 @@ export namespace Igniter {
     // Added by the api-keys spec.
     export const Sdk = Base.extend({
         variant: z.literal("sdk"),
-        inputs: z.record(z.string(), z.unknown()).optional(),
     })
 
     export const Schema = z.discriminatedUnion("variant", [
@@ -77,6 +86,7 @@ export namespace Igniter {
         SubWorkflow,
         ChatMessage,
         Webhook,
+        GatewayEvent,
         Scheduled,
         Sdk,
     ])
@@ -89,6 +99,7 @@ export namespace Igniter {
         "sub_workflow",
         "chat_message",
         "webhook",
+        "gateway_event",
         "scheduled",
         "sdk",
     ])

@@ -7,7 +7,7 @@ import { OptionsDropdown } from './OptionsDropdown'
 import Tipped from '@/components/Tipped'
 import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint'
 import { PROXY_TEMPLATE_ID } from '../../../NodePanel/proxy'
-import { CredentialPicker } from '../../../CredentialsRenderer/CredentialPicker'
+import { CredentialRenderer } from '../../../CredentialsRenderer';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 
 interface Props {
@@ -121,32 +121,28 @@ const ProxyButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                 sidebarClassName='w-[270px]'
                 contentClassName='w-[400px]'
                 sidebarRenderer={() => (
-                    <>
-                        <div className='flex flex-row gap-2'>
-                            <SystemIcons.NetworkProxy className='size-6' strokeWidth={2}/>
-                            <Dialog.Title className='text-sm font-semibold my-auto'>Network Proxy</Dialog.Title>
-                        </div>
-                        <Dialog.Description className='text-xs text-muted-foreground pt-1'>
+                    <DialogSDK.SplitTemplate.Header>
+                        <DialogSDK.SplitTemplate.Icon icon={SystemIcons.NetworkProxy} />
+                        <DialogSDK.SplitTemplate.Title>Network Proxy</DialogSDK.SplitTemplate.Title>
+                        <DialogSDK.SplitTemplate.Description>
                             Route this node's outbound requests through a proxy.
-                        </Dialog.Description>
-                    </>
+                        </DialogSDK.SplitTemplate.Description>
+                    </DialogSDK.SplitTemplate.Header>
                 )}
             >
+                <Dialog.Title className='hidden'>Network Proxy</Dialog.Title>
+                <Dialog.Description className='hidden'>Route this node's outbound requests through a proxy</Dialog.Description>
                 <div className='flex flex-col gap-2 h-full pt-3'>
                     <p className='text-xs font-medium text-muted-foreground '>Select a Network Proxy Credential</p>
-                    <CredentialPicker credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
+                    <CredentialRenderer credentialTemplate={proxyTemplate} nodeId={nodeId} showTitle={false} />
 
                     <div className='flex flex-row justify-between mt-auto'>
-                        <Button variant='ghost-destructive' size='sm' className='rounded-full'
-                            onClick={() => setProxyInstance(null)}
-                        >
+                        <Dialog.Action variant='ghost-destructive' size='sm' onClick={() => setProxyInstance(null)}>
                             Remove Proxy
-                        </Button>
-                        <Button size='sm' className='rounded-full'
-                            onClick={() => DialogSDK.actions.pop(dialogId)}
-                        >
+                        </Dialog.Action>
+                        <Dialog.Action size='sm' onClick={() => DialogSDK.actions.pop(dialogId)}>
                             Done
-                        </Button>
+                        </Dialog.Action>
                     </div>
                 </div>
             </DialogSDK.SplitTemplate>

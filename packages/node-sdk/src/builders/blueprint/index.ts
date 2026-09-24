@@ -3,6 +3,7 @@ import type { Port }               from "@pretzel-graph/shared/domain/Foundation
 import type { Field }              from "@pretzel-graph/shared/domain/Foundations/Field";
 import { Blueprint }          from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import type { CredentialTemplate } from "../credential";
+import type { Gateway }            from "@pretzel-graph/shared/domain";
 import { NetworkProxyCredential }  from "../../credentials/networkProxy";
 import { StandardFields }          from "../standardFields";
 import type { DefineBlueprintReturn, ConditionKey, DerivativeBody, ToolContribution } from "./types";
@@ -36,6 +37,7 @@ export function defineBlueprint<
     inputs:           TInputs;
     outputs:          TOutputs;
     webhooks?:        TWebhooks;
+    gatewayListener?: Gateway.Listener;
     toolCompatible?:  TToolCompatible;
     proxyCompatible?: boolean;
     igniter?:         boolean;
@@ -52,15 +54,37 @@ export function defineBlueprint<
     if (definition.itemScope !== undefined && !definition.inputs.some(i => (i.id as string) === definition.itemScope))
         throw new Error(`defineBlueprint(${definition.id}): itemScope "${definition.itemScope}" is not a declared input port id`);
 
+    // The listener's refFieldId must name a declared LibraryRef field that accepts connections.
+    if (definition.gatewayListener) {
+        const refFieldId = definition.gatewayListener.refFieldId as string;
+        const field      = definition.fields.find(f => (f.id as string) === refFieldId);
+
+        if (!field)
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener points at "${refFieldId}", which is not a declared field`);
+
+        if (field.variant !== "LibraryRef" || !field.accepts.includes("connection"))
+            throw new Error(`defineBlueprint(${definition.id}): gateway listener points at "${refFieldId}", which is not a LibraryRef field accepting connections`);
+    }
+
+    // A blueprint may restate a standard field to change its default, and then it owns it — the
+    // framework copy would otherwise be a second field with the same id.
+    const declaredIds = new Set(definition.fields.map(field => String(field.id)));
+
     const baseFields = [
         ...definition.fields,
-        ...StandardFields.StandardNode,
+        ...StandardFields.StandardNode.filter(field => !declaredIds.has(String(field.id))),
     ] as const;
 
-    const withDefaults = (
+    const withTool = (
         definition.toolCompatible
         ? [...baseFields, StandardFields.toolConvertedField]
         : baseFields) as readonly Field[];
+
+    // A node that listens to a connection gets the policy whether or not it asked for one.
+    const withDefaults = (
+        definition.gatewayListener
+        ? [...withTool, StandardFields.ignitionPolicyField]
+        : withTool) as readonly Field[];
 
     // Framework defaults are in the pool before conditions are checked, so a blueprint can
     // branch on "isConvertedToTool==true" without declaring the field.
@@ -86,6 +110,7 @@ export function defineBlueprint<
         inputs:          definition.inputs,
         outputs:         definition.outputs,
         webhooks:        definition.webhooks,
+        gatewayListener: definition.gatewayListener,
         toolCompatible:  definition.toolCompatible as TToolCompatible,
         proxyCompatible: definition.proxyCompatible,
         igniter:         definition.igniter,

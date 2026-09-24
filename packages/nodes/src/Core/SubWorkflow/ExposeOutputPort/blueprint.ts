@@ -7,7 +7,14 @@ export const Blueprint = defineBlueprint({
     icon: "LogOut",
     accent: "utility",
     iconColor: "primary",
-    fields: [],
+    fields: [
+        defineField.UniqueString("exposed_port_id", "Exposed Port ID", {
+            prefix: "ExposedOutputPort-",
+            length: 5,
+            required: true,
+            only: "static"
+        })
+    ],
     inputs: [
         defineInput.Unresolved("input", "Input", {
             polymorphicGroupId: "expose_output_port"

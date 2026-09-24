@@ -27,6 +27,7 @@
         "@pretzel-graph/shared": "*",
         "@pretzel-graph/worker": "*",
         "axios": "*",
+        "discord.js": "^14.27.0",
         "kalshi-typescript": "3.26.0",
         "lodash": "^4.17.23",
         "pg": "^8.22.0",

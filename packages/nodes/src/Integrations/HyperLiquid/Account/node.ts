@@ -10,7 +10,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     readonly #info: HyperLiquidInfoClient;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
         this.#info = new HyperLiquidInfoClient(this.httpClientFactory);
     }

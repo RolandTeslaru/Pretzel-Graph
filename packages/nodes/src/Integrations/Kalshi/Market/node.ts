@@ -112,7 +112,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly kalshi: KalshiPublicSDK
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context)
         this.kalshi = new KalshiPublicSDK(this.httpClientFactory)
     }

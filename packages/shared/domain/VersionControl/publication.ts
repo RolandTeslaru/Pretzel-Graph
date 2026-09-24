@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { PublicationId, WorkflowId } from "../Workflow/ids"
+import { PublicationId, WorkflowId } from "../ids"
 import { Workflow } from "../Workflow"
 
 // Canonical version-control publication record; workflow_meta and workflow_data bind to Workflow via getters.

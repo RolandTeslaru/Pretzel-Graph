@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import { Auth, Workspace } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { VerifiedToken, subjectExistsAtIssuer } from '@/utils/auth';
+import { System } from '@pretzel-graph/shared/system';
 
 /** The account named as owner at deploy time, when one is configured. */
 function configuredOwner(): Auth.User.Id | null {
@@ -23,7 +24,7 @@ function configuredOwner(): Auth.User.Id | null {
 @Injectable()
 export class MemberService {
 
-    private readonly logger = new Logger(MemberService.name);
+    private readonly log = System.log.withContext("Member");
 
     /**
      * The caller's role, or null when they are not a member.
@@ -124,7 +125,7 @@ export class MemberService {
                 .set({ claimed_by: token.userId })
                 .execute();
 
-            this.logger.log(`Deployment claimed by ${token.email ?? token.userId}`);
+            this.log.info(`Deployment claimed by ${token.email ?? token.userId}`);
 
             return 'owner';
         });

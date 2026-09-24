@@ -1,5 +1,6 @@
 export * from "./errors";
 export * from "./engine/index";
-export { ExecutionContext } from "./execution-context";
+export { CatalogueService } from "./catalogue";
+export { ExecutionContext } from "./engine/execution-context";
 export {  extendCompilePath } from "./turboGraph/context";
 export { TurboGraph } from "./turboGraph/index";

@@ -2,22 +2,22 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue, QueueEvents } from 'bullmq';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
-import { createRedisClient, createRedisSubscriber } from '../../utils/redis';
 import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } from '@pretzel-graph/shared/constants';
-import { Activity, Chat, Execution, Validation, Vault, Workbench, Workflow } from '@pretzel-graph/shared/domain';
-import { CatalogueService } from '@pretzel-graph/node-sdk';
+import { Execution, Validation, Workbench, Workflow } from '@pretzel-graph/shared/domain';
 import { SystemError } from '@pretzel-graph/shared/domain/SystemError';
 import { Algorithms } from '@pretzel-graph/shared/domain/Algorithms';
 import { RealtimeService } from '../Realtime/realtime.service';
-import { PermissionService } from '../Permission/permission.service';
 import { ExecutionRepository } from './execution.repository';
-import { ChatDatabase } from '../Chat/chat.database';
-import { VaultRepository } from '../Vault/vault.repository';
+import { ExecutionTracker } from './execution.tracker';
+import { ChatService } from '../Chat/chat.service';
+import { VaultService } from '../Vault/vault.service';
 import { WorkbenchRepository } from '../Workbench/workbench.repository';
-import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { ExecutionToken } from '@/auth/execution-token';
 import { WorkerLifecycleService } from '../Worker/worker-lifecycle.service';
+import { ShelfService } from '../Shelf/shelf.service';
+import { System } from '@pretzel-graph/shared/system';
+
+const log = System.log.withContext('Execution');
 
 @Injectable()
 export class ExecutionService {
@@ -26,48 +26,29 @@ export class ExecutionService {
         connection: { host: REDIS_HOST, port: REDIS_PORT, password: REDIS_PASSWORD, maxRetriesPerRequest: null }
     });
 
-    private readonly redis = createRedisClient('execution.service');
-
     constructor(
         @InjectQueue(Execution.Queue.ID)
         private readonly executionQueue:      Queue,
         private readonly realtime:            RealtimeService,
-        private readonly ownership:           PermissionService,
-        private readonly executionRepository: ExecutionRepository,
-        private readonly chatDatabase:        ChatDatabase,
-        private readonly vaultRepository:     VaultRepository,
+        private readonly repository:          ExecutionRepository,
+        private readonly tracker:             ExecutionTracker,
+        private readonly chats:               ChatService,
+        private readonly vault:               VaultService,
         private readonly workbenchRepository: WorkbenchRepository,
+        private readonly shelf:               ShelfService,
         
         @Inject(forwardRef(() => WorkerLifecycleService))
         private readonly workerLifecycle:     WorkerLifecycleService,
     ) {
         this.queueEvents.on('failed', async ({ jobId, failedReason }) => {
-            console.error(`[Execution] ${jobId} failed:`, failedReason);
+            log.error('queue job failed', { jobId, reason: failedReason });
             const status = failedReason === 'terminated' ? 'terminated' : 'failed';
-            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId: jobId as Execution.Id, status, error: failedReason }));
+            this.tracker.announce(await this.repository.finalise(Principal.SELF, { executionId: jobId as Execution.Id, status, error: failedReason }));
         });
 
         // A worker's idle window runs from its last job to end, whichever way it ended.
         this.queueEvents.on('failed',    ({ jobId }) => void this.workerLifecycle.noteJobEnded(jobId));
         this.queueEvents.on('completed', ({ jobId }) => void this.workerLifecycle.noteJobEnded(jobId));
-    }
-
-
-
-
-    /**
-     * Tells the workspace a run reached a new state. Called after the write
-     * commits — a publish inside a scope that later rolls back would put a card
-     * on every open board for a row that does not exist.
-     */
-    private announce(execution: Execution.Meta): void {
-        const channel = Activity.Event.getChannel();
-
-        this.realtime.emitEvent({
-            type: 'activity:execution:upserted',
-            channel,
-            execution,
-        } satisfies Activity.Event.Execution.Upserted);
     }
 
 
@@ -113,13 +94,13 @@ export class ExecutionService {
             event => Execution.Event.TERMINAL.has(event.type),
         );
 
-        const current = await this.executionRepository.get(principal, executionId);
+        const current = await this.repository.get(principal, executionId);
 
         if (Execution.isSettled(current))
             return { execution: current, settled: true };
 
         const arrived   = await settled;
-        const execution = arrived ? await this.executionRepository.get(principal, executionId) : current;
+        const execution = arrived ? await this.repository.get(principal, executionId) : current;
 
         return { execution, settled: arrived };
     }
@@ -142,55 +123,6 @@ export class ExecutionService {
 
 
 
-    // Resolve each node's derivative blueprint so validation sees its final fields and ports.
-    private async resolveBlueprints(
-        workflowData: Workflow.Data,
-    ): Promise<Record<Blueprint.Id, Blueprint>> {
-        const blueprints: Record<Blueprint.Id, Blueprint> = {};
-
-        for (const node of Object.values(workflowData.nodes)) {
-            // Subworkflow dependency node: absent from the catalogue by design, so never attempt the
-            // path-convention import. Its blueprint is the Core.SubWorkflow.Execute container's —
-            // exposed ports derive from the embedded dependency at read time (resolveInputs/Outputs).
-            // Mirrors the compiler's resolveDependencyNode.
-            const shapeDepRef = Workbench.Document.selectors.node.dependency.getShapeRef({ data: workflowData }, node.id)
-
-            if (shapeDepRef) {
-                const executeBp = await CatalogueService.loadBaseBlueprint("Core.SubWorkflow.Execute" as Blueprint.Id);
-
-                if (executeBp) 
-                    blueprints[node.blueprintId] = executeBp;
-
-                continue;
-            }
-
-            const base = await CatalogueService.loadBaseBlueprint(node.blueprintId);
-
-            if (!base) continue;
-
-            if (node.reconciledBlueprintId) {
-                const path = Blueprint.isReconciledId(node.reconciledBlueprintId)
-                    ? node.reconciledBlueprintId.slice(base.id.length + 1)
-                    : null;
-                const derived = path
-                    ? Blueprint.deriveByPath(base, path)
-                    : Blueprint.derive(base, workflowData.staticValues[node.id] ?? {}).blueprint;
-                blueprints[node.reconciledBlueprintId] = derived;
-            } else {
-                blueprints[node.blueprintId] = base;
-            }
-        }
-
-        return blueprints;
-    }
-
-    // Attribution follows the principal; a machine-triggered run has no owner.
-    private async ensureChat(principal: Principal.User | Principal.Service, chatId: Chat.Id, workflowId: Workflow.Id): Promise<void> {
-        const createdBy = principal.type === 'user' ? principal.userId : null;
-
-        await DB.asUser({ userId: createdBy }, (trx) => this.chatDatabase.chat.ensure(trx, createdBy, chatId, workflowId));
-    }
-
     private async runCore(
         principal:    Principal.User | Principal.Service,
         workflowId:   Workflow.Id,
@@ -200,8 +132,16 @@ export class ExecutionService {
     ): Promise<Execution.API.Run.Response> {
         const chatId = igniter.chat_id;
 
-        const blueprints = await this.resolveBlueprints(workflowData);
-        const wfCache = Workbench.Document.createCache(workflowData, blueprints);
+        const { blueprints, repairs } = await this.shelf.collectWorkflowBlueprints(workflowData);
+
+        if (repairs.length > 0)
+            throw new SystemError(
+                SystemError.Code.CONFIG_INVALID_FIELD,
+                'Workflow has nodes whose blueprints no longer exist — open it in the editor to repair them',
+                { data: { repairs } }
+            );
+
+        const wfCache =Workbench.Document.createCache(workflowData, blueprints);
         // Validation
         const arcsMap = Workbench.Document.deriveArcs(wfCache);
         const sccs    = Algorithms.Tarjan.deriveSCCs(workflowData.nodes, arcsMap)[3];
@@ -217,13 +157,13 @@ export class ExecutionService {
             );
 
         if (chatId)
-            await this.ensureChat(principal, chatId, workflowId);
+            await this.chats.ensure(principal, workflowId, { chatId });
 
         const session = Execution.Session.createInitial();
-        const created = await this.executionRepository.create(principal, { workflowId, igniter, session, executionId: proposedId, chatId });
+        const created = await this.repository.create(principal, { workflowId, igniter, session, executionId: proposedId, chatId });
         const executionId = created.id;
 
-        this.announce(created);
+        this.tracker.announce(created);
 
         const execution = {
             id: executionId,
@@ -241,9 +181,8 @@ export class ExecutionService {
         let workerStarted: Promise<boolean>;
 
         try {
-            const credentialInstanceIds = collectCredentialInstanceIds(workflowData);
-            const instances = await this.vaultRepository.credentialInstance.listByIds(Principal.SELF, [...credentialInstanceIds]);
-            const credentialInstances = Object.fromEntries(instances.map(i => [i.id, i])) as Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>;
+            const credentialInstanceIds = Workflow.collectCredentialInstanceIds(workflowData);
+            const credentialInstances = await this.vault.credentialInstance.mapByIds(Principal.SELF, [...credentialInstanceIds]);
 
             const queueItem: Execution.Queue.Item = {
                 execution,
@@ -262,21 +201,28 @@ export class ExecutionService {
 
             await this.executionQueue.add('run', queueItem, { jobId: executionId });
 
+            log.info('execution enqueued', { executionId, workflowId, igniter: igniter.variant });
+
             // After the add, so waiting on a machine to start never holds the job back.
             await this.workerLifecycle.ensureComputeForJob();
 
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: message }));
+
+            log.error('failed to enqueue execution', { executionId, workflowId, error: message });
+
+            this.tracker.announce(await this.repository.finalise(Principal.SELF, { executionId, status: 'failed', error: message }));
             throw error;
         }
 
         const started = await workerStarted;
 
         if (!started) {
-            this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status: 'failed', error: 'No worker picked up the job' }));
+            log.error('no worker picked up the job', { executionId, workflowId });
+
+            this.tracker.announce(await this.repository.finalise(Principal.SELF, { executionId, status: 'failed', error: 'No worker picked up the job' }));
             this.executionQueue.remove(executionId).catch(err =>
-                console.error('Failed to remove execution from queue after start timeout', err)
+                log.error('failed to remove execution from queue after start timeout', { error: err })
             );
             throw new SystemError(SystemError.Code.INFRA_UNKNOWN, 'No worker picked up the job');
         }
@@ -313,7 +259,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'paused' }));
+            this.tracker.announce(await this.repository.updateProgress(principal, { executionId, status: 'paused' }));
        
         return { success };
     }
@@ -333,7 +279,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'running' }));
+            this.tracker.announce(await this.repository.updateProgress(principal, { executionId, status: 'running' }));
         
         return { success };
     }
@@ -371,7 +317,7 @@ export class ExecutionService {
         );
 
         if (success)
-            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'suspended' }));
+            this.tracker.announce(await this.repository.updateProgress(principal, { executionId, status: 'suspended' }));
 
         return { success };
     }
@@ -391,7 +337,7 @@ export class ExecutionService {
         );
 
         if (success) 
-            this.announce(await this.executionRepository.updateProgress(principal, { executionId, status: 'terminated' }));
+            this.tracker.announce(await this.repository.updateProgress(principal, { executionId, status: 'terminated' }));
         
         return { success };
     }
@@ -400,7 +346,7 @@ export class ExecutionService {
 
 
     public async finalise({ executionId, status }: Execution.API.Finalise.Request): Promise<Execution.API.Finalise.Response> {
-        this.announce(await this.executionRepository.finalise(Principal.SELF, { executionId, status }));
+        this.tracker.announce(await this.repository.finalise(Principal.SELF, { executionId, status }));
         return {};
     }
 
@@ -412,12 +358,12 @@ export class ExecutionService {
         // Undefined when it settled first, which is the outcome that stands. The
         // session rides along for the event: `Meta` omits it, and an editor watching
         // this run applies the same payload a live failure would have sent.
-        const closed = await this.executionRepository.failIfActive(Principal.SELF, executionId, error);
+        const closed = await this.repository.failIfActive(Principal.SELF, executionId, error);
 
         if (!closed)
             return;
 
-        this.announce(closed.meta);
+        this.tracker.announce(closed.meta);
 
         // On the execution's own channel too: the board hears about it either way,
         // but an editor open on this run learns nothing from the activity channel.
@@ -439,7 +385,7 @@ export class ExecutionService {
     public async terminateAll(
         principal: Principal.User,
     ): Promise<Execution.API.TerminateAll.Response> {
-        const activeExecutionIds = await this.executionRepository.listActiveIds(Principal.SELF);
+        const activeExecutionIds = await this.repository.listActiveIds(Principal.SELF);
         if (activeExecutionIds.length === 0) return { terminatedCount: 0 };
 
         for (const executionId of activeExecutionIds) {
@@ -454,126 +400,10 @@ export class ExecutionService {
         for (const job of waiting) 
             await job.remove();
 
-        const terminated = await this.executionRepository.terminateMany(Principal.SELF, activeExecutionIds, 'Terminated by admin');
+        const terminated = await this.repository.terminateMany(Principal.SELF, activeExecutionIds, 'Terminated by admin');
 
-        terminated.forEach((meta) => this.announce(meta));
+        terminated.forEach((meta) => this.tracker.announce(meta));
 
         return { terminatedCount: activeExecutionIds.length };
     }
-
-
-
-
-    // No ownership assert: the read runs through RLS, which confines it to the caller's own
-    // executions. A row that is not theirs is not visible, and the resulting no-row throw
-    // surfaces as the same 404 the assert used to produce.
-    public async get(
-        principal:   Principal.User,
-        executionId: Execution.Id,
-    ): Promise<Execution.API.Get.Response> {
-
-        const execution = await this.executionRepository.get(principal, executionId);
-
-        return { execution };
-    }
-
-
-
-
-    public async update(
-        payload: Execution.API.Update.Request
-    ): Promise<Execution.API.Update.Response> {
-        const { executionId, status, duration, session, recording } = payload;
-        // Progress from the running graph — written as the execution's owner, so RLS
-        // scopes it. Terminal results arrive on /finalise, which stays on the service role.
-        const delegate = await this.ownership.resolveDelegate(executionId);
-
-        const meta = await this.executionRepository.updateProgress(delegate, { executionId, status, duration, session, recording });
-
-        // Only a status move is activity; a session or recording write is not.
-        if (status !== undefined)
-            this.announce(meta);
-        return {};
-    }
-
-
-    public readonly recording = {
-
-        // Reads Redis, which RLS does not reach — the route's execution scope is the only
-        // thing confining this to the caller's own run.
-        getLive: async (
-            executionId: Execution.Id,
-        ): Promise<Execution.API.Recording.GetLive.Response> => {
-            const key = Execution.Event.getChannel(executionId);
-            const raw = await this.redis.get(key);
-
-            if (!raw) 
-                throw new SystemError(SystemError.Code.NOT_FOUND, 'Live recording not found or expired');
-
-            const recording = Execution.Recording.Schema.parse(JSON.parse(raw));
-            return { recording };
-        },
-
-    };
-
-    public meta = {
-
-        get: async (
-            principal:   Principal.User,
-            executionId: Execution.Id,
-        ): Promise<Execution.API.Meta.Get.Response> => {
-
-            const meta = await this.executionRepository.meta.get(principal, executionId);
-
-            return { execution: meta };
-        },
-
-
-        list: async (
-            principal:  Principal.User,
-            workflowId: Workflow.Id,
-        ): Promise<Execution.API.Meta.List.Response> => {
-
-            const metaList = await this.executionRepository.meta.list(principal, workflowId);
-
-            return { executions: metaList };
-        },
-
-
-
-        listActive: async (
-            principal: Principal.User,
-        ): Promise<Execution.API.Meta.ListActive.Response> => {
-            const executions = await this.executionRepository.meta.listActive(principal);
-
-            return { executions: executions };
-        }
-    }
-
-
-}
-
-
-function collectCredentialInstanceIds(workflowData: Workflow.Data): Set<Vault.Credential.Instance.Id> {
-    const ids = new Set<Vault.Credential.Instance.Id>();
-    for (const nodeMap of Object.values(workflowData.credentialInstanceIds))
-        for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
-            ids.add(instanceId);
-        
-    for (const dep of Object.values(workflowData.dependencies)) {
-        switch (dep.kind) {
-            case "draftWorkflow":
-            case "publishedWorkflow":
-            case "listing":
-                collectCredentialInstanceIds(dep.workflow_data).forEach(id => ids.add(id));
-                break;
-
-            case "skill":
-                break;
-
-            default:
-                dep satisfies never;
-        }
-    }
-    return ids;
 }

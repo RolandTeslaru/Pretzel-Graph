@@ -16,6 +16,7 @@ import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
 import Tipped from '@/components/Tipped';
+import { Button } from '@pretzel-graph/standard-ui/foundations';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const nodeId = props.id as Workflow.Node.Id;
@@ -45,15 +46,18 @@ export default CanvasNode
 const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
-  const hasUpdate     = WorkbenchSDK.useDocument(d => d.selectors.node.dependency.hasUpdates(d, hyNode.id))
 
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled
   const isIgniter   = hyNode.blueprint.igniter ?? false
   const isPassive   = hyNode.blueprint.passive ?? false
+  const listensToGateway = Boolean(hyNode.blueprint.gatewayListener)
+  const hasWebhooks = Boolean(hyNode.blueprint.webhooks?.length)
 
+  const canAddInputPort = WorkbenchSDK.useDocument(d => d.selectors.node.ports.canAddInput(d, hyNode.id))
+  
   // Igniters and passive nodes never take inputs, so they get no offer to add one.
-  const showAddInputPortBtn = !isIgniter && !isPassive && hyNode.outputs.length == 0 && hyNode.inputs.length == 0
+  const showAddInputPortBtn = canAddInputPort && hyNode.outputs.length === 0
 
   let backgroundColor = 'var(--card)';
   let borderColor = "var(--border)";
@@ -79,16 +83,38 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         </NodeToolbar>
       )}
 
-      {isIgniter && 
-        <div className='absolute top-1 -left-8'>
-          <Tipped label={
-            <div className='max-w-[220px]'>
-              <p className='font-semibold'>Igniter Node</p>
-              <p className='text-xs opacity-70'>A run can start from this node. Pick it as the entry point when you launch.</p>
-            </div>
-          }>
-            <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
-          </Tipped>
+      {(isIgniter || listensToGateway || hasWebhooks) &&
+        <div className='absolute top-1 right-full mr-2 flex items-center gap-1'>
+          {isIgniter &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Igniter Node</p>
+                <p className='text-xs opacity-70'>A run can start from this node. Pick it as the entry point when you launch.</p>
+              </div>
+            }>
+              <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
+            </Tipped>
+          }
+          {listensToGateway &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Gateway Listener</p>
+                <p className='text-xs opacity-70'>Listens for events from a persistent connection.</p>
+              </div>
+            }>
+              <SystemIcons.ChevronsLeftRightEllipsis className='size-6 text-cyan-400 '/>
+            </Tipped>
+          }
+          {hasWebhooks &&
+            <Tipped label={
+              <div className='max-w-[220px]'>
+                <p className='font-semibold'>Webhook Listener</p>
+                <p className='text-xs opacity-70'>Receives events through an HTTP webhook.</p>
+              </div>
+            }>
+              <SystemIcons.Webhook className='size-6 text-cyan-400'/>
+            </Tipped>
+          }
         </div>
       }
       {isPassive && 
@@ -104,6 +130,16 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         </div>
       }
 
+      {canAddInputPort &&
+        <Button  variant={"input"} size="icon-sm" className='absolute -left-10 top-1/2 -translate-y-1/2'
+          onClick={() => {
+            WorkbenchSDK.dialogs.openAddInputPort(hyNode.id)
+          }}
+        >
+          <SystemIcons.Plus />
+        </Button>
+      }
+
       <div className={cn(
           "animate-in fade-in-0 duration-200 ease-out transition-colors",
           "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
@@ -113,7 +149,7 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={hyNode.id}
       >
-        <NodeHeader executionStatus={executionStatus} hyNode={hyNode} hasUpdate={hasUpdate} />
+        <NodeHeader executionStatus={executionStatus} hyNode={hyNode}/>
 
         {!isMinimized &&
           <div className='dark:bg-black/50 bg-card/80 py-2 gap-2 flex flex-col  rounded-b-[26px] rounded-t-xl shadow-md shadow-black/10 min-h-8 pzg-9f3a1c'

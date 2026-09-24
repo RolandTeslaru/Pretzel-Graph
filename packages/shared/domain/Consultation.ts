@@ -1,5 +1,5 @@
 import z from "zod";
-import { NodeId } from "./Workflow/ids"
+import { NodeId } from "./ids"
 // Leaf modules only — importing the Execution barrel here would cycle, since
 // Execution/session.ts embeds Consultation.Request in pending_consultations.
 import { ExecutionId } from "./Execution/ids"

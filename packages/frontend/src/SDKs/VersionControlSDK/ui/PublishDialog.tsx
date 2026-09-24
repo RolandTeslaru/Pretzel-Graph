@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Button, Dialog, Input, Label, Spinner, Textarea } from "@pretzel-graph/standard-ui/foundations"
+import { Dialog, Input, Label, Textarea } from "@pretzel-graph/standard-ui/foundations"
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK"
 import { VersionControlSDK } from "../sdk"
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk"
@@ -15,16 +15,13 @@ export function openPublishDialog() {
             sidebarClassName="w-[300px]"
             contentClassName="w-[450px]"
             sidebarRenderer={() => (
-                <div className="flex flex-col gap-2 ">
-                    <div className="flex flex-row items-center gap-2">
-                        <SystemIcons.History className="size-5 shrink-0" />
-                        <p className="text-md font-semibold text-foreground">Version Control</p>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.History} />
+                    <DialogSDK.SplitTemplate.Title>Version Control</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Creates a versioned snapshot of the current workflow state.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
             <PublishDialogContent />
@@ -100,13 +97,10 @@ function PublishDialogContent() {
                 </div>
 
                 <Dialog.Footer>
-                    <Button type="submit" disabled={isLoading || !name.trim()} className="rounded-full">
-                        {isLoading
-                            ? <Spinner className="mr-2 h-4 w-4" />
-                            : <SystemIcons.CloudUpload className="mr-2 size-4" />
-                        }
+                    <Dialog.Action type="submit" loading={isLoading} disabled={!name.trim()}>
+                        {!isLoading && <SystemIcons.CloudUpload />}
                         Publish
-                    </Button>
+                    </Dialog.Action>
                 </Dialog.Footer>
             </form>
         </div>

@@ -9,11 +9,14 @@ import { Node as ExposeInputPortNode } from "../ExposeInputPort/node";
 
 export class Node extends RuntimeNode<typeof Blueprint> {
 
+    private readonly log = System.log.withContext("SubWorkflow");
+
+
     /** ExposeOutputPort nodes propagate parent outputs directly via enclosingNodeAPI
      *  as they fire — suppress automatic fan-out so the engine doesn't double-signal. */
     protected override readonly PROPAGATION_STRATEGY = RuntimeNode.PropagationStrategy.NONE
 
-    private subEnvironment!: ReturnType<RuntimeNode.ExecutionContext["subWorkflowAPI"]["createEnv"]>;
+    private subEnvironment!: ReturnType<RuntimeNode.Context["subWorkflowAPI"]["createEnv"]>;
     private subExecutionCtx!: ExecutionContext;
 
     /** Author-written `$metrics` rollups from the sub-workflow, read back after the sub-run. */
@@ -64,7 +67,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
         this.subEnvironment = this.context.subWorkflowAPI.createEnv();
 
-        const enclosingNodeAPI: RuntimeNode.ExecutionContext["enclosingNodeAPI"] = {
+        const enclosingNodeAPI: RuntimeNode.Context["enclosingNodeAPI"] = {
             writePort: (outputId, value) => {
                 this.context.portAPI.write(this.nodeId, outputId, value);
             },
@@ -102,7 +105,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             // a second fan-out signal from the engine on completion.
             return {};
         } catch (err) {
-            System.log.error("[ExecuteSubWorkflow:onRun] sub-environment threw", {
+            this.log.error("sub-environment threw", {
                 error: err instanceof Error ? err.message : String(err),
             });
             throw new Error(`Error executing sub-workflow: ${err instanceof Error ? err.message : String(err)}`);
@@ -128,7 +131,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             const exposeNodeId = instance.fieldValues.exposed_port_id;
             const dynamicInputs = incoming as Record<string, unknown>;
-            System.log.debug("[ExecuteSubWorkflow:onRun] injecting exposed input port", {
+            this.log.debug("injecting exposed input port", {
                 exposed_port_id: exposeNodeId,
                 value:           JSON.stringify(dynamicInputs[exposeNodeId])?.slice(0, 100),
             });

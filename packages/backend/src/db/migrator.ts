@@ -5,6 +5,9 @@ import { Migrator } from 'kysely/migration';
 import type { Kysely } from 'kysely';
 import type { Migration, MigrationProvider } from 'kysely/migration';
 import { DB } from './index';
+import { System } from '@pretzel-graph/shared/system';
+
+const log = System.log.withContext('Migrate');
 
 // Resolves to packages/backend/migrations from src, and to dist/backend/migrations
 // from a build — the build copies the folder alongside the compiled output.
@@ -49,14 +52,14 @@ export async function runMigrations(): Promise<void> {
 
     for (const result of results ?? []) {
         if (result.status === 'Success')
-            console.log(`[migrate] applied ${result.migrationName}`);
+            log.info('applied migration', { migration: result.migrationName });
         if (result.status === 'Error')
-            console.error(`[migrate] failed ${result.migrationName}`);
+            log.error('migration failed', { migration: result.migrationName });
     }
 
     if (error)
         throw error instanceof Error ? error : new Error(String(error));
 
     if (!results?.length)
-        console.log('[migrate] schema up to date');
+        log.info('schema up to date');
 }

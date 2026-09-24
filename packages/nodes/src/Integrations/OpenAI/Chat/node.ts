@@ -9,7 +9,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatOpenAI;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
 
         const { model, maxTokens, reasoningEffort } = this.fieldValues;

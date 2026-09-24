@@ -11,7 +11,7 @@ import {
     http as createViemHTTPTransport,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
-import { polygon } from "viem/chains"
+import { polygon } from "viem/chains/definitions/polygon"
 
 import { Polymarket } from "../../domain"
 

@@ -1,24 +1,66 @@
-import type React from "react";
+import React from "react";
 import { immer } from "zustand/middleware/immer"
 import { enableMapSet } from 'immer';
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import { Consultation } from "@pretzel-graph/shared/domain";
+import { Consultation, Gateway, HumanReview } from "@pretzel-graph/shared/domain";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
-import { ExecutionSDK } from "../ExecutionSDK/sdk";
+import "../ExecutionSDK/sdk";
+import type { ExecutionSDKImpl } from "../ExecutionSDK/sdk";
 import { isLiveStatus } from "../ExecutionSDK/observe";
 import { _createConsultationActions_, type _ConsultationSDKActions_ } from "./actions";
 import { consultationReducers } from "./reducers";
 import { ConsultationOverlay } from "./ui/Overlay";
 import { ConsultationTemplate } from "./ui/Template";
+import { reviewCardRenderer } from "./ui/cards/ReviewCard/renderer";
+import { webhookCardRenderer } from "./ui/cards/WebhookCard/renderer";
+import { GatewayListenerCard } from "./ui/cards/GatewayListenerCard";
+import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 
 enableMapSet()
 
 @SDK("Consultation")
 export class ConsultationSDKImpl extends BaseSDK<ConsultationSDK.State> {
 
-    constructor() { super() }
+    constructor() {
+        super()
+
+        const executionSDK = SDK.get<ExecutionSDKImpl>("Execution")
+
+        this.register(HumanReview.Variant.Confirm, reviewCardRenderer)
+        this.register(HumanReview.Variant.Choice,  reviewCardRenderer)
+        this.register(HumanReview.Variant.Form,    reviewCardRenderer)
+        this.register(Webhook.Test.Consultation.Variant, webhookCardRenderer)
+        this.register(Gateway.Test.Consultation.Variant, props =>
+            React.createElement(GatewayListenerCard, {
+                ...props,
+                request: props.consultation as Gateway.Test.Consultation.Request,
+            }),
+        )
+
+        // The execution session is the source of truth; this SDK owns its projection into cards.
+        executionSDK.observeCurrent({
+            onAttach: (execution, { isLive }) => {
+                if (isLive)
+                    this.actions.reconcile(execution.session.pending_consultations)
+                else
+                    this.actions.clear()
+            },
+            // Consultations arrive as session patches, which leave the execution's identity alone.
+            onUpdate: (execution, previous) => {
+                if (execution.session.pending_consultations === previous.session.pending_consultations)
+                    return
+
+                if (!isLiveStatus(execution.status))
+                    return
+
+                this.actions.reconcile(execution.session.pending_consultations ?? {})
+            },
+            onDetach: () => this.actions.clear(),
+            onStop:   () => this.actions.clear(),
+        }, { immediate: true })
+    }
     
     public readonly useStore: BaseSDK.Store<ConsultationSDK.State> = createWithEqualityFn(
         immer<ConsultationSDK.State>(() => ({
@@ -35,8 +77,7 @@ export class ConsultationSDKImpl extends BaseSDK<ConsultationSDK.State> {
     public readonly UIOverlay: ConsultationSDK.UILayer = ConsultationOverlay
     public readonly Template: ConsultationSDK.Template = ConsultationTemplate
 
-    // Consultation.Variant is an open registry, so cards are looked up rather than switched
-    // on. A node shipping a new variant registers here; nothing in this file changes.
+    // Built-ins are installed in the constructor; extensions can register additional variants.
     private readonly renderers = new Map<Consultation.Variant, ConsultationSDK.Renderer>()
 
     public register(variant: Consultation.Variant, renderer: ConsultationSDK.Renderer) {
@@ -50,39 +91,6 @@ export class ConsultationSDKImpl extends BaseSDK<ConsultationSDK.State> {
 }
 
 export const ConsultationSDK = SDK.get<ConsultationSDKImpl>("Consultation")
-
-
-// ─── Sync ───────────────────────────────────────────────────────────────────
-// The session is the source of truth; the stack is a projection of it.
-
-// Identity and lifecycle edges. `immediate` replays onAttach for whatever is already in
-// state, which is what rebuilds the stack when the workflow page is re-entered mid-run.
-ExecutionSDK.observeCurrent({
-    onAttach: (execution, { isLive }) => {
-        // A finished run can still carry entries if the worker died before its finally ran —
-        // they're history, not something to answer.
-        if (isLive)
-            ConsultationSDK.actions.reconcile(execution.session.pending_consultations)
-        else
-            ConsultationSDK.actions.clear()
-    },
-    onDetach: () => ConsultationSDK.actions.clear(),
-    onStop:   () => ConsultationSDK.actions.clear(),
-}, { immediate: true })
-
-// Consultations open and close while identity and status hold still, so observeCurrent can't
-// see them — those edges arrive as session patches.
-ExecutionSDK.subscribe((state, prev) => {
-    const next     = state.currentExecution?.session.pending_consultations
-    const previous = prev.currentExecution?.session.pending_consultations
-
-    if (next === previous) return
-
-    const execution = state.currentExecution
-    if (!execution || !isLiveStatus(execution.status)) return
-
-    ConsultationSDK.actions.reconcile(next ?? {})
-})
 
 
 export namespace ConsultationSDK {

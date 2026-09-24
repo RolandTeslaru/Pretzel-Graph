@@ -1,4 +1,4 @@
-import { RuntimeNode, InferIncoming, InferOutputs, mongo, toMongoCreds } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, toMongoCreds } from "@pretzel-graph/node-sdk";
 import { ObjectId, type Document, type Filter } from "mongodb";
 import { Blueprint } from "./blueprint";
 
@@ -32,7 +32,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ) {
         const fields = this.fieldValues;
         const creds = toMongoCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.mongoDb.blob));
-        const client = await mongo.get(creds);
+        const client = await this.context.connectionAPI.mongo.get(creds);
         const coll = client.db(creds.database).collection(fields.collection);
 
         switch (fields.operation) {

@@ -1,6 +1,8 @@
 import { z } from "zod"
 import { Port } from "../Port"
 import { Ref } from "../../Dependency/ref"
+import { Ref as LibraryRefMod } from "../../Library/ref"
+import { ConnectionDefinitionId } from "../../ids"
 import { evaluateRule as _evaluateRule, evaluateRuleGroup as _evaluateRuleGroup, evaluateCondition as _evaluateCondition } from "./condition";
 
 export namespace Field {
@@ -9,6 +11,13 @@ export namespace Field {
 
     export const Value = z.any();
     export type Value = z.infer<typeof Value>
+
+    // Ids whose value differs between two value records, including added and removed ones.
+    export const getChangedIds = (before: Record<Id, Value>, after: Record<Id, Value>): Id[] => {
+        const ids = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<Id>;
+
+        return [...ids].filter(id => JSON.stringify(before[id]) !== JSON.stringify(after[id]));
+    }
 
     export const Base = z.object({
         id: Field.Id,
@@ -49,6 +58,7 @@ export namespace Field {
         "CalendarDateTimeRange",
         "WorkflowIdSelector",
         "Dependency",
+        "LibraryRef",
     ])
     export type Variant = z.infer<typeof Variant>
 
@@ -113,6 +123,7 @@ export namespace Field {
     export const Boolean = Field.Base.extend({
         variant: configLiteral("Boolean"),
         initialValue: z.boolean(),
+        appearance: z.enum(["switch", "checkbox"]).optional(),
         isExpressionInitially: z.boolean().optional(),
         only: z.enum(["static", "expression"]).optional(),
     })
@@ -129,6 +140,8 @@ export namespace Field {
             })
         ),
         kind: z.enum(["select", "tab"]).default("select"),
+        // A select long enough to need filtering; ignored by the tab kind.
+        search: z.boolean().optional(),
         isExpressionInitially: z.boolean().optional(),
         only: z.enum(["static", "expression"]).optional(),
     })
@@ -447,6 +460,19 @@ export namespace Field {
 
     export interface Dependency extends z.infer<typeof Dependency.Schema> { }
 
+    // A node's pointer at a library item, limited to the kinds it accepts. Live, never snapshotted.
+    export namespace LibraryRef {
+        export const Schema = Field.Base.extend({
+            variant:      configLiteral("LibraryRef"),
+            accepts:      z.array(LibraryRefMod.Kind),
+            // Connections only: narrows the picker to one connection type.
+            definitionId: ConnectionDefinitionId.optional(),
+            initialValue: LibraryRefMod.Schema.nullable(),
+        })
+    }
+
+    export interface LibraryRef extends z.infer<typeof LibraryRef.Schema> { }
+
     export interface Integer extends z.infer<typeof Integer> { }
     export interface Float extends z.infer<typeof Float> { }
     export interface String extends z.infer<typeof String> { }
@@ -485,6 +511,7 @@ export namespace Field {
         CalendarDateTimeRange.Schema,
         WorkflowIdSelector,
         Dependency.Schema,
+        LibraryRef.Schema,
     ]);
 
     export type Schema = z.infer<typeof Schema>;
@@ -511,6 +538,29 @@ export namespace Field {
         return "isExpressionInitially" in field && field.isExpressionInitially === true;
     }
 
+
+
+
+
+    // Joins a resolved blueprint or connection's fields against stored values, falling back to
+    // each field's initialValue. Callers that know the shape pass it as T.
+    export function mapValuesToIds<T = Record<Field.Id, Field.Value>>(
+        fields:       readonly Field[],
+        staticValues: Record<Field.Id, Field.Value>,
+    ): T {
+        const resolved: Record<Field.Id, Field.Value> = {};
+
+        for (const field of fields) {
+            const fieldId = field.id as Field.Id;
+
+            if (fieldId in staticValues)
+                resolved[fieldId] = staticValues[fieldId] as Field.Value;
+            else
+                resolved[fieldId] = field.initialValue as Field.Value;
+        }
+
+        return resolved as T;
+    }
 
 
 

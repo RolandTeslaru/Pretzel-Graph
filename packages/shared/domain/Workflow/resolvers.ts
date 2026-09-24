@@ -5,7 +5,8 @@ import { Port } from "../Foundations/Port";
 import type { Node } from "./node";
 import type { Workflow } from "./index";
 import type { Dependency } from "../Dependency";
-import { SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
+import type { Vault } from "../Vault";
+import { SHAPE_DEPENDENCY_FIELD_ID } from "../ids";
 
 type PolymorphicResolutions = Record<Port.PolymorphicGroupId, Port.Variant>;
 
@@ -68,22 +69,24 @@ export function extractExposedInputs(wfData: Workflow.Data): Port.Input[] {
 
 // A subworkflow's exposed output ports, read from its `ExposeOutputPort` nodes. Same skip-if-unresolved rule.
 export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
-    const outputs: Port.Output[] = [];
+    const byId: Record<Port.Output.Id, Port.Output> = {};
 
     for (const node of Object.values(wfData.nodes)) {
         if (node.blueprintId !== "Core.SubWorkflow.ExposeOutputPort") continue;
 
         const variant = Object.values(node.polymorphicResolutions ?? {})[0];
-        if (!variant) continue;
+        const portId  = wfData.staticValues[node.id]?.[EXPOSED_PORT_ID_FIELD] as Port.Output.Id | undefined;
+        if (!variant || !portId)
+            continue;
 
-        outputs.push({
-            id: Port.Output.Id.parse(node.id),
+        byId[portId] = {
+            id: portId,
             displayName: node.ui.displayName,
             variant,
-        } as Port.Output);
+        } as Port.Output;
     }
 
-    return outputs;
+    return Object.values(byId);
 }
 
 
@@ -166,4 +169,33 @@ function mergeFieldsById(
             fieldsById.set(field.id, field);
 
     return [...fieldsById.values()];
+}
+
+
+// Every credential instance a workflow references, including the ones inside its
+// sub-workflow dependencies — what the backend loads before queueing a run.
+export function collectCredentialInstanceIds(data: Workflow.Data): Set<Vault.Credential.Instance.Id> {
+    const ids = new Set<Vault.Credential.Instance.Id>();
+
+    for (const nodeMap of Object.values(data.credentialInstanceIds))
+        for (const instanceId of Object.values(nodeMap) as Vault.Credential.Instance.Id[])
+            ids.add(instanceId);
+
+    for (const dependency of Object.values(data.dependencies)) {
+        switch (dependency.kind) {
+            case "draftWorkflow":
+            case "publishedWorkflow":
+            case "listing":
+                collectCredentialInstanceIds(dependency.workflow_data).forEach(id => ids.add(id));
+                break;
+
+            case "skill":
+                break;
+
+            default:
+                dependency satisfies never;
+        }
+    }
+
+    return ids;
 }

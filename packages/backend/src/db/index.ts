@@ -6,6 +6,8 @@ import { parse as parseConnectionString } from 'pg-connection-string';
 import {
     Auth,
     ApiKey as ApiKeyD,
+    Foundations,
+    Gateway,
     Library,
     Skill          as SkillD,
     SystemError,
@@ -169,6 +171,8 @@ export namespace DB {
             workflow_id: WorkflowD.Id,
             name:        z.string(),
             attachments: z.unknown().nullable(),
+            // Where the chat came from, for one opened by a gateway event rather than in the editor.
+            external_key: ChatD.ExternalKey.nullable(),
             created_at:  supabaseTimestamp,
             updated_at:  supabaseTimestamp,
         });
@@ -221,6 +225,51 @@ export namespace DB {
         export type Row = z.infer<typeof Row>;
 
         export const toDomain = (row: Row) => Vault.Credential.Instance.Schema.parse(row);
+    }
+
+    export namespace Connection {
+        export const Row = z.object({
+            id:            Gateway.Connection.Id,
+            created_by:    Auth.User.Id.nullable(),
+            folder_id:     Library.Folder.Id,
+            definition_id: Gateway.Definition.Id,
+            name:          z.string(),
+            credential_id: Vault.Credential.Instance.Id.nullable(),
+            field_values:  z.record(Foundations.Field.Id, Foundations.Field.Value),
+            status:        Gateway.Connection.Status.default('pending'),
+            error:         z.string().nullable(),
+            created_at:    z.string(),
+            updated_at:    z.string(),
+        });
+        export type Row = z.infer<typeof Row>;
+
+        // The only toDomain that takes more than a row: the domain holds the credential the
+        // row only references.
+        export const toDomain = (row: Row, credential: Vault.Credential.Instance | null) =>
+            Gateway.Connection.Schema.parse({
+                id:           row.id,
+                folderId:     row.folder_id,
+                definitionId: row.definition_id,
+                name:         row.name,
+                credential,
+                fieldValues:  row.field_values,
+                status:       row.status,
+                error:        row.error,
+                createdAt:    row.created_at,
+                updatedAt:    row.updated_at,
+            });
+
+        // Going the other way, the credential collapses back to its id.
+        export const toRow = (connection: Gateway.Connection): Omit<Row, 'created_by' | 'created_at' | 'updated_at'> => ({
+            id:            connection.id,
+            folder_id:     connection.folderId,
+            definition_id: connection.definitionId,
+            name:          connection.name,
+            credential_id: connection.credential?.id ?? null,
+            field_values:  connection.fieldValues,
+            status:        connection.status,
+            error:         connection.error,
+        });
     }
 
     export namespace ApiKey {
@@ -304,6 +353,7 @@ export namespace DB {
         version_control:     Table<typeof VersionControl.Row, 'id' | 'published_at'>;
         api_keys:            Table<typeof ApiKey.Row, 'id' | 'created_at'>;
         credential_instance: Table<typeof CredentialInstance.Row, 'id' | Stamps>;
+        connections:         Table<typeof Connection.Row, 'id' | 'status' | 'error' | Stamps>;
     }
 
     /**

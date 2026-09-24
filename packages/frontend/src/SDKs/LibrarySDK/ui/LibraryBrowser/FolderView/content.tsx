@@ -1,4 +1,4 @@
-import { Library, type Skill } from "@pretzel-graph/shared/domain";
+import { Library, type Gateway, type Skill } from "@pretzel-graph/shared/domain";
 import React, { useMemo } from "react";
 import { EmptyFolder } from "./empty-folder";
 import classNames from "classnames";
@@ -9,6 +9,8 @@ import { ScrollArea, Skeleton } from "@pretzel-graph/standard-ui/foundations";
 import { FolderItem } from "./items/folder";
 import { WorkflowItem } from "./items/workflow";
 import { SkillItem } from "./items/skill";
+import { ConnectionItem } from "./items/connection";
+import { GatewaySDK } from "@/SDKs/GatewaySDK/sdk";
 import { sizeStyles as itemSizeStyles, type ItemSize } from "./items/sizes";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import { useLibraryBrowser } from "../root";
@@ -72,11 +74,20 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
 
     VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.activeWorkflows, enabled: isQueryReady }])
 
+    const [connections] = GatewaySDK.useWith(
+        (s) => GatewaySDK.selectors.byFolderId(s, cwd),
+        [
+            { ...GatewaySDK.query.connections, enabled: isQueryReady },
+            { ...GatewaySDK.query.definitions, enabled: isQueryReady },
+        ],
+    )
+
     const query = searchQuery ? searchQuery.trim().toLowerCase() : ""
 
     const filteredFolders = useMemo(() => view.folders.filter(f => matchesQuery(f, query)), [view.folders, query])
     const filteredWorkflows = useMemo(() => view.worfklows.filter(w => matchesQuery(w, query)), [view.worfklows, query])
     const filteredSkills = useMemo(() => view.skills.filter(k => matchesSkill(k, query)).sort((a, b) => a.name.localeCompare(b.name)), [view.skills, query])
+    const filteredConnections = useMemo(() => connections.filter(c => matchesConnection(c, query)).sort((a, b) => a.name.localeCompare(b.name)), [connections, query])
 
     const styles = sizeStyles[size]
 
@@ -85,7 +96,7 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
         onClick:  () => onItemClick?.(item),
     })
 
-    const isEmpty = filteredFolders.length === 0 && filteredWorkflows.length === 0 && filteredSkills.length === 0;
+    const isEmpty = filteredFolders.length === 0 && filteredWorkflows.length === 0 && filteredSkills.length === 0 && filteredConnections.length === 0;
     const hasNoMatches = !isEmpty && filteredFolders.length === 0 && filteredWorkflows.length === 0
 
     return (
@@ -130,6 +141,17 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
                                 <SkillItem key={k.id} skill={k} size={size} {...itemProps({ type: 'skill', id: k.id })} />
                             ))}
                         </div>
+                        {filteredConnections.length > 0 &&
+                            <h4 className={styles.heading}>
+                                {filteredConnections.length} Connection
+                                {filteredConnections.length === 1 ? "" : "s"}
+                            </h4>
+                        }
+                        <div className={classNames('grid', styles.grid)}>
+                            {filteredConnections.map((c) => (
+                                <ConnectionItem key={c.id} connection={c} size={size} {...itemProps({ type: 'connection', id: c.id })} />
+                            ))}
+                        </div>
                     </div>
                 )}
             </ScrollArea.Root>
@@ -148,6 +170,12 @@ function matchesSkill(skill: Skill.Meta, query: string) {
     if (!query) return true
 
     return skill.name.includes(query) || skill.description.toLowerCase().includes(query) || skill.id.includes(query)
+}
+
+function matchesConnection(connection: Gateway.Connection, query: string) {
+    if (!query) return true
+
+    return connection.name.toLowerCase().includes(query) || connection.id.includes(query)
 }
 
 function NoMatches({ query }: { query: string }) {

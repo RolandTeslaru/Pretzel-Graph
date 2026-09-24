@@ -53,6 +53,7 @@ export const CORE_DRAWERS = {
         "Core.Developer.ErrorThrower",
         "Core.Developer.ResourceLoaderTest",
         "Core.Developer.DerivativeTest",
+        "Core.Developer.LibraryRefTest",
         "Core.Developer.DependencyFieldTest",
         "Core.Developer.DependencyReader",
       ],
@@ -174,6 +175,18 @@ export const BUNDLE_DRAWERS = {
       "Integrations.Anthropic.Chat",
       "Integrations.Anthropic.ClaudeCode"
     ]
+  },
+  discord: {
+    displayName: "Discord",
+    id: "discord",
+    icon: "Discord",
+    blueprintIds: ["Integrations.Discord.Events", "Integrations.Discord.Operation"]
+  },
+  slack: {
+    displayName: "Slack",
+    id: "slack",
+    icon: "Slack",
+    blueprintIds: ["Integrations.Slack.Events", "Integrations.Slack.Operation"]
   },
   google: {
     displayName: "Google",

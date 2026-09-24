@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Job as BullJob } from 'bullmq';
 import { Execution } from '@pretzel-graph/shared/domain';
+import { System } from '@pretzel-graph/shared/system';
 
 const LOCK_EXTEND_INTERVAL_MS = 15_000;
 const LOCK_EXTEND_DURATION_MS = 30_000;
@@ -9,6 +10,9 @@ const MAX_PAUSE_DURATION_MS   = 5 * 60_000;
 // Keeps a paused execution's job lease alive, and ends a pause nobody comes back to.
 @Injectable()
 export class LockService {
+
+    private readonly log = System.log.withContext("Lock");
+
 
     private readonly lockExtensions = new Map<Execution.Id, NodeJS.Timeout>();
 
@@ -27,7 +31,7 @@ export class LockService {
                 await job.extendLock(token, LOCK_EXTEND_DURATION_MS);
             }
             catch (error) {
-                console.error(`[Worker] Failed to extend lock for execution ${executionId}:`, error);
+                this.log.error("failed to extend execution lock", { executionId, error });
             }
         }, LOCK_EXTEND_INTERVAL_MS);
 

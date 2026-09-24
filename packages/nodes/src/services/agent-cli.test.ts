@@ -16,7 +16,7 @@ import {
 test("runs a CLI without a shell and sends the prompt over stdin", async () => {
     const result = await runAgentCli({
         command: process.execPath,
-        args: ["-e", "process.stdin.on('data', chunk => process.stdout.write(chunk.toString().toUpperCase()))"],
+        args: ["-e", "process.stdwin.on('data', chunk => process.stdout.write(chunk.toString().toUpperCase()))"],
         prompt: "hello agent",
         cwd: process.cwd(),
         timeoutMs: 5_000,

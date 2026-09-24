@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, Button, Dialog, Spinner, Tabs } from '@pretzel-graph/standard-ui/foundations'
+import { Badge, Dialog, Spinner, Tabs } from '@pretzel-graph/standard-ui/foundations'
 import { Workflow } from '@pretzel-graph/shared/domain'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
@@ -94,9 +94,9 @@ const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProp
                     <p className='px-1 text-xs text-muted-foreground'>
                         {kindDescriptions[kind]}
                     </p>
-                    <Button className="mt-auto" onClick={handleAttach} disabled={isAttaching}>
+                    <Dialog.Action className="mt-auto" onClick={handleAttach} loading={isAttaching}>
                         Attach
-                    </Button>
+                    </Dialog.Action>
                 </>
             )}
         </div>

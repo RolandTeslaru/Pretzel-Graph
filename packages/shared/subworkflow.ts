@@ -13,6 +13,7 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
 
     // Since multiple "ExposeInputPort" nodes can have the same port id, we need to ensure uniquness in the exposeure
     const uniqueInputPorts: Record<Port.Input.Id, Port.Input> = {};
+    const uniqueOutputPorts: Record<Port.Output.Id, Port.Output> = {};
 
     Object.values(wfData.nodes).forEach(node => {
         
@@ -42,15 +43,21 @@ export const extractExposedPorts = (wfData: Workflow.Data): ExposedPorts => {
             if(!variant)
                 throw new Error(`Exposed output port node ${node.id} is missing a polymorphic resolution.`);
 
-            outputs.push({
-                id: Port.Output.Id.parse(node.id),
+            const portId = wfData.staticValues[node.id]?.["exposed_port_id" as Field.Id] as Port.Output.Id | undefined;
+
+            if(!portId)
+                throw new Error(`Exposed output port node ${node.id} is missing the 'exposed_port_id' static value.`);
+
+            uniqueOutputPorts[portId] = {
+                id: portId,
                 displayName: node.ui.displayName,
                 variant: variant,
-            } as Port.Output);
+            } as Port.Output;
         }
     });
 
     inputs.push(...Object.values(uniqueInputPorts));
+    outputs.push(...Object.values(uniqueOutputPorts));
 
     return { inputs, outputs };
 };

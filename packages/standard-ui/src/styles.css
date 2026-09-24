@@ -322,20 +322,6 @@ code {
   --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
-
-  --animate-aurora: aurora 60s linear infinite;
-  @keyframes aurora {
-    from {
-      background-position:
-        50% 50%,
-        50% 50%;
-    }
-    to {
-      background-position:
-        350% 50%,
-        350% 50%;
-    }
-  }
 }
 
 /* Braille pulse spinner */
@@ -358,10 +344,10 @@ code {
 
 /* Dialog motion: the wrapper zooms without touching opacity, each surface fades itself in. */
 @keyframes dialog-zoom-in {
-  from { transform: translate(-50%, -48%) scale(0.7); box-shadow: 0 0 #0000; }
+  from { transform: translate(-50%, -48%) scale(0.7); }
 }
 @keyframes dialog-zoom-out {
-  to { transform: translate(-50%, -48%) scale(0.7); box-shadow: 0 0 #0000; }
+  to { transform: translate(-50%, -48%) scale(0.7); }
 }
 @keyframes dialog-fade-in {
   from { opacity: 0; }

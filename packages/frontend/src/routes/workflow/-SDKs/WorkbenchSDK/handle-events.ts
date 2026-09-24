@@ -43,6 +43,11 @@ const reduceEvent = withCyclesRecompute((d: Workbench.Document, event: Workbench
                 d.reducers.port.removeInput(d, event.nodeId, event.portId);
             break;
 
+        case "node:inputPortUpdated":
+            if (d.data.nodes[event.nodeId])
+                d.reducers.port.updateInput(d, event.nodeId, event.portId, event.port);
+            break;
+
         case "edge:created": {
             const edge = Workflow.Edge.fromId(event.edgeId);
 

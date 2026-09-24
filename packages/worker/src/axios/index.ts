@@ -1,8 +1,12 @@
 import axios from "axios";
 import { Injectable } from "@nestjs/common";
+import { System } from "@pretzel-graph/shared/system";
 
 @Injectable()
 export class AxiosService {
+
+    private readonly log = System.log.withContext("Axios");
+
     constructor() {
         this.init();
     }
@@ -31,7 +35,7 @@ export class AxiosService {
             (response) => response,
             (error) => {
                 if (error.response?.status === 401) {
-                    console.warn("Backend rejected token.");
+                    this.log.warning("backend rejected token");
                 }
                 return Promise.reject(error);
             }

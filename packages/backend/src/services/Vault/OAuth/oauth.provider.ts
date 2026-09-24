@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { SystemError, Vault } from '@pretzel-graph/shared/domain';
+import { System } from '@pretzel-graph/shared/system';
 
 type Provider = Vault.OAuth.Provider;
 type Client   = Vault.OAuth.Client;
@@ -18,7 +19,7 @@ const TokenResponse = z.object({
 @Injectable()
 export class OAuthProvider {
 
-    private readonly logger = new Logger(OAuthProvider.name);
+    private readonly log = System.log.withContext("OAuth");
 
 
     public authorizeUrl(provider: Provider, clientId: string, redirectUri: string, state: string): string {
@@ -97,7 +98,7 @@ export class OAuthProvider {
             });
         }
         catch (error) {
-            this.logger.warn(`Revoke skipped: ${(error as Error).message}`);
+            this.log.warning(`Revoke skipped: ${(error as Error).message}`);
         }
     }
 

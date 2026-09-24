@@ -3,7 +3,7 @@ import { Blueprint } from "../Foundations/Blueprint";
 import { Field } from "../Foundations/Field";
 import { Port } from "../Foundations/Port";
 import { Webhook } from "../Webhook";
-import { NodeId, EdgeId, SHAPE_DEPENDENCY_FIELD_ID as _SHAPE_DEPENDENCY_FIELD_ID } from "./ids";
+import { NodeId, EdgeId, SHAPE_DEPENDENCY_FIELD_ID as _SHAPE_DEPENDENCY_FIELD_ID } from "../ids";
 import { resolveInputs as _resolveInputs, resolveOutputs as _resolveOutputs } from "./resolvers";
 
 export namespace Node {

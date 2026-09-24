@@ -1,26 +1,12 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Button, Dialog, Form, Input, Select, Switch } from '@pretzel-graph/standard-ui/foundations'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { WorkbenchSDK } from '../sdk'
 import { Port } from '@pretzel-graph/shared/domain/Foundations/Port'
 import type { Workflow } from '@pretzel-graph/shared/domain'
-
-const VARIANT_OPTIONS = [
-    'Message', 'MessageList', 'Text', 'Data', 'DataList',
-    'Document', 'LanguageModel', 'Embeddings', 'VectorStore',
-    'Retriever', 'Tool', 'ToolList', 'Skill', 'SkillList', 'DataFrame',
-] as const satisfies readonly Port.Variant[]
-
-const schema = z.object({
-    id: z.string().trim().min(1, 'ID is required'),
-    displayName: z.string().trim().min(1, 'Name is required'),
-    variant: z.enum(VARIANT_OPTIONS, { message: 'Please select a type' }),
-    required: z.boolean(),
-})
-type Values = z.infer<typeof schema>
+import { INPUT_PORT_VARIANTS, inputPortSchema, type InputPortValues } from './input-port-schema'
 
 interface Props {
     nodeId: Workflow.Node.Id
@@ -35,31 +21,30 @@ export function openAddInputPortDialog(nodeId: Workflow.Node.Id) {
             sidebarClassName='w-[260px]'
             contentClassName='w-[420px]'
             sidebarRenderer={() => (
-                <div className='flex flex-col gap-2'>
-                    <div className='flex flex-row items-center gap-2'>
-                        <SystemIcons.LogIn className='size-5 shrink-0' />
-                        <p className='text-md font-semibold text-foreground'>Add Input Port</p>
-                    </div>
-
-                    <p className='text-xs text-muted-foreground'>
+                <DialogSDK.SplitTemplate.Header>
+                    <DialogSDK.SplitTemplate.Icon icon={SystemIcons.LogIn} />
+                    <DialogSDK.SplitTemplate.Title>Add Input Port</DialogSDK.SplitTemplate.Title>
+                    <DialogSDK.SplitTemplate.Description>
                         Define a new input port on this node.
-                    </p>
-                </div>
+                    </DialogSDK.SplitTemplate.Description>
+                </DialogSDK.SplitTemplate.Header>
             )}
         >
+            <Dialog.Title className='hidden'>Add Input Port</Dialog.Title>
+            <Dialog.Description className='hidden'>Define a new input port on this node</Dialog.Description>
             <AddInputPortContent nodeId={nodeId} dialogId={id} />
         </DialogSDK.SplitTemplate>
     ))
 }
 
 const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
-    const form = useForm<Values>({
-        resolver: zodResolver(schema),
+    const form = useForm<InputPortValues>({
+        resolver: zodResolver(inputPortSchema),
         mode: 'onSubmit',
         defaultValues: { id: '', displayName: '', variant: 'Data', required: false },
     })
 
-    const onSubmit = (values: Values) => {
+    const onSubmit = (values: InputPortValues) => {
         const state = WorkbenchSDK.document
 
         
@@ -116,7 +101,7 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                                         <Select.Value placeholder='Select a type' />
                                     </Select.Trigger>
                                     <Select.Content className='max-h-60 overflow-y-auto'>
-                                        {VARIANT_OPTIONS.map(v => (
+                                        {INPUT_PORT_VARIANTS.map(v => (
                                             <Select.Item key={v} value={v}>{v}</Select.Item>
                                         ))}
                                     </Select.Content>
@@ -141,12 +126,12 @@ const AddInputPortContent = ({ nodeId, dialogId }: Props) => {
                     )} />
 
                     <Dialog.Footer>
-                        <Button type='button' variant='outline' onClick={() => DialogSDK.actions.pop(dialogId)}>
+                        <Dialog.Cancel>
                             Cancel
-                        </Button>
-                        <Button type='submit'>
+                        </Dialog.Cancel>
+                        <Dialog.Action type='submit'>
                             Add
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>

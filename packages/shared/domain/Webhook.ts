@@ -1,6 +1,6 @@
 import z from "zod";
 import type { AxiosInstance } from "axios";
-import { NodeId } from "./Workflow/ids";
+import { NodeId } from "./ids";
 // Leaf modules only — the Execution barrel reaches Workflow, which imports this file.
 import { Signal as ExecutionSignal } from "./Execution/signal";
 import { ExecutionId } from "./Execution/ids";

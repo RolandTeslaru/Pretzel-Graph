@@ -1,7 +1,9 @@
 import { PortProjectionsView } from '../PortDataTree'
 import { WorkbenchSDK } from '../../../sdk'
 import type { Execution, Foundations, Workflow } from '@pretzel-graph/shared/domain'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
+import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
+import { AlertDialog } from '@pretzel-graph/standard-ui/foundations'
 
 interface Props {
   nodeId: Workflow.Node.Id
@@ -33,11 +35,42 @@ export const Content = ({ nodeId, inputs, nodeOutputProjections }: Props) => {
     return result
   }, [cache, nodeId, nodeOutputProjections])
 
+  const removePort = useCallback((portId: string) => {
+    const dialogId = `remove-input-port-${nodeId}-${portId}`
+    const label = inputs.find(p => p.id === portId)?.displayName ?? portId
+
+    DialogSDK.actions.push(dialogId, (props) => (
+      <DialogSDK.AlertTemplate
+        {...props}
+        type='danger'
+        approveLabel='Remove'
+        onApprove={() => {
+          WorkbenchSDK.actions.port.removeInput(nodeId, portId as Foundations.Port.Input.Id)
+          DialogSDK.actions.pop(dialogId)
+        }}
+        onCancel={() => DialogSDK.actions.pop(dialogId)}
+      >
+        <AlertDialog.Title>Remove input port?</AlertDialog.Title>
+        <AlertDialog.Description>
+          <span className='font-semibold text-destructive'>{label}</span> and any edge connected to it will be removed.
+        </AlertDialog.Description>
+      </DialogSDK.AlertTemplate>
+    ))
+  }, [nodeId, inputs])
+
+  const editPort = useCallback((portId: string) => {
+    const port = inputs.find(p => p.id === portId)
+    if (port)
+      WorkbenchSDK.dialogs.openEditInputPort(nodeId, port)
+  }, [nodeId, inputs])
+
   return (
     <PortProjectionsView
       ports={inputs}
       projections={projections}
-      emptyMessage="No incoming data yet."
+      emptyMessage="No input ports."
+      onRemovePort={removePort}
+      onEditPort={editPort}
     />
   )
 }

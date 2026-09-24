@@ -3,7 +3,7 @@ import type { AxiosInstance } from "axios"
 import { Workflow } from "./Workflow"
 import { VersionControl } from "./VersionControl"
 import { Dependency } from "./Dependency"
-import { ListingId, LISTING_ID_PREFIX, isListingId as isListingIdValue } from "./Workflow/ids"
+import { ListingId, LISTING_ID_PREFIX, isListingId as isListingIdValue } from "./ids"
 
 // A workflow shared through the listing registry, usable by any deployment.
 export namespace Listing {

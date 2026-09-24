@@ -1,0 +1,19 @@
+import { Chat } from '@pretzel-graph/shared/domain'
+
+interface Props {
+  message: Chat.Message.Human
+}
+
+const Human: React.FC<Props> = ({ message }) => {
+  return (
+    <div className="flex flex-col items-end w-full gap-1 mb-2 origin-bottom-right animate-in fade-in-0 zoom-in-95 slide-in-from-right-3 slide-in-from-bottom-2 duration-300 ease-out">
+      <div className="flex flex-row gap-2 items-end max-w-[85%]">
+        <div className="bg-card/50 border border-border/80 text-foreground px-2 py-0.5 rounded-xl rounded-br-sm text-sm shadow-sm ring-1 ring-black/5">
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Human

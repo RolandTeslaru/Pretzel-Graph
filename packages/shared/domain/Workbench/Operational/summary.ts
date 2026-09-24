@@ -102,7 +102,7 @@ export namespace Summary {
         blueprintId: node.blueprintId,
         displayName: d.selectors.node.getUI(d, node.id).displayName,
         isDisabled:  node.isDisabled ?? false,
-        hasIssues:   !!d.issues.nodes[node.id],
+        hasIssues:   d.selectors.node.hasIssues(d, node.id),
     })
 
     export const edge = (edge: WorkflowD.Edge): Edge => ({

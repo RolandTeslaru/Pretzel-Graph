@@ -1,7 +1,11 @@
 import { Chat } from "@pretzel-graph/shared/domain";
-import type { ChatSDK } from "./sdk";
 
-export type State = ChatSDK.State;
+// The message slice any conversation store keeps.
+export type State = {
+    messages:       Chat.Message.Id[],
+    messagesRecord: Record<Chat.Message.Id, Chat.Message>,
+    toolCallStatus: Record<Chat.ToolCall.Id, Chat.ToolCall.Status>,
+}
 
 export function createChatSDKReducers() {
     return {
@@ -16,7 +20,10 @@ export function createChatSDKReducers() {
             }
         },
         appendContent: (s, messageId, content) => {
-            s.messagesRecord[messageId].content += content;
+            const message = s.messagesRecord[messageId];
+
+            if (message)
+                message.content += content;
         },
         resetMessages: (s) => {
             s.messages = [];

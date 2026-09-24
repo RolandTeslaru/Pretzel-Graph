@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AlertDialog, Button, Dialog, Form, Input, Spinner, Textarea } from '@pretzel-graph/standard-ui/foundations'
+import { AlertDialog, Dialog, Form, Input, Spinner, Textarea } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { Skill, SystemError, type Library } from '@pretzel-graph/shared/domain'
@@ -95,11 +95,10 @@ function CreateSkillContent({ dialogId, folder_id }: { dialogId: string; folder_
                         </Form.Item>
                     )} />
                     <Dialog.Footer>
-                        <Button type="button" variant="outline" onClick={() => DialogSDK.actions.pop(dialogId)}>Cancel</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                        <Dialog.Cancel>Cancel</Dialog.Cancel>
+                        <Dialog.Action type="submit" loading={form.formState.isSubmitting}>
                             Create
-                        </Button>
+                        </Dialog.Action>
                     </Dialog.Footer>
                 </form>
             </Form.Root>
@@ -189,10 +188,10 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
             sidebarRenderer={() => (
                 <Form.Root {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col gap-4" autoComplete="off">
-                        <Dialog.Title className="flex items-center gap-2 text-base">
+                        <h2 className="flex items-center gap-2 text-base font-medium">
                             <SkillTitleIcon />
                             Edit skill
-                        </Dialog.Title>
+                        </h2>
                         <Form.Field control={form.control} name="name" render={({ field }) => (
                             <Form.Item>
                                 <Form.Label>Name</Form.Label>
@@ -228,13 +227,9 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
             )}
         >
             <div className="relative h-[600px] w-[680px] shrink-0">
-                {/* Header */}
-                <div className='pointer-events-none absolute top-0 w-full left-0 z-90 flex flex-row gap-2 items-center px-4 pt-5 pb-4'>
-                    <p className='text-sm font-medium text-foreground'>Edit Content</p>
-                </div>
+                <Dialog.FloatingHeader title='Edit Content' />
 
-                {/* Content */}
-                <div className='h-full [mask-image:linear-gradient(to_bottom,transparent_0,black_80px,black_calc(100%_-_80px),transparent_100%)]'>
+                <Dialog.MaskedScrollArea scroll={false}>
                     <MonacoEditor
                         height="100%"
                         defaultLanguage="markdown"
@@ -242,20 +237,16 @@ function SkillEditorContent({ dialogProps, dialogId, skill }: Omit<SkillEditorPr
                         onChange={setContent}
                         options={EDITOR_OPTIONS}
                     />
-                </div>
+                </Dialog.MaskedScrollArea>
 
-                {/* Footer */}
-                <div className='pointer-events-none absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 w-full flex'>
-                    <div className='ml-auto gap-2 flex'>
-                        <Button type='button' variant='outline' className='pointer-events-auto rounded-full' onClick={() => DialogSDK.actions.pop(dialogId)}>
-                            Cancel
-                        </Button>
-                        <Button type='button' className='pointer-events-auto rounded-full' onClick={form.handleSubmit(onSubmit)} disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Spinner className='size-3.5' />}
-                            Save
-                        </Button>
-                    </div>
-                </div>
+                <Dialog.FloatingFooter>
+                    <Dialog.Cancel>
+                        Cancel
+                    </Dialog.Cancel>
+                    <Dialog.Action onClick={form.handleSubmit(onSubmit)} loading={form.formState.isSubmitting}>
+                        Save
+                    </Dialog.Action>
+                </Dialog.FloatingFooter>
             </div>
         </DialogSDK.SplitTemplate>
     )

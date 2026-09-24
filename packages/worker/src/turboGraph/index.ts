@@ -5,7 +5,7 @@
 import { Airlock, Execution, Workbench } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
-import { CatalogueService, NetworkProxy, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { NetworkProxy, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 
 import { AggexCompilerError } from "../errors";
@@ -13,7 +13,8 @@ import { S2Graph, Vertex } from "../S2/graph";
 import { isUUID } from "../utils";
 
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import type { ExecutionContext } from "../execution-context";
+import type { ExecutionContext } from "../engine/execution-context";
+import { CatalogueService } from "../catalogue";
 
 
 // Turns stored Workflow.Data into a runnable execution context. compile() in order:
@@ -28,12 +29,12 @@ import type { ExecutionContext } from "../execution-context";
 //   6. Warm the expression cache (needs step 5's resolved blueprints).
 //   7. Add each edge as a graph dependency, skipping disabled endpoints.
 //   8. Wire start nodes — no incoming edges and not passive — to START. Throws if there are none.
-//   9. Fire the igniter (webhook payload / chat message) at the nodes that handle it.
+//   9. Fire the igniter (webhook payload / chat message / exposed inputs) at the nodes that handle it.
 //
 // The graph is a signal graph, not a DAG — nodes fire on accumulated signals and may re-fire,
 // so cycles are legal here.
 export class TurboGraph {
-    constructor() { }
+    constructor(private readonly catalogue: CatalogueService) { }
 
 
 
@@ -44,7 +45,7 @@ export class TurboGraph {
 
         const { workflowId, workflowData, compiledGraph: graph } = executionCtx;
 
-        await CatalogueService.warmBlueprintCache(workflowData);
+        await this.catalogue.preloadWorkflowBlueprints(workflowData);
 
         const blueprints    = await this.loadAllBlueprints(workflowData);
         executionCtx.workflowCache = Workbench.Document.createCache(workflowData, blueprints);
@@ -87,7 +88,7 @@ export class TurboGraph {
         const startNodes = this.findStartNodes(
             nodes,
             edges,
-            (id) => executionCtx.catalogueAPI.getBlueprint(id),
+            (id) => this.catalogue.getNodeBlueprint(executionCtx.workflowData.nodes[id]),
             electedNodeId,
         );
 
@@ -116,7 +117,7 @@ export class TurboGraph {
 
             const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-            const { blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
+            const { blueprint } = await this.catalogue.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
             blueprints[wfNode.reconciledBlueprintId ?? wfNode.blueprintId] = blueprint;
         }
@@ -131,10 +132,10 @@ export class TurboGraph {
 
         for (const node of Object.values(ctx.workflowData.nodes)) {
 
-            const blueprint    = ctx.catalogueAPI.getBlueprint(node.id);
+            const blueprint    = this.catalogue.getNodeBlueprint(node);
             const staticValues = ctx.workflowData.staticValues[node.id] ?? {};
             const expressionOverrides = ctx.workflowData.fieldExpressions?.[node.id] ?? {};
-            const values       = mapFieldValues(blueprint.fields, staticValues);
+            const values       = Field.mapValuesToIds(blueprint.fields, staticValues);
 
             for (const field of blueprint.fields) {
 
@@ -166,6 +167,11 @@ export class TurboGraph {
     ){
         const igniter = executionCtx.igniter;
 
+        const broadcast = async () => {
+            for (const instance of executionCtx.instanceRegistryAPI.getAll())
+                await instance.handleIgniter(igniter);
+        };
+
         switch (igniter.variant) {
 
             case "webhook": {
@@ -178,10 +184,27 @@ export class TurboGraph {
                 break;
             }
 
+            case "gateway_event": {
+
+                const instance = executionCtx.instanceRegistryAPI.get(igniter.nodeId as Workflow.Node.Id);
+
+                if (instance)
+                    await instance.handleIgniter(igniter);
+
+                break;
+            }
+
             case "chat_message": {
 
-                for (const instance of executionCtx.instanceRegistryAPI.getAll())
-                    await instance.handleIgniter(igniter);
+                await broadcast();
+
+                break;
+            }
+
+            default: {
+
+                if (igniter.inputs)
+                    await broadcast();
 
                 break;
             }
@@ -224,12 +247,12 @@ export class TurboGraph {
         const workflowData = executionCtx.workflowData
         const staticValues = workflowData.staticValues[wfNode.id] ?? {};
 
-        const { RuntimeNode, blueprint } = await CatalogueService.resolveWorkflowNode(wfNode, staticValues, workflowData);
+        const { RuntimeNode, blueprint } = await this.catalogue.resolveWorkflowNode(wfNode, staticValues, workflowData);
 
         this.assertProxySupported(wfNode, blueprint, executionCtx);
 
         // Resolved blueprint, so this includes derivative-contributed fields.
-        const fieldValues = mapFieldValues(blueprint.fields, staticValues);
+        const fieldValues = Field.mapValuesToIds(blueprint.fields, staticValues);
 
         const instance = new RuntimeNode(wfNode.id, executionCtx);
 
@@ -256,7 +279,7 @@ export class TurboGraph {
         ctx:    ExecutionContext,
     ): void {
 
-        const blueprint = ctx.catalogueAPI.getBlueprint(nodeId);
+        const blueprint = this.catalogue.getNodeBlueprint(ctx.workflowData.nodes[nodeId]);
 
         if (blueprint?.igniter)
             return;

@@ -1,12 +1,16 @@
 import { S2EngineShortCircuitError, S2EngineError, S2EngineKilledError, S2EngineXORCollisionError } from "./errors";
 import { S2Graph, Vertex } from "./graph";
 import { S2Hooks } from "./types";
+import { System } from "@pretzel-graph/shared/system";
 
 // Bulk Asynchronous Parallel Directed Cyclical Signal based Graph Engine
 
 // S² Engine (Super Solenoid Engine from Neon Genesis Evangelion)
 
 export class S2Engine {
+
+    private readonly log = System.log.withContext("S2Engine");
+
 
     public static readonly MAX_VERTEX_EXECUTION_DELTA = 1;
     public static readonly MAX_VERTEX_RUN_COUNT = 20;
@@ -113,7 +117,7 @@ export class S2Engine {
     ) { 
         const allDependents = this.ctx.graph.dependentsMap.get(vertexId)!;
         const dependents = signalSet ?? allDependents;
-        // console.log("Firing dependents of vertex", vertexId, "with signal set", signalSet, "resulting in dependents", dependents);
+        this.log.debug("firing dependents", { vertexId, dependents: [...dependents] });
 
         dependents.forEach(dep => {
             if (this.ctx.settled) return;
@@ -174,7 +178,7 @@ export class S2Engine {
         vertexId: Vertex.Id,
         signals:  Set<Vertex.Id>, // incoming signals that triggered this vertex to fire. For AND strategy, this will be the complete set of dependencies. For OR/XOR, this will be a subset of dependencies.
     ) {
-        // console.log("Attempting to fire vertex", vertexId, "with incoming signals", signals);
+        this.log.debug("firing vertex", { vertexId, signals: [...signals] });
         if (this.ctx.settled) return;
 
         this.ctx.activeTasks++;

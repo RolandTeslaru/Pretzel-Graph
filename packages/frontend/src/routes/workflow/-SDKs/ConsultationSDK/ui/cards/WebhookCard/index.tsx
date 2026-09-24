@@ -1,7 +1,8 @@
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook'
 import { ExecutionSDK } from '../../../../ExecutionSDK/sdk'
-import { ConsultationSDK } from '../../../sdk'
+import type { ConsultationSDK } from '../../../sdk'
+import { ConsultationTemplate } from '../../../ui/Template'
 import Sonar from './Sonar'
 
 export interface WebhookCardProps extends ConsultationSDK.TemplateProps {
@@ -12,7 +13,7 @@ export interface WebhookCardProps extends ConsultationSDK.TemplateProps {
 // the consultation resolves when a payload actually arrives at the webhook server.
 export const WebhookCard = ({ request, ...templateProps }: WebhookCardProps) => {
     return (
-        <ConsultationSDK.Template
+        <ConsultationTemplate
             {...templateProps}
             className='!bg-card/70 !backdrop-blur-md h-[250px]'
             timeout={{
@@ -33,6 +34,6 @@ export const WebhookCard = ({ request, ...templateProps }: WebhookCardProps) => 
 
                 <Sonar className='absolute top-1/2 left-1/2 -translate-1/2 text-cyan-600 dark:text-cyan-400 !w-[400px] !h-[400px] mask-t-from-60% mask-t-to-75%' />
             </div>
-        </ConsultationSDK.Template>
+        </ConsultationTemplate>
     )
 }

@@ -2,8 +2,9 @@ import { produce } from "immer";
 import { Consultation, Dependency, Execution, Vault, Workbench } from "@pretzel-graph/shared/domain";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
+import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
-import { CatalogueService, HTTP, RuntimeNode, mapFieldValues } from "@pretzel-graph/node-sdk";
+import { ConnectionAPI, HTTP, InferFieldValues, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Encryption } from "@pretzel-graph/shared/server/vault/encryption";
 import { AggexEngine } from "src/engine";
 
@@ -12,7 +13,8 @@ import { TurboGraph } from "./index";
 import { createHTTPClientAPI } from "./http";
 import { createProxyAPI } from "./proxy";
 import { agentToolBridgeService } from "../tool-bridge/service";
-import { ExecutionAPIs, ExecutionContext } from "../execution-context";
+import { ExecutionAPIs, ExecutionContext } from "../engine/execution-context";
+import { CatalogueService } from "../catalogue";
 
 // Builds the per-execution API facade injected into every node's ExecutionContext.
 export function createExecutionAPIs(
@@ -22,12 +24,14 @@ export function createExecutionAPIs(
     credentialInstances: Record<Vault.Credential.Instance.Id, Vault.Credential.Instance>,
     realtime:            RuntimeNode.RealtimeScope,
     internalAPI:         HTTP.Client,
+    catalogue:           CatalogueService,
+    connectionAPI:       ConnectionAPI,
 ): ExecutionAPIs {
     const { airlock, workflowId, workflowData } = executionCtx;
 
     const portAPI = {
         write: (nodeId, outputId, value) => engine.services.nodeIO.writePort(nodeId, outputId, value),
-    } satisfies RuntimeNode.ExecutionContext["portAPI"];
+    } satisfies RuntimeNode.Context["portAPI"];
 
 
 
@@ -35,7 +39,7 @@ export function createExecutionAPIs(
     const propagationAPI = {
         emitPort: (nodeId, outputId) => engine.propagationAPI.emitPort(nodeId, outputId),
         emitNode: (nodeId)           => engine.propagationAPI.emitNode(nodeId),
-    } satisfies RuntimeNode.ExecutionContext["propagationAPI"];
+    } satisfies RuntimeNode.Context["propagationAPI"];
 
 
 
@@ -43,20 +47,23 @@ export function createExecutionAPIs(
     const instanceRegistryAPI = {
         get:    (nodeId) => executionCtx.nodeRuntimeMap.get(nodeId)?.instance,
         getAll: ()       => Array.from(executionCtx.nodeRuntimeMap.values()).map(({ instance }) => instance),
-    } satisfies RuntimeNode.ExecutionContext["instanceRegistryAPI"];
+    } satisfies RuntimeNode.Context["instanceRegistryAPI"];
 
 
 
 
     const workflowQueryAPI = {
+        getBlueprint:                (nodeId)         => catalogue.getNodeBlueprint(executionCtx.workflowData.nodes[nodeId]),
         getNode:                     (nodeId)         => executionCtx.workflowData.nodes[nodeId],
         getNodeOutput:               (nodeId, portId) => executionCtx.session.node_output_instances[nodeId]?.[portId],
         getInputs:                   (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].inputs,
         getOutputs:                  (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].outputs,
         getOutputPort:               (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].outputs.find(p => p.id === portId),
         getInputPort:                (nodeId, portId) => executionCtx.workflowCache.resolvedShape[nodeId].inputs.find(p => p.id === portId),
+        hasOutputEdge:               (nodeId, portId) => Boolean(executionCtx.workflowCache.outputEdgesByPort[nodeId]?.[portId]),
         getFields:                   (nodeId)         => executionCtx.workflowCache.resolvedShape[nodeId].fields,
         getStaticValues:             (nodeId)         => executionCtx.workflowData.staticValues[nodeId] ?? {},
+        getCredentialIds:            (nodeId)         => executionCtx.workflowData.credentialInstanceIds[nodeId] ?? {},
         getExpressionTaggedFieldIds: (nodeId)         => executionCtx.workflowData.fieldExpressions?.[nodeId] ?? {},
 
         getNodesByBlueprint: <T_Blueprint extends Blueprint>(blueprintId: T_Blueprint["id"]) =>
@@ -64,13 +71,13 @@ export function createExecutionAPIs(
                 .filter(n => n.blueprintId === blueprintId)
                 .map(n => ({
                     node:   n,
-                    fields: mapFieldValues<T_Blueprint>(
-                        executionCtx.catalogueAPI.getBlueprint(n.id).fields,
+                    fields: Field.mapValuesToIds<InferFieldValues<T_Blueprint>>(
+                        catalogue.getNodeBlueprint(n).fields,
                         executionCtx.workflowData.staticValues[n.id] ?? {},
                     ),
                 })),
         getNodeDependency: (nodeId) => Workbench.Document.selectors.node.dependency.getShapeValue({ data: executionCtx.workflowData }, nodeId),
-    } satisfies RuntimeNode.ExecutionContext["workflowQueryAPI"];
+    } satisfies RuntimeNode.Context["workflowQueryAPI"];
 
 
 
@@ -81,7 +88,7 @@ export function createExecutionAPIs(
         removeSignal:  (nodeId, fromNodeId) => engine.schedulerAPI.removeSignal(nodeId, fromNodeId),
         clearSignals:  (nodeId)             => engine.schedulerAPI.clearSignals(nodeId),
         scheduleCheck: (nodeId)             => engine.schedulerAPI.scheduleCheck(nodeId),
-    } satisfies RuntimeNode.ExecutionContext["schedulerAPI"];
+    } satisfies RuntimeNode.Context["schedulerAPI"];
 
 
 
@@ -95,7 +102,7 @@ export function createExecutionAPIs(
 
     const subWorkflowAPI = {
         createEnv: () => {
-            const subCompiler = new TurboGraph();
+            const subCompiler = new TurboGraph(catalogue);
             let subEngine: AggexEngine | null = null;
 
             return {
@@ -110,6 +117,8 @@ export function createExecutionAPIs(
                         credentialInstances,
                         realtime,
                         internalAPI,
+                        catalogue,
+                        connectionAPI,
                         enclosingNodeAPI,
                     });
 
@@ -126,7 +135,7 @@ export function createExecutionAPIs(
                 },
             };
         },
-    } satisfies RuntimeNode.ExecutionContext["subWorkflowAPI"];
+    } satisfies RuntimeNode.Context["subWorkflowAPI"];
 
 
 
@@ -141,28 +150,7 @@ export function createExecutionAPIs(
 
             return value as Dependency.ValueFor<R>;
         },
-    } satisfies RuntimeNode.ExecutionContext["dependencyAPI"];
-
-
-
-
-    const catalogueAPI = {
-        // Sync read of the resolved derivative blueprint, warmed by prepareNode.
-        getBlueprint: (nodeId) => {
-            const n  = workflowData.nodes[nodeId];
-            const bp = CatalogueService.getBlueprint(n.reconciledBlueprintId ?? n.blueprintId);
-
-            if (!bp) {
-                throw new AggexCompilerError(
-                    SystemError.Code.COMPILATION_NODE_NOT_FOUND,
-                    `Blueprint not resolved for node "${nodeId}" (${n.blueprintId}) — catalogue cache not warmed`,
-                    { data: { nodeId, blueprintId: n.blueprintId } },
-                );
-            }
-
-            return bp;
-        },
-    } satisfies RuntimeNode.ExecutionContext["catalogueAPI"];
+    } satisfies RuntimeNode.Context["dependencyAPI"];
 
 
 
@@ -170,7 +158,7 @@ export function createExecutionAPIs(
     // Per execution: every node sharing a credential shares one token fetch.
     const accessTokens = new Map<Vault.Credential.Instance.Id, Vault.API.OAuth.AccessToken.Response>();
 
-    const credentialsAPI: RuntimeNode.ExecutionContext["credentialsAPI"] = {
+    const credentialsAPI: RuntimeNode.Context["credentialsAPI"] = {
         getInstance:       (instanceId) => credentialInstances[instanceId],
         getDecryptedValue: (blob)       => Encryption.decryptBlob(blob) as any,
 
@@ -295,7 +283,7 @@ export function createExecutionAPIs(
                 }));
             }
         },
-    } satisfies RuntimeNode.ExecutionContext["consultationAPI"];
+    } satisfies RuntimeNode.Context["consultationAPI"];
 
 
 
@@ -309,7 +297,7 @@ export function createExecutionAPIs(
         subWorkflowAPI,
         dependencyAPI,
         credentialsAPI,
-        catalogueAPI,
+        connectionAPI,
         abortAPI,
         realtimeAPI,
         updateSession,

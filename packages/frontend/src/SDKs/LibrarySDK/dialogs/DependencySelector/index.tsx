@@ -40,6 +40,10 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
 
             case 'skill':
                 return !accepted.skill
+
+            // A connection is live, never a snapshot, so it is never a dependency.
+            case 'connection':
+                return true
         }
     }
 
@@ -55,6 +59,9 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
 
             case 'skill':
                 return attach({ kind: 'skill', id: item.id })
+
+            case 'connection':
+                return
         }
     }
 
@@ -64,14 +71,13 @@ const DependencySelectorDialog = ({ dialogProps, options }: Props) => {
                 <DialogSDK.SplitTemplate {...dialogProps}
                     sidebarRenderer={() => (
                         <>
-                            <div className="flex flex-row items-center gap-2">
-                                <SystemIcons.Graph className="size-5 shrink-0" />
-                                <p className="text-md font-semibold text-foreground">Dependency Selector</p>
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                                Embeds a snapshot of the selection in this node
-                            </p>
+                            <DialogSDK.SplitTemplate.Header>
+                                <DialogSDK.SplitTemplate.Icon icon={SystemIcons.Graph} />
+                                <DialogSDK.SplitTemplate.Title>Dependency Selector</DialogSDK.SplitTemplate.Title>
+                                <DialogSDK.SplitTemplate.Description>
+                                    Embeds a snapshot of the selection in this node
+                                </DialogSDK.SplitTemplate.Description>
+                            </DialogSDK.SplitTemplate.Header>
 
                             {showLocal && accepted.listing && (
                                 <Tabs.List size="xs" variant="accent" className='w-full mt-auto'>

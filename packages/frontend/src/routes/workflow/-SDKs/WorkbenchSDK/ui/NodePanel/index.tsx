@@ -11,7 +11,7 @@ import { NodeSidebarHeader } from './Header';
 import { NodeSidebarFooter  as Footer} from './Footer';
 import WebhookRenderer from './webhook-renderer';
 import { InputItem } from './input-renderer';
-import { CredentialPicker } from '../CredentialsRenderer/CredentialPicker';
+import { CredentialRenderer } from '../CredentialsRenderer';
 import { PROXY_TEMPLATE_ID } from './proxy'
 
 
@@ -98,7 +98,19 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
         const executionStrategyFields: Foundations.Field[] = []
 
         hyNode.fields.forEach(field => {
-            if (field.id === "signalDependency" || field.id === "dataDependency" || field.id === "onErrorStrategy"){
+            if (
+                hyNode.blueprint.igniter
+                && (field.id === "signalDependency" || field.id === "dataDependency")
+            )
+                return
+
+            if (
+                field.id === "signalDependency"
+                || field.id === "dataDependency"
+                || field.id === "onErrorStrategy"
+                || field.id === "ignition_policy"
+                || field.id === "test_timeout_ms"
+            ) {
                 executionStrategyFields.push(field)
                 return
             }
@@ -170,7 +182,7 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
                         <SidebarAccordionItem label='Credentials' value='credentials'>
                             {credentials.map(cred => (
                                 <div key={cred.id} className='px-4 py-1 min-w-0'>
-                                    <CredentialPicker credentialTemplate={cred} nodeId={hyNode.id} />
+                                    <CredentialRenderer credentialTemplate={cred} nodeId={hyNode.id} />
                                 </div>
                             ))}
                         </SidebarAccordionItem>

@@ -6,7 +6,7 @@ import { api } from "@/SDKs/ApiInterceptorSDK";
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
 import FullscreenChat from "./ui/FullscreenChat";
 
-function deriveChatName(content: string, maxLength = 50): string {
+export function deriveChatName(content: string, maxLength = 50): string {
     const trimmed = content.trim().replace(/\s+/g, ' ');
     return trimmed.length > maxLength
         ? trimmed.slice(0, maxLength).trimEnd() + '…'

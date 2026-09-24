@@ -3,6 +3,7 @@ import { IconRenderer } from "@pretzel-graph/standard-ui/icons/IconRenderer";
 import type { Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from "../../sdk";
 import { WorkbenchSDK } from "../../../WorkbenchSDK/sdk";
+import { ShelfSDK } from "../../../ShelfSDK/sdk";
 import Tipped from "@/components/Tipped";
 import { AnimatePresence, motion } from "motion/react";
 import { ControlButton } from "./control-button";
@@ -235,10 +236,18 @@ export default ExecutionControls;
 // a plain Run starts none of them.
 const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
   const ui = WorkbenchSDK.useDocument((d) => d.selectors.node.getUI(d, nodeId));
+  const blueprintId = WorkbenchSDK.useDocument((d) => d.data.nodes[nodeId]?.blueprintId);
+
+  // A node that listens to a connection runs off an event, so the entry shows what starts it.
+  const listensToGateway = ShelfSDK.useStore((s) =>
+    Boolean(blueprintId && s.blueprints[blueprintId]?.gatewayListener),
+  );
 
   return (
     <DropdownMenu.Item onSelect={() => ExecutionSDK.actions.runFromIgniteableNode(nodeId)}>
-      <IconRenderer name={ui.icon ?? ""} className="mr-2" />
+      {listensToGateway
+        ? <SystemIcons.GatewayConnection className="mr-2" />
+        : <IconRenderer name={ui.icon ?? ""} className="mr-2" />}
       Run via {ui.displayName}
     </DropdownMenu.Item>
   );

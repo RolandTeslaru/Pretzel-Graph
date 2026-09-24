@@ -2,20 +2,30 @@ import { immer } from "zustand/middleware/immer";
 import { _createLibraryActions_, type _LibrarySDKActions } from "./actions";
 import { _createLibrarySelectors_, type _LibrarySDKSelectors } from "./selectors";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
-import { Workflow, Library, Skill } from "@pretzel-graph/shared/domain";
+import { Workflow, Library, Skill, type Gateway } from "@pretzel-graph/shared/domain";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 import type { Tree as TreeDomain } from '@/components/Tree/domain';
 import type { FileSystemNodeData } from './actions';
 import { _createLibraryDialogs_, type _LibrarySDKDialogs } from './dialogs';
+import { GatewaySDK } from '@/SDKs/GatewaySDK/sdk';
+import { rebuildTree } from './actions/tree';
 
 const BOOTSTRAP_STALE_TIME = 60_000
 
 @SDK("Library")
 export class LibrarySDKImpl extends BaseSDK<LibrarySDK.State> {
 
-    constructor() { super() }
+    constructor() {
+        super()
+
+        // Connections live in GatewaySDK and appear in the tree, so it rebuilds whenever they change.
+        GatewaySDK.subscribe((state, previous) => {
+            if (state.connections !== previous.connections)
+                rebuildTree(this)
+        })
+    }
 
     public readonly useStore = createWithEqualityFn<LibrarySDK.State>()(
         immer(() => ({
@@ -82,8 +92,9 @@ export namespace LibrarySDK {
 
     // A library entry the browser opens or picks on click.
     export type Item =
-        | { type: 'workflow'; id: Workflow.Id }
-        | { type: 'skill';    id: Skill.Id }
+        | { type: 'workflow';   id: Workflow.Id }
+        | { type: 'skill';      id: Skill.Id }
+        | { type: 'connection'; id: Gateway.Connection.Id }
 
     export type Selectors = _LibrarySDKSelectors
     export type Actions = _LibrarySDKActions

@@ -9,7 +9,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     private readonly llm: ChatXAI;
 
-    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.ExecutionContext) {
+    constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
 
         const { model, temperature, maxTokens } = this.fieldValues;

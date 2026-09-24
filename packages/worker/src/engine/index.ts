@@ -11,17 +11,17 @@ import { AggexExecutionError } from "src/errors";
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "@pretzel-graph/shared/domain/Foundations/Blueprint";
 import { Field } from "@pretzel-graph/shared/domain/Foundations/Field";
-import { FlightRecorderService } from "./flight-recorder-service";
-import { RoutingService } from "./routing-service";
-import { SchedulerService } from "./scheduler-service";
-import { PropagationService } from "./propagation-service";
-import { NodeIOService } from "./node-io-service";
-import { ErrorService } from "./error-service";
-import { SessionService } from "./session-service";
-import { LifecycleEffectService } from "./lifecycle-effect-service";
+import { FlightRecorderService } from "./services/flight-recorder-service";
+import { RoutingService } from "./services/routing-service";
+import { SchedulerService } from "./services/scheduler-service";
+import { PropagationService } from "./services/propagation-service";
+import { NodeIOService } from "./services/node-io-service";
+import { ErrorService } from "./services/error-service";
+import { SessionService } from "./services/session-service";
+import { LifecycleEffectService } from "./services/lifecycle-effect-service";
 import { System } from "@pretzel-graph/shared/system";
 import { frameworkFields } from "./framework-fields";
-import { ExecutionContext } from "../execution-context";
+import { ExecutionContext } from "./execution-context";
 
 
 export interface AggexHooks {
@@ -37,7 +37,7 @@ export interface AggexHooks {
 //                     data/signal gate; otherwise RoutingService decides.
 //   onVertexFired     Mark the node active and open its session record.
 //   onVertexExecute   The actual work — see below.
-//   onVertexWaiting   Not enough signals yet: hand the node its partial inputs via wait().
+//   onVertexWaiting   Not enough signals yet: record and emit the waiting state.
 //   onVertexCompleted Close the session record, honour stopAtNodeId, then gate on pause.
 //   onVertexError     Only reached by `terminate` / terminal errors; records the failure.
 //
@@ -50,6 +50,9 @@ export interface AggexHooks {
 // This is NOT a DAG walk. Nodes fire on accumulated signals and may re-fire, so cycles are
 // first-class and a node can execute many times in one run.
 export class AggexEngine {
+
+    private readonly log = System.log.withContext("Engine");
+
 
     /** Abort reason marking an intentional "execute up until this point" stop (vs a real termination). */
     public static readonly STOP_AT_TARGET_REASON = "stop_at_target";
@@ -254,7 +257,7 @@ export class AggexEngine {
             // (→ onErrorStrategy), an OOM force-terminates (handled in handleNodeError).
             const fields = nodeInstance.evaluateFieldValues(inputs);
 
-            System.log.debug("node executing", {
+            this.log.debug("node executing", {
                 nodeId:         wfNode.id,
                 dataDependency: dataDependency ?? "OR",
                 signals:        [...signals],
@@ -331,7 +334,7 @@ export class AggexEngine {
         if (!entry)
             return
 
-        const { instance, wfNode } = entry;
+        const { wfNode } = entry;
 
         const nodeDepMap: Record<Workflow.Node.Id, boolean> = {};
 
@@ -340,27 +343,13 @@ export class AggexEngine {
             nodeDepMap[depId] = resolved;
         })
 
-        System.log.debug("node waiting on dependencies", {
+        this.log.debug("node waiting on dependencies", {
             nodeId:     wfNode.id,
             arrived:    [...arrivedSignals],
             resolution: nodeDepMap,
         });
 
         this.services.session.onNodeWaiting(wfNode.id);
-
-        const partialInputs = this.services.nodeIO.getIncomingData(wfNode.id, arrivedSignals);
-
-        let partialFields;
-
-        try {
-            partialFields = instance.evaluateFieldValues(partialInputs);
-        }
-        catch (err) {
-            this.services.errors.handle(vertexId, err);  // OOM → throws (terminate); else recorded
-            return;
-        }
-
-        instance.wait(partialInputs, nodeDepMap, partialFields);
     }
 
 
@@ -371,7 +360,7 @@ export class AggexEngine {
         vertexId: Vertex.Id,
         error:    unknown,
     ) {
-        System.log.error("node errored (reached S2)", {
+        this.log.error("node errored (reached S2)", {
             nodeId: vertexId,
             error:  error instanceof Error ? error.message : String(error),
         });

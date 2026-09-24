@@ -1,4 +1,4 @@
-import { RuntimeNode, InferIncoming, InferOutputs, redis, toRedisCreds } from "@pretzel-graph/node-sdk";
+import { RuntimeNode, InferIncoming, InferOutputs, toRedisCreds } from "@pretzel-graph/node-sdk";
 import { Blueprint } from "./blueprint";
 
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -8,7 +8,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     ) {
         const fields = this.fieldValues;
         const creds = toRedisCreds(this.context.credentialsAPI.getDecryptedValue(this.credentials.redis.blob));
-        const client = await redis.get(creds);
+        const client = await this.context.connectionAPI.redis.get(creds);
 
         switch (fields.resource) {
             case "string": {

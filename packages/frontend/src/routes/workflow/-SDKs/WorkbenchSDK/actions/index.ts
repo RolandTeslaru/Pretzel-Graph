@@ -55,6 +55,7 @@ export function _createWorkbenchActions_(sdk: WorkbenchSDKImpl) {
         port: {
             addInput:             withCommit((...props) => setDocument(d => { reducers.port.addInput(d,             ...props) })),
             removeInput:          withCommit((...props) => setDocument(withCyclesRecompute(d => { reducers.port.removeInput(d,          ...props) }))),
+            updateInput:          withCommit((...props) => setDocument(withCyclesRecompute(d => { reducers.port.updateInput(d,          ...props) }))),
             removeOutput:         withCommit((...props) => setDocument(withCyclesRecompute(d => { reducers.port.removeOutput(d,         ...props) }))),
             addOutput:            withCommit((...props) => setDocument(d => { reducers.port.addOutput(d,            ...props) })),
             setOutputDisplayName: withCommit((...props) => setDocument(d => { reducers.port.setOutputDisplayName(d, ...props) })),
@@ -181,6 +182,7 @@ export interface _WorkbenchSDKActions {
     port                    : {
         addInput            : DropFirstArg<WorkbenchSDK.Reducers['port']['addInput']>;
         removeInput         : DropFirstArg<WorkbenchSDK.Reducers['port']['removeInput']>;
+        updateInput         : DropFirstArg<WorkbenchSDK.Reducers['port']['updateInput']>;
         removeOutput        : DropFirstArg<WorkbenchSDK.Reducers['port']['removeOutput']>;
         addOutput           : DropFirstArg<WorkbenchSDK.Reducers['port']['addOutput']>;
         setOutputDisplayName: DropFirstArg<WorkbenchSDK.Reducers['port']['setOutputDisplayName']>;
