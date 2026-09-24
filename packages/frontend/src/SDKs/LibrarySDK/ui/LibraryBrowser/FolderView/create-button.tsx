@@ -48,7 +48,7 @@ export const CreateBtn = ({ size, triggerClassName }: Props) => {
                             <DropdownMenu.Item
                                 key={definition.id}
                                 onClick={() => LibrarySDK.dialogs.openCreateConnection({ folder_id: cwd, definition })}
-                            ><IconRenderer name={definition.icon} />{definition.displayName}</DropdownMenu.Item>
+                            ><IconRenderer name={definition.icon} className='size-4' />{definition.displayName}</DropdownMenu.Item>
                         ))}
                     </DropdownMenu.SubContent>
                 </DropdownMenu.Sub>
