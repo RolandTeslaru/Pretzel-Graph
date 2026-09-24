@@ -8,8 +8,9 @@ import { GatewayService } from '../../Gateway/gateway.service';
 import { ShelfService } from '../../Shelf/shelf.service';
 import { ChatService } from '../../Chat/chat.service';
 
-// The blueprint-typed filter, read back with the field values the node sent.
-type Filter = (event: unknown, context: Gateway.Socket.Context) => boolean;
+// The blueprint-typed statics, read back with the field values the node sent.
+type Filter = (event: unknown, scope: Gateway.Socket.ScopeFingerprint, context: Gateway.Socket.Context) => boolean;
+type Scope  = (event: unknown, context: Gateway.Socket.Context) => Gateway.Socket.ScopeFingerprint | null;
 
 interface TestRegistration {
     workflowId:  Workflow.Id;
@@ -47,11 +48,12 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
         if (!ref.success || ref.data.id !== body.connectionId)
             throw new ForbiddenException('The connection does not match the one this node points at');
 
-        const gateway = await this.shelf.getGatewayFilter(blueprintId);
-        const filter  = gateway?.filter as Filter | undefined;
+        const hooks  = await this.shelf.getGatewayHooks(blueprintId);
+        const filter = hooks?.filter as Filter | undefined;
+        const scope  = hooks?.scope as Scope | undefined;
 
-        if (!gateway || !filter)
-            throw new BadRequestException(`${blueprintId} has no gateway filter`);
+        if (!hooks || !filter)
+            throw new BadRequestException(`${blueprintId} has no gateway hooks`);
 
         const connection = this.gateways.connection.getOpen(body.connectionId);
 
@@ -66,6 +68,8 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
             chatAPI: {
                 append: (externalKey, messages) =>
                     this.chats.appendByExternalKey(workflowId, externalKey, messages),
+                findIdByExternalKey: externalKey =>
+                    this.chats.findIdByExternalKey(workflowId, externalKey),
             },
             log: message => this.log.info(message),
         };
@@ -73,12 +77,15 @@ export class GatewayIgniterTestService implements OnModuleDestroy {
         this.deregister(body.consultationId);
 
         const unsubscribe = this.gateways.connection.subscribe(body.connectionId, event => {
-            const parsed = gateway.schema.safeParse(event);
+            const parsed = hooks.schema.safeParse(event);
 
             if (!parsed.success)
                 return;
 
-            if (!filter(parsed.data, context))
+            const fingerprint = scope?.(parsed.data, context)
+                ?? Gateway.Socket.createScope(context.definition.provider, connection.id, 'node', body.nodeId);
+
+            if (!filter(parsed.data, fingerprint, context))
                 return;
 
             void this.answer(body, event);

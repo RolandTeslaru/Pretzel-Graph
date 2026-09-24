@@ -10,8 +10,13 @@ import {
 } from '../ActivePublication/active-publication.service';
 import { ChatService } from '../Chat/chat.service';
 import { ExecutionService } from '../Execution/execution.service';
+import { ExecutionTracker } from '../Execution/execution.tracker';
 import { GatewayService } from '../Gateway/gateway.service';
 import { ShelfService } from '../Shelf/shelf.service';
+
+// The node field naming its policy, and what a node that declares none falls back to.
+const IGNITION_POLICY_FIELD = 'ignition_policy' as Field.Id;
+const POLICY_DEFAULT: Gateway.Socket.IgnitionPolicy = 'every_event';
 
 // A published node subscribed to a connection, with everything an event needs to be handled.
 interface Listener {
@@ -19,39 +24,17 @@ interface Listener {
     nodeId:       Workflow.Node.Id;
     connectionId: Gateway.Connection.Id;
     fieldValues:  Record<Field.Id, Field.Value>;
-    hooks:        Hooks;
-}
-
-// The node's own statics, erased of the blueprint they were typed against.
-interface Hooks {
-    schema:    ZodType;
-    // Absent when the node scopes nothing; its events then share one slot.
-    scope?:    (
-        event:   unknown,
-        context: Gateway.Socket.Context,
-    ) => Gateway.Socket.ScopeFingerprint | null;
-    filter:    (
-        event:   unknown,
-        scope:   Gateway.Socket.ScopeFingerprint,
-        context: Gateway.Socket.Context,
-    ) => boolean;
-    // Absent when the node records nothing; an event then starts a run without opening a chat.
-    recorder?: (
-        event:   unknown,
-        scope:   Gateway.Socket.ScopeFingerprint,
-        context: Gateway.Socket.Context,
-    ) => Promise<void>;
-    igniter?:  (
-        event:   unknown,
-        scope:   Gateway.Socket.ScopeFingerprint,
-        context: Gateway.Socket.Context,
-    ) => Promise<Pick<Execution.Igniter, 'record' | 'debug' | 'chat_id' | 'inputs'>>;
+    hooks:        Gateway.Socket.Hooks;
 }
 
 @Injectable()
 export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     private readonly log = System.log.withContext('GatewayIgnition');
     private readonly subscriptions = new Map<Workflow.Id, (() => void)[]>();
+
+    // The run each conversation currently has in flight.
+    private readonly activeFingerprints = new Map<Gateway.Socket.ScopeFingerprint, Execution.Id>();
+    private unsubscribeFromSettled: (() => void) | null = null;
     private unsubscribeFromPublications: (() => void) | null = null;
 
     constructor(
@@ -59,10 +42,13 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
         private readonly gateways: GatewayService,
         private readonly shelf: ShelfService,
         private readonly executions: ExecutionService,
+        private readonly executionTracker: ExecutionTracker,
         private readonly chats: ChatService,
     ) {}
 
     public async onModuleInit(): Promise<void> {
+        this.unsubscribeFromSettled = this.executionTracker.onSettled(executionId => this.releaseFingerprint(executionId));
+
         this.unsubscribeFromPublications = this.activePublications.subscribe(change =>
             this.handlePublicationChange(change),
         );
@@ -83,6 +69,9 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     public onModuleDestroy(): void {
         this.unsubscribeFromPublications?.();
         this.unsubscribeFromPublications = null;
+        this.unsubscribeFromSettled?.();
+        this.unsubscribeFromSettled = null;
+        this.activeFingerprints.clear();
 
         for (const workflowId of this.subscriptions.keys())
             this.unregister(workflowId);
@@ -137,7 +126,7 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
                 nodeId:       node.id,
                 connectionId: connectionRef.data.id,
                 fieldValues,
-                hooks:        hooks as Hooks,
+                hooks:        hooks as Gateway.Socket.Hooks,
             });
         }
 
@@ -188,20 +177,26 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
 
         // Fingerprinted once, so the filter, the recorder, the policy and the igniter agree. A node
         // that fingerprints nothing still needs a slot of its own to serialise against.
-        const scope = listener.hooks.scope?.(parsed.data, context)
+        const scopeFingreprint = listener.hooks.scope?.(parsed.data, context)
             ?? Gateway.Socket.createScope(context.definition.provider, listener.connectionId, 'node', listener.nodeId);
 
-        if (!listener.hooks.filter(parsed.data, scope, context))
+        if (!listener.hooks.filter(parsed.data, scopeFingreprint, context))
             return;
 
         try {
-            await listener.hooks.recorder?.(parsed.data, scope, context);
+            await listener.hooks.recorder?.(parsed.data, scopeFingreprint, context);
         }
         catch (error) {
             this.log.error(`Recorder for node ${listener.nodeId} failed: ${(error as Error).message}`);
         }
 
-        const igniterProps = await listener.hooks.igniter?.(parsed.data, scope, context) ?? {};
+        const policy = Gateway.Socket.IgnitionPolicy.catch(POLICY_DEFAULT)
+            .parse(listener.fieldValues[IGNITION_POLICY_FIELD]);
+
+        if (!this.admits(policy, scopeFingreprint))
+            return;
+
+        const igniterProps = await listener.hooks.igniter?.(parsed.data, scopeFingreprint, context) ?? {};
 
         const igniter: Execution.Igniter = {
             variant: 'gateway_event',
@@ -216,9 +211,51 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             igniter,
         }, 'gateway');
 
+        // Claimed before the await returns, so a second event cannot slip in behind this one.
+        if (policy !== 'every_event')
+            this.activeFingerprints.set(scopeFingreprint, execution.id);
+
         this.log.info(
             `Triggered workflow=${listener.publication.workflow_id} publication=${listener.publication.id} executionId=${execution.id}`,
         );
+    }
+
+
+    /**
+     * Whether this event may start a run now, given what the fingerprint already has in flight.
+     *
+     * Discarding loses nothing when the node records: the run that does happen reads the messages
+     * this one skipped.
+     */
+    private admits(
+        policy: Gateway.Socket.IgnitionPolicy,
+        scope:  Gateway.Socket.ScopeFingerprint,
+    ): boolean {
+        if (policy === 'every_event')
+            return true;
+
+        const running = this.activeFingerprints.get(scope);
+
+        if (running === undefined)
+            return true;
+
+        if (!this.executionTracker.isActive(running)) {
+            this.activeFingerprints.delete(scope);
+            return true;
+        }
+
+        return false;
+    }
+
+
+    // A run settled, so the next event on that conversation may start one.
+    private releaseFingerprint(executionId: Execution.Id): void {
+        for (const [scope, running] of this.activeFingerprints) {
+            if (running === executionId) {
+                this.activeFingerprints.delete(scope);
+                return;
+            }
+        }
     }
 
 

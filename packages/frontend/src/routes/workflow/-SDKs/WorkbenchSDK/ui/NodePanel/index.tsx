@@ -108,6 +108,7 @@ export const Content = ({ hyNode, showFooter = true }: ContentProps) => {
                 field.id === "signalDependency"
                 || field.id === "dataDependency"
                 || field.id === "onErrorStrategy"
+                || field.id === "ignition_policy"
                 || field.id === "test_timeout_ms"
             ) {
                 executionStrategyFields.push(field)

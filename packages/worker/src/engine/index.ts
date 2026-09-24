@@ -37,7 +37,7 @@ export interface AggexHooks {
 //                     data/signal gate; otherwise RoutingService decides.
 //   onVertexFired     Mark the node active and open its session record.
 //   onVertexExecute   The actual work — see below.
-//   onVertexWaiting   Not enough signals yet: hand the node its partial inputs via wait().
+//   onVertexWaiting   Not enough signals yet: record and emit the waiting state.
 //   onVertexCompleted Close the session record, honour stopAtNodeId, then gate on pause.
 //   onVertexError     Only reached by `terminate` / terminal errors; records the failure.
 //
@@ -334,7 +334,7 @@ export class AggexEngine {
         if (!entry)
             return
 
-        const { instance, wfNode } = entry;
+        const { wfNode } = entry;
 
         const nodeDepMap: Record<Workflow.Node.Id, boolean> = {};
 
@@ -350,20 +350,6 @@ export class AggexEngine {
         });
 
         this.services.session.onNodeWaiting(wfNode.id);
-
-        const partialInputs = this.services.nodeIO.getIncomingData(wfNode.id, arrivedSignals);
-
-        let partialFields;
-
-        try {
-            partialFields = instance.evaluateFieldValues(partialInputs);
-        }
-        catch (err) {
-            this.services.errors.handle(vertexId, err);  // OOM → throws (terminate); else recorded
-            return;
-        }
-
-        instance.wait(partialInputs, nodeDepMap, partialFields);
     }
 
 

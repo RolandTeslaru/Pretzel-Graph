@@ -71,10 +71,16 @@ export function defineBlueprint<
         ...StandardFields.StandardNode,
     ] as const;
 
-    const withDefaults = (
+    const withTool = (
         definition.toolCompatible
         ? [...baseFields, StandardFields.toolConvertedField]
         : baseFields) as readonly Field[];
+
+    // A node that listens to a connection gets the policy whether or not it asked for one.
+    const withDefaults = (
+        definition.gatewayListener
+        ? [...withTool, StandardFields.ignitionPolicyField]
+        : withTool) as readonly Field[];
 
     // Framework defaults are in the pool before conditions are checked, so a blueprint can
     // branch on "isConvertedToTool==true" without declaring the field.

@@ -30,8 +30,6 @@ export abstract class RuntimeNode<
      *  evaluating item-scoped fields, so per-item eval sees the same inputs as node-level eval. */
     private projectedIn: Record<Port.Input.Id, Projection> = {};
 
-    protected isWaiting: boolean = false;
-
     /** Read by the engine's error interception hook: if an incoming error envelope
      *  is found, a catching node materializes it to `onError` instead of re-propagating. */
     public readonly CATCHES_ERROR: boolean = false
@@ -100,7 +98,6 @@ export abstract class RuntimeNode<
         incoming: InferIncoming<T_Blueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<Partial<InferOutputs<T_Blueprint>>> {
-        this.isWaiting = false;
         this.fieldValues = fields;
 
         return this.onRun(incoming);
@@ -305,7 +302,6 @@ export abstract class RuntimeNode<
         incoming: InferIncoming<T_ToolBlueprint>,
         fields: InferFieldValues<T_Blueprint>,
     ): Promise<InferOutputs<T_ToolBlueprint>> {
-        this.isWaiting = false;
         this.fieldValues = fields;
         return this.onBuildTool(incoming);
     }
@@ -326,27 +322,6 @@ export abstract class RuntimeNode<
     ): Promise<InferOutputs<T_ToolBlueprint>> {
         return this.onRun(incoming as never) as never;
     }
-
-
-
-
-
-    public async wait(
-        partialInputs: InferIncoming<T_Blueprint>,
-        dependencyResolutionMap: Record<Workflow.Node.Id, boolean>,
-        fields: InferFieldValues<T_Blueprint>,
-    ): Promise<void> {
-        this.isWaiting = true;
-        this.fieldValues = fields;
-        return this.onWait(partialInputs);
-    }
-
-
-
-
-    protected onWait(
-        incoming: InferIncoming<T_Blueprint>
-    ): Promise<void> | void {}
 
 
 

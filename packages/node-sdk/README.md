@@ -180,7 +180,6 @@ Subclass `RuntimeNode<typeof Blueprint>` (optionally `<typeof Blueprint, typeof 
 | Hook | When | Returns |
 |---|---|---|
 | `onRun(incoming)` *(required)* | normal execution | `Partial<InferOutputs>` |
-| `onWait(incoming)` | node is waiting on partial inputs | — |
 | `onCompile(ctx)` | once, at graph compile time | — |
 | `onIgniter(igniter)` | a trigger fires the node | — |
 | `onWebhook(payload)` | an inbound webhook arrives | — |

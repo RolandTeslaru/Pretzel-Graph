@@ -45,6 +45,7 @@ export const Blueprint = defineBlueprint({
                     { value: 'react', displayName: 'React' },
                     { value: 'pin',   displayName: 'Pin'   },
                     { value: 'pins',  displayName: 'Pins'  },
+                    { value: 'typing', displayName: 'Typing' },
                 ],
                 initialValue: 'send',
             }),
@@ -141,6 +142,15 @@ export const Blueprint = defineBlueprint({
                 defineField.String('pin_channel_id', 'Channel ID', { required: true }),
                 defineField.String('pin_message_id', 'Message ID', { required: true }),
                 defineField.Boolean('pin_unpin', 'Unpin', { initialValue: false }),
+            ],
+        },
+
+        'message_action==typing': {
+            fields: [
+                defineField.String('typing_channel_id', 'Channel ID', {
+                    required: true,
+                    tooltip:  'Shows the bot as typing there for about ten seconds.',
+                }),
             ],
         },
 

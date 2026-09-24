@@ -54,6 +54,22 @@ export namespace StandardFields {
     );
 
 
+    // Appended to any blueprint declaring a gateway listener: every one of them has to say what
+    // happens when an event arrives while the same conversation is already running.
+    export const ignitionPolicyField = defineField.MultiOption(
+        "ignition_policy",
+        "Ignition Policy",
+        {
+        options: [
+            { value: "every_event",        displayName: "Every Event",        description: "Every event starts its own run." },
+            { value: "drop_while_running", displayName: "Drop While Running", description: "Events arriving during a run are dropped." },
+        ],
+        initialValue: "every_event",
+        tooltip:      "What happens when an event arrives while the same conversation is already running.",
+        },
+    );
+
+
     export const StandardNode = [
         signalDependencyStrategyField,
         dataDependencyStrategyField,
@@ -62,8 +78,10 @@ export namespace StandardFields {
 
     export const TOOL_FIELDS = [toolConvertedField] as const;
 
+    export const GATEWAY_FIELDS = [ignitionPolicyField] as const;
+
     export const IDS: ReadonlySet<string> = new Set(
-        [...StandardNode, ...TOOL_FIELDS].map(field => String(field.id)),
+        [...StandardNode, ...TOOL_FIELDS, ...GATEWAY_FIELDS].map(field => String(field.id)),
     );
 
     // Selects the standard fields for a blueprint, keeping the literal tuple type.

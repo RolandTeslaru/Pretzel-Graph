@@ -120,6 +120,12 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             return {};
         }
 
+        if (fields.message_action === 'typing') {
+            await discord.startTyping(fields.typing_channel_id);
+
+            return {};
+        }
+
         if (fields.message_action === 'pin') {
             await discord.pin(fields.pin_channel_id, fields.pin_message_id, fields.pin_unpin);
 

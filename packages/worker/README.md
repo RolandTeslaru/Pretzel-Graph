@@ -91,7 +91,7 @@ Each vertex owns an **`accumulatedSignals`** set (which source vertices have sig
 | `onVertexFired` | `onNodeFired` | Incoming edges → `completed`, outgoing edges → `preparing` (only for `"all"` propagation); `node_status: running`; emit `node:started`. |
 | `onVertexExecute` | `onNodeExecuted` | **Runs the node** (see below). Returns the downstream signal set per propagation strategy. |
 | `onVertexCompleted` | `onNodeCompleted` | Outgoing edges → `waiting` (+`runCount`; router → only taken branches; none → skip); `node_status: completed`; emit `node:completed` with projected output; honor pause. |
-| `onVertexWaiting` | `onNodeWaiting` | `node_status: waiting`; emit `node:waiting`; call `instance.wait(partialInputs, depResolutionMap, partialFields)` so the node can react to partial inputs. |
+| `onVertexWaiting` | `onNodeWaiting` | `node_status: waiting`; emit `node:waiting`. Field expressions are not evaluated until the data gate opens and the node executes. |
 | `onVertexError` | `onNodeError` | Wrap error, `node_status: failed`, emit `node:error`. **An error rejects the S2 promise — the whole execution terminates** (there is no per-node `continueOnFail` today). |
 | `canVertexRun` | `canNodeRun` | The **data-dependency** gate (below). |
 

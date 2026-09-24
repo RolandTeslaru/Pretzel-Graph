@@ -199,7 +199,7 @@ export namespace Gateway {
          * Recording is never gated, so a dropped event is still in the conversation when the next
          * run reads it.
          */
-        export const IgnitionPolicy = z.enum(['every_event', 'one_at_a_time', 'catch_up']);
+        export const IgnitionPolicy = z.enum(['every_event', 'drop_while_running']);
         export type IgnitionPolicy = z.infer<typeof IgnitionPolicy>;
 
         /**

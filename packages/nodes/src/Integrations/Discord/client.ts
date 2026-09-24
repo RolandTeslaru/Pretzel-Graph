@@ -94,6 +94,13 @@ export class DiscordAPI {
     }
 
 
+    // Shows the bot as typing for about ten seconds, or until it posts. There is no way to stop it
+    // early, so a longer run re-sends rather than cancelling.
+    async startTyping(channelId: string): Promise<void> {
+        await this.rest.post(Routes.channelTyping(channelId));
+    }
+
+
     async listPins(channelId: string): Promise<APIMessage[]> {
         return this.rest.get(Routes.channelPins(channelId)) as Promise<APIMessage[]>;
     }
