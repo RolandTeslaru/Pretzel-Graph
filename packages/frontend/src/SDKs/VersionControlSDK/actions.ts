@@ -1,136 +1,73 @@
-import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
+import { Deployment, VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { api } from "../ApiInterceptorSDK";
-import { RealtimeSDK } from "../Realtime/sdk";
 import { LibrarySDK } from "../LibrarySDK/sdk";
 import type { VersionControlSDKImpl } from "./sdk";
 
 export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
+    const applyDeployed = (publication: VersionControl.Publication) => {
+        sdk.setState(s => { s.reducers.deployments.upsert(s, publication) });
+        void sdk.invalidate(sdk.query.publications(publication.workflow_id));
+    };
+
     return {
         publish: async (workflowId, payload) => {
             const data = await VersionControl.API.publish(api, workflowId, payload);
-            sdk.setState(s => {
-                s.reducers.currentWorkflow.upsert(s, data.publication);
-                s.reducers.activeWorkflows.upsert(s, data.publication);
-            });
             void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
         list: async (workflowId) => {
-            const data = await VersionControl.API.list(api, workflowId);
-            sdk.setState(s => { s.reducers.currentWorkflow.set(s, data.publications) });
-            return data;
-        },
-
-        listActiveWorkflows: async () => {
-            const data = await VersionControl.API.listActiveWorkflows(api);
-            sdk.setState(s => { s.reducers.activeWorkflows.set(s, data.activeWorkflows) });
-            return data;
-        },
-
-        getActiveByWorkflowId: async (workflowId) => {
-            const data = await VersionControl.API.getActiveByWorkflow(api, workflowId);
-            sdk.setState(s => {
-                if (data.publication) s.reducers.activeWorkflows.upsert(s, data.publication);
-                else s.reducers.activeWorkflows.removeByWorkflowId(s, workflowId);
-            });
-            return data;
+            return VersionControl.API.list(api, workflowId);
         },
 
         get: async (publicationId) => {
             return VersionControl.API.get(api, publicationId);
         },
 
-        activate: async (workflowId, publicationId) => {
-            const data = await VersionControl.API.activate(api, workflowId, publicationId);
-            sdk.setState(s => {
-                s.reducers.currentWorkflow.deactivateAll(s);
-                s.reducers.currentWorkflow.upsert(s, data.publication);
-                s.reducers.activeWorkflows.upsert(s, data.publication);
-            });
+        remove: async (workflowId, publicationId) => {
+            const data = await VersionControl.API.remove(api, workflowId, publicationId);
+            const wasDeployed = sdk.state.deployments[workflowId]?.id === publicationId;
+            if (wasDeployed) {
+                sdk.setState(s => { s.reducers.deployments.remove(s, workflowId) });
+                LibrarySDK.actions.workflow.__removeListingId(workflowId);
+            }
             void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
         },
 
-        deactivate: async (workflowId, publicationId) => {
-            const data = await VersionControl.API.deactivate(api, workflowId, publicationId);
+        listDeployments: async () => {
+            const data = await Deployment.API.list(api);
+            sdk.setState(s => { s.reducers.deployments.set(s, data.deployments) });
+            return data;
+        },
+
+        getDeployment: async (workflowId) => {
+            const data = await Deployment.API.get(api, workflowId);
             sdk.setState(s => {
-                s.reducers.currentWorkflow.upsert(s, data.publication);
-                s.reducers.activeWorkflows.removeByWorkflowId(s, data.publication.workflow_id);
+                if (data.publication) s.reducers.deployments.upsert(s, data.publication);
+                else s.reducers.deployments.remove(s, workflowId);
             });
+            return data;
+        },
+
+        deployWorkflow: async (workflowId) => {
+            const data = await Deployment.API.deployWorkflow(api, workflowId);
+            applyDeployed(data.publication);
+            return data;
+        },
+
+        deployPublication: async (workflowId, publicationId) => {
+            const data = await Deployment.API.deployPublication(api, workflowId, publicationId);
+            applyDeployed(data.publication);
+            return data;
+        },
+
+        undeploy: async (workflowId) => {
+            const data = await Deployment.API.undeploy(api, workflowId);
+            sdk.setState(s => { s.reducers.deployments.remove(s, workflowId) });
             LibrarySDK.actions.workflow.__removeListingId(workflowId);
             void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
-        },
-
-        remove: async (workflowId, publicationId) => {
-            const data = await VersionControl.API.remove(api, workflowId, publicationId);
-            sdk.setState(s => {
-                s.reducers.currentWorkflow.remove(s, publicationId);
-                s.reducers.activeWorkflows.removeByWorkflowId(s, data.workflowId);
-            });
-            if (!sdk.state.selectors.getActive(sdk.state))
-                LibrarySDK.actions.workflow.__removeListingId(workflowId);
-            void sdk.invalidate(sdk.query.publications(workflowId));
-            return data;
-        },
-
-        subscribe: (workflowId) => {
-            sdk.actions.unsubscribe();
-            sdk.setState(s => { s.reducers.subscription.setWorkflow(s, workflowId) });
-
-            for (const action of VersionControl.Signal.Action.options) {
-                const channel = VersionControl.Signal.getChannel(workflowId, action);
-                const unsub = RealtimeSDK.subscribeToChannel<VersionControl.Signal>(channel, (signal) => {
-                    switch (signal.type) {
-                        case "published":
-                        case "activated":
-                            // The signal carries no publication — it is only a nudge. Re-read the
-                            // now-active publication and upsert the fresh copy, rather than trusting
-                            // the wire. Invalidate the list query so deactivated siblings refresh too.
-                            VersionControl.API.getActiveByWorkflow(api, signal.workflowId)
-                                .then(({ publication }) => {
-                                    if (!publication) return;
-                                    sdk.setState(s => {
-                                        s.reducers.currentWorkflow.upsert(s, publication);
-                                        s.reducers.activeWorkflows.upsert(s, publication);
-                                    });
-                                    void sdk.invalidate(sdk.query.publications(signal.workflowId));
-                                })
-                                .catch(() => {});
-                            break;
-                        case "deactivated":
-                            sdk.setState(s => {
-                                const pub = s.currentWorkflowPublications.find(p => p.id === signal.publicationId);
-                                if (pub) pub.is_active = false;
-                                s.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
-                            });
-                            break;
-                        case "removed":
-                            sdk.setState(s => {
-                                s.reducers.currentWorkflow.remove(s, signal.publicationId);
-                                s.reducers.activeWorkflows.removeByWorkflowId(s, signal.workflowId);
-                            });
-                            break;
-                    }
-                });
-                sdk.unsubscribers.push(unsub);
-            }
-        },
-
-        unsubscribe: () => {
-            for (const unsub of sdk.unsubscribers) unsub();
-            sdk.unsubscribers = [];
-            sdk.setState(s => { s.reducers.subscription.setWorkflow(s, null) });
-        },
-
-        activeWorkflows: {
-            removeByWorkflowId: (workflowId) => {
-                sdk.setState(s => { s.reducers.activeWorkflows.removeByWorkflowId(s, workflowId) });
-            },
-            removeByPublicationId: (publicationId) => {
-                sdk.setState(s => { s.reducers.activeWorkflows.removeByPublicationId(s, publicationId) });
-            },
         },
     } satisfies VersionControlSDKActions;
 };
@@ -138,16 +75,11 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
 export type VersionControlSDKActions = {
     publish: (workflowId: Workflow.Id, payload: VersionControl.API.Publish.Request) => Promise<VersionControl.API.Publish.Response>
     list: (workflowId: Workflow.Id) => Promise<VersionControl.API.List.Response>
-    listActiveWorkflows: () => Promise<VersionControl.API.ListActiveWorkflows.Response>
-    getActiveByWorkflowId: (workflowId: Workflow.Id) => Promise<VersionControl.API.GetActiveByWorkflow.Response>
     get: (publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Get.Response>
-    activate: (workflowId: Workflow.Id, publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Activate.Response>
-    deactivate: (workflowId: Workflow.Id, publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Deactivate.Response>
     remove: (workflowId: Workflow.Id, publicationId: VersionControl.Publication.Id) => Promise<VersionControl.API.Remove.Response>
-    subscribe: (workflowId: Workflow.Id) => void
-    unsubscribe: () => void
-    activeWorkflows: {
-        removeByWorkflowId: (workflowId: Workflow.Id) => void
-        removeByPublicationId: (publicationId: VersionControl.Publication.Id) => void
-    }
+    listDeployments: () => Promise<Deployment.API.List.Response>
+    getDeployment: (workflowId: Workflow.Id) => Promise<Deployment.API.Get.Response>
+    deployWorkflow: (workflowId: Workflow.Id) => Promise<Deployment.API.DeployWorkflow.Response>
+    deployPublication: (workflowId: Workflow.Id, publicationId: VersionControl.Publication.Id) => Promise<Deployment.API.DeployPublication.Response>
+    undeploy: (workflowId: Workflow.Id) => Promise<Deployment.API.Undeploy.Response>
 };

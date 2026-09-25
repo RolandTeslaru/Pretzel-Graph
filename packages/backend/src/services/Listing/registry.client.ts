@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Listing, SystemError, Workflow } from '@pretzel-graph/shared/domain';
 import { CloudService } from '../Cloud/cloud.service';
 
 // The listing registry: open reads, token-bearing writes, reached through CloudService.
@@ -26,7 +26,7 @@ export class ListingRegistry {
         return Listing.API.Get.Response.parse(body).workflow;
     }
 
-    public async getUpdates(ids: Workflow.Id[]): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
+    public async getUpdates(ids: Workflow.Id[]): Promise<Record<Workflow.Id, Listing.PublicationMeta>> {
         if (ids.length === 0)
             return {};
 

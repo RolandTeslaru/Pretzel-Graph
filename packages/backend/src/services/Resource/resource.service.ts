@@ -4,7 +4,7 @@ import { Dependency, Listing, Resource, SystemError, Workflow } from '@pretzel-g
 import { WorkbenchService } from '../Workbench/workbench.service';
 import { ListingService } from '../Listing/listing.service';
 import { LibraryRepository } from '../Library/repository';
-import { VersionControlRepository } from '../VersionControl/version-control.repository';
+import { DeploymentRepository } from '../Deployment/deployment.repository';
 
 @Injectable()
 export class ResourceService {
@@ -12,7 +12,7 @@ export class ResourceService {
         private readonly workbench:  WorkbenchService,
         private readonly listings:   ListingService,
         private readonly library:    LibraryRepository,
-        private readonly versionControl: VersionControlRepository,
+        private readonly deployments: DeploymentRepository,
     ) {}
 
     public async load(
@@ -33,14 +33,14 @@ export class ResourceService {
             }
 
             case 'publishedWorkflow': {
-                const publication = await this.versionControl.getActivePublicationForWorkflow(principal, ref.id);
+                const deployment = await this.deployments.get(principal, ref.id);
 
-                if (!publication)
-                    throw new SystemError(SystemError.Code.NOT_FOUND, 'No active publication found for this workflow');
+                if (!deployment)
+                    throw new SystemError(SystemError.Code.NOT_FOUND, 'This workflow has no deployed publication');
 
                 const dependency = Dependency.Value.Publication.Schema.parse({
-                    ...publication.workflow_meta,
-                    ...publication,
+                    ...deployment.workflow_meta,
+                    ...deployment,
                     kind: 'publishedWorkflow',
                 });
 
@@ -113,7 +113,7 @@ export class ResourceService {
 
         const updates = await Promise.all([
             this.library.workflow.checkUpdates(principal, drafts),
-            this.versionControl.checkUpdates(principal, publications),
+            this.deployments.checkUpdates(principal, publications),
             this.library.skill.checkUpdates(principal, skills),
             this.listings.checkUpdates(listings).catch(() => []),
         ]);

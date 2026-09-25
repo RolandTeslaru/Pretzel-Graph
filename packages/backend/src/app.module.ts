@@ -13,6 +13,7 @@ import { RealtimeModule } from './services/Realtime/realtime.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { UserModule } from './services/User/user.module';
 import { VersionControlModule } from './services/VersionControl/version-control.module';
+import { DeploymentModule } from './services/Deployment/deployment.module';
 import { WebhookTestModule } from './services/WebhookTest/webhook-test.module';
 import { PermissionModule } from './services/Permission/permission.module';
 import { MemberModule } from './services/Member/member.module';
@@ -54,6 +55,7 @@ import { GatewayIgnitionModule } from './services/GatewayIgnition/gateway-igniti
         RealtimeModule,
         UserModule,
         VersionControlModule,
+        DeploymentModule,
         WebhookTestModule,
         PermissionModule,
         MemberModule,

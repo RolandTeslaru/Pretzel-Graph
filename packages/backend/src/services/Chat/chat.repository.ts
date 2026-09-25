@@ -1,25 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Auth, Chat, Workflow } from '@pretzel-graph/shared/domain';
-import { DB } from '@/db';
-import { ZodReturn } from '../../decorators/database';
-import { AllowedDatabaseRoles, DatabaseClass } from '../../decorators/database-roles';
+import { Chat, Workflow } from '@pretzel-graph/shared/domain';
+import { Principal } from '@/domain/Principal';
+import { Repository, Transactional } from '@/db/repository';
+import { ZodReturn } from '@/decorators/database';
 
-@DatabaseClass
-class ChatMethods {
+class ChatMethods extends Repository {
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Chat.Schema)
-    async create(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async create(
+        principal: Principal.User,
         workflowId: Workflow.Id,
         name = 'New Chat',
     ): Promise<Chat> {
-        const row = await trx
+        const row = await this.trx
             .insertInto('chats')
             .values({
-                created_by: createdBy,
+                created_by: principal.userId,
                 workflow_id: workflowId,
                 name,
             })
@@ -29,40 +27,14 @@ class ChatMethods {
         return Chat.Schema.parse(row);
     }
 
-    // The chat a gateway event belongs to, opened on the first event and reused after that. Two
-    // events arriving together race to insert, so the conflict clause decides rather than a read.
-    @AllowedDatabaseRoles("user", "service")
-    @ZodReturn(Chat.Schema)
-    async upsertByExternalKey(
-        trx: DB.Transaction<'user' | 'service'>,
-        workflowId: Workflow.Id,
-        externalKey: Chat.ExternalKey,
-        name = 'New Chat',
-    ): Promise<Chat> {
-        const row = await trx
-            .insertInto('chats')
-            .values({
-                workflow_id:  workflowId,
-                external_key: externalKey,
-                name,
-            })
-            .onConflict(conflict => conflict
-                .columns(['workflow_id', 'external_key'])
-                .doUpdateSet({ updated_at: new Date().toISOString() }))
-            .returningAll()
-            .executeTakeFirstOrThrow();
-
-        return Chat.Schema.parse(row);
-    }
-
-    @AllowedDatabaseRoles("user", "service")
+    @Transactional('user', 'service')
     @ZodReturn(Chat.Schema.nullable())
-    async findByExternalKey(
-        trx: DB.Transaction<'user' | 'service'>,
+    public async findByExternalKey(
+        principal: Principal.User | Principal.Service,
         workflowId: Workflow.Id,
         externalKey: Chat.ExternalKey,
     ): Promise<Chat | null> {
-        const row = await trx
+        const row = await this.trx
             .selectFrom('chats')
             .selectAll()
             .where('workflow_id', '=', workflowId)
@@ -72,19 +44,19 @@ class ChatMethods {
         return row ? Chat.Schema.parse(row) : null;
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(z.object({ chat: Chat.Schema, messages: Chat.Message.Schema.array() }))
-    async get(
-        trx: DB.UserTransaction,
+    public async get(
+        principal: Principal.User,
         chatId: Chat.Id,
     ): Promise<{ chat: Chat; messages: Chat.Message[] }> {
-        const chat = await trx
+        const chat = await this.trx
             .selectFrom('chats')
             .selectAll()
             .where('id', '=', chatId)
             .executeTakeFirstOrThrow();
 
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('chat_messages')
             .selectAll()
             .where('chat_id', '=', chatId)
@@ -97,10 +69,10 @@ class ChatMethods {
         };
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Chat.Schema.array())
-    async list(trx: DB.UserTransaction): Promise<Chat[]> {
-        const rows = await trx
+    public async list(principal: Principal.User): Promise<Chat[]> {
+        const rows = await this.trx
             .selectFrom('chats')
             .selectAll()
             .orderBy('updated_at', 'desc')
@@ -109,13 +81,13 @@ class ChatMethods {
         return rows.map((row) => Chat.Schema.parse(row));
     }
 
-    @AllowedDatabaseRoles("user")
+    @Transactional('user')
     @ZodReturn(Chat.Schema.array())
-    async listByWorkflow(
-        trx: DB.UserTransaction,
+    public async listByWorkflow(
+        principal: Principal.User,
         workflowId: Workflow.Id,
     ): Promise<Chat[]> {
-        const rows = await trx
+        const rows = await this.trx
             .selectFrom('chats')
             .selectAll()
             .where('workflow_id', '=', workflowId)
@@ -125,16 +97,16 @@ class ChatMethods {
         return rows.map((row) => Chat.Schema.parse(row));
     }
 
-    @AllowedDatabaseRoles("user")
+    // A service principal leaves the chat ownerless.
+    @Transactional('user', 'service')
     @ZodReturn(Chat.Schema)
-    async ensure(
-        trx: DB.UserTransaction,
-        createdBy: Auth.User.Id | null,
+    public async ensure(
+        principal: Principal.User | Principal.Service,
         chatId: Chat.Id,
         workflowId: Workflow.Id,
         name = 'New Chat',
     ): Promise<Chat> {
-        const existing = await trx
+        const existing = await this.trx
             .selectFrom('chats')
             .selectAll()
             .where('id', '=', chatId)
@@ -143,11 +115,11 @@ class ChatMethods {
         if (existing)
             return Chat.Schema.parse(existing);
 
-        const row = await trx
+        const row = await this.trx
             .insertInto('chats')
             .values({
                 id: chatId,
-                created_by: createdBy,
+                created_by: principal.type === 'user' ? principal.userId : null,
                 workflow_id: workflowId,
                 name,
             })
@@ -157,36 +129,132 @@ class ChatMethods {
         return Chat.Schema.parse(row);
     }
 
-    @AllowedDatabaseRoles("user")
-    async erase(
-        trx: DB.UserTransaction,
+    @Transactional('user')
+    public async erase(
+        principal: Principal.User,
         chatId: Chat.Id,
     ): Promise<void> {
-        await trx
+        await this.trx
             .deleteFrom('chat_messages')
             .where('chat_id', '=', chatId)
             .execute();
 
-        await trx
+        await this.trx
             .deleteFrom('chats')
             .where('id', '=', chatId)
             .execute();
     }
 }
 
-@DatabaseClass
-class MessageMethods {
+class MessageMethods extends Repository {
 
-    @AllowedDatabaseRoles("user", "delegate", "service")
-    async add(
-        trx: DB.Transaction<'user' | 'delegate' | 'service'>,
+    @Transactional('user', 'delegate')
+    public async add(
+        principal: Principal.User | Principal.Delegate,
         chatId: Chat.Id,
         messages: Chat.Message[],
     ): Promise<void> {
+        await this._insert(chatId, messages);
+    }
+
+    // Upserts the workflow's chat for the external key, then appends to it.
+    @Transactional('service')
+    public async appendByExternalKey(
+        principal: Principal.Service,
+        workflowId: Workflow.Id,
+        externalKey: Chat.ExternalKey,
+        messages: Chat.Message[],
+        name = 'New Chat',
+    ): Promise<Chat.Id> {
+        const chat = await this.trx
+            .insertInto('chats')
+            .values({
+                workflow_id:  workflowId,
+                external_key: externalKey,
+                name,
+            })
+            .onConflict(conflict => conflict
+                .columns(['workflow_id', 'external_key'])
+                .doUpdateSet({ updated_at: new Date().toISOString() }))
+            .returning('id')
+            .executeTakeFirstOrThrow();
+
+        await this._insert(chat.id, messages);
+
+        return chat.id;
+    }
+
+    @Transactional('user')
+    public async erase(principal: Principal.User, messageId: Chat.Message.Id): Promise<void> {
+        await this.trx
+            .deleteFrom('chat_messages')
+            .where('id', '=', messageId)
+            .execute();
+    }
+
+    @Transactional('user')
+    public async update(
+        principal: Principal.User,
+        messageId: Chat.Message.Id,
+        content: string,
+    ): Promise<void> {
+        await this.trx
+            .updateTable('chat_messages')
+            .set({ content })
+            .where('id', '=', messageId)
+            .execute();
+    }
+
+    @Transactional('user', 'delegate')
+    public async updateInChat(
+        principal: Principal.User | Principal.Delegate,
+        chatId: Chat.Id,
+        messageId: Chat.Message.Id,
+        content: string,
+    ): Promise<void> {
+        await this.trx
+            .updateTable('chat_messages')
+            .set({ content })
+            .where('id', '=', messageId)
+            .where('chat_id', '=', chatId)
+            .execute();
+    }
+
+    @Transactional('user', 'delegate')
+    @ZodReturn(Chat.Message.Schema.array())
+    public async list(
+        principal: Principal.User | Principal.Delegate,
+        chatId: Chat.Id,
+    ): Promise<Chat.Message[]> {
+        const rows = await this.trx
+            .selectFrom('chat_messages')
+            .selectAll()
+            .where('chat_id', '=', chatId)
+            .orderBy('id')
+            .execute();
+
+        return rows.map((row) => Chat.Message.Schema.parse(row));
+    }
+
+    @Transactional('user', 'delegate')
+    public async overwrite(
+        principal: Principal.User | Principal.Delegate,
+        chatId: Chat.Id,
+        messages: Chat.Message[],
+    ): Promise<void> {
+        await this.trx
+            .deleteFrom('chat_messages')
+            .where('chat_id', '=', chatId)
+            .execute();
+
+        await this._insert(chatId, messages);
+    }
+
+    private async _insert(chatId: Chat.Id, messages: Chat.Message[]): Promise<void> {
         if (!messages.length)
             return;
 
-        await trx
+        await this.trx
             .insertInto('chat_messages')
             .values(messages.map((message) => ({
                 id: message.id,
@@ -198,74 +266,10 @@ class MessageMethods {
             })))
             .execute();
     }
-
-    @AllowedDatabaseRoles("user")
-    async erase(trx: DB.UserTransaction, messageId: Chat.Message.Id): Promise<void> {
-        await trx
-            .deleteFrom('chat_messages')
-            .where('id', '=', messageId)
-            .execute();
-    }
-
-    @AllowedDatabaseRoles("user")
-    async update(
-        trx: DB.UserTransaction,
-        messageId: Chat.Message.Id,
-        content: string,
-    ): Promise<void> {
-        await trx
-            .updateTable('chat_messages')
-            .set({ content })
-            .where('id', '=', messageId)
-            .execute();
-    }
-
-    @AllowedDatabaseRoles("user", "delegate")
-    async updateInChat(
-        trx: DB.Transaction<'user' | 'delegate'>,
-        chatId: Chat.Id,
-        messageId: Chat.Message.Id,
-        content: string,
-    ): Promise<void> {
-        await trx
-            .updateTable('chat_messages')
-            .set({ content })
-            .where('id', '=', messageId)
-            .where('chat_id', '=', chatId)
-            .execute();
-    }
-
-    @AllowedDatabaseRoles("user", "delegate")
-    @ZodReturn(Chat.Message.Schema.array())
-    async list(trx: DB.Transaction<'user' | 'delegate'>, chatId: Chat.Id): Promise<Chat.Message[]> {
-        const rows = await trx
-            .selectFrom('chat_messages')
-            .selectAll()
-            .where('chat_id', '=', chatId)
-            .orderBy('id')
-            .execute();
-
-        return rows.map((row) => Chat.Message.Schema.parse(row));
-    }
-
-    @AllowedDatabaseRoles("user", "delegate")
-    async overwrite(
-        trx: DB.Transaction<'user' | 'delegate'>,
-        chatId: Chat.Id,
-        messages: Chat.Message[],
-    ): Promise<void> {
-        await trx
-            .deleteFrom('chat_messages')
-            .where('chat_id', '=', chatId)
-            .execute();
-
-        await this.add(trx, chatId, messages);
-    }
 }
 
 @Injectable()
-@DatabaseClass
-export class ChatDatabase {
+export class ChatRepository {
     public readonly chat = new ChatMethods();
     public readonly message = new MessageMethods();
 }

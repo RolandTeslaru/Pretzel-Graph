@@ -7,9 +7,10 @@ import { shallow } from "zustand/shallow";
 import { createVersionControlSDKActions, type VersionControlSDKActions } from "./actions";
 import { createVersionControlSDKReducers, type VersionControlSDKReducers } from "./reducers";
 import { versionControlSDKSelectors, type VersionControlSDKSelectors } from "./selectors";
+import { _createVersionControlDialogs_, type _VersionControlSDKDialogs } from "./dialogs";
 
-const ACTIVE_WORKFLOWS_STALE_TIME = 60_000
 const PUBLICATIONS_STALE_TIME = 30_000
+const DEPLOYMENTS_STALE_TIME = 60_000
 
 @SDK("VersionControl")
 export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
@@ -17,46 +18,42 @@ export class VersionControlSDKImpl extends BaseSDK<VersionControlSDK.State> {
 
     public readonly useStore: BaseSDK.Store<VersionControlSDK.State> = createWithEqualityFn(
         immer<VersionControlSDK.State>(() => ({
-            currentWorkflowPublications: [],
-            activeWorkflows: {},
-            subscribedWorkflowId: null,
+            deployments: {},
             selectors: versionControlSDKSelectors,
-            reducers: createVersionControlSDKReducers(this),
+            reducers: createVersionControlSDKReducers(),
         })),
         shallow
     )
 
-    public unsubscribers: Array<() => void> = [];
-
     public readonly actions: VersionControlSDK.Actions = createVersionControlSDKActions(this)
 
     public readonly query = {
-        activeWorkflows: {
-            queryKey:  ['version-control', 'active-workflows'] as const,
-            queryFn:   () => this.actions.listActiveWorkflows(),
-            staleTime: ACTIVE_WORKFLOWS_STALE_TIME,
-        },
-        activeWorkflow: (workflowId: Workflow.Id) => ({
-            queryKey:  ['version-control', 'active-workflow', workflowId] as const,
-            queryFn:   () => this.actions.getActiveByWorkflowId(workflowId),
-            staleTime: ACTIVE_WORKFLOWS_STALE_TIME,
-        }),
         publications: (workflowId: Workflow.Id) => ({
             queryKey:  ['version-control', 'publications', workflowId] as const,
             queryFn:   () => this.actions.list(workflowId),
             staleTime: PUBLICATIONS_STALE_TIME,
             enabled:   Boolean(workflowId),
         }),
+        deployments: {
+            queryKey:  ['version-control', 'deployments'] as const,
+            queryFn:   () => this.actions.listDeployments(),
+            staleTime: DEPLOYMENTS_STALE_TIME,
+        },
+        deployment: (workflowId: Workflow.Id) => ({
+            queryKey:  ['version-control', 'deployment', workflowId] as const,
+            queryFn:   () => this.actions.getDeployment(workflowId),
+            staleTime: DEPLOYMENTS_STALE_TIME,
+        }),
     }
+
+    public readonly dialogs: VersionControlSDK.Dialogs = _createVersionControlDialogs_()
 }
 
 export const VersionControlSDK = SDK.get<VersionControlSDKImpl>("VersionControl")
 
 export namespace VersionControlSDK {
     export type State = {
-        currentWorkflowPublications: VersionControl.Publication.Meta[]
-        activeWorkflows: Record<Workflow.Id, VersionControl.Publication.Meta>
-        subscribedWorkflowId: Workflow.Id | null
+        deployments: Record<Workflow.Id, VersionControl.Publication.Meta>
         selectors: VersionControlSDKSelectors
         reducers: VersionControlSDKReducers
     }
@@ -64,4 +61,5 @@ export namespace VersionControlSDK {
     export type Reducers = VersionControlSDKReducers
     export type Actions = VersionControlSDKActions
     export type Selectors = VersionControlSDKSelectors
+    export type Dialogs = _VersionControlSDKDialogs
 }

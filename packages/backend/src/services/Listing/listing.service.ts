@@ -2,7 +2,7 @@ import type { Dependency } from '@pretzel-graph/shared/domain';
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
 import { Listing, SystemError, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
-import { VersionControlRepository } from '../VersionControl/version-control.repository';
+import { DeploymentRepository } from '../Deployment/deployment.repository';
 import { ListingRegistry } from './registry.client';
 import { System } from '@pretzel-graph/shared/system';
 
@@ -14,7 +14,7 @@ export class ListingService {
     private readonly log = System.log.withContext("Listing");
 
     constructor(
-        private readonly versionControlRepository: VersionControlRepository,
+        private readonly deployments: DeploymentRepository,
         private readonly registry: ListingRegistry,
     ) {}
 
@@ -57,7 +57,7 @@ export class ListingService {
         return entry ? Listing.toPublication(entry) : null;
     }
 
-    // Listings whose active publication moved on from the one each snapshot was taken at.
+    // Listings whose deployed publication moved on from the one each snapshot was taken at.
     public async checkUpdates(
         dependencies: Array<Pick<Dependency.Update.Listing, 'id' | 'publicationId'>>,
     ): Promise<Dependency.Update.Listing[]> {
@@ -105,12 +105,12 @@ export class ListingService {
         if (!this.registry.canShare)
             throw new SystemError(SystemError.Code.FORBIDDEN, 'This deployment cannot share workflows');
 
-        const publication = await this.versionControlRepository.getActivePublicationForWorkflow(principal, workflowId);
+        const deployment = await this.deployments.get(principal, workflowId);
 
-        if (!publication)
-            throw new SystemError(SystemError.Code.CONFLICT, 'A workflow needs an active publication before it can be public');
+        if (!deployment)
+            throw new SystemError(SystemError.Code.CONFLICT, 'Deploy a version before making this workflow public');
 
-        const bound = getNodesBindingCredentials(publication.workflow_data);
+        const bound = getNodesBindingCredentials(deployment.workflow_data);
 
         if (bound.length > 0)
             throw new SystemError(
@@ -119,11 +119,11 @@ export class ListingService {
                 { data: { nodeIds: bound } },
             );
 
-        return this.registry.put(workflowId, toRequest(publication));
+        return this.registry.put(workflowId, toRequest(deployment));
     }
 
-    // The registry mirrors the publication that VersionControl just made active.
-    public async syncActive(publication: VersionControl.Publication): Promise<void> {
+    // The registry mirrors the publication that was just deployed.
+    public async syncDeployed(publication: VersionControl.Publication): Promise<void> {
         if (!this.registry.canShare)
             return;
 
@@ -142,7 +142,7 @@ function toRequest(publication: VersionControl.Publication): Listing.API.Put.Req
     const { workflow_data, ...meta } = publication;
 
     return {
-        publicationMeta: meta,
+        publicationMeta: Listing.PublicationMeta.parse(meta),
         workflowData:    workflow_data,
     };
 }

@@ -29,7 +29,7 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, size = 'def
         [{ ...LibrarySDK.query.bootstrap, enabled: isQueryReady }],
     )
 
-    VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.activeWorkflows, enabled: isQueryReady }])
+    VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.deployments, enabled: isQueryReady }])
 
     const query = treeSearchQuery.trim().toLowerCase()
 

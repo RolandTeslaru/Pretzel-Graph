@@ -40,12 +40,12 @@ const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProp
 
     const [isAttaching, setIsAttaching] = useState(false)
 
-    const [activePublication, [request]] = VersionControlSDK.useWith(
-        (s) => s.activeWorkflows[workflowId],
-        [VersionControlSDK.query.activeWorkflow(workflowId)],
+    const [deployedPublication, [request]] = VersionControlSDK.useWith(
+        (s) => s.deployments[workflowId],
+        [VersionControlSDK.query.deployment(workflowId)],
     )
 
-    const hasPublication = Boolean(activePublication)
+    const hasPublication = Boolean(deployedPublication)
 
     const handleAttach = async () => {
         setIsAttaching(true)
@@ -82,9 +82,9 @@ const DependencyTypeDialog = ({ workflowId, onSelect }: DependencyTypeDialogProp
                                 <SystemIcons.ShieldCheck className='size-10' />
                                 <div className='flex flex-row gap-2'>
                                     Published
-                                    {activePublication &&
+                                    {deployedPublication &&
                                         <Badge variant="success" className='h-auto my-auto'>
-                                            {activePublication.name}
+                                            {deployedPublication.name}
                                         </Badge>
                                     }
                                 </div>

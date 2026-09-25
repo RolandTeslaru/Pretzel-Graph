@@ -200,7 +200,7 @@ export namespace DB {
             name:          z.string(),
             description:   z.string().nullable(),
             workflow_meta: WorkflowD.Meta.Schema,
-            is_active:     z.boolean().default(true),
+            is_deployed:   z.boolean().default(false),
             published_at:  z.string(),
         });
         export type Row = z.infer<typeof Row>;
@@ -301,7 +301,7 @@ export namespace DB {
         export const toDomain = (row: Row) => WorkspaceD.Member.Schema.parse(row);
     }
 
-    export namespace Deployment {
+    export namespace Workspace {
         export const Row = z.object({
             id:         z.literal(true),
             claimed_by: Auth.User.Id.nullable(),
@@ -343,7 +343,7 @@ export namespace DB {
     export interface Tables {
         users:               Table<typeof User.Row, Stamps>;
         members:             Table<typeof Member.Row, Stamps>;
-        deployment:          Table<typeof Deployment.Row, 'id'>;
+        workspace:           Table<typeof Workspace.Row, 'id'>;
         folders:             Table<typeof Folder.Row, 'id' | Stamps>;
         skills:              Table<typeof Skill.Row, 'id' | 'description' | 'content' | 'content_hash' | Stamps>;
         workflows:           Table<typeof Workflow.Row, 'id' | Stamps>;

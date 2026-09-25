@@ -18,10 +18,14 @@ export namespace Listing {
     export const createId = (): Id =>
         `${LISTING_ID_PREFIX}${crypto.randomUUID().slice(LISTING_ID_PREFIX.length)}` as Id
 
-    // The owner's active publication, verbatim, under the registry's id.
+    // A publication's metadata without its deployment state.
+    export const PublicationMeta = VersionControl.Publication.Meta.Schema.omit({ is_deployed: true })
+    export type PublicationMeta = z.infer<typeof PublicationMeta>
+
+    // The owner's deployed publication, verbatim, under the registry's id.
     export const Schema = z.object({
         id:              Id,
-        publicationMeta: VersionControl.Publication.Meta.Schema,
+        publicationMeta: PublicationMeta,
         get workflowData() { return Workflow.Data.Schema },
         // Set by the registry operator on extended shelf entries only.
         blueprintId:     z.string().nullable().optional(),
@@ -55,7 +59,7 @@ export namespace Listing {
 
         export namespace Updates {
             export const Response = z.object({
-                updates: z.record(Workflow.Id, VersionControl.Publication.Meta.Schema),
+                updates: z.record(Workflow.Id, PublicationMeta),
             })
             export type Response = z.infer<typeof Response>
         }
@@ -78,7 +82,7 @@ export namespace Listing {
         // The publication to serve; the workflow is named in the path.
         export namespace Put {
             export const Request = z.object({
-                publicationMeta: VersionControl.Publication.Meta.Schema,
+                publicationMeta: PublicationMeta,
                 get workflowData() { return Workflow.Data.Schema },
             })
             export type Request = z.infer<typeof Request>

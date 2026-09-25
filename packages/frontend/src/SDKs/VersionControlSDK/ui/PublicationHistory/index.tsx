@@ -3,38 +3,25 @@ import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
 import { Badge, Button, ScrollArea, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { Accordion } from "@pretzel-graph/standard-ui/foundations/accordion";
-import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import { VersionControlSDK } from "../../sdk";
 import { TimelineItem } from "./TimelineItem";
-import { getPublicationLabel, openDeactivatePublicationDialog } from "./utils";
+import { formatTimelineTimestamp, getPublicationLabel } from "../../utils";
+import { DeploymentToggle } from "../DeploymentToggle";
 
 const RECENT_GROUP_SIZE = 4;
 
-function formatTimelineTimestamp(value: Date | string | null | undefined): string {
-    if (!value) return "Unknown time";
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Unknown time";
-
-    const day = date.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-    });
-    const time = date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    });
-
-    return `${day} at ${time}`;
+interface PublicationHistoryProps {
+    className?: string;
+    hideHeader?: boolean;
+    showCurrentChangesItem?: boolean;
 }
 
-function VersionHistory({ className, hideHeader }: { className?: string; hideHeader?: boolean }) {
+function PublicationHistory({ className, hideHeader, showCurrentChangesItem = true }: PublicationHistoryProps) {
     const [workflowId, isDirty] = WorkbenchSDK.useDocument(d => [d.workflowId, d.isDirty]);
     const workflowUpdatedAt = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.updated_at);
 
-    const [activePublication, [versionsQuery]] = VersionControlSDK.useWith(
-        (s) => s.selectors.getActive(s),
+    const [, [versionsQuery]] = VersionControlSDK.useWith(
+        () => null,
         [VersionControlSDK.query.publications(workflowId)],
     );
 
@@ -47,38 +34,24 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
             {!hideHeader && <div className="flex items-center justify-between border-b border-border/70 py-2 px-3">
                 <div className="flex items-center gap-2">
                     <div className="text-sm font-medium">
-                        Version history
+                        Publication history
                     </div>
                 </div>
-                {activePublication &&
-                    <Button
-                        variant={activePublication ? "ghost-success" : "ghost-destructive"}
-                        size="icon-xs"
-                        className="gap-2"
-                        disabled={!activePublication}
-                        onClick={() => {
-                            if (!activePublication) return;
-                            openDeactivatePublicationDialog(
-                                activePublication,
-                                () => VersionControlSDK.actions.deactivate(activePublication.workflow_id, activePublication.id),
-                            );
-                        }}
-                    >
-                        <SystemIcons.Power />
-                    </Button>
-                }
+                <DeploymentToggle size="icon-xs" />
             </div>}
 
             <ScrollArea.Root className="max-h-[420px]">
                 <div className="space-y-3 p-2">
-                    <TimelineItem
-                        actionType="draft"
-                        highlighted={isDirty}
-                        label="Current changes"
-                        marker={<span className={`size-2 rounded-full ${isDirty ? "bg-amber-500" : "bg-muted-foreground/40"}`} />}
-                        showLine={publications.length > 0}
-                        subtitle={formatTimelineTimestamp(workflowUpdatedAt)}
-                    />
+                    {showCurrentChangesItem &&
+                        <TimelineItem
+                            actionType="draft"
+                            highlighted={isDirty}
+                            label="Current changes"
+                            marker={<span className={`size-2 rounded-full ${isDirty ? "bg-amber-500" : "bg-muted-foreground/40"}`} />}
+                            showLine={publications.length > 0}
+                            subtitle={formatTimelineTimestamp(workflowUpdatedAt)}
+                        />
+                    }
 
                     {versionsQuery.isLoading && (
                         <div className="flex items-center gap-2 rounded-xl border border-dashed border-border/80 px-3 py-4 text-sm text-muted-foreground">
@@ -90,7 +63,7 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
                     {versionsQuery.isError && (
                         <div className="rounded-xl border border-dashed border-destructive/30 px-3 py-4">
                             <div className="text-sm font-medium text-foreground">
-                                Could not load version history
+                                Could not load publication history
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
                                 Try refreshing the list.
@@ -128,9 +101,9 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
                                         <TimelineItem
                                             actionType="publication"
                                             key={publication.id}
-                                            badge={publication.is_active ? <Badge variant="success" size={"xs"}>Active</Badge> : undefined}
+                                            badge={publication.is_deployed ? <Badge variant="success" size={"xs"}>Deployed</Badge> : undefined}
                                             label={getPublicationLabel(publication)}
-                                            marker={<span className={`size-2 rounded-full border ${publication.is_active ? "border-primary bg-primary" : "border-border bg-background"}`} />}
+                                            marker={<span className={`size-2 rounded-full border ${publication.is_deployed ? "border-primary bg-primary" : "border-border bg-background"}`} />}
                                             publication={publication}
                                             showLine={index < recentPublications.length - 1 || olderPublications.length > 0}
                                             subtitle={formatTimelineTimestamp(publication.published_at)}
@@ -149,9 +122,9 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
                                             <TimelineItem
                                                 actionType="publication"
                                                 key={publication.id}
-                                                badge={publication.is_active ? <Badge size={"xs"} variant="success">Active</Badge> : undefined}
+                                                badge={publication.is_deployed ? <Badge size={"xs"} variant="success">Deployed</Badge> : undefined}
                                                 label={getPublicationLabel(publication)}
-                                                marker={<span className={`size-2 rounded-full border ${publication.is_active ? "border-primary bg-primary" : "border-border bg-background"}`} />}
+                                                marker={<span className={`size-2 rounded-full border ${publication.is_deployed ? "border-primary bg-primary" : "border-border bg-background"}`} />}
                                                 publication={publication}
                                                 showLine={index < olderPublications.length - 1}
                                                 subtitle={formatTimelineTimestamp(publication.published_at)}
@@ -168,4 +141,4 @@ function VersionHistory({ className, hideHeader }: { className?: string; hideHea
     );
 }
 
-export default VersionHistory;
+export default PublicationHistory;

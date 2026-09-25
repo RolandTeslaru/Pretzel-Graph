@@ -38,11 +38,11 @@ export class UserRepository extends Repository {
         return DB.User.toDomain(row);
     }
 
-    /** Whether anyone owns this deployment yet. */
+    /** Whether anyone owns this workspace yet. */
     @Transactional('service')
-    public async getDeploymentClaim(principal: Principal.Service): Promise<{ claimed_at: string | null } | undefined> {
+    public async getWorkspaceClaim(principal: Principal.Service): Promise<{ claimed_at: string | null } | undefined> {
         return this.trx
-            .selectFrom('deployment')
+            .selectFrom('workspace')
             .select('claimed_at')
             .executeTakeFirst();
     }

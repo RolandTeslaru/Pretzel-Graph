@@ -7,9 +7,9 @@ import { UserRepository } from './user.repository';
 export class UserService {
     constructor(private readonly userRepository: UserRepository) {}
 
-    /** Whether anyone owns this deployment yet. Public — it gates the first-run screen. */
+    /** Whether anyone owns this workspace yet. Public — it gates the first-run screen. */
     public async getStatus(): Promise<Auth.API.Status.Response> {
-        const row = await this.userRepository.getDeploymentClaim(Principal.SELF);
+        const row = await this.userRepository.getWorkspaceClaim(Principal.SELF);
 
         return { claimed: Boolean(row?.claimed_at) };
     }

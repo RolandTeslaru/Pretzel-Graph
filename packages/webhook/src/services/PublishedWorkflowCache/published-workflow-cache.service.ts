@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnModuleDestroy, OnModuleInit } from '@nestjs/common/interfaces';
 import { REDIS_HOST, REDIS_PORT } from '@pretzel-graph/shared/constants';
-import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { Deployment, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import Redis from 'ioredis';
 import { db, closeDb } from '@/utils/db';
@@ -11,7 +11,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     private readonly logger = new Logger(PublishedWorkflowCacheService.name);
     private redisSub = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 
-    // workflowId maps to active publication
+    // workflowId maps to deployed publication
     private readonly publicationsMap = new Map<Workflow.Id, VersionControl.Publication>();
 
     private toPublication(row: unknown): VersionControl.Publication {
@@ -35,10 +35,10 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
         let rows: unknown[];
 
         try {
-            // Active publications carrying at least one webhook node.
+            // Deployed publications carrying at least one webhook node.
             const result = await db().query(
                 `select * from version_control
-                 where is_active = true
+                 where is_deployed = true
                    and exists (
                        select 1
                        from jsonb_each(workflow_data->'nodes') as n
@@ -66,13 +66,11 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
         );
     }
 
-    private async fetchActivePublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
+    private async fetchDeployedPublication(workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
         const result = await db().query(
-            `select id, workflow_id, version, name, description, workflow_meta, workflow_data, is_active, published_at
+            `select id, workflow_id, version, name, description, workflow_meta, workflow_data, is_deployed, published_at
              from version_control
-             where workflow_id = $1 and is_active = true
-             order by published_at desc
-             limit 1`,
+             where workflow_id = $1 and is_deployed = true`,
             [workflowId],
         );
 
@@ -85,15 +83,15 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     // ─────────────────────────────────────────────────────────
 
     private subscribeToSignals() {
-        this.redisSub.psubscribe(VersionControl.Signal.PATTERN_CHANNEL, (err) => {
+        this.redisSub.psubscribe(Deployment.Signal.PATTERN_CHANNEL, (err) => {
             if (err) this.logger.error(`psubscribe failed: ${err.message}`);
-            else this.logger.log(`Subscribed to ${VersionControl.Signal.PATTERN_CHANNEL}`);
+            else this.logger.log(`Subscribed to ${Deployment.Signal.PATTERN_CHANNEL}`);
         });
 
         this.redisSub.on('pmessage', (_pattern, _channel, raw) => {
-            let signal: VersionControl.Signal;
+            let signal: Deployment.Signal;
             try {
-                signal = VersionControl.Signal.Schema.parse(JSON.parse(raw));
+                signal = Deployment.Signal.Schema.parse(JSON.parse(raw));
             } catch (e) {
                 this.logger.warn(`Ignored malformed signal: ${(e as Error).message}`);
                 return;
@@ -104,21 +102,19 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
         });
     }
 
-    private async handleSignal(signal: VersionControl.Signal) {
+    private async handleSignal(signal: Deployment.Signal) {
         switch (signal.type) {
-            case 'published':
-            case 'activated': {
+            case 'deployed': {
                 // The signal is only a nudge — re-read the authoritative row rather than trust
                 // the wire. Replace any prior entry regardless; a re-read that finds nothing
-                // (e.g. deactivated in the same instant) correctly leaves the workflow unregistered.
+                // (e.g. undeployed in the same instant) correctly leaves the workflow unregistered.
                 this.removePublication(signal.workflowId);
-                const publication = await this.fetchActivePublication(signal.workflowId);
+                const publication = await this.fetchDeployedPublication(signal.workflowId);
                 if (publication)
                     this.addPublication(publication);
                 break;
             }
-            case 'deactivated':
-            case 'removed':
+            case 'undeployed':
                 this.removePublication(signal.workflowId);
                 break;
         }
@@ -129,7 +125,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     // ─────────────────────────────────────────────────────────
 
     private addPublication(publication: VersionControl.Publication) {
-        if (!publication.is_active) return;
+        if (!publication.is_deployed) return;
 
         this.publicationsMap.set(publication.workflow_id, publication);
 

@@ -28,14 +28,14 @@ create table members (
     constraint members_role_check check (role in ('owner', 'admin', 'member'))
 );
 
--- One row, seeded below. Records that this deployment has an owner, so clearing
+-- One row, seeded below. Records that this workspace has an owner, so clearing
 -- `members` cannot hand ownership to the next caller.
-create table deployment (
+create table workspace (
     id         boolean default true not null,
     claimed_by uuid,
     claimed_at timestamp with time zone,
 
-    constraint deployment_singleton check (id)
+    constraint workspace_singleton check (id)
 );
 
 create table folders (
@@ -78,7 +78,7 @@ create table version_control (
     -- The workflow row as it looked at publish time, graph excluded.
     workflow_meta jsonb not null,
     workflow_data jsonb not null,
-    is_active     boolean default true not null,
+    is_deployed   boolean default false not null,
     version       smallint default '1'::smallint not null,
     name          text not null,
     description   text,
@@ -153,7 +153,7 @@ create table api_keys (
 
 alter table only users               add constraint users_pkey               primary key (id);
 alter table only members             add constraint members_pkey             primary key (user_id);
-alter table only deployment          add constraint deployment_pkey          primary key (id);
+alter table only workspace           add constraint workspace_pkey           primary key (id);
 alter table only folders             add constraint folders_pkey             primary key (id);
 alter table only workflows           add constraint workflows_pkey           primary key (id);
 alter table only version_control     add constraint version_control_pkey     primary key (id);
@@ -172,8 +172,8 @@ alter table only version_control
 alter table only members
     add constraint members_user_id_fkey foreign key (user_id) references users(id) on delete cascade;
 
-alter table only deployment
-    add constraint deployment_claimed_by_fkey foreign key (claimed_by) references users(id) on delete set null;
+alter table only workspace
+    add constraint workspace_claimed_by_fkey foreign key (claimed_by) references users(id) on delete set null;
 
 -- Attribution FKs blank on delete; the rows outlive the user.
 alter table only folders
@@ -223,7 +223,7 @@ alter table only api_keys
 
 create unique index users_username_lower_key on users using btree (lower(username));
 
-create unique index one_active_per_workflow on version_control using btree (workflow_id) where (is_active = true);
+create unique index one_deployed_per_workflow on version_control using btree (workflow_id) where (is_deployed = true);
 
 
 -- ── Triggers ─────────────────────────────────────────────────────────────────
@@ -275,6 +275,6 @@ $$;
 
 create trigger folders_prevent_root_delete before delete on folders for each row when (old.id = '00000000-0000-4000-8000-000000000001') execute function prevent_root_folder_delete();
 
-insert into deployment (id) values (true);
+insert into workspace (id) values (true);
 
 insert into folders (id, display_name) values ('00000000-0000-4000-8000-000000000001', 'Home');

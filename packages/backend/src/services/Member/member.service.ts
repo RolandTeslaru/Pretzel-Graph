@@ -74,9 +74,9 @@ export class MemberService {
         if (owner && token.userId !== owner)
             return null;
 
-        const unclaimed = await DB.asService('read deployment claim', (db) =>
+        const unclaimed = await DB.asService('read workspace claim', (db) =>
             db
-                .selectFrom('deployment')
+                .selectFrom('workspace')
                 .select('claimed_at')
                 .executeTakeFirst(),
         );
@@ -89,11 +89,11 @@ export class MemberService {
         if (!await subjectExistsAtIssuer(token))
             return null;
 
-        return DB.asService('claim deployment', async (db) => {
+        return DB.asService('claim workspace', async (db) => {
             // Stakes the claim first: a concurrent first request blocks here, then
             // finds it taken. `claimed_by` follows once the user row it references exists.
             const claim = await db
-                .updateTable('deployment')
+                .updateTable('workspace')
                 .set({ claimed_at: sql<string>`now()` })
                 .where('claimed_at', 'is', null)
                 .executeTakeFirst();
@@ -121,11 +121,11 @@ export class MemberService {
                 .execute();
 
             await db
-                .updateTable('deployment')
+                .updateTable('workspace')
                 .set({ claimed_by: token.userId })
                 .execute();
 
-            this.log.info(`Deployment claimed by ${token.email ?? token.userId}`);
+            this.log.info(`Workspace claimed by ${token.email ?? token.userId}`);
 
             return 'owner';
         });

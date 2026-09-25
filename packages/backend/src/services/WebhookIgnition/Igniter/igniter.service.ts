@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, MethodNotAllowedException } from '@nestj
 import { Execution, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { resolveWebhook } from '@pretzel-graph/shared/utils';
 import { Webhook } from '@pretzel-graph/shared/domain/Webhook';
-import { ActivePublicationService } from '../../ActivePublication/active-publication.service';
+import { DeploymentService } from '../../Deployment/deployment.service';
 import { ExecutionService } from '../../Execution/execution.service';
 import { ShelfService } from '../../Shelf/shelf.service';
 import { System } from '@pretzel-graph/shared/system';
@@ -21,18 +21,18 @@ export class IgniterService {
     private readonly log = System.log.withContext("Igniter");
 
     constructor(
-        private readonly activePublications: ActivePublicationService,
+        private readonly deployments: DeploymentService,
         private readonly executions: ExecutionService,
         private readonly shelf: ShelfService,
     ) {}
 
     async handle(req: InboundRequest): Promise<unknown> {
-        const publication = this.activePublications.get(req.workflowId as unknown as Workflow.Id);
-        if (!publication) {
-            throw new NotFoundException(`No active webhook registered for workflow ${req.workflowId}`);
+        const deployment = this.deployments.getCached(req.workflowId as unknown as Workflow.Id);
+        if (!deployment) {
+            throw new NotFoundException(`No deployed webhook registered for workflow ${req.workflowId}`);
         }
 
-        const match = this.findWebhookNode(publication, req.path, req.method);
+        const match = this.findWebhookNode(deployment, req.path, req.method);
         if (!match) {
             throw new MethodNotAllowedException(
                 `Method ${req.method} not allowed on ${req.path}`,
@@ -52,15 +52,15 @@ export class IgniterService {
         };
 
         const payload: Execution.API.Run.InternalRequest = {
-            workflowId: publication.workflow_id,
-            workflowData: publication.workflow_data,
+            workflowId: deployment.workflow_id,
+            workflowData: deployment.workflow_data,
             igniter,
         };
 
         const { execution } = await this.executions.runFromService(payload, 'webhook');
 
         this.log.info(
-            `Triggered workflow=${publication.workflow_id} publication=${publication.id} executionId=${execution.id}`,
+            `Triggered workflow=${deployment.workflow_id} publication=${deployment.id} executionId=${execution.id}`,
         );
 
         // The sender gets an acknowledgement and an id to quote, nothing more —
