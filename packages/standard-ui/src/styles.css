@@ -1,7 +1,7 @@
 @import "@fontsource-variable/geist";
 
 @utility input-default {
-  @apply bg-input/70 border-border focus-visible:border-ring focus-visible:ring-ring/50
+  @apply bg-input/70 border-input-border focus-visible:border-ring focus-visible:ring-ring/50
     aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
     dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80
     border transition-colors file:h-6 file:text-sm file:font-medium
@@ -76,6 +76,7 @@ code {
   --muted: oklch(95.2% 0 0);
   --muted-foreground: theme(--color-neutral-500);
   --input: theme(--color-white);
+  --input-border: var(--border);
 
   --radius: 0.875rem;
 
@@ -252,10 +253,11 @@ code {
   --active-foreground: theme(--color-sky-300);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(54, 54, 54);
+  --border: rgb(60, 60, 60);
 
   /* --border: theme(--color-stone-800); */
   --input: rgb(35, 35, 35);
+  --input-border: rgb(54, 54, 54);
   --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
   /* Success states */

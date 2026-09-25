@@ -158,6 +158,7 @@ const preset: Config = {
                 selected: "var(--selected)",
                 border: "var(--border)",
                 input: "var(--input)",
+                "input-border": "var(--input-border)",
                 ring: "var(--ring)",
                 background: "var(--background)",
                 foreground: "var(--foreground)",
