@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { VersionControlSDK } from "@/SDKs/VersionControlSDK/sdk";
-import { Button, DropdownMenu, Spinner } from "@pretzel-graph/standard-ui/foundations";
+import { Button, DropdownMenu } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
 
@@ -20,47 +20,16 @@ function PublicationActions({
 }: {
     publication: VersionControl.Publication.Meta;
 }) {
-    const [isPending, setIsPending] = useState(false);
-
     const handleDeploy = () => {
-        if (publication.is_deployed || isPending) return;
-
-        const replaced = VersionControlSDK.state.selectors.getDeployed(VersionControlSDK.state, publication.workflow_id);
-
-        VersionControlSDK.dialogs.openDeploy(publication, replaced, async () => {
-            setIsPending(true);
-            try {
-                await VersionControlSDK.actions.deployPublication(publication.workflow_id, publication.id);
-            } finally {
-                setIsPending(false);
-            }
-        });
+        void VersionControlSDK.dialogs.openDeploy(publication);
     };
 
     const handleUndeploy = () => {
-        if (!publication.is_deployed || isPending) return;
-
-        VersionControlSDK.dialogs.openUndeploy(publication, async () => {
-            setIsPending(true);
-            try {
-                await VersionControlSDK.actions.undeploy(publication.workflow_id);
-            } finally {
-                setIsPending(false);
-            }
-        });
+        void VersionControlSDK.dialogs.openUndeploy(publication.workflow_id);
     };
 
     const handleDelete = () => {
-        if (isPending) return;
-
-        VersionControlSDK.dialogs.openDeletePublication(publication, async () => {
-            setIsPending(true);
-            try {
-                await VersionControlSDK.actions.remove(publication.workflow_id, publication.id);
-            } finally {
-                setIsPending(false);
-            }
-        });
+        VersionControlSDK.dialogs.openDeletePublication(publication);
     };
 
     return (
@@ -70,14 +39,13 @@ function PublicationActions({
                     variant="ghost"
                     size="icon-xs"
                     className="mt-[-2px] rounded-full"
-                    disabled={isPending}
                 >
-                    {isPending ? <Spinner className="size-3.5" /> : <SystemIcons.Ellipsis className="size-4" />}
+                    <SystemIcons.Ellipsis className="size-4" />
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 <DropdownMenu.Item
-                    disabled={publication.is_deployed || isPending}
+                    disabled={publication.is_deployed}
                     onClick={handleDeploy}
                 >
                     <SystemIcons.CircleCheck className="size-4" />
@@ -85,7 +53,7 @@ function PublicationActions({
                 </DropdownMenu.Item>
                 {publication.is_deployed &&
                     <DropdownMenu.Item
-                        disabled={!publication.is_deployed || isPending}
+                        disabled={!publication.is_deployed}
                         onClick={handleUndeploy}
                     >
                         <SystemIcons.Power className="size-4" />
@@ -95,7 +63,6 @@ function PublicationActions({
                 <DropdownMenu.Separator />
                 <DropdownMenu.Item
                     variant="destructive"
-                    disabled={isPending}
                     onClick={handleDelete}
                 >
                     <SystemIcons.Trash2 className="size-4" />
