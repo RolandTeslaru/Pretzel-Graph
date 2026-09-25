@@ -107,6 +107,7 @@ export class PublishedWorkflowCacheService implements OnModuleInit, OnModuleDest
     private async handleSignal(signal: VersionControl.Signal) {
         switch (signal.type) {
             case 'published':
+                break;
             case 'activated': {
                 // The signal is only a nudge — re-read the authoritative row rather than trust
                 // the wire. Replace any prior entry regardless; a re-read that finds nothing

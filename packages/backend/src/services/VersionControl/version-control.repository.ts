@@ -5,8 +5,10 @@ import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
+import { sql } from 'kysely';
 
 const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'workflow_meta', 'is_active', 'published_at'] as const;
+
 
 @Injectable()
 export class VersionControlRepository extends Repository {
@@ -14,13 +16,6 @@ export class VersionControlRepository extends Repository {
     @Transactional('user')
     @ZodReturn(VersionControl.Publication.Schema)
     public async publish(principal: Principal.User, workflowId: Workflow.Id, { name, description, workflowData }: VersionControl.API.Publish.Request): Promise<VersionControl.Publication> {
-        await this.trx
-            .updateTable('version_control')
-            .set({ is_active: false })
-            .where('workflow_id', '=', workflowId)
-            .where('is_active', '=', true)
-            .execute();
-
         const latest = await this.trx
             .selectFrom('version_control')
             .select(({ fn }) => fn.max('version').as('version'))
@@ -44,7 +39,7 @@ export class VersionControlRepository extends Repository {
                 description:   description ?? null,
                 workflow_meta: Workflow.Meta.Schema.parse(workflow),
                 workflow_data: workflowData,
-                is_active:     true,
+                is_active:     false,
             })
             .returningAll()
             .executeTakeFirstOrThrow();

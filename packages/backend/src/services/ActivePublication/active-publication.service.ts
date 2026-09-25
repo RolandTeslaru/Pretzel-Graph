@@ -79,6 +79,7 @@ export class ActivePublicationService implements OnModuleInit, OnModuleDestroy {
     private async handleSignal(signal: VersionControl.Signal): Promise<void> {
         switch (signal.type) {
             case 'published':
+                break;
             case 'activated': {
                 const publication = await this.repository.findByWorkflowId(Principal.SELF, signal.workflowId);
 

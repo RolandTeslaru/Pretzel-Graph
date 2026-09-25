@@ -21,9 +21,7 @@ export class VersionControlService {
     ): Promise<VersionControl.API.Publish.Response> {
 
         const publication = await this.repository.publish(principal, workflowId, payload);
-        
-        publication.is_active = true;
-        await this.listings.syncActive(publication);
+
 
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),

@@ -10,7 +10,6 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
             const data = await VersionControl.API.publish(api, workflowId, payload);
             sdk.setState(s => {
                 s.reducers.currentWorkflow.upsert(s, data.publication);
-                s.reducers.activeWorkflows.upsert(s, data.publication);
             });
             void sdk.invalidate(sdk.query.publications(workflowId));
             return data;
@@ -84,6 +83,8 @@ export const createVersionControlSDKActions = (sdk: VersionControlSDKImpl) => {
                 const unsub = RealtimeSDK.subscribeToChannel<VersionControl.Signal>(channel, (signal) => {
                     switch (signal.type) {
                         case "published":
+                            void sdk.invalidate(sdk.query.publications(signal.workflowId));
+                            break;
                         case "activated":
                             // The signal carries no publication — it is only a nudge. Re-read the
                             // now-active publication and upsert the fresh copy, rather than trusting
