@@ -126,7 +126,7 @@ export const buildIgniter = (options: BuildIgniterOptions): Igniter => {
     if (options.variant === "chat")
         return {
             variant: "chat_message",
-            chat_id: options.chatId,
+            chat_id: options.chatId ?? Chat.createId(),
             message: { id: Chat.Message.createId(), role: "human", content: options.message },
             ...flags,
         }

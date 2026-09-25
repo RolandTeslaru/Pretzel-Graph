@@ -49,9 +49,9 @@ export const Blueprint = defineBlueprint({
             initialValue: "read-only",
         }),
         defineField.Integer("timeoutSeconds", "Timeout", {
-            initialValue: 300,
+            initialValue: 1800,
             min: 1,
-            max: 3600,
+            max: 7200,
             step: 1,
             advanced: true,
             tooltip: "Maximum duration of the complete Codex run, in seconds.",

@@ -19,7 +19,7 @@ const AssistantPanel: React.FC = () => {
     const isIncomplete = setupStatus === "incomplete"
 
     return (
-        <>
+        <div className='w-full h-full flex overflow-x-auto'>
             <Conversation.PromptInput
                 onSend={(content) => AssistantSDK.actions.message.send({ content })}
                 placeholder={isIncomplete ? undefined : "Ask the assistant..."}
@@ -30,7 +30,7 @@ const AssistantPanel: React.FC = () => {
             <Conversation.Content messageIds={messageIds} isLoading={isLoading} scrollKey={lastMessageContent}>
                 {(id) => <MessageItem id={id} toolCallStatus={toolCallStatus} />}
             </Conversation.Content>
-        </>
+        </div>
     )
 }
 

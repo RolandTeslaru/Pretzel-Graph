@@ -10,9 +10,9 @@ import ConversationRoot from '../ConversationRoot'
 const FullscreenAssistant = (props: DialogSDK.TemplateProps) => (
     <DialogSDK.SplitTemplate
         {...props}
-        className='h-[90vh] w-[1050px]'
+        className='h-[90vh]'
         sidebarClassName='w-[250px] shrink-0 p-0! gap-0!'
-        contentClassName='relative p-0! gap-0!'
+        contentClassName='relative w-[800px] p-0! gap-0!'
         sidebarRenderer={() => (
             <Conversation.Root accent="LanguageModel">
                 <AssistantList />
