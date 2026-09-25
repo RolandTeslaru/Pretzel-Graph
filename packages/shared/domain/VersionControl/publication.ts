@@ -17,7 +17,7 @@ export namespace Publication {
             description:   z.string().nullable(),
             // The workflow's display row as it looked when this version was published.
             get workflow_meta() { return Workflow.Meta.Schema },
-            is_active:     z.boolean(),
+            is_deployed:   z.boolean(),
             published_at:  z.coerce.date(),
         })
     }

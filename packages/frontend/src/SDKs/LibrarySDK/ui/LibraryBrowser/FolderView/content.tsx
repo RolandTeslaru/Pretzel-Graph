@@ -72,7 +72,7 @@ export const Content: React.FC<Props> = ({ scrollContainerClassName, className, 
         [{ ...LibrarySDK.query.bootstrap, enabled: isQueryReady }],
     )
 
-    VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.activeWorkflows, enabled: isQueryReady }])
+    VersionControlSDK.useWith(() => null, [{ ...VersionControlSDK.query.deployments, enabled: isQueryReady }])
 
     const [connections] = GatewaySDK.useWith(
         (s) => GatewaySDK.selectors.byFolderId(s, cwd),

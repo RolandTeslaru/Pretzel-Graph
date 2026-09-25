@@ -67,8 +67,8 @@ export function TreeItem({
             onItemClick?.(item)
     }
 
-    const hasActiveWorkflow = VersionControlSDK.useStore((s) => (
-        workflowId ? Boolean(s.activeWorkflows[workflowId]) : false
+    const isDeployed = VersionControlSDK.useStore((s) => (
+        workflowId ? Boolean(s.deployments[workflowId]) : false
     ))
 
     const Icon = isFolder
@@ -124,7 +124,7 @@ export function TreeItem({
                     <Icon className={classNames('mr-1 shrink-0', styles.icon, isFolder ? 'text-muted-foreground' : 'text-primary')} />
                 )}
                 <span className='min-w-0 flex-1 truncate whitespace-nowrap text-foreground'>{branch.data?.name}</span>
-                {hasActiveWorkflow ? (
+                {isDeployed ? (
                     <div className='my-auto ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400' />
                 ) : null}
                 {connection ? (

@@ -47,6 +47,7 @@ export const Route = createFileRoute('/workflow/$workflowid')({
         void ShelfSDK.prefetch(ShelfSDK.query.section("integrations"))
         void LibrarySDK.prefetch(LibrarySDK.query.bootstrap)
         void VersionControlSDK.prefetch(VersionControlSDK.query.publications(workflowId))
+        void VersionControlSDK.prefetch(VersionControlSDK.query.deployment(workflowId))
         void ChatSDK.prefetch(ChatSDK.query.list(workflowId))
 
         ChatSDK.actions.chat.new();

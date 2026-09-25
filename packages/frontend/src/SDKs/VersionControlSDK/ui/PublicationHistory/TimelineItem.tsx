@@ -1,11 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { VersionControlSDK } from "@/SDKs/VersionControlSDK/sdk";
-import { openPublishDialog } from "@/SDKs/VersionControlSDK/ui/PublishDialog";
 import { Button, DropdownMenu, Spinner } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import type { VersionControl } from "@pretzel-graph/shared/domain";
-import { toast } from "sonner";
-import { getPublicationLabel, openDeactivatePublicationDialog, openDeletePublicationDialog } from "./utils";
 
 type TimelineItemProps = {
     actionType?: "draft" | "publication";
@@ -25,27 +22,28 @@ function PublicationActions({
 }) {
     const [isPending, setIsPending] = useState(false);
 
-    const handleActivate = async () => {
-        if (publication.is_active || isPending) return;
+    const handleDeploy = () => {
+        if (publication.is_deployed || isPending) return;
 
-        setIsPending(true);
-        try {
-            await VersionControlSDK.actions.activate(publication.workflow_id, publication.id);
-            toast.success(`${getPublicationLabel(publication)} is now active`);
-        } catch {
-            toast.error("Could not activate version");
-        } finally {
-            setIsPending(false);
-        }
-    };
+        const replaced = VersionControlSDK.state.selectors.getDeployed(VersionControlSDK.state, publication.workflow_id);
 
-    const handleDeactivate = () => {
-        if (!publication.is_active || isPending) return;
-
-        openDeactivatePublicationDialog(publication, async () => {
+        VersionControlSDK.dialogs.openDeploy(publication, replaced, async () => {
             setIsPending(true);
             try {
-                await VersionControlSDK.actions.deactivate(publication.workflow_id, publication.id);
+                await VersionControlSDK.actions.deployPublication(publication.workflow_id, publication.id);
+            } finally {
+                setIsPending(false);
+            }
+        });
+    };
+
+    const handleUndeploy = () => {
+        if (!publication.is_deployed || isPending) return;
+
+        VersionControlSDK.dialogs.openUndeploy(publication, async () => {
+            setIsPending(true);
+            try {
+                await VersionControlSDK.actions.undeploy(publication.workflow_id);
             } finally {
                 setIsPending(false);
             }
@@ -55,7 +53,7 @@ function PublicationActions({
     const handleDelete = () => {
         if (isPending) return;
 
-        openDeletePublicationDialog(publication, async () => {
+        VersionControlSDK.dialogs.openDeletePublication(publication, async () => {
             setIsPending(true);
             try {
                 await VersionControlSDK.actions.remove(publication.workflow_id, publication.id);
@@ -79,19 +77,19 @@ function PublicationActions({
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 <DropdownMenu.Item
-                    disabled={publication.is_active || isPending}
-                    onClick={() => void handleActivate()}
+                    disabled={publication.is_deployed || isPending}
+                    onClick={handleDeploy}
                 >
                     <SystemIcons.CircleCheck className="size-4" />
-                    Make active
+                    Deploy this version
                 </DropdownMenu.Item>
-                {publication.is_active &&
+                {publication.is_deployed &&
                     <DropdownMenu.Item
-                        disabled={!publication.is_active || isPending}
-                        onClick={handleDeactivate}
+                        disabled={!publication.is_deployed || isPending}
+                        onClick={handleUndeploy}
                     >
                         <SystemIcons.Power className="size-4" />
-                        Deactivate
+                        Undeploy
                     </DropdownMenu.Item>
                 }
                 <DropdownMenu.Separator />
@@ -121,7 +119,7 @@ function DraftActions() {
                 </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
-                <DropdownMenu.Item onClick={openPublishDialog}>
+                <DropdownMenu.Item onClick={VersionControlSDK.dialogs.openPublish}>
                     <SystemIcons.CloudUpload className="size-4" />
                     Publish current changes
                 </DropdownMenu.Item>

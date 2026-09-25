@@ -4,10 +4,10 @@ import { ResourceService } from './resource.service';
 import { WorkbenchModule } from '../Workbench/workbench.module';
 import { ListingModule } from '../Listing/listing.module';
 import { LibraryModule } from '../Library/library.module';
-import { VersionControlModule } from '../VersionControl/version-control.module';
+import { DeploymentModule } from '../Deployment/deployment.module';
 
 @Module({
-    imports: [WorkbenchModule, ListingModule, LibraryModule, VersionControlModule],
+    imports: [WorkbenchModule, ListingModule, LibraryModule, DeploymentModule],
     controllers: [ResourceController],
     providers: [ResourceService],
 })

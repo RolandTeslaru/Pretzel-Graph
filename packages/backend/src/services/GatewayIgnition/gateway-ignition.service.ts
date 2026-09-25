@@ -4,10 +4,7 @@ import { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Blueprint';
 import { Field } from '@pretzel-graph/shared/domain/Foundations/Field';
 import { System } from '@pretzel-graph/shared/system';
 import type { ZodType } from 'zod';
-import {
-    ActivePublicationChange,
-    ActivePublicationService,
-} from '../ActivePublication/active-publication.service';
+import { DeploymentChange, DeploymentService } from '../Deployment/deployment.service';
 import { ChatService } from '../Chat/chat.service';
 import { ExecutionService } from '../Execution/execution.service';
 import { ExecutionTracker } from '../Execution/execution.tracker';
@@ -18,9 +15,9 @@ import { ShelfService } from '../Shelf/shelf.service';
 const IGNITION_POLICY_FIELD = 'ignition_policy' as Field.Id;
 const POLICY_DEFAULT: Gateway.Socket.IgnitionPolicy = 'every_event';
 
-// A published node subscribed to a connection, with everything an event needs to be handled.
+// A deployed node subscribed to a connection, with everything an event needs to be handled.
 interface Listener {
-    publication:  VersionControl.Publication;
+    deployment:   VersionControl.Publication;
     nodeId:       Workflow.Node.Id;
     connectionId: Gateway.Connection.Id;
     fieldValues:  Record<Field.Id, Field.Value>;
@@ -35,10 +32,10 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     // The run each conversation currently has in flight.
     private readonly activeFingerprints = new Map<Gateway.Socket.ScopeFingerprint, Execution.Id>();
     private unsubscribeFromSettled: (() => void) | null = null;
-    private unsubscribeFromPublications: (() => void) | null = null;
+    private unsubscribeFromDeployments: (() => void) | null = null;
 
     constructor(
-        private readonly activePublications: ActivePublicationService,
+        private readonly deployments: DeploymentService,
         private readonly gateways: GatewayService,
         private readonly shelf: ShelfService,
         private readonly executions: ExecutionService,
@@ -49,53 +46,53 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
     public async onModuleInit(): Promise<void> {
         this.unsubscribeFromSettled = this.executionTracker.onSettled(executionId => this.releaseFingerprint(executionId));
 
-        this.unsubscribeFromPublications = this.activePublications.subscribe(change =>
-            this.handlePublicationChange(change),
+        this.unsubscribeFromDeployments = this.deployments.subscribe(change =>
+            this.handleDeploymentChange(change),
         );
 
-        const publications = this.activePublications.list();
+        const deployments = this.deployments.listCached();
         const results = await Promise.allSettled(
-            publications.map(publication => this.registerPublication(publication)),
+            deployments.map(deployment => this.registerDeployment(deployment)),
         );
 
         for (const [index, result] of results.entries()) {
             if (result.status === 'rejected')
                 this.log.error(
-                    `Failed to register workflow ${publications[index].workflow_id}: ${String(result.reason)}`,
+                    `Failed to register workflow ${deployments[index].workflow_id}: ${String(result.reason)}`,
                 );
         }
     }
 
     public onModuleDestroy(): void {
-        this.unsubscribeFromPublications?.();
-        this.unsubscribeFromPublications = null;
+        this.unsubscribeFromDeployments?.();
+        this.unsubscribeFromDeployments = null;
         this.unsubscribeFromSettled?.();
         this.unsubscribeFromSettled = null;
         this.activeFingerprints.clear();
 
         for (const workflowId of this.subscriptions.keys())
-            this.unregister(workflowId);
+            this.unregisterDeployment(workflowId);
     }
 
-    private async handlePublicationChange(change: ActivePublicationChange): Promise<void> {
+    private async handleDeploymentChange(change: DeploymentChange): Promise<void> {
         if (change.type === 'removed') {
-            this.unregister(change.workflowId);
+            this.unregisterDeployment(change.workflowId);
             return;
         }
 
-        await this.registerPublication(change.publication);
+        await this.registerDeployment(change.deployment);
     }
 
-    private async registerPublication(publication: VersionControl.Publication): Promise<void> {
-        this.clearSubscriptions(publication.workflow_id);
+    private async registerDeployment(deployment: VersionControl.Publication): Promise<void> {
+        this.clearSubscriptions(deployment.workflow_id);
 
         const listeners: Listener[] = [];
 
-        for (const node of Object.values(publication.workflow_data.nodes)) {
+        for (const node of Object.values(deployment.workflow_data.nodes)) {
             if (node.isDisabled)
                 continue;
 
-            const staticValues = publication.workflow_data.staticValues[node.id] ?? {};
+            const staticValues = deployment.workflow_data.staticValues[node.id] ?? {};
             const base = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
             const blueprint = Blueprint.derive(base, staticValues).blueprint;
 
@@ -122,7 +119,7 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
                 throw new Error(`Node ${node.id} gateway listener does not reference a connection`);
 
             listeners.push({
-                publication,
+                deployment,
                 nodeId:       node.id,
                 connectionId: connectionRef.data.id,
                 fieldValues,
@@ -134,21 +131,21 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             this.gateways.connection.subscribe(listener.connectionId, event => {
                 void this.handleSocketEvent(listener, event).catch(error =>
                     this.log.error(
-                        `Gateway event failed for workflow ${publication.workflow_id} node ${listener.nodeId}: ${String(error)}`,
+                        `Gateway event failed for workflow ${deployment.workflow_id} node ${listener.nodeId}: ${String(error)}`,
                     ),
                 );
             }),
         );
 
         if (unsubscribers.length)
-            this.subscriptions.set(publication.workflow_id, unsubscribers);
+            this.subscriptions.set(deployment.workflow_id, unsubscribers);
 
         this.log.info(
-            `Registered ${unsubscribers.length} gateway listeners for workflow ${publication.workflow_id}`,
+            `Registered ${unsubscribers.length} gateway listeners for workflow ${deployment.workflow_id}`,
         );
     }
 
-    private unregister(workflowId: Workflow.Id): void {
+    private unregisterDeployment(workflowId: Workflow.Id): void {
         this.clearSubscriptions(workflowId);
     }
 
@@ -206,8 +203,8 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
         };
 
         const { execution } = await this.executions.runFromService({
-            workflowId: listener.publication.workflow_id,
-            workflowData: listener.publication.workflow_data,
+            workflowId: listener.deployment.workflow_id,
+            workflowData: listener.deployment.workflow_data,
             igniter,
         }, 'gateway');
 
@@ -216,7 +213,7 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             this.activeFingerprints.set(scopeFingreprint, execution.id);
 
         this.log.info(
-            `Triggered workflow=${listener.publication.workflow_id} publication=${listener.publication.id} executionId=${execution.id}`,
+            `Triggered workflow=${listener.deployment.workflow_id} deployment=${listener.deployment.id} executionId=${execution.id}`,
         );
     }
 
@@ -273,9 +270,9 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
             definition:  this.gateways.definition.get(connection.definitionId),
             chatAPI: {
                 append: (externalKey, messages) =>
-                    this.chats.appendByExternalKey(listener.publication.workflow_id, externalKey, messages),
+                    this.chats.appendByExternalKey(listener.deployment.workflow_id, externalKey, messages),
                 findIdByExternalKey: externalKey =>
-                    this.chats.findIdByExternalKey(listener.publication.workflow_id, externalKey),
+                    this.chats.findIdByExternalKey(listener.deployment.workflow_id, externalKey),
             },
             log: message => this.log.info(message),
         };

@@ -1,12 +1,12 @@
-import { VersionControl } from "@pretzel-graph/shared/domain";
+import { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import type { VersionControlSDK } from "./sdk";
 
 export const versionControlSDKSelectors = {
-    getActive: (state) => {
-        return state.currentWorkflowPublications.find(p => p.is_active) ?? null;
+    getDeployed: (state, workflowId) => {
+        return state.deployments[workflowId] ?? null;
     },
 } satisfies VersionControlSDKSelectors;
 
 export type VersionControlSDKSelectors = {
-    getActive: (state: VersionControlSDK.State) => VersionControl.Publication.Meta | null
+    getDeployed: (state: VersionControlSDK.State, workflowId: Workflow.Id) => VersionControl.Publication.Meta | null
 };

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ActivePublicationModule } from '../ActivePublication/active-publication.module';
+import { DeploymentModule } from '../Deployment/deployment.module';
 import { ChatModule } from '../Chat/chat.module';
 import { ExecutionModule } from '../Execution/execution.module';
 import { GatewayModule } from '../Gateway/gateway.module';
@@ -8,7 +8,7 @@ import { GatewayIgnitionService } from './gateway-ignition.service';
 import { GatewayIgniterTestModule } from './IgniterTest/igniter-test.module';
 
 @Module({
-    imports: [ActivePublicationModule, ChatModule, ExecutionModule, GatewayModule, ShelfModule, GatewayIgniterTestModule],
+    imports: [DeploymentModule, ChatModule, ExecutionModule, GatewayModule, ShelfModule, GatewayIgniterTestModule],
     providers: [GatewayIgnitionService],
 })
 export class GatewayIgnitionModule {}

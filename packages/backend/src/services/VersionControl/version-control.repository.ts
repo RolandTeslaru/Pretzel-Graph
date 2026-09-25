@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { Dependency, VersionControl, Workflow } from '@pretzel-graph/shared/domain';
+import { VersionControl, Workflow } from '@pretzel-graph/shared/domain';
 import { DB } from '@/db';
 import { Principal } from '@/domain/Principal';
 import { Repository, Transactional } from '@/db/repository';
 import { ZodReturn } from '../../decorators/database';
 import { sql } from 'kysely';
 
-const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'workflow_meta', 'is_active', 'published_at'] as const;
+export const META_COLUMNS = ['id', 'workflow_id', 'version', 'name', 'description', 'workflow_meta', 'is_deployed', 'published_at'] as const;
 
 
 @Injectable()
@@ -39,7 +39,7 @@ export class VersionControlRepository extends Repository {
                 description:   description ?? null,
                 workflow_meta: Workflow.Meta.Schema.parse(workflow),
                 workflow_data: workflowData,
-                is_active:     false,
+                is_deployed:   false,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
@@ -61,91 +61,6 @@ export class VersionControlRepository extends Repository {
     }
 
     @Transactional('user')
-    @ZodReturn(z.record(Workflow.Id, VersionControl.Publication.Meta.Schema))
-    public async listActiveWorkflows(principal: Principal.User): Promise<Record<Workflow.Id, VersionControl.Publication.Meta>> {
-        const rows = await this.trx
-            .selectFrom('version_control')
-            .select(META_COLUMNS)
-            .where('is_active', '=', true)
-            .orderBy('published_at', 'desc')
-            .execute();
-
-        return Object.fromEntries(
-            rows.map((row) => [row.workflow_id, DB.VersionControl.toMeta(row)]),
-        ) as Record<Workflow.Id, VersionControl.Publication.Meta>;
-    }
-
-    @Transactional('user')
-    @ZodReturn(VersionControl.Publication.Meta.Schema.nullable())
-    public async getActiveByWorkflow(principal: Principal.User, workflowId: Workflow.Id): Promise<VersionControl.Publication.Meta | null> {
-        const row = await this.trx
-            .selectFrom('version_control')
-            .select(META_COLUMNS)
-            .where('workflow_id', '=', workflowId)
-            .where('is_active', '=', true)
-            .executeTakeFirst();
-
-        return row ? DB.VersionControl.toMeta(row) : null;
-    }
-
-    // Full row, workflow_data included.
-    @Transactional('user')
-    @ZodReturn(VersionControl.Publication.Schema.nullable())
-    public async getActivePublicationForWorkflow(principal: Principal.User, workflowId: Workflow.Id): Promise<VersionControl.Publication | null> {
-        const row = await this.trx
-            .selectFrom('version_control')
-            .selectAll()
-            .where('workflow_id', '=', workflowId)
-            .where('is_active', '=', true)
-            .executeTakeFirst();
-
-        return row ? DB.VersionControl.toDomain(row) : null;
-    }
-
-    @Transactional('user')
-    @ZodReturn(z.array(Dependency.Update.Publication.Schema))
-    public async checkUpdates(
-        principal: Principal.User,
-        dependencies: Array<Pick<Dependency.Update.Publication, 'id' | 'publicationId'>>,
-    ): Promise<Dependency.Update.Publication[]> {
-        if (!dependencies.length)
-            return [];
-
-        const snapshotPublicationId = new Map(
-            dependencies.map((dependency) => [
-                dependency.id,
-                dependency.publicationId,
-            ]),
-        );
-        const workflowIds = dependencies.map((dependency) => dependency.id);
-
-        const rows = await this.trx
-            .selectFrom('version_control')
-            .select(['id', 'workflow_id', 'version', 'name', 'description'])
-            .where('workflow_id', 'in', workflowIds)
-            .where('is_active', '=', true)
-            .execute();
-
-        const updates: Dependency.Update.Publication[] = [];
-
-        for (const row of rows) {
-            if (snapshotPublicationId.get(row.workflow_id) === row.id)
-                continue;
-
-            updates.push({
-                kind: "publishedWorkflow",
-                id: row.workflow_id,
-                publicationId: row.id,
-                version: row.version,
-                name: row.name,
-                description: row.description,
-            });
-        }
-
-        return updates;
-    }
-
-    @Transactional('user')
     @ZodReturn(VersionControl.Publication.Schema)
     public async get(principal: Principal.User, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
         const row = await this.trx
@@ -158,54 +73,14 @@ export class VersionControlRepository extends Repository {
     }
 
     @Transactional('user')
-    @ZodReturn(VersionControl.Publication.Schema)
-    public async activate(principal: Principal.User, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
-        const target = await this.trx
-            .selectFrom('version_control')
-            .select('workflow_id')
-            .where('id', '=', publicationId)
-            .executeTakeFirstOrThrow();
-
-        await this.trx
-            .updateTable('version_control')
-            .set({ is_active: false })
-            .where('workflow_id', '=', target.workflow_id)
-            .where('is_active', '=', true)
-            .where('id', '!=', publicationId)
-            .execute();
-
-        const row = await this.trx
-            .updateTable('version_control')
-            .set({ is_active: true })
-            .where('id', '=', publicationId)
-            .returningAll()
-            .executeTakeFirstOrThrow();
-
-        return DB.VersionControl.toDomain(row);
-    }
-
-    @Transactional('user')
-    @ZodReturn(VersionControl.Publication.Schema)
-    public async deactivate(principal: Principal.User, publicationId: VersionControl.Publication.Id): Promise<VersionControl.Publication> {
-        const row = await this.trx
-            .updateTable('version_control')
-            .set({ is_active: false })
-            .where('id', '=', publicationId)
-            .returningAll()
-            .executeTakeFirstOrThrow();
-
-        return DB.VersionControl.toDomain(row);
-    }
-
-    @Transactional('user')
-    @ZodReturn(z.object({ workflowId: Workflow.Id, wasActive: z.boolean() }))
-    public async remove(principal: Principal.User, publicationId: VersionControl.Publication.Id): Promise<{ workflowId: Workflow.Id; wasActive: boolean }> {
+    @ZodReturn(z.object({ workflowId: Workflow.Id, wasDeployed: z.boolean() }))
+    public async remove(principal: Principal.User, publicationId: VersionControl.Publication.Id): Promise<{ workflowId: Workflow.Id; wasDeployed: boolean }> {
         const row = await this.trx
             .deleteFrom('version_control')
             .where('id', '=', publicationId)
-            .returning(['workflow_id', 'is_active'])
+            .returning(['workflow_id', 'is_deployed'])
             .executeTakeFirstOrThrow();
 
-        return { workflowId: row.workflow_id, wasActive: row.is_active };
+        return { workflowId: row.workflow_id, wasDeployed: row.is_deployed };
     }
 }

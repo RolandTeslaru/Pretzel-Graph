@@ -30,45 +30,12 @@ export class VersionControlController {
         return this.service.list(principal, workflowId);
     }
 
-    @Get('active')
-    async listActiveWorkflows(@AuthenticatedUser() principal: Principal.User) {
-        return this.service.listActiveWorkflows(principal);
-    }
-
-    @Get('active/:workflowId')
-    async getActiveByWorkflow(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodParam('workflowId', Workflow.Id) workflowId: Workflow.Id,
-    ) {
-        return this.service.getActiveByWorkflow(principal, workflowId);
-    }
-
     @Get(':publicationId')
     async get(
         @AuthenticatedUser() principal: Principal.User,
         @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
     ) {
         return this.service.get(principal, publicationId);
-    }
-
-    // Scoped to the workflow, not the publication: owning the workflow is the boundary that
-    // matters, and the publication write itself resolves through RLS.
-    @Post(':workflowId/:publicationId/activate')
-    @HttpCode(200)
-    async activate(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
-    ) {
-        return this.service.activate(principal, publicationId);
-    }
-
-    @Post(':workflowId/:publicationId/deactivate')
-    @HttpCode(200)
-    async deactivate(
-        @AuthenticatedUser() principal: Principal.User,
-        @ZodParam('publicationId', VersionControl.Publication.Id) publicationId: VersionControl.Publication.Id,
-    ) {
-        return this.service.deactivate(principal, publicationId);
     }
 
     @Delete(':workflowId/:publicationId')

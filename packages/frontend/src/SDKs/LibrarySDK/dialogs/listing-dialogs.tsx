@@ -91,10 +91,13 @@ export function openListingManagerDialog(workflowId: Workflow.Id) {
 
 const ListingManagerContent = ({ workflowId, dialogId }: { workflowId: Workflow.Id; dialogId: string }) => {
     const listingId = LibrarySDK.useStore(s => s.workflowMetas[workflowId]?.listing_id ?? null)
-    const hasActivePublication = VersionControlSDK.useStore(s => s.selectors.getActive(s) !== null)
+    const [isDeployed] = VersionControlSDK.useWith(
+        (s) => s.selectors.getDeployed(s, workflowId) !== null,
+        [VersionControlSDK.query.deployment(workflowId)],
+    )
 
     const isListed = listingId !== null
-    const reason = !isListed && !hasActivePublication ? 'Publish a version first' : null
+    const reason = !isListed && !isDeployed ? 'Deploy a version first' : null
 
     const handleChange = (next: boolean) => {
         if (next)

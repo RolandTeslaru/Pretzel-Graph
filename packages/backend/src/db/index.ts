@@ -200,7 +200,7 @@ export namespace DB {
             name:          z.string(),
             description:   z.string().nullable(),
             workflow_meta: WorkflowD.Meta.Schema,
-            is_active:     z.boolean().default(false),
+            is_deployed:   z.boolean().default(false),
             published_at:  z.string(),
         });
         export type Row = z.infer<typeof Row>;

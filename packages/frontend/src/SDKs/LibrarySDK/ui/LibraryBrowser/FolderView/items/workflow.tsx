@@ -21,7 +21,7 @@ function iconColor(workflow: Library.WorkflowMeta) {
 
 export function WorkflowItem({ workflow, size = 'default', disabled = false, onClick }: WorkflowCardProps) {
 
-    const hasActiveWorkflow = VersionControlSDK.useStore((s) => Boolean(s.activeWorkflows[workflow.id]))
+    const isDeployed = VersionControlSDK.useStore((s) => Boolean(s.deployments[workflow.id]))
 
     const styles = sizeStyles[size]
 
@@ -55,9 +55,9 @@ export function WorkflowItem({ workflow, size = 'default', disabled = false, onC
                 <div className="min-w-0 flex flex-col gap-1">
 
                     <p className={classNames('font-medium text-center truncate', styles.name)}>{workflow.display_name || 'Untitled'}</p>
-                    {hasActiveWorkflow ? (
+                    {isDeployed ? (
                         <Badge variant="success" className='mx-auto' size={styles.badge}>
-                            Active
+                            Deployed
                         </Badge>
                     ) : null}
                 </div>

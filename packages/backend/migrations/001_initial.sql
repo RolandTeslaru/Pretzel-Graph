@@ -78,7 +78,7 @@ create table version_control (
     -- The workflow row as it looked at publish time, graph excluded.
     workflow_meta jsonb not null,
     workflow_data jsonb not null,
-    is_active     boolean default false not null,
+    is_deployed   boolean default false not null,
     version       smallint default '1'::smallint not null,
     name          text not null,
     description   text,
@@ -223,7 +223,7 @@ alter table only api_keys
 
 create unique index users_username_lower_key on users using btree (lower(username));
 
-create unique index one_active_per_workflow on version_control using btree (workflow_id) where (is_active = true);
+create unique index one_deployed_per_workflow on version_control using btree (workflow_id) where (is_deployed = true);
 
 
 -- ── Triggers ─────────────────────────────────────────────────────────────────
