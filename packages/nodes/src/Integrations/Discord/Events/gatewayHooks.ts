@@ -73,17 +73,20 @@ export const gatewayHooks = defineGatewayHooks<typeof Blueprint>()(Discord.Event
         if (fieldValues.conversation_scope === 'none')
             return null;
 
+        // The socket reports the bot before any event arrives; the row id is only a last resort.
+        const botId = connection.remoteId ?? connection.id;
+
         if (fieldValues.conversation_scope === 'shared')
-            return Discord.createScope(connection.id);
+            return Discord.createScope(botId);
 
         const { channel, user } = eventSubjects(event);
 
         if (!channel)
-            return Discord.createScope(connection.id);
+            return Discord.createScope(botId);
 
         return fieldValues.conversation_scope === 'channel_and_user'
-            ? Discord.createScope(connection.id, channel, user ?? undefined)
-            : Discord.createScope(connection.id, channel);
+            ? Discord.createScope(botId, channel, user ?? undefined)
+            : Discord.createScope(botId, channel);
     },
 
     filter: (event, _scope, { fieldValues }) => {

@@ -93,10 +93,10 @@ export class GatewayIgnitionService implements OnModuleInit, OnModuleDestroy {
                 continue;
 
             const staticValues = deployment.workflow_data.staticValues[node.id] ?? {};
-            const base = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
+            
+            const base      = this.shelf.getBlueprint({ blueprintId: node.blueprintId }).blueprint;
             const blueprint = Blueprint.derive(base, staticValues).blueprint;
-
-            const listener = blueprint.gatewayListener;
+            const listener  = blueprint.gatewayListener;
 
             if (!listener)
                 continue;

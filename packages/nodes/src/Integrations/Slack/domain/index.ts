@@ -14,10 +14,10 @@ export namespace Slack {
     }
 
     // Fingerprints a Slack conversation; each part left out widens it.
-    export const createScope = (connectionId: Gateway.Connection.Id, parts: ScopeParts = {}) =>
+    export const createScope = (botUserId: string, parts: ScopeParts = {}) =>
         Gateway.Socket.createScope(
             PROVIDER,
-            connectionId,
+            botUserId,
             ...(parts.channelId ? ['channel', parts.channelId] : []),
             ...(parts.threadTs ? ['thread', parts.threadTs] : []),
             ...(parts.userId ? ['user', parts.userId] : []),

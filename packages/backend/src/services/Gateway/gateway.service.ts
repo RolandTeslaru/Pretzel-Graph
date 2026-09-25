@@ -341,6 +341,8 @@ export class GatewayService implements OnModuleInit, OnApplicationBootstrap, OnM
             log: System.log.withContext(`Gateway:Socket:${connection.definitionId}`),
             dispatch: (event) => this.dispatch(connection.id, event),
             fail:     (error) => this.fail(connection.id, socket, error),
+            // getOpen hands out this same object, so the hooks read the identity from here.
+            identify: (remoteId) => { connection.remoteId = remoteId },
             credentialsAPI: {
                 getInstance:       (id) => connection.credential && id === connection.credential.id ? connection.credential : undefined,
                 getDecryptedValue: (blob) => Encryption.decryptBlob(blob) as any,
