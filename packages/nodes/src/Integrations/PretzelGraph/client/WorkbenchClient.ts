@@ -1,7 +1,7 @@
 import type { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Execution, Shelf, Workbench, Workflow, type Foundations } from "@pretzel-graph/shared/domain";
 
-import Session = Workbench.API.Session;
+import API = Workbench.API;
 
 const HEARTBEAT_MS = 20_000;
 
@@ -45,7 +45,7 @@ export class WorkbenchClient {
     }
 
     public getMeta() {
-        return Session.getMeta(this.http.raw, this.workflowId);
+        return API.Session.getMeta(this.http.raw, this.workflowId);
     }
 
     // ── Transaction ──────────────────────────────────────────────────────────
@@ -55,12 +55,12 @@ export class WorkbenchClient {
         if (this.inTransaction)
             throw new Error(`A transaction on ${this.workflowId} is already open`);
 
-        const snapshot = await Session.beginTransaction(this.http.raw, this.workflowId);
+        const snapshot = await API.Session.beginTransaction(this.http.raw, this.workflowId);
 
         this.operations.load(this.build(snapshot), "write");
 
         this.#heartbeat = setInterval(() => {
-            void Session.heartbeat(this.http.raw, this.workflowId).catch(error => {
+            void API.Session.heartbeat(this.http.raw, this.workflowId).catch(error => {
                 // The backend closed it without us — the run ended, or the hold was reaped.
                 if (isGone(error))
                     void this.#finish(async () => {});
@@ -86,7 +86,7 @@ export class WorkbenchClient {
 
         const document = this.operations.getDocument();
 
-        await this.#finish(() => Session.commitTransaction(this.http.raw, this.workflowId, { data: document.data }));
+        await this.#finish(() => API.Session.commitTransaction(this.http.raw, this.workflowId, { data: document.data }));
 
         this.operations.load(document, "read");
     }
@@ -96,7 +96,7 @@ export class WorkbenchClient {
         if (!this.inTransaction)
             return;
 
-        await this.#finish(() => Session.abortTransaction(this.http.raw, this.workflowId));
+        await this.#finish(() => API.Session.abortTransaction(this.http.raw, this.workflowId));
         await this.loadSnapshot();
     }
 
@@ -121,7 +121,7 @@ export class WorkbenchClient {
         this.operations.load(this.build(await Workbench.API.Workflow.get(this.http.raw, { workflowId: this.workflowId })), "read");
     }
 
-    private build(snapshot: Session.Begin.Response): Workbench.Document {
+    private build(snapshot: API.Session.Begin.Response): Workbench.Document {
         const { workflow, blueprints, repairs } = snapshot;
         const data     = Workflow.Repair.applyAll(workflow.data, repairs).data;
         const document = Workbench.Document.create(workflow.id, data, blueprints);
