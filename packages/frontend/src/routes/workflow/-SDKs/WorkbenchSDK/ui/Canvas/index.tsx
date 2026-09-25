@@ -1,7 +1,7 @@
 import { ReactFlow, Background, useEdgesState, useNodesState, useUpdateNodeInternals } from '@xyflow/react'
 import React, { memo, useEffect, useMemo, useRef } from 'react'
 import { WorkbenchSDK } from '../../sdk'
-import { createCanvasCallbacks, canvasProps } from './props'
+import { createCanvasCallbacks, canvasProps, GRID_GAP } from './props'
 import { createCycleSelectionDrivers } from '../../utils/createDrivers'
 import { useCanvasKeyBindings } from '../../hooks/useCanvasKeyBindings'
 import { SelectionContextMenu } from './SelectionContextMenu'
@@ -84,7 +84,7 @@ const CanvasRenderer = memo(() => {
             {...canvasCallbacks}
         >
             <NewNodeHandleMeasurer />
-            <Background size={2} gap={40} />
+            <Background size={2} gap={GRID_GAP} />
         </ReactFlow>
     )
 })

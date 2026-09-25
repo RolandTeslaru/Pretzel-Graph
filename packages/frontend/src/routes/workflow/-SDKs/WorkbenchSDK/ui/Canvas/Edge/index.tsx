@@ -1,11 +1,14 @@
 import { memo, useCallback, useRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
-import { type EdgeProps, getBezierPath } from '@xyflow/react';
+import { type EdgeProps, getBezierPath, getSmoothStepPath } from '@xyflow/react';
+import { SettingsSDK } from '@/SDKs/SettingsSDK/sdk';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import CanvasEdgeLabel from './label';
 import { type EdgeColorKey, edgeColor, edgeMarkerId } from './markers';
+
+const CORNER_RADIUS = 32
 
 const CanvasEdge = memo(({
     source,
@@ -21,14 +24,21 @@ const CanvasEdge = memo(({
     id,
     selected,
 }: EdgeProps) => {
-    const [edgePath, labelX, labelY] = getBezierPath({
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
-    });
+    const routingStyle = SettingsSDK.useStore(s => s.edgeStyle);
+
+    // Hybrid keeps edges that run backwards, the ones closing a loop, curved.
+    const wantsAngled = routingStyle === 'angled' || (routingStyle === 'hybrid' && targetX >= sourceX);
+
+    // A drop too short for two full corners kinks, so it stays curved.
+    const fitsCorners = Math.abs(targetY - sourceY) >= CORNER_RADIUS * 2;
+
+    const isAngled = wantsAngled && fitsCorners;
+
+    const pathParams = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition };
+
+    const [edgePath, labelX, labelY] = isAngled
+        ? getSmoothStepPath({ ...pathParams, borderRadius: CORNER_RADIUS, offset: 20 })
+        : getBezierPath(pathParams);
 
     const edgeId = id as Workflow.Edge.Id;
     const sourceNodeId = source as Workflow.Node.Id;

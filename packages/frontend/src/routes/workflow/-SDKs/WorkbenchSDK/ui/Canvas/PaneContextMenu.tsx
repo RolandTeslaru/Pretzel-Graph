@@ -3,9 +3,11 @@ import { WorkbenchSDK } from '../../sdk'
 import { DropdownMenu } from '@pretzel-graph/standard-ui/foundations'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { convertMousePositionToCanvas } from './props'
+import { SettingsSDK } from '@/SDKs/SettingsSDK/sdk'
 
 export const PaneContextMenu: React.FC = memo(() => {
     const menu = WorkbenchSDK.useStore(s => s.paneContextMenu);
+    const edgeStyle = SettingsSDK.useStore(s => s.edgeStyle);
 
     const close = () => WorkbenchSDK.actions.setPaneContextMenu(null);
 
@@ -37,6 +39,16 @@ export const PaneContextMenu: React.FC = memo(() => {
                     <DropdownMenu.Item onSelect={handleImport}>
                         <SystemIcons.Braces /> Import from JSON
                     </DropdownMenu.Item>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Label>Edge style</DropdownMenu.Label>
+                    <DropdownMenu.RadioGroup
+                        value={edgeStyle}
+                        onValueChange={(value) => SettingsSDK.setEdgeStyle(value as SettingsSDK.EdgeStyle)}
+                    >
+                        <DropdownMenu.RadioItem value='curved'>Curved</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value='angled'>Right-angled</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value='hybrid'>Hybrid</DropdownMenu.RadioItem>
+                    </DropdownMenu.RadioGroup>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
         </div>
