@@ -1,12 +1,12 @@
 import { tool } from "@langchain/core/tools";
 import { ToolBudget, type HTTP } from "@pretzel-graph/node-sdk";
-import { Shelf, type Foundations } from "@pretzel-graph/shared/domain";
+import { Foundations, Shelf } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 import { listDerivations, projectToBaseBlueprint } from "./catalogue";
 
 
-const PORT_VARIANTS = ["Message", "MessageList", "Data", "DataList", "Text", "LanguageModel", "Document", "Retriever", "Embeddings", "VectorStore", "Tool"] as const;
+const PORT_VARIANTS = Foundations.Port.Variant.options as [string, ...string[]];
 
 const strings = z.array(z.string()).optional();
 
@@ -21,7 +21,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_query_blueprints",
-            description: "Find blueprints that can be placed on a workflow. Filters combine; omit all to list everything. Each result has the id, name, drawer, capabilities, field ids and port kinds; use shelf_get_blueprint for the full shape. Read-only.",
+            description: "Find blueprints that can be placed on a workflow. Filters combine; omit all to list everything. Each result has the id, name, description, drawer, capabilities, field ids and port kinds; use shelf_get_blueprint for the full shape. Field and port filters match the base shape only, not what a branch adds; see shelf_get_blueprint_derivations for those. Read-only.",
             schema: z.object({
                 ids:             strings.describe("Only these blueprint ids."),
                 displayName:     z.string().optional().describe("Case-insensitive substring of the display name."),
@@ -46,7 +46,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_get_blueprint",
-            description: "Get a blueprint's fields, input ports and output ports. A field marked reconcile changes the node's ports when set. Read-only.",
+            description: "Get a blueprint's base shape: its description, fields, input ports and output ports. A field marked reconcile reshapes the node when set; shelf_get_blueprint_derivations lists what each value adds. Read-only.",
             schema:      z.object({ blueprintId: z.string().describe("Blueprint id, e.g. Core.Text.Input. See shelf_query_blueprints.") }),
         },
     );
@@ -62,7 +62,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_get_blueprint_derivations",
-            description: "List every way a blueprint's node can be reshaped: each path is the field values that select a branch, with the fields and ports that branch adds and any base members it replaces. Set those fields with workbench_set_field to reach a branch. Read-only.",
+            description: "List every way a blueprint's node can be reshaped: each path is the field values that select a branch, with the fields and ports that branch adds and any base members it replaces. A repeating field appears once, as <fieldId>==<count>, with the ports each slot adds. Set those fields with workbench_set_field to reach a branch. Read-only.",
             schema:      z.object({ blueprintId: z.string().describe("Blueprint id. Only derivable blueprints have branches; see shelf_query_blueprints.") }),
         },
     );

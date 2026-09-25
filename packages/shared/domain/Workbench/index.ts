@@ -12,6 +12,7 @@ export namespace Workbench {
     export import Summary  = OperationalMod.Summary
 
     export const OperationalClient = OperationalMod.OperationalClient
+    export const ID_PATTERN        = OperationalMod.ID_PATTERN
     export type  OperationalClient = OperationalMod.OperationalClient
 
     export type Operation         = OperationalMod.Operation
@@ -20,4 +21,6 @@ export namespace Workbench {
     export type CreateNodeRequest = OperationalMod.CreateNodeRequest
     export type InputPortSpec     = OperationalMod.InputPortSpec
     export type GlobalFieldSpec   = OperationalMod.GlobalFieldSpec
+    export type GlobalFieldPatch  = OperationalMod.GlobalFieldPatch
+    export type BatchResult       = OperationalMod.BatchResult
 }

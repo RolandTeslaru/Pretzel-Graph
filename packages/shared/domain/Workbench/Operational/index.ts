@@ -9,6 +9,11 @@ import { GlobalFieldOperations } from "./globalField"
 
 export type Mode = "read" | "write"
 
+export interface BatchResult {
+    results: unknown[]
+    failed?: { index: number, op: Operation["op"], message: string }
+}
+
 /**
  * What can be asked of a workflow document, in the terms a caller uses: a group per target, a
  * method per operation, over the document loaded here. Loaded for reading, only the reads
@@ -71,8 +76,8 @@ export class OperationalClient {
         this.onOperation(edit)
     }
 
-    /** In order; stops at the first failure, what landed before it stays applied. */
-    public async batch(operations: Operation[]): Promise<{ results: unknown[] }> {
+    /** In order; stops at the first failure, what landed before it stays applied and is returned. */
+    public async batch(operations: Operation[]): Promise<BatchResult> {
         const results: unknown[] = []
 
         for (const [index, op] of operations.entries()) {
@@ -82,7 +87,7 @@ export class OperationalClient {
             catch (error) {
                 const message = error instanceof Error ? error.message : String(error)
 
-                throw new Error(`Operation ${index} (${op.op}) failed: ${message}`)
+                return { results, failed: { index, op: op.op, message } }
             }
         }
 
@@ -108,4 +113,5 @@ export class OperationalClient {
 }
 
 export { Summary } from "./summary"
-export type { BlueprintResolver, OnOperation, Operation, CreateNodeRequest, InputPortSpec, GlobalFieldSpec, GlobalFieldVariant, Position, Connection } from "./types"
+export { ID_PATTERN } from "./types"
+export type { BlueprintResolver, OnOperation, Operation, CreateNodeRequest, InputPortSpec, GlobalFieldSpec, GlobalFieldPatch, GlobalFieldVariant, Position, Connection } from "./types"

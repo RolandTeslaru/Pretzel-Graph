@@ -3,7 +3,7 @@ import { defineBlueprint, defineTool, defineField, defineOutput } from "@pretzel
 export const Blueprint = defineBlueprint({
     id: "Integrations.PretzelGraph.WorkbenchSDK",
     displayName: "Workbench SDK",
-    description: "Reads and edits another workflow in this workspace — its nodes, edges, and field values.",
+    description: "Reads and edits a workflow in this workspace — its nodes, edges, and field values.",
     icon: "PretzelGraphAppIcon",
     accent: "utility",
     toolCompatible: true,
@@ -62,7 +62,7 @@ export const Blueprint = defineBlueprint({
                 defineField.Integer("positionY", "Y", { initialValue: 0 }),
                 defineField.Json("staticValues", "Field values", {
                     initialValue: {},
-                    tooltip: "Initial field values, keyed by field id.",
+                    tooltip: "Initial values, keyed by field id or input port id. Fields that reshape the node are set after it is created.",
                 }),
             ],
         },
@@ -116,7 +116,7 @@ export const Blueprint = defineBlueprint({
         fields: [
             defineField.WorkflowIdSelector("workflowId", "Workflow", {
                 required: true,
-                tooltip: "The workflow the tools read and edit. Edits are saved when the run completes.",
+                tooltip: "The workflow the tools read and edit. Edits are saved if the run completes and discarded if it fails or is stopped.",
             }),
         ],
         inputs:  [],

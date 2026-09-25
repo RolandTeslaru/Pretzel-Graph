@@ -2,7 +2,7 @@ import { Port } from "../../Foundations/Port"
 import type { Workflow } from "../../Workflow"
 import { Document } from "../Document"
 import { Summary } from "./summary"
-import type { CreateNodeRequest, InputPortSpec, Position } from "./types"
+import { ID_PATTERN, type CreateNodeRequest, type InputPortSpec, type Position } from "./types"
 import type { OperationalClient } from "."
 
 const { withCyclesRecompute } = Document
@@ -115,6 +115,9 @@ export class NodeOperations {
             if (Port.isUnresolvedLike(spec.variant))
                 throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
 
+            if (!ID_PATTERN.test(spec.id))
+                throw new Error(`Port id ${spec.id} may only contain letters, digits and underscores`)
+
             if (d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
                 throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)
 
@@ -161,6 +164,9 @@ export class NodeOperations {
 
                 if (Port.isUnresolvedLike(spec.variant))
                     throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
+
+                if (!ID_PATTERN.test(spec.id))
+                    throw new Error(`Port id ${spec.id} may only contain letters, digits and underscores`)
 
                 if (spec.id !== portId && d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
                     throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)

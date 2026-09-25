@@ -1,5 +1,5 @@
 import z from "zod"
-import { type AxiosInstance } from "axios"
+import { type AxiosInstance, type AxiosRequestConfig } from "axios"
 import { Workflow } from "../Workflow"
 import { supabaseTimestamp } from "../zod-utils"
 import { Chat } from "../Chat"
@@ -218,8 +218,9 @@ export namespace Execution {
             export type Response = z.infer<typeof Response>
         }
 
-        export async function run(api: AxiosInstance, workflowId: Workflow.Id, req: Run.Request): Promise<Run.Response> {
-            const { data } = await api.post<Run.Response>(`/api/execution/${workflowId}/run`, req)
+        export async function run(api: AxiosInstance, workflowId: Workflow.Id, req: Run.Request, config: AxiosRequestConfig = {}): Promise<Run.Response> {
+            const timeout = req.await ? (req.await.timeoutMs ?? Wait.DEFAULT_TIMEOUT_MS) + 5_000 : config.timeout
+            const { data } = await api.post<Run.Response>(`/api/execution/${workflowId}/run`, req, { ...config, timeout })
             return data
         }
 

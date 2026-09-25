@@ -1,17 +1,17 @@
 import { tool } from "@langchain/core/tools";
 import { ToolBudget } from "@pretzel-graph/node-sdk";
-import type { Foundations, Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 import type { WorkbenchClient } from "../client";
 
 
-const nodeId      = z.string().describe("Node id, as returned by get_workflow or create_node.");
+const nodeId      = z.string().describe("Node id, as returned by workbench_query_nodes or workbench_create_node.");
 const blueprintId = z.string().describe("Blueprint id, e.g. Core.Text.Input. The Shelf tools list and describe them.");
 const position    = z.object({ x: z.number(), y: z.number() }).optional()
     .describe("Canvas position. Omit to place the node to the right of the rightmost one.");
 const staticValues = z.record(z.unknown()).optional()
-    .describe("Initial values for the blueprint's base fields, keyed by field id. Fields marked reconcile are rejected here; set them with workbench_set_field after creating.");
+    .describe("Initial values keyed by base field id, or by input port id to set that port's value. Unknown keys are rejected, and so are fields marked reconcile; set those with workbench_set_field after creating.");
 
 const edgeEndpoints = {
     sourceNodeId: z.string(),
@@ -30,12 +30,18 @@ const globalFieldSpec = {
     max:          z.number().optional().describe("Integer and Float only."),
     multiline:    z.boolean().optional().describe("String only."),
 };
-const globalFieldId = z.string().describe("Global field id: letters, digits, underscores.");
+const globalFieldPatch = z.object(globalFieldSpec).partial().extend({
+    tooltip: z.string().nullable().optional().describe("Null clears it."),
+    min:     z.number().nullable().optional().describe("Integer and Float only. Null clears it."),
+    max:     z.number().nullable().optional().describe("Integer and Float only. Null clears it."),
+});
+const identifier    = z.string().regex(Workbench.ID_PATTERN, "Letters, digits and underscores only.");
+const globalFieldId = identifier.describe("Global field id: letters, digits, underscores.");
 
-const PORT_VARIANTS = ["Message", "MessageList", "Text", "Data", "DataList", "Document", "LanguageModel", "Embeddings", "VectorStore", "Retriever", "Tool", "ToolList", "Skill", "SkillList", "DataFrame"] as const;
+const PORT_VARIANTS = Foundations.Port.Variant.options.filter(v => !Foundations.Port.isUnresolvedLike(v)) as [string, ...string[]];
 
 const inputPort = z.object({
-    id:          z.string().describe("Port id: letters, digits, underscores. Must be new on the node."),
+    id:          identifier.describe("Port id: letters, digits, underscores. Unique on the node."),
     displayName: z.string(),
     variant:     z.enum(PORT_VARIANTS).describe("The kind of data the port accepts."),
     required:    z.boolean().optional().describe("Whether a connection must be present to run."),
@@ -47,15 +53,24 @@ const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.move"),   nodeId, position: z.object({ x: z.number(), y: z.number() }) }),
     z.object({ op: z.literal("node.addInputPort"),    nodeId, port: inputPort }),
     z.object({ op: z.literal("node.removeInputPort"), nodeId, portId: z.string() }),
-    z.object({ op: z.literal("edge.create"), source: z.string(), sourceHandle: z.string(), target: z.string(), targetHandle: z.string() }),
+    z.object({ op: z.literal("node.updateInputPort"), nodeId, portId: z.string(), port: inputPort }),
+    z.object({ op: z.literal("edge.create"), ...edgeEndpoints }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
     z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
     z.object({ op: z.literal("globalField.add"),    id: globalFieldId, ...globalFieldSpec }),
-    z.object({ op: z.literal("globalField.update"), fieldId: globalFieldId, patch: z.object(globalFieldSpec).partial() }),
+    z.object({ op: z.literal("globalField.update"), fieldId: globalFieldId, patch: globalFieldPatch }),
     z.object({ op: z.literal("globalField.remove"), fieldId: globalFieldId }),
 ]);
 
+const toConnection = (edge: z.infer<z.ZodObject<typeof edgeEndpoints>>): Workbench.Document.DriverConnection => ({
+    source:       edge.sourceNodeId as Workflow.Node.Id,
+    sourceHandle: edge.sourcePortId as Foundations.Port.Output.Id,
+    target:       edge.targetNodeId as Workflow.Node.Id,
+    targetHandle: edge.targetPortId as Foundations.Port.Input.Id,
+});
 
+const READ_NOTE = "Reads show the saved graph plus this run's edits. The first edit in a run reloads the saved graph, so ids read before it can be gone if the workflow was saved elsewhere in between.";
+const LOCK_NOTE = "The first edit in a run holds the workflow until workbench_commit, workbench_discard or the end of the run; no one else can save it meanwhile, and the edit fails if someone else already holds it.";
 
 
 export function buildTools(client: WorkbenchClient) {
@@ -77,7 +92,7 @@ export function buildTools(client: WorkbenchClient) {
         },
         {
             name:        "workbench_query_nodes",
-            description: "Find nodes. Filters combine; omit all to list every node. Returns id, blueprint, display name, disabled flag and whether the node has validation issues; use get_node for detail. Read-only.",
+            description: `Find nodes. Filters combine; omit all to list every node. Returns id, blueprint, display name, disabled flag and whether the node has validation issues; use workbench_get_node for detail. Read-only. ${READ_NOTE}`,
             schema: z.object({
                 ids:          nodeIds.describe("Only these node ids."),
                 blueprintIds: z.array(z.string()).optional().describe("Only nodes of these blueprints."),
@@ -133,7 +148,7 @@ export function buildTools(client: WorkbenchClient) {
         async ({ nodeId }) => ToolBudget.value(client.operations.node.get(nodeId as Workflow.Node.Id)),
         {
             name:        "workbench_get_node",
-            description: "Get one node: its blueprint, fields, ports, current field values, the edges on each port, and validation issues. Read-only.",
+            description: `Get one node: its blueprint, fields, ports, current field values and validation issues, and for each port the edges on it with the node and port at their other end. Read-only. ${READ_NOTE}`,
             schema:      z.object({ nodeId }),
         },
     );
@@ -149,7 +164,7 @@ export function buildTools(client: WorkbenchClient) {
         ),
         {
             name:        "workbench_create_node",
-            description: "Add a node on its base branch. Returns its id and any validation issues. Reshape it afterwards with workbench_set_field on a reconcile field.",
+            description: `Add a node on its base branch. Returns its id and any validation issues. Reshape it afterwards with workbench_set_field on a reconcile field. ${LOCK_NOTE}`,
             schema:      z.object({ blueprintId, position, staticValues }),
         },
     );
@@ -201,18 +216,23 @@ export function buildTools(client: WorkbenchClient) {
     );
 
 
-    const createEdge = tool(
-        async ({ sourceNodeId, sourcePortId, targetNodeId, targetPortId }) => ToolBudget.value(
-            await write(() => client.operations.edge.create({
-                source:       sourceNodeId as Workflow.Node.Id,
-                sourceHandle: sourcePortId as Foundations.Port.Output.Id,
-                target:       targetNodeId as Workflow.Node.Id,
-                targetHandle: targetPortId as Foundations.Port.Input.Id,
-            })),
+    const updateInputPort = tool(
+        async ({ nodeId, portId, port }) => ToolBudget.value(
+            await write(() => client.operations.node.input.updatePort(nodeId as Workflow.Node.Id, portId as Foundations.Port.Input.Id, port as never)),
         ),
         {
+            name:        "workbench_update_input_port",
+            description: "Replace an added input port's id, name, kind or required flag. Blueprint ports cannot be edited.",
+            schema:      z.object({ nodeId, portId: z.string().describe("The added port to change."), port: inputPort }),
+        },
+    );
+
+
+    const createEdge = tool(
+        async (edge) => ToolBudget.value(await write(() => client.operations.edge.create(toConnection(edge)))),
+        {
             name:        "workbench_create_edge",
-            description: "Connect an output port of one node to an input port of another. Fails if the port types do not match.",
+            description: "Connect an output port of one node to an input port of another. Fails, with the reason, wherever the editor would refuse the same connection, such as mismatched port kinds.",
             schema:      z.object(edgeEndpoints),
         },
     );
@@ -234,7 +254,7 @@ export function buildTools(client: WorkbenchClient) {
         ),
         {
             name:        "workbench_set_field",
-            description: "Set a field value on a node. If the field reshapes the node, the result lists the ports added and removed and the edges dropped.",
+            description: `Set a field value on a node. If the field reshapes the node, the result lists the ports added and removed and the edges dropped. ${LOCK_NOTE}`,
             schema:      z.object({ nodeId, fieldId: z.string(), value: z.unknown() }),
         },
     );
@@ -268,8 +288,8 @@ export function buildTools(client: WorkbenchClient) {
         ),
         {
             name:        "workbench_update_global_field",
-            description: "Change a global field's name, kind, default or limits. Only the given properties change.",
-            schema:      z.object({ fieldId: globalFieldId, patch: z.object(globalFieldSpec).partial() }),
+            description: "Change a global field's name, kind, default or limits. Only the given properties change; null clears tooltip, min or max. Changing the kind resets the default, limits and multiline to the new kind's unless the patch sets them.",
+            schema:      z.object({ fieldId: globalFieldId, patch: globalFieldPatch }),
         },
     );
 
@@ -285,10 +305,14 @@ export function buildTools(client: WorkbenchClient) {
 
 
     const apply = tool(
-        async ({ operations }) => ToolBudget.value(await write(() => client.operations.batch(operations as never))),
+        async ({ operations }) => {
+            const mapped = operations.map(op => op.op === "edge.create" ? { op: op.op, ...toConnection(op) } : op);
+
+            return ToolBudget.value(await write(() => client.operations.batch(mapped as Workbench.Operation[])));
+        },
         {
             name:        "workbench_apply",
-            description: "Apply several operations in order in one call. Stops at the first failure; earlier operations stay applied.",
+            description: `Apply several operations in order in one call. Stops at the first failure; earlier operations stay applied and their results are returned, with the failure under failed. ${LOCK_NOTE}`,
             schema:      z.object({ operations: z.array(operation).min(1) }),
         },
     );
@@ -304,7 +328,7 @@ export function buildTools(client: WorkbenchClient) {
         },
         {
             name:        "workbench_commit",
-            description: "Save every change made so far. Changes are also saved automatically when the run completes; call this to save earlier.",
+            description: "Save every change made so far and release the workflow. Unsaved changes are saved automatically if the run completes and discarded if it fails or is stopped; call this to make them permanent now. The next edit holds the workflow again.",
             schema:      z.object({}),
         },
     );
@@ -320,7 +344,7 @@ export function buildTools(client: WorkbenchClient) {
         },
         {
             name:        "workbench_discard",
-            description: "Throw away every unsaved change since the last save.",
+            description: "Throw away every change since the last save and release the workflow. Reads go back to the saved graph.",
             schema:      z.object({}),
         },
     );
@@ -328,7 +352,7 @@ export function buildTools(client: WorkbenchClient) {
 
     return [
         getMeta, queryNodes, queryEdges, getNode, getLayout,
-        createNode, deleteNode, moveNode, addInputPort, removeInputPort, createEdge, deleteEdge, setField,
+        createNode, deleteNode, moveNode, addInputPort, updateInputPort, removeInputPort, createEdge, deleteEdge, setField,
         listGlobalFields, addGlobalField, updateGlobalField, removeGlobalField,
         apply, commit, discard,
     ];

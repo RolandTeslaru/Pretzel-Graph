@@ -1,5 +1,5 @@
 import type { Foundations } from "../../Foundations"
-import type { GlobalFieldSpec, GlobalFieldVariant } from "./types"
+import { ID_PATTERN, type GlobalFieldPatch, type GlobalFieldSpec, type GlobalFieldVariant } from "./types"
 import type { OperationalClient } from "."
 
 // Only the scalar variants the settings panel offers; a spec is what a caller writes, a field
@@ -23,6 +23,10 @@ const createGlobalField = (spec: GlobalFieldSpec): Foundations.Field => {
     }
 }
 
+// Null clears, undefined keeps the current value.
+const patched = <T>(value: T | null | undefined, current: T | undefined): T | undefined =>
+    value === null ? undefined : value ?? current
+
 // Global fields: the workflow's own inputs, shown when it runs as a sub-workflow node and read
 // inside it as $globalFields.
 export class GlobalFieldOperations {
@@ -36,6 +40,9 @@ export class GlobalFieldOperations {
     public add(spec: GlobalFieldSpec): { field: Foundations.Field } {
         const d = this.client.getDocument()
 
+        if (!ID_PATTERN.test(spec.id))
+            throw new Error(`Global field id ${spec.id} may only contain letters, digits and underscores`)
+
         if (d.data.globalFields.some(f => f.id === spec.id))
             throw new Error(`Global field ${spec.id} already exists`)
 
@@ -47,24 +54,27 @@ export class GlobalFieldOperations {
         return { field }
     }
 
-    public update(fieldId: Foundations.Field.Id, patch: Partial<Omit<GlobalFieldSpec, "id">>): { field: Foundations.Field } {
+    public update(fieldId: Foundations.Field.Id, patch: GlobalFieldPatch): { field: Foundations.Field } {
         const d       = this.client.getDocument()
         const current = d.data.globalFields.find(f => f.id === fieldId)
 
         if (!current)
             throw new Error(`Global field ${fieldId} not found`)
 
-        // Rebuilt from the merged spec so a variant change starts from that variant's defaults.
+        const variant = patch.variant ?? current.variant as GlobalFieldVariant
+        const kept    = variant === current.variant ? current : null
+
+        // A kind change keeps only name, required and tooltip; the rest start from the new kind's defaults.
         const field = createGlobalField({
             id:           fieldId,
-            displayName:  patch.displayName  ?? current.displayName,
-            variant:      patch.variant      ?? current.variant as GlobalFieldVariant,
-            required:     patch.required     ?? current.required,
-            tooltip:      patch.tooltip      ?? current.tooltip,
-            initialValue: patch.initialValue ?? ("initialValue" in current ? current.initialValue as GlobalFieldSpec["initialValue"] : undefined),
-            min:          patch.min          ?? ("min"       in current ? current.min       : undefined),
-            max:          patch.max          ?? ("max"       in current ? current.max       : undefined),
-            multiline:    patch.multiline    ?? ("multiline" in current ? current.multiline : undefined),
+            displayName:  patch.displayName ?? current.displayName,
+            variant,
+            required:     patch.required ?? current.required,
+            tooltip:      patched(patch.tooltip, current.tooltip),
+            initialValue: patch.initialValue ?? (kept && "initialValue" in kept ? kept.initialValue as GlobalFieldSpec["initialValue"] : undefined),
+            min:          patched(patch.min, kept && "min" in kept ? kept.min : undefined),
+            max:          patched(patch.max, kept && "max" in kept ? kept.max : undefined),
+            multiline:    patch.multiline ?? (kept && "multiline" in kept ? kept.multiline : undefined),
         })
 
         d.reducers.workflow.setGlobalFields(d, d.data.globalFields.map(f => f.id === fieldId ? field : f))

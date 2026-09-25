@@ -2,7 +2,7 @@ import { RuntimeNode, type InferIncoming } from "@pretzel-graph/node-sdk";
 import { Execution, Workflow, type Chat } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
-import { buildTools } from "./tools";
+import { buildTools, NO_RETRY } from "./tools";
 
 
 export class Node extends RuntimeNode<typeof Blueprint> {
@@ -23,7 +23,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             const wait        = "awaitTimeoutSeconds" in f ? { timeoutMs: f.awaitTimeoutSeconds * 1_000 } : undefined;
 
             if ("workflowId" in f)
-                return { result: await Execution.API.run(api.raw, f.workflowId as Workflow.Id, { executionId, igniter, await: wait }) };
+                return { result: await Execution.API.run(api.raw, f.workflowId as Workflow.Id, { executionId, igniter, await: wait }, NO_RETRY) };
 
             const slots = this.incomingFor(f, incoming);
 
@@ -32,7 +32,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
             const { id, data } = Workflow.Schema.pick({ id: true, data: true }).parse(slots.workflow);
 
-            return { result: await Execution.API.run(api.raw, id, { workflowData: data, executionId, igniter, await: wait }) };
+            return { result: await Execution.API.run(api.raw, id, { workflowData: data, executionId, igniter, await: wait }, NO_RETRY) };
         }
 
         // Every non-run action declares executionId; the wait arm is narrowed apart from them.

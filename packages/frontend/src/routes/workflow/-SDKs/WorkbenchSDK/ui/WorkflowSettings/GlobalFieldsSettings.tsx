@@ -249,7 +249,7 @@ function createUniqueFieldId(fields: readonly GlobalField[]): Foundations.Field.
 }
 
 function toFieldId(value: string): Foundations.Field.Id {
-    return value.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_:-]/g, '') as Foundations.Field.Id
+    return value.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') as Foundations.Field.Id
 }
 
 function isGlobalField(field: Foundations.Field): field is GlobalField {

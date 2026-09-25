@@ -27,7 +27,7 @@ export type Operation =
     | { op: "edge.delete";          edgeId: Workflow.Edge.Id }
     | { op: "field.set";            nodeId: Workflow.Node.Id; fieldId: Foundations.Field.Id; value: unknown }
     | ({ op: "globalField.add" }      & GlobalFieldSpec)
-    | { op: "globalField.update";   fieldId: Foundations.Field.Id; patch: Partial<Omit<GlobalFieldSpec, "id">> }
+    | { op: "globalField.update";   fieldId: Foundations.Field.Id; patch: GlobalFieldPatch }
     | { op: "globalField.remove";   fieldId: Foundations.Field.Id }
 
 /** A hand-added input port: a concrete type, never an unresolved one, since it belongs to no group. */
@@ -37,6 +37,9 @@ export interface InputPortSpec {
     variant:     Foundations.Port.Variant
     required?:   boolean
 }
+
+/** Ids a caller writes for ports and global fields, so expressions can reference them. */
+export const ID_PATTERN = /^[A-Za-z0-9_]+$/
 
 export type GlobalFieldVariant = "String" | "Boolean" | "Integer" | "Float"
 
@@ -50,4 +53,11 @@ export interface GlobalFieldSpec {
     min?:          number
     max?:          number
     multiline?:    boolean
+}
+
+/** Omitted keeps the current value; null clears it. */
+export type GlobalFieldPatch = Partial<Omit<GlobalFieldSpec, "id" | "tooltip" | "min" | "max">> & {
+    tooltip?: string | null
+    min?:     number | null
+    max?:     number | null
 }
