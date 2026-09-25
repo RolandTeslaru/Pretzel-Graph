@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useEffect } from 'react';
+import { memo, useCallback, useRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { WorkbenchSDK } from '../../../sdk';
@@ -9,6 +9,7 @@ import { type EdgeColorKey, edgeColor, edgeMarkerId } from './markers';
 
 const CanvasEdge = memo(({
     source,
+    target,
     sourceHandleId,
     sourceX,
     sourceY,
@@ -32,6 +33,21 @@ const CanvasEdge = memo(({
     const edgeId = id as Workflow.Edge.Id;
     const sourceNodeId = source as Workflow.Node.Id;
     const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
+
+    // An end still flying in has its handles measured where it started, so the edge would draw
+    // to the wrong point for the whole animation. Wait for both ends to land instead.
+    const [settleDelay] = useState(() =>
+        WorkbenchSDK.animations.settleDelay([sourceNodeId, target as Workflow.Node.Id]));
+    const [isHeld, setIsHeld] = useState(settleDelay > 0);
+
+    useEffect(() => {
+        if (!isHeld)
+            return;
+
+        const timer = window.setTimeout(() => setIsHeld(false), settleDelay);
+
+        return () => window.clearTimeout(timer);
+    }, [isHeld, settleDelay]);
 
     // Compositor-only dot: bake the bezier into transform keyframes so the GPU moves a
     // once-rasterized quad each frame (no repaint). Rebuilds only when the path changes.
@@ -75,7 +91,7 @@ const CanvasEdge = memo(({
         WorkbenchSDK.actions.edge.remove(edgeId);
     }, [edgeId]);
 
-    if (!output) {
+    if (!output || isHeld) {
         return null;
     }
 

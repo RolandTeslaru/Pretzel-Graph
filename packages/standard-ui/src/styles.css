@@ -324,6 +324,15 @@ code {
   --font-chivo: 'Chivo', system-ui, sans-serif;
 }
 
+/* Where a node a run created flies in from. Picked per node so a burst does not arrive in
+   lockstep; the node-arrive keyframe reads these and falls back if no variant is set. */
+.arrive-from-1 { --arrive-x: -180px; --arrive-y: 200px; }
+.arrive-from-2 { --arrive-x:  170px; --arrive-y: 240px; }
+.arrive-from-3 { --arrive-x: -140px; --arrive-y: 270px; }
+.arrive-from-4 { --arrive-x:  210px; --arrive-y: 190px; }
+.arrive-from-5 { --arrive-x: -230px; --arrive-y: 230px; }
+.arrive-from-6 { --arrive-x:  130px; --arrive-y: 260px; }
+
 /* Braille pulse spinner */
 .braille-pulse {
   font-family: var(--font-mono);

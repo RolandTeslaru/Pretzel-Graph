@@ -29,6 +29,29 @@ const preset: Config = {
                     from: { transform: "translate(-50%, -50%) rotate(0deg)" },
                     to: { transform: "translate(-50%, -50%) rotate(360deg)" },
                 },
+                // A node set onto the canvas by a run: it pops in where the run reached for it,
+                // travels across, then settles down onto its place. 2s matches ARRIVE_MS.
+                "node-arrive": {
+                    "0%": {
+                        opacity: "0",
+                        transform: "translate(var(--arrive-x, -180px), var(--arrive-y, 200px)) scale(0)",
+                        animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                    },
+                    "20%": {
+                        opacity: "1",
+                        transform: "translate(var(--arrive-x, -180px), var(--arrive-y, 200px)) scale(1)",
+                        animationTimingFunction: "cubic-bezier(0.65, 0, 0.35, 1)",
+                    },
+                    "60%": {
+                        opacity: "1",
+                        transform: "translate(0px, var(--arrive-y, 200px)) scale(1)",
+                        animationTimingFunction: "cubic-bezier(0.65, 0, 0.35, 1)",
+                    },
+                    "100%": {
+                        opacity: "1",
+                        transform: "translate(0px, 0px) scale(1)",
+                    },
+                },
                 neonPulse: {
                     '0%, 100%': {
                         boxShadow: '0 0 0 3px var(--node-ring), 0 0 8px currentColor, 0 0 16px currentColor'
@@ -110,6 +133,7 @@ const preset: Config = {
                 "ping-fixed-50": "ping-fixed-50 700ms linear infinite",
                 "ping-fixed-10": "ping-fixed-10 700ms linear infinite",
                 "spin-slow": "spin-slow 1.5s linear infinite",
+                "node-arrive": "node-arrive 2s linear",
                 "sonar-sweep": "spin-slow calc(var(--sonar-duration, 4) * 1s) linear infinite",
             },
             colors: {

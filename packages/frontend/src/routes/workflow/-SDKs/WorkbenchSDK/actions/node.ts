@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { api } from "@/SDKs/ApiInterceptorSDK";
 import { extractExposedPorts } from "@pretzel-graph/shared/subworkflow";
 import { loadResource } from "./dependency";
+import { ANIMATE_EVERY_CREATE } from "../animations";
 
 // Policy, not document state: attach a credential automatically only when exactly one vault
 // instance matches the template. Optional templates are opt-in and never auto-attached.
@@ -106,6 +107,9 @@ export function createNodeActions(sdk: WorkbenchSDKImpl) {
             const nodeId = createdId;
             if (!nodeId)
                 return;
+
+            if (ANIMATE_EVERY_CREATE)
+                sdk.animations.schedule(nodeId);
 
             // A pre-wired node lands with its dependency pointer set; fetch the snapshot if the workflow
             // lacks it. On failure, remove the node — it can't function without its dependency data.

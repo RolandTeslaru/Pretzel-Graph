@@ -44,6 +44,8 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
 
+  const animationClassName = WorkbenchSDK.useNodeAnimation(hyNode.id)
+
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled
 
@@ -67,17 +69,19 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
     <>
       <NodeCustomToolbar hyNode={hyNode}/>
 
-      <NodeOrnaments hyNode={hyNode} canAddInputPort={canAddInputPort} />
-
       <div className={cn(
-          "animate-in fade-in-0 duration-200 ease-out transition-colors",
+          "transition-colors",
           "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
           isMinimized ? "" : "w-[250px]",
           isDisabled ? "opacity-50" : "opacity-100",
+          // Last, so twMerge lets a pending node's opacity-0 beat the line above.
+          animationClassName,
         )}
         style={{ backgroundColor, borderColor, borderWidth: 2 }}
         id={hyNode.id}
       >
+        <NodeOrnaments hyNode={hyNode} canAddInputPort={canAddInputPort} />
+
         <NodeHeader executionStatus={executionStatus} hyNode={hyNode}/>
 
         {!isMinimized &&

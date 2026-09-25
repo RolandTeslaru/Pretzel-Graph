@@ -15,6 +15,7 @@ import { editorReducers } from "./reducers";
 import { handleWorkbenchEvent } from "./handle-events";
 import { AsyncEventQueueHandler } from "@/SDKs/Realtime/EventQueue";
 import { createDrivers, reconcileNodeDrivers, reconcileEdgeDrivers } from "./utils/createDrivers";
+import { AnimationScheduler, animationClass, createAnimationStore, type AnimationState } from "./animations";
 import { sameUndoableData } from "./utils/temporal";
 import { Document, type NodeUI } from "@pretzel-graph/shared/domain/Workbench/Document";
 import type { Port } from "@pretzel-graph/shared/domain/Foundations/Port";
@@ -80,6 +81,11 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         shallow
     )
 
+    /** Which nodes are mid-entrance; driven by the scheduler, read through useNodeAnimation. */
+    public readonly useAnimations: BaseSDK.Store<AnimationState> = createAnimationStore()
+
+    public readonly animations = new AnimationScheduler(this.useAnimations)
+
     // The document-side twins of BaseSDK's `state` / `subscribe` / `setState`.
     public get document()          { return this.useDocument.getState() }
     public get subscribeDocument() { return this.useDocument.subscribe }
@@ -96,6 +102,12 @@ export class WorkbenchSDKImpl extends BaseSDK<WorkbenchSDK.State> {
         return LibrarySDK.state.workflowMetas[this.document.workflowId]?.locked ?? false;
     }
 
+
+
+    /** The animation class a node's body wears: its mount fade, or the entrance a run's create earns. */
+    public useNodeAnimation(nodeId: Workflow.Node.Id): string {
+        return this.useAnimations(s => animationClass(s.nodes[nodeId], nodeId));
+    }
 
 
     public useNode(nodeId: Workflow.Node.Id | null) {
