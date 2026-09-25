@@ -72,8 +72,8 @@ const Content: AlertDialogComponents.Content = ({
                data-[state=open]:zoom-in-70 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2
                data-[state=open]:slide-in-from-top-[48%]
                `,
-              'rounded-2xl border border-border shadow-2xl shadow-neutral-500/60 dark:shadow-black/60',
-              blockTransparency ? 'bg-card! backdrop-blur-none!' : 'bg-card/80 dark:bg-card/80 backdrop-blur-sm',
+              'surface-elevated rounded-2xl border shadow-2xl shadow-neutral-500/60 dark:shadow-black/60',
+              blockTransparency && '[--material-opacity:100%] backdrop-blur-none!',
             ),
         className,
       )}
@@ -131,7 +131,7 @@ const Action: AlertDialogComponents.Action = ({
 
 const Cancel: AlertDialogComponents.Cancel = ({
   className, children,
-  variant = "outline",
+  variant = "ghost",
   size = "default",
   ...rest
 }) => (

@@ -9,8 +9,8 @@ export const ANIMATE_EVERY_CREATE = false
 
 /** How long a node takes to fly in. Keep in step with the node-arrive animation in the preset. */
 const ARRIVE_MS     = 2000
-const STEP          = 400
-const MAX_LOOKAHEAD = 4000
+const STEP          = 700
+const MAX_LOOKAHEAD = 7000
 const MOVE_MS       = 700
 
 /** Waiting its turn, flying in, landed. */

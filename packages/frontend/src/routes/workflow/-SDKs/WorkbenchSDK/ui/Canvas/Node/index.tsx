@@ -77,7 +77,7 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
           // Last, so twMerge lets a pending node's opacity-0 beat the line above.
           animationClassName,
         )}
-        style={{ backgroundColor, borderColor, borderWidth: 2 }}
+        style={{ backgroundColor, borderColor, borderWidth: 1 }}
         id={hyNode.id}
       >
         <NodeOrnaments hyNode={hyNode} canAddInputPort={canAddInputPort} />

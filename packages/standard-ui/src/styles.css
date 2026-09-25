@@ -1,7 +1,7 @@
 @import "@fontsource-variable/geist";
 
 @utility input-default {
-  @apply bg-input/70 border-input-border focus-visible:border-ring focus-visible:ring-ring/50
+  @apply bg-input border-input-border focus-visible:border-ring focus-visible:ring-ring/50
     aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
     dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80
     border transition-colors file:h-6 file:text-sm file:font-medium
@@ -9,6 +9,23 @@
     w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent
     disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50
     shadow-sm shadow-black/10;
+}
+
+@utility surface {
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+
+@utility surface-elevated {
+  background-color: color-mix(in srgb, var(--surface-elevated) var(--material-opacity, var(--material-opacity-content)), transparent);
+  border-color: var(--border);
+  @apply backdrop-blur-lg;
+}
+
+@utility surface-elevated-sidebar {
+  background-color: color-mix(in srgb, var(--surface-elevated-sidebar) var(--material-opacity, var(--material-opacity-sidebar)), transparent);
+  border-color: var(--border);
+  @apply backdrop-blur-lg;
 }
 
 body {
@@ -46,7 +63,14 @@ code {
   --node-accent-base: var(--card);
   --background: theme(--color-gray-200);
   --foreground: #2C1810;
-  --card: #ffffff;
+
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-elevated-sidebar: #ffffff;
+  --material-opacity-content: 80%;
+  --material-opacity-sidebar: 60%;
+
+  --card: var(--surface);
   --card-float: #ffffff;
   --card-foreground: theme(--color-stone-600);
 
@@ -71,11 +95,12 @@ code {
 
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: oklch(86.9% 0.005 56.366);
+  --border: rgb(44 24 16 / 0.14);
+  --separator: rgb(190 188 186);
 
   --muted: oklch(95.2% 0 0);
   --muted-foreground: theme(--color-neutral-500);
-  --input: theme(--color-white);
+  --input: rgb(255 255 255 / 0.7);
   --input-border: var(--border);
 
   --radius: 0.875rem;
@@ -227,7 +252,14 @@ code {
   --background: theme(--color-neutral-950);
 
   --foreground: theme(--color-white);
-  --card: rgb(40, 40, 42);
+
+  --surface: rgb(40 40 42);
+  --surface-elevated: rgb(24 24 25);
+  --surface-elevated-sidebar: rgb(42 42 44);
+  --material-opacity-content: 85%;
+  --material-opacity-sidebar: 70%;
+
+  --card: var(--surface);
   --card-float: rgb(30, 30, 30);
 
   --port-Data-foreground: theme(--color-slate-500);
@@ -253,10 +285,10 @@ code {
   --active-foreground: theme(--color-sky-300);
   --destructive: theme(--color-red-500);
   --destructive-foreground: theme(--color-white);
-  --border: rgb(60, 60, 60);
+  --border: rgb(255 255 255 / 0.1);
+  --separator: rgb(58 58 60);
 
-  /* --border: theme(--color-stone-800); */
-  --input: rgb(35, 35, 35);
+  --input: rgb(255 255 255 / 0.06);
   --input-border: rgb(54, 54, 54);
   --ring: color-mix(in oklch, #FF6A00 55%, transparent);
 
@@ -321,6 +353,7 @@ code {
 }
 
 @theme inline {
+  --color-separator: var(--separator);
   --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-chivo: 'Chivo', system-ui, sans-serif;
