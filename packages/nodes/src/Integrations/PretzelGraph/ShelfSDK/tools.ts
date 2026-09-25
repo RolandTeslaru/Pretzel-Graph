@@ -46,7 +46,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_get_blueprint",
-            description: "Get a blueprint's base shape: its description, fields, input ports and output ports. A field marked reconcile reshapes the node when set; shelf_get_blueprint_derivations lists what each value adds. Read-only.",
+            description: "Get a blueprint's base shape: its description, fields, input ports, output ports and the credential templates its node takes. A field marked reconcile reshapes the node when set; shelf_get_blueprint_derivations lists what each value adds. Read-only.",
             schema:      z.object({ blueprintId: z.string().describe("Blueprint id, e.g. Core.Text.Input. See shelf_query_blueprints.") }),
         },
     );
@@ -62,7 +62,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_get_blueprint_derivations",
-            description: "List every way a blueprint's node can be reshaped: each path is the field values that select a branch, with the fields and ports that branch adds and any base members it replaces. A repeating field appears once, as <fieldId>==<count>, with the ports each slot adds. Set those fields with workbench_set_field to reach a branch. Read-only.",
+            description: "List every way a blueprint's node can be reshaped: each path is the field values that select a branch, with the fields, ports and credential templates that branch adds and any base members it replaces. A repeating field appears once, as <fieldId>==<count>, with the ports each slot adds. Set those fields with workbench_set_field to reach a branch. Read-only.",
             schema:      z.object({ blueprintId: z.string().describe("Blueprint id. Only derivable blueprints have branches; see shelf_query_blueprints.") }),
         },
     );

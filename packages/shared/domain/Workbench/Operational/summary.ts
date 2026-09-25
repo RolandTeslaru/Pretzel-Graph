@@ -1,5 +1,6 @@
 import type { Foundations } from "../../Foundations"
 import type { Validation } from "../../Validation"
+import type { Vault } from "../../Vault"
 import type { Workflow as WorkflowD } from "../../Workflow"
 import type { Document } from "../Document"
 
@@ -43,12 +44,21 @@ export namespace Summary {
         outgoing: Record<Foundations.Port.Output.Id, PortEdge[]>
     }
 
+    /** A credential template the node takes, and the instance attached to it. */
+    export interface CredentialSlot {
+        templateId:   Vault.Credential.Template.Id
+        templateName: string
+        optional:     boolean
+        instanceId:   Vault.Credential.Instance.Id | null
+    }
+
     export interface NodeDetail {
         node:           WorkflowD.Node.Raw
         fields:         readonly Foundations.Field[]
         inputs:         readonly Foundations.Port.Input[]
         outputs:        readonly Foundations.Port.Output[]
         staticValues:   Record<string, unknown> | null
+        credentials:    CredentialSlot[]
         connectedEdges: ConnectedEdges
         issues:         NodeIssues
     }

@@ -40,6 +40,12 @@ export class NodeOperations {
             inputs:         shape?.inputs  ?? [],
             outputs:        shape?.outputs ?? [],
             staticValues:   d.selectors.node.getStaticValues(d, nodeId),
+            credentials:    d.selectors.credential.getTemplates(d, nodeId).map(template => ({
+                templateId:   template.id,
+                templateName: template.displayName,
+                optional:     template.optional ?? false,
+                instanceId:   d.selectors.credential.getInstance(d, nodeId, template.id),
+            })),
             connectedEdges: Summary.connectedEdges(d, nodeId),
             issues:         d.issues.nodes[nodeId] ?? null,
         }

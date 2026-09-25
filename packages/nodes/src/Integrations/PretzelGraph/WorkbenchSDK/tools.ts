@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { ToolBudget } from "@pretzel-graph/node-sdk";
-import { Foundations, Workbench, type Workflow } from "@pretzel-graph/shared/domain";
+import { Foundations, Workbench, type Vault, type Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 import type { WorkbenchClient } from "../client";
@@ -47,6 +47,11 @@ const inputPort = z.object({
     required:    z.boolean().optional().describe("Whether a connection must be present to run."),
 });
 
+const credentialAssignment = {
+    templateId: z.string().describe("A credential template the node takes, as listed under credentials by workbench_get_node."),
+    instanceId: z.string().nullable().describe("A credential instance of that template, from vault_list_credential_instances. Null detaches the attached instance."),
+};
+
 const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.create"), blueprintId, position, staticValues }),
     z.object({ op: z.literal("node.delete"), nodeId }),
@@ -57,6 +62,7 @@ const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("edge.create"), ...edgeEndpoints }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
     z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
+    z.object({ op: z.literal("credential.setInstance"), nodeId, ...credentialAssignment }),
     z.object({ op: z.literal("globalField.add"),    id: globalFieldId, ...globalFieldSpec }),
     z.object({ op: z.literal("globalField.update"), fieldId: globalFieldId, patch: globalFieldPatch }),
     z.object({ op: z.literal("globalField.remove"), fieldId: globalFieldId }),
@@ -148,7 +154,7 @@ export function buildTools(client: WorkbenchClient) {
         async ({ nodeId }) => ToolBudget.value(client.operations.node.get(nodeId as Workflow.Node.Id)),
         {
             name:        "workbench_get_node",
-            description: `Get one node: its blueprint, fields, ports, current field values and validation issues, and for each port the edges on it with the node and port at their other end. Read-only. ${READ_NOTE}`,
+            description: `Get one node: its blueprint, fields, ports, current field values, the credential templates it takes with the instance attached to each, and validation issues, and for each port the edges on it with the node and port at their other end. Read-only. ${READ_NOTE}`,
             schema:      z.object({ nodeId }),
         },
     );
@@ -260,6 +266,22 @@ export function buildTools(client: WorkbenchClient) {
     );
 
 
+    const setCredentialInstance = tool(
+        async ({ nodeId, templateId, instanceId }) => ToolBudget.value(
+            await write(() => client.operations.credential.setInstance(
+                nodeId as Workflow.Node.Id,
+                templateId as Vault.Credential.Template.Id,
+                instanceId as Vault.Credential.Instance.Id | null,
+            )),
+        ),
+        {
+            name:        "workbench_set_credential_instance",
+            description: "Attach a credential instance to a node for one of the credential templates it takes, or detach it with null. A credential template is a type of credential a node can take, e.g. tavilyApi; a credential instance is one saved in the vault, made from one template. The instance must be made from that template. Returns the node's remaining validation issues.",
+            schema:      z.object({ nodeId, ...credentialAssignment }),
+        },
+    );
+
+
     const listGlobalFields = tool(
         async () => ToolBudget.list("fields", client.operations.globalField.list()),
         {
@@ -352,7 +374,7 @@ export function buildTools(client: WorkbenchClient) {
 
     return [
         getMeta, queryNodes, queryEdges, getNode, getLayout,
-        createNode, deleteNode, moveNode, addInputPort, updateInputPort, removeInputPort, createEdge, deleteEdge, setField,
+        createNode, deleteNode, moveNode, addInputPort, updateInputPort, removeInputPort, createEdge, deleteEdge, setField, setCredentialInstance,
         listGlobalFields, addGlobalField, updateGlobalField, removeGlobalField,
         apply, commit, discard,
     ];

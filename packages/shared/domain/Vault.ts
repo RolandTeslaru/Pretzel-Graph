@@ -121,6 +121,14 @@ export namespace Vault {
         }
         export type Instance = z.infer<typeof Instance.Schema>
 
+        /** An instance without its blob, with its template's display name. */
+        export namespace Summary {
+            export const Schema = Instance.Schema.omit({ blob: true }).extend({
+                template_name: z.string().nullable(),
+            })
+        }
+        export type Summary = z.infer<typeof Summary.Schema>
+
         // Emitted by the backend when a credential's secrets change; carries field names, never values.
         export namespace Signal {
             export const Channel = Realtime.Channel.brand("Vault.Credential.Signal.Channel")
@@ -373,6 +381,27 @@ export namespace Vault {
                     expiresAt:   z.number(),
                 })
                 export type Response = z.infer<typeof Response>
+            }
+        }
+
+        export namespace Internal {
+
+            export namespace Query {
+                export const Request = z.object({
+                    ids:         z.array(Credential.Instance.Id).optional(),
+                    templateIds: z.array(Credential.Template.Id).optional(),
+                })
+                export type Request = z.infer<typeof Request>
+
+                export const Response = z.object({
+                    instances: z.array(Credential.Summary.Schema),
+                })
+                export type Response = z.infer<typeof Response>
+            }
+
+            export async function query(api: AxiosInstance, req: Query.Request): Promise<Query.Response> {
+                const { data } = await api.post<Query.Response>('/api/internal/vault/credential-instances/query', req)
+                return data
             }
         }
     }

@@ -1,4 +1,5 @@
 import type { Foundations } from "../../Foundations"
+import type { Vault } from "../../Vault"
 import type { Workflow } from "../../Workflow"
 import type { Document } from "../Document"
 import type { Event } from "../event"
@@ -8,6 +9,8 @@ export type Connection = Document.DriverConnection
 
 export type BlueprintResolver = (blueprintId: Foundations.Blueprint.Id) => Promise<Foundations.Blueprint>
 export type OnOperation       = (edit: Event.Unstamped) => void
+/** Null when no instance has that id. */
+export type CredentialResolver = (instanceId: Vault.Credential.Instance.Id) => Promise<Vault.Credential.Summary | null>
 
 export interface CreateNodeRequest {
     blueprintId:   Foundations.Blueprint.Id
@@ -26,6 +29,7 @@ export type Operation =
     | ({ op: "edge.create" }          & Connection)
     | { op: "edge.delete";          edgeId: Workflow.Edge.Id }
     | { op: "field.set";            nodeId: Workflow.Node.Id; fieldId: Foundations.Field.Id; value: unknown }
+    | { op: "credential.setInstance"; nodeId: Workflow.Node.Id; templateId: Vault.Credential.Template.Id; instanceId: Vault.Credential.Instance.Id | null }
     | ({ op: "globalField.add" }      & GlobalFieldSpec)
     | { op: "globalField.update";   fieldId: Foundations.Field.Id; patch: GlobalFieldPatch }
     | { op: "globalField.remove";   fieldId: Foundations.Field.Id }

@@ -1,5 +1,5 @@
 import type { HTTP, RuntimeNode } from "@pretzel-graph/node-sdk";
-import { Execution, Shelf, Workbench, Workflow, type Foundations } from "@pretzel-graph/shared/domain";
+import { Execution, Shelf, Vault, Workbench, Workflow, type Foundations } from "@pretzel-graph/shared/domain";
 
 import API = Workbench.API;
 
@@ -19,6 +19,7 @@ export class WorkbenchClient {
 
     public readonly operations = new Workbench.OperationalClient(
         blueprintId => this.resolveBlueprint(blueprintId),
+        instanceId  => this.resolveCredential(instanceId),
         edit        => this.announce(edit),
     );
 
@@ -142,6 +143,12 @@ export class WorkbenchClient {
         const { blueprint } = await Shelf.API.Internal.get(this.http.raw, blueprintId);
 
         return blueprint;
+    }
+
+    private async resolveCredential(instanceId: Vault.Credential.Instance.Id): Promise<Vault.Credential.Summary | null> {
+        const { instances } = await Vault.API.Internal.query(this.http.raw, { ids: [instanceId] });
+
+        return instances[0] ?? null;
     }
 
     // Edits travel on the run's own channel; the backend relays them onto the workflow's once

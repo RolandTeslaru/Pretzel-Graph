@@ -1,11 +1,12 @@
 import type { Document } from "../Document"
 import type { Event } from "../event"
-import type { BlueprintResolver, OnOperation, Operation } from "./types"
+import type { BlueprintResolver, CredentialResolver, OnOperation, Operation } from "./types"
 import { WorkflowOperations } from "./workflow"
 import { NodeOperations } from "./node"
 import { EdgeOperations } from "./edge"
 import { FieldOperations } from "./field"
 import { GlobalFieldOperations } from "./globalField"
+import { CredentialOperations } from "./credential"
 
 export type Mode = "read" | "write"
 
@@ -28,13 +29,15 @@ export class OperationalClient {
     public readonly edge        = new EdgeOperations(this)
     public readonly field       = new FieldOperations(this)
     public readonly globalField = new GlobalFieldOperations(this)
+    public readonly credential  = new CredentialOperations(this)
 
     #document: Document | null = null
     #mode:     Mode            = "read"
 
     constructor(
-        public readonly resolveBlueprint: BlueprintResolver,
-        public readonly onOperation:      OnOperation,
+        public readonly resolveBlueprint:  BlueprintResolver,
+        public readonly resolveCredential: CredentialResolver,
+        public readonly onOperation:       OnOperation,
     ) {}
 
     public get isLoaded(): boolean {
@@ -105,6 +108,7 @@ export class OperationalClient {
             case "edge.create":          return this.edge.create(op)
             case "edge.delete":          return this.edge.delete(op.edgeId)
             case "field.set":            return this.field.set(op.nodeId, op.fieldId, op.value)
+            case "credential.setInstance": return this.credential.setInstance(op.nodeId, op.templateId, op.instanceId)
             case "globalField.add":      return this.globalField.add(op)
             case "globalField.update":   return this.globalField.update(op.fieldId, op.patch)
             case "globalField.remove":   return this.globalField.remove(op.fieldId)
@@ -114,4 +118,4 @@ export class OperationalClient {
 
 export { Summary } from "./summary"
 export { ID_PATTERN } from "./types"
-export type { BlueprintResolver, OnOperation, Operation, CreateNodeRequest, InputPortSpec, GlobalFieldSpec, GlobalFieldPatch, GlobalFieldVariant, Position, Connection } from "./types"
+export type { BlueprintResolver, CredentialResolver, OnOperation, Operation, CreateNodeRequest, InputPortSpec, GlobalFieldSpec, GlobalFieldPatch, GlobalFieldVariant, Position, Connection } from "./types"

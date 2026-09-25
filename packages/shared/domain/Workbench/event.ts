@@ -2,6 +2,7 @@ import z from "zod"
 import { Realtime } from "../Realtime"
 import { Workflow } from "../Workflow"
 import { Foundations } from "../Foundations"
+import { Vault } from "../Vault"
 import { ExecutionId } from "../Execution/ids"
 
 // One channel per workflow: workbench:<workflowId>. Carries what happens to a workflow as a
@@ -93,6 +94,16 @@ export namespace Event {
         export type Set = z.infer<typeof Set>
     }
 
+    export namespace Credential {
+        export const InstanceSet = Base.extend({
+            type:       z.literal("credential:instanceSet"),
+            nodeId:     Workflow.Node.Id,
+            templateId: Vault.Credential.Template.Id,
+            instanceId: Vault.Credential.Instance.Id.nullable(),
+        })
+        export type InstanceSet = z.infer<typeof InstanceSet>
+    }
+
     export namespace Workflow_ {
         export const GlobalFieldsChanged = Base.extend({
             type:         z.literal("workflow:globalFieldsChanged"),
@@ -107,6 +118,7 @@ export namespace Event {
         Node.Created,  Node.Deleted, Node.Moved, Node.InputPortAdded, Node.InputPortRemoved, Node.InputPortUpdated,
         Edge.Created,  Edge.Deleted,
         Field.Set,
+        Credential.InstanceSet,
     ])
 
     /** The addressing the backend stamps; what an emitter supplies is the rest. */

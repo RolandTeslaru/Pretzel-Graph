@@ -18,6 +18,7 @@ export namespace Workbench {
     export type Operation         = OperationalMod.Operation
     export type BlueprintResolver = OperationalMod.BlueprintResolver
     export type OnOperation       = OperationalMod.OnOperation
+    export type CredentialResolver = OperationalMod.CredentialResolver
     export type CreateNodeRequest = OperationalMod.CreateNodeRequest
     export type InputPortSpec     = OperationalMod.InputPortSpec
     export type GlobalFieldSpec   = OperationalMod.GlobalFieldSpec

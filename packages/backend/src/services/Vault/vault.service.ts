@@ -48,6 +48,18 @@ export class VaultService {
             >;
         },
 
+        // Instances without their blobs, each named by its template.
+        query: async (
+            principal: Principal.Delegate,
+            req: Vault.API.Internal.Query.Request,
+        ): Promise<Vault.API.Internal.Query.Response> => {
+            const rows      = await this.vaultRepository.credentialInstance.query(principal, req);
+            const templates = loadCredentialTemplates();
+            const instances = rows.map(row => ({ ...row, template_name: templates[row.template_id]?.displayName ?? null }));
+
+            return { instances };
+        },
+
         list: async (
             principal: Principal.User,
         ): Promise<Vault.API.CredentialInstance.List.Response> => {

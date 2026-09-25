@@ -19,12 +19,13 @@ export const projectToBaseBlueprint = (bp: Foundations.Blueprint) => ({
     })),
     inputs:  bp.inputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
     outputs: bp.outputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
+    credentials: (bp.credentials ?? []).map(t => ({ templateId: t.id, templateName: t.displayName, optional: t.optional ?? false })),
 });
 
 export interface Derivation {
     /** Conditions from the base down, e.g. "target==node/nodeOperation==create". */
     path:     string
-    adds:     { fields: Foundations.Field.Id[], inputs: Foundations.Port.Input.Id[], outputs: Foundations.Port.Output.Id[] }
+    adds:     { fields: Foundations.Field.Id[], inputs: Foundations.Port.Input.Id[], outputs: Foundations.Port.Output.Id[], credentialTemplates: string[] }
     /** Base members this branch drops rather than extends. */
     replaces: { fields?: Foundations.Field.Id[], inputs?: Foundations.Port.Input.Id[], outputs?: Foundations.Port.Output.Id[] }
 }
@@ -52,6 +53,7 @@ export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
                     fields:  (branch.fields  ?? []).map(f => f.id),
                     inputs:  (branch.inputs  ?? []).map(p => p.id),
                     outputs: (branch.outputs ?? []).map(p => p.id),
+                    credentialTemplates: (branch.credentials ?? []).map(t => t.id),
                 },
                 replaces: {
                     ...(replaces.has("fields")  && { fields:  bp.fields.map(f => f.id) }),
@@ -77,6 +79,7 @@ export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
                 fields:  [],
                 inputs:  (field.template.inputs  ?? []).map(p => p.id),
                 outputs: (field.template.outputs ?? []).map(p => p.id),
+                credentialTemplates: [],
             },
             replaces: {},
         });

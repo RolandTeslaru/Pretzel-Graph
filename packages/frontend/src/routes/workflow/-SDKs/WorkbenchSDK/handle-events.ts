@@ -80,6 +80,11 @@ const reduceEvent = withCyclesRecompute((d: Workbench.Document, event: Workbench
             break;
         }
 
+        case "credential:instanceSet":
+            if (d.data.nodes[event.nodeId])
+                d.reducers.credential.setInstance(d, event.nodeId, event.templateId, event.instanceId);
+            break;
+
         case "workflow:globalFieldsChanged":
             d.reducers.workflow.setGlobalFields(d, event.globalFields);
             break;
