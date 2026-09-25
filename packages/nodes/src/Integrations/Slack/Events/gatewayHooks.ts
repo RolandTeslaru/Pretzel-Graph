@@ -53,21 +53,24 @@ export const gatewayHooks = defineGatewayHooks<typeof Blueprint>()(Slack.Event.S
         if (fieldValues.conversation_scope === 'none')
             return null;
 
+        // The socket reports the bot before any event arrives; the row id is only a last resort.
+        const botId = connection.remoteId ?? connection.id;
+
         if (fieldValues.conversation_scope === 'shared')
-            return Slack.createScope(connection.id);
+            return Slack.createScope(botId);
 
         const { channel, thread, user } = eventSubjects(event);
 
         if (!channel)
-            return Slack.createScope(connection.id);
+            return Slack.createScope(botId);
 
         if (fieldValues.conversation_scope === 'thread')
-            return Slack.createScope(connection.id, { channelId: channel, threadTs: thread ?? undefined });
+            return Slack.createScope(botId, { channelId: channel, threadTs: thread ?? undefined });
 
         if (fieldValues.conversation_scope === 'channel_and_user')
-            return Slack.createScope(connection.id, { channelId: channel, userId: user ?? undefined });
+            return Slack.createScope(botId, { channelId: channel, userId: user ?? undefined });
 
-        return Slack.createScope(connection.id, { channelId: channel });
+        return Slack.createScope(botId, { channelId: channel });
     },
 
     filter: (event, _scope, { fieldValues }) => {

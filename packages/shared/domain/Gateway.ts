@@ -68,6 +68,8 @@ export namespace Gateway {
             // Hydrated from credential_id; the row stores only the reference. Null when the definition takes none.
             credential:   Vault.Credential.Instance.Schema.nullable(),
             fieldValues:  z.record(Field.Id, Field.Value),
+            // The account the socket authenticated as, reported on connect. Held in memory, never stored.
+            remoteId:     z.string().nullable().default(null),
             status:       Status,
             // Why it failed; null unless status is failed.
             error:        z.string().nullable(),
@@ -190,8 +192,9 @@ export namespace Gateway {
         export const ScopeFingerprint = z.string().brand('Gateway.Socket.ScopeFingerprint');
         export type ScopeFingerprint = z.infer<typeof ScopeFingerprint>;
 
-        export const createScope = (provider: string, connectionId: Connection.Id, ...parts: string[]) =>
-            [provider, connectionId, ...parts].join(':') as ScopeFingerprint;
+        // `identity` names the remote account, so the key survives the connection row being recreated.
+        export const createScope = (provider: string, identity: string, ...parts: string[]) =>
+            [provider, identity, ...parts].join(':') as ScopeFingerprint;
 
         /**
          * What an event does when a run for the same fingerprint is already going.

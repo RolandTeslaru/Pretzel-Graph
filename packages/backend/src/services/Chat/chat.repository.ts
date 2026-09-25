@@ -173,8 +173,10 @@ class MessageMethods extends Repository {
                 external_key: externalKey,
                 name,
             })
+            // The unique index is partial, and Postgres only infers one when given its predicate.
             .onConflict(conflict => conflict
                 .columns(['workflow_id', 'external_key'])
+                .where('external_key', 'is not', null)
                 .doUpdateSet({ updated_at: new Date().toISOString() }))
             .returning('id')
             .executeTakeFirstOrThrow();

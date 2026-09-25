@@ -44,6 +44,9 @@ export class SlackSocket extends GatewaySocket<typeof Definition> {
             throw describeSlackError(error, 'checking the bot token')
         }
 
+        // A bot user id is per install, and it outlives both the token and the connection row.
+        this.ctx.identify(this.identity.user_id)
+
         await this.open()
     }
 

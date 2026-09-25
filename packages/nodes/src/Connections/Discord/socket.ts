@@ -47,7 +47,11 @@ export class DiscordSocket extends GatewaySocket<typeof Definition> {
 
         // login() only starts the gateway handshake; ClientReady is when Discord has accepted the bot.
         await new Promise<void>((resolve, reject) => {
-            this.client.once(DiscordEvents.ClientReady, () => resolve())
+            // A bot's user id is its application id, and it outlives both the token and the connection row.
+            this.client.once(DiscordEvents.ClientReady, ready => {
+                this.ctx.identify(ready.user.id)
+                resolve()
+            })
             this.client.login(botToken).catch(error => reject(this.describeLoginError(error)))
         })
     }

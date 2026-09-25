@@ -7,4 +7,6 @@ export interface SocketContext extends HostContext {
     readonly dispatch:   (event: Gateway.Socket.Event) => void,
     // Reports that the socket has given up for good; drops it recovers from itself are not reported.
     readonly fail:       (error: Error) => void,
+    // Reports which remote account the socket authenticated as, once the handshake says.
+    readonly identify:   (remoteId: string) => void,
 }
