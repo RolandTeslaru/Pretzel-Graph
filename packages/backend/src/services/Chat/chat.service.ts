@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
 import { Chat, Workflow } from '@pretzel-graph/shared/domain';
-import { ChatDatabase } from './chat.database';
+import { ChatRepository } from './chat.repository';
 
 @Injectable()
 export class ChatService {
     constructor(
-        private readonly database: ChatDatabase,
+        private readonly repository: ChatRepository,
     ) {}
 
     // Appends to the workflow's chat for `externalKey`, opening it on the first write. Runs with no
@@ -17,13 +16,7 @@ export class ChatService {
         externalKey: Chat.ExternalKey,
         messages:    Chat.Message[],
     ): Promise<Chat.Id> {
-        return DB.asService('gateway recorder appending to a chat', async (trx) => {
-            const chat = await this.database.chat.upsertByExternalKey(trx, workflowId, externalKey);
-
-            await this.database.message.add(trx, chat.id, messages);
-
-            return chat.id;
-        });
+        return this.repository.message.appendByExternalKey(Principal.SELF, workflowId, externalKey, messages);
     }
 
     // The chat opened under an external key, or null before its first write.
@@ -31,10 +24,7 @@ export class ChatService {
         workflowId:  Workflow.Id,
         externalKey: Chat.ExternalKey,
     ): Promise<Chat.Id | null> {
-        const chat = await DB.asService(
-            'gateway hook resolving a chat for an igniter',
-            (trx) => this.database.chat.findByExternalKey(trx, workflowId, externalKey),
-        );
+        const chat = await this.repository.chat.findByExternalKey(Principal.SELF, workflowId, externalKey);
 
         return chat?.id ?? null;
     }
@@ -47,7 +37,7 @@ export class ChatService {
     ): Promise<Chat.API.Create.Response> {
         const { name } = payload;
 
-        const chat = await DB.asUser(principal, (trx) => this.database.chat.create(trx, principal.userId, workflow_id, name));
+        const chat = await this.repository.chat.create(principal, workflow_id, name);
 
         return { chat };
     }
@@ -59,9 +49,8 @@ export class ChatService {
         payload:     Chat.API.Ensure.Request
     ): Promise<Chat.API.Ensure.Response> {
         const { chatId, name } = payload;
-        const createdBy = principal.type === 'user' ? principal.userId : null;
 
-        const chat = await DB.asUser({ userId: createdBy }, (trx) => this.database.chat.ensure(trx, createdBy, chatId, workflow_id, name));
+        const chat = await this.repository.chat.ensure(principal, chatId, workflow_id, name);
         return { chat };
     }
 
@@ -70,13 +59,13 @@ export class ChatService {
         principal: Principal.User,
         chatId:    Chat.Id,
     ): Promise<Chat.API.Get.Response> {
-        return DB.asUser(principal, (trx) => this.database.chat.get(trx, chatId));
+        return this.repository.chat.get(principal, chatId);
     }
 
     async list(
         principal: Principal.User,
     ): Promise<Chat.API.List.Response> {
-        const chats = await DB.asUser(principal, (trx) => this.database.chat.list(trx));
+        const chats = await this.repository.chat.list(principal);
         return { chats };
     }
 
@@ -85,7 +74,7 @@ export class ChatService {
         workflow_id: Workflow.Id,
     ): Promise<Chat.API.ListByWorkflow.Response> {
 
-        const chats = await DB.asUser(principal, (trx) => this.database.chat.listByWorkflow(trx, workflow_id));
+        const chats = await this.repository.chat.listByWorkflow(principal, workflow_id);
         return { chats };
     }
 
@@ -93,7 +82,7 @@ export class ChatService {
         principal: Principal.User,
         chatId:    Chat.Id,
     ): Promise<Chat.API.Erase.Response> {
-        await DB.asUser(principal, (trx) => this.database.chat.erase(trx, chatId));
+        await this.repository.chat.erase(principal, chatId);
 
 
         return {};
@@ -106,7 +95,7 @@ export class ChatService {
             payload:   Chat.API.Message.Add.Request
         ): Promise<Chat.API.Message.Add.Response> => {
             const { messages } = payload;
-            await DB.asUser(principal, (trx) => this.database.message.add(trx, chatId, messages));
+            await this.repository.message.add(principal, chatId, messages);
             return {};
         },
 
@@ -114,7 +103,7 @@ export class ChatService {
             principal: Principal.User,
             payload: Chat.API.Message.Erase.Request
         ): Promise<Chat.API.Message.Erase.Response> => {
-            await DB.asUser(principal, (trx) => this.database.message.erase(trx, payload.messageId));
+            await this.repository.message.erase(principal, payload.messageId);
             return {};
         },
 
@@ -123,7 +112,7 @@ export class ChatService {
             payload: Chat.API.Message.Update.Request
         ): Promise<Chat.API.Message.Update.Response> => {
             const { messageId, content } = payload;
-            await DB.asUser(principal, (trx) => this.database.message.update(trx, messageId, content));
+            await this.repository.message.update(principal, messageId, content);
             return {};
         }
     };

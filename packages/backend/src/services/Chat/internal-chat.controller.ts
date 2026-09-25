@@ -3,8 +3,7 @@ import { Chat } from '@pretzel-graph/shared/domain';
 import { DelegateAuthGuard } from '../../auth/delegate-auth.guard';
 import { AuthenticatedDelegate } from '@/decorators/principal';
 import { Principal } from '@/domain/Principal';
-import { DB } from '@/db';
-import { ChatDatabase } from './chat.database';
+import { ChatRepository } from './chat.repository';
 import { ZodBody } from '@pretzel-graph/shared/server/pipes/zod.pipe';
 import { RealtimeService } from '../Realtime/realtime.service';
 import { z } from 'zod';
@@ -34,7 +33,7 @@ const overwriteMessagesRequest = accessRequest.extend({
 @UseGuards(DelegateAuthGuard)
 export class InternalChatController {
     constructor(
-        private readonly database: ChatDatabase,
+        private readonly repository: ChatRepository,
         private readonly realtime: RealtimeService,
     ) {}
 
@@ -48,7 +47,7 @@ export class InternalChatController {
     ) {
 
         if (body.persist)
-            await DB.asDelegate(delegate, (trx) => this.database.message.add(trx, body.chatId, body.messages));
+            await this.repository.message.add(delegate, body.chatId, body.messages);
 
         if (body.broadcast)
             this.realtime.emitSignal<Chat.Event.Message.Added>({
@@ -68,7 +67,7 @@ export class InternalChatController {
         @ZodBody(updateMessageRequest) body: z.infer<typeof updateMessageRequest>,
     ) {
 
-        await DB.asDelegate(delegate, (trx) => this.database.message.updateInChat(trx, body.chatId, body.messageId, body.content));
+        await this.repository.message.updateInChat(delegate, body.chatId, body.messageId, body.content);
         return {};
     }
 
@@ -79,7 +78,7 @@ export class InternalChatController {
         @ZodBody(accessRequest) body: z.infer<typeof accessRequest>,
     ) {
 
-        const messages = await DB.asDelegate(delegate, (trx) => this.database.message.list(trx, body.chatId));
+        const messages = await this.repository.message.list(delegate, body.chatId);
         return { messages };
     }
 
@@ -90,7 +89,7 @@ export class InternalChatController {
         @ZodBody(overwriteMessagesRequest) body: z.infer<typeof overwriteMessagesRequest>,
     ) {
 
-        await DB.asDelegate(delegate, (trx) => this.database.message.overwrite(trx, body.chatId, body.messages));
+        await this.repository.message.overwrite(delegate, body.chatId, body.messages);
         return {};
     }
 }

@@ -24,12 +24,14 @@ export class VersionControlService {
         
         publication.is_active = true;
         await this.listings.syncActive(publication);
+
         this.realtime.emitSignal<VersionControl.Signal.Published>({
             channel: VersionControl.Signal.getChannel(publication.workflow_id, 'published'),
             type: 'published',
             workflowId: publication.workflow_id,
             publicationId: publication.id,
         });
+        
         return { publication };
     }
 
