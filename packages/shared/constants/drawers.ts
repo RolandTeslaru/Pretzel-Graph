@@ -71,6 +71,7 @@ export const CORE_DRAWERS = {
     icon: "Bot",
     blueprintIds: [
       "Pretzel.Agent",
+      "Pretzel.ChatAgent",
       "Core.LanguageModel"
     ],
   },
