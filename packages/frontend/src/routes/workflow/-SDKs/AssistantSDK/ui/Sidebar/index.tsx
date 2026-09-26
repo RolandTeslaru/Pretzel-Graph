@@ -1,11 +1,9 @@
-import { memo, useEffect } from 'react'
+import { useEffect } from 'react'
 import { AssistantSDK } from '../../sdk'
 import { StackSDK } from '@/routes/workflow/-SDKs/StackSDK'
 import AssistantPanel from '../ConversationArea'
 import ConversationRoot from '../ConversationRoot'
-import { Conversation } from '@/components/Conversation'
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
-import { Button } from '@pretzel-graph/standard-ui/foundations'
+import Header from './header'
 
 const AssistantSidebar = () => {
     const isSidebarVisible = AssistantSDK.useStore(s => s.isSidebarVisible)
@@ -15,19 +13,7 @@ const AssistantSidebar = () => {
             StackSDK.actions.push("assistantSidebar", (props) => (
                 <StackSDK.Template {...props}>
                     <ConversationRoot>
-                        <Conversation.Header>
-                            <Conversation.Title icon={SystemIcons.Sparkles} iconClassName='fill-current'>
-                                Assistant
-                            </Conversation.Title>
-                            <Conversation.Actions>
-                                <Button size="icon-xs" variant="ghost" onClick={() => AssistantSDK.actions.thread.new()}>
-                                    <SystemIcons.Plus className='text-secondary-foreground' />
-                                </Button>
-                                <Button size="icon-xs" variant="ghost" onClick={() => AssistantSDK.actions.ui.openFullscreen()}>
-                                    <SystemIcons.Maximize2 className='text-secondary-foreground' />
-                                </Button>
-                            </Conversation.Actions>
-                        </Conversation.Header>
+                        <Header />
                         <AssistantPanel />
                     </ConversationRoot>
                 </StackSDK.Template>

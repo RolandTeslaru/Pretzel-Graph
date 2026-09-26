@@ -29,7 +29,7 @@ const Tool: React.FC<Props> = ({ message }) => {
         `}>
             <div className='h-fit my-auto'>
                 {isSuccess ? (
-                    <SystemIcons.Hammer className="w-3 h-3 text-(--port-Tool-foreground)" />
+                    <SystemIcons.Tool className="w-3 h-3 text-(--port-Tool-foreground)" />
                 ) : (
                     <SystemIcons.AlertTriangle className="w-3.5 h-3.5 text-destructive" />
                 )}

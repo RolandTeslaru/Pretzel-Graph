@@ -97,10 +97,10 @@ const ToolbarContent: React.FC<Props> = memo(({ hyNode }) => {
                     )}
                     {shapeDependencyRef && (
                         <Tipped label="Open workflow">
-                            <Button variant="ghost-primary" size="icon-xs" className='h-6!'
+                            <Button variant="ghost-primary" size="xs" className='h-6! rounded-full!'
                                 onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDependencyRef.id)}
                             >
-                                <SystemIcons.Graph />
+                                Open <SystemIcons.Graph />
                             </Button>
                         </Tipped>
                     )}
@@ -193,7 +193,7 @@ const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                         WorkbenchSDK.actions.tool.convert(nodeId);
                 }}
             >
-                <SystemIcons.Hammer />
+                <SystemIcons.Tool />
             </Button>
         </Tipped>
     );

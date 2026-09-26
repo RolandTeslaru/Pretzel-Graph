@@ -118,6 +118,13 @@ export const buttonVariants = cva(
           focus-visible:ring-[color-mix(in_srgb,var(--port-LanguageModel)_30%,transparent)]
           focus-visible:border-[color-mix(in_srgb,var(--port-LanguageModel)_40%,transparent)]
         `,
+        "ghost-language-model": `
+          shadow-none border-transparent text-[var(--port-LanguageModel-foreground)]
+          hover:bg-[color-mix(in_srgb,var(--port-LanguageModel)_20%,transparent)]
+          aria-expanded:bg-[color-mix(in_srgb,var(--port-LanguageModel)_20%,transparent)]
+          focus-visible:ring-[color-mix(in_srgb,var(--port-LanguageModel)_30%,transparent)]
+          focus-visible:border-[color-mix(in_srgb,var(--port-LanguageModel)_40%,transparent)]
+        `,
         message: `
           shadow-none border-transparent text-[var(--port-Message-foreground)]
           bg-[color-mix(in_srgb,var(--port-Message)_20%,transparent)]

@@ -5,6 +5,13 @@ import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { AssistantSDK } from '../../sdk'
 import { Conversation } from '@/components/Conversation'
 
+const SUGGESTIONS = [
+    "Create a Discord bot that answers questions with AI",
+    "Create a ReAct agent with web search",
+    "Build a workflow that summarizes a webhook payload",
+    "Explain what this workflow does",
+] as const
+
 const AssistantPanel: React.FC = () => {
     const [messageIds, isLoading, lastMessageContent, toolCallStatus, setupStatus] = AssistantSDK.useStore(s => {
         const lastId = s.messages[s.messages.length - 1]
@@ -17,6 +24,7 @@ const AssistantPanel: React.FC = () => {
     }, [])
 
     const isIncomplete = setupStatus === "incomplete"
+    const showSuggestions = messageIds.length === 0 && !isLoading && setupStatus === "ready"
 
     return (
         <div className='w-full h-full flex overflow-x-auto'>
@@ -24,6 +32,7 @@ const AssistantPanel: React.FC = () => {
                 onSend={(content) => AssistantSDK.actions.message.send({ content })}
                 placeholder={isIncomplete ? undefined : "Ask the assistant..."}
                 notice={isIncomplete && <FinishSetupButton />}
+                suggestions={showSuggestions ? SUGGESTIONS : undefined}
             >
                 <Conversation.SendButton />
             </Conversation.PromptInput>
