@@ -29,6 +29,7 @@ export function buildTools(api: HTTP.Client) {
                 toolCompatible:  z.boolean().optional().describe("Can be handed to an agent as tools."),
                 proxyCompatible: z.boolean().optional().describe("Can route its network traffic through a proxy credential."),
                 derivable:       z.boolean().optional().describe("Some field values reshape the node's ports."),
+                igniter:         z.boolean().optional().describe("Starts a run only when the run is started via it: webhooks and connection events."),
                 fieldIds:        strings.describe("Has every one of these fields."),
                 inputVariants:   z.array(z.enum(PORT_VARIANTS)).optional().describe("Has an input port of any of these kinds."),
                 outputVariants:  z.array(z.enum(PORT_VARIANTS)).optional().describe("Has an output port of any of these kinds."),
@@ -46,7 +47,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "shelf_get_blueprint",
-            description: "Get a blueprint's base shape: its description, fields, input ports, output ports and the credential templates its node takes. A field marked reconcile reshapes the node when set; shelf_get_blueprint_derivatives lists what each value adds. Read-only.",
+            description: "Get a blueprint's base shape: its description, fields, input ports, output ports and the credential templates its node takes. A field marked reconcile reshapes the node when set; shelf_get_blueprint_derivatives lists what each value adds. igniter: true means a run must be started via this node; webhookRoute means it receives HTTP requests; connectionField names the field holding the connection it listens on. Read-only.",
             schema:      z.object({ blueprintId: z.string() }),
         },
     );

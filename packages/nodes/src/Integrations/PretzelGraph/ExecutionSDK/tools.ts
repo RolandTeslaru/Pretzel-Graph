@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { ToolBudget, type HTTP } from "@pretzel-graph/node-sdk";
-import { Execution } from "@pretzel-graph/shared/domain";
+import { Execution, type Workflow } from "@pretzel-graph/shared/domain";
 import { z } from "zod/v3";
 
 
@@ -17,6 +17,7 @@ export function buildTools(api: HTTP.Client) {
         workflowId:  z.string(),
         message:     z.string().optional().describe("Start the run as a chat message to the workflow. Omitted, the run starts as a manual one."),
         chatId:      z.string().optional().describe("With message: an existing chat to continue. Omitted, a new chat starts."),
+        viaNodeId:   z.string().optional().describe("Start the run via this igniter node (a Webhook or Events node). It then waits, until its test timeout, for a real request or event the user sends."),
         record:      z.boolean().optional().describe("Keep a flight recording of the run."),
     };
 
@@ -25,15 +26,21 @@ export function buildTools(api: HTTP.Client) {
 
     const NODE_RESULTS = "Node errors are in session.node_status[nodeId].error; the top-level error can be empty. Outputs are in session.node_output_projections.";
 
-    const RUN_NOTE = "Fails if the workflow has validation issues or nodes whose blueprints no longer exist.";
+    const RUN_NOTE = "Without viaNodeId or message the run is manual, and igniter nodes don't start. Fails if the workflow has validation issues or nodes whose blueprints no longer exist.";
 
-    const start = (args: { workflowId: string, message?: string, chatId?: string, record?: boolean }, wait?: { timeoutMs: number }) =>
+    const igniterOptions = (args: { message?: string, chatId?: string, viaNodeId?: string, record?: boolean }): Execution.BuildIgniterOptions => {
+        if (args.viaNodeId !== undefined)
+            return { variant: "via", nodeId: args.viaNodeId as Workflow.Node.Id, record: args.record };
+
+        if (args.message !== undefined)
+            return { variant: "chat", message: args.message, chatId: args.chatId as never, record: args.record };
+
+        return { variant: "manual", record: args.record };
+    };
+
+    const start = (args: { workflowId: string, message?: string, chatId?: string, viaNodeId?: string, record?: boolean }, wait?: { timeoutMs: number }) =>
         Execution.API.run(api.raw, args.workflowId as never, {
-            igniter:     Execution.buildIgniter(
-                args.message !== undefined
-                    ? { variant: "chat", message: args.message, chatId: args.chatId as never, record: args.record }
-                    : { variant: "manual", record: args.record },
-            ),
+            igniter:     Execution.buildIgniter(igniterOptions(args)),
             await: wait,
         }, NO_RETRY);
 

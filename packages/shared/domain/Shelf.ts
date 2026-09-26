@@ -53,6 +53,10 @@ export namespace Shelf {
             proxyCompatible: boolean
             /** Has derivative branches: some field values reshape the node. */
             derivable:       boolean
+            /** Starts a run only when the run elects it; a manual run skips it. */
+            igniter:         boolean
+            /** Never starts a run; fires only when another node triggers it. */
+            passive:         boolean
             fieldIds:        Foundations.Field.Id[]
             inputVariants:   Foundations.Port.Variant[]
             outputVariants:  Foundations.Port.Variant[]
@@ -65,6 +69,8 @@ export namespace Shelf {
             toolCompatible:  z.boolean().optional(),
             proxyCompatible: z.boolean().optional(),
             derivable:       z.boolean().optional(),
+            igniter:         z.boolean().optional(),
+            passive:         z.boolean().optional(),
             /** Has every one of these fields. */
             fieldIds:        z.array(Foundations.Field.Id).optional(),
             /** Has an input of any of these variants. */
@@ -103,6 +109,8 @@ export namespace Shelf {
                 toolCompatible:  bp.toolCompatible  ?? false,
                 proxyCompatible: bp.proxyCompatible ?? false,
                 derivable:       Foundations.Blueprint.isDerivable(bp),
+                igniter:         bp.igniter ?? false,
+                passive:         bp.passive ?? false,
                 fieldIds:        bp.fields.map(f => f.id),
                 inputVariants:   [...new Set(bp.inputs.map(p => p.variant))],
                 outputVariants:  [...new Set(bp.outputs.map(p => p.variant))],
@@ -123,6 +131,8 @@ export namespace Shelf {
                 (q.toolCompatible  === undefined || s.toolCompatible  === q.toolCompatible) &&
                 (q.proxyCompatible === undefined || s.proxyCompatible === q.proxyCompatible) &&
                 (q.derivable       === undefined || s.derivable       === q.derivable) &&
+                (q.igniter         === undefined || s.igniter         === q.igniter) &&
+                (q.passive         === undefined || s.passive         === q.passive) &&
                 (!q.fieldIds || q.fieldIds.every(id => s.fieldIds.includes(id))) &&
                 (!inputs    || s.inputVariants.some(v => inputs.has(v))) &&
                 (!outputs   || s.outputVariants.some(v => outputs.has(v))),

@@ -20,6 +20,10 @@ export const projectToBaseBlueprint = (bp: Foundations.Blueprint) => ({
     inputs:  bp.inputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
     outputs: bp.outputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
     credentials: (bp.credentials ?? []).map(t => ({ templateId: t.id, templateName: t.displayName, optional: t.optional ?? false })),
+    ...(bp.igniter ? { igniter: true } : {}),
+    ...(bp.passive ? { passive: true } : {}),
+    ...(bp.webhooks?.length ? { webhookRoute: true } : {}),
+    ...(bp.gatewayListener ? { connectionField: bp.gatewayListener.refFieldId } : {}),
 });
 
 export interface DerivativeSummary {

@@ -91,19 +91,14 @@ export function extractExposedOutputs(wfData: Workflow.Data): Port.Output[] {
 
 
 
-/**
- * Derive a slim node's live input ports. When the node is a subworkflow (its dependency's graph is
- * passed), its ports ARE the subworkflow's exposed inputs — the `base` (blueprint's own inputs) is
- * only a drawer-preview snapshot and would double the ports if concatenated, so it's dropped.
- * Otherwise it's the blueprint base plus the node's own `addedInputs`.
- */
+// A node's live input ports: the subworkflow's exposed inputs when a dependency graph is passed, else the blueprint base, plus the node's `addedInputs`.
 export function resolveInputs(
     base: readonly Port.Input[],
     node: Node.Raw,
     shapeDepData: Workflow.Data | null,
 ): Port.Input[] {
     if (shapeDepData)
-        return resolve([], extractExposedInputs(shapeDepData), node.polymorphicResolutions);
+        return resolve(extractExposedInputs(shapeDepData), node.addedInputs, node.polymorphicResolutions);
     return resolve(base, node.addedInputs, node.polymorphicResolutions);
 }
 
