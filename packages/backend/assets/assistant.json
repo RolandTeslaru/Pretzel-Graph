@@ -1,0 +1,1001 @@
+{
+  "displayName": "Assistant",
+  "description": null,
+  "icon": "Bot",
+  "accent": "port-LanguageModel",
+  "iconColor": null,
+  "data": {
+    "version": 6,
+    "globalFields": [],
+    "nodes": {
+      "Core.Text.Input-we5ff": {
+        "id": "Core.Text.Input-we5ff",
+        "blueprintId": "Core.Text.Input",
+        "ui": {
+          "isMinimized": false
+        }
+      },
+      "Pretzel.ChatAgent-99t3p": {
+        "id": "Pretzel.ChatAgent-99t3p",
+        "blueprintId": "Pretzel.ChatAgent",
+        "ui": {},
+        "addedInputs": [
+          {
+            "id": "sysMsg",
+            "displayName": "System Message",
+            "isAddedByUser": true,
+            "variant": "Message",
+            "required": true
+          }
+        ]
+      },
+      "Core.Utils.Tool.Catalog-oywv7": {
+        "id": "Core.Utils.Tool.Catalog-oywv7",
+        "blueprintId": "Core.Utils.Tool.Catalog",
+        "ui": {
+          "isMinimized": true
+        },
+        "reconciledBlueprintId": "Core.Utils.Tool.Catalog:tools_num==5"
+      },
+      "Core.SubWorkflow.ExposeInputPort-0mut4": {
+        "id": "Core.SubWorkflow.ExposeInputPort-0mut4",
+        "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+        "ui": {
+          "isMinimized": false
+        },
+        "polymorphicResolutions": {
+          "expose_input_port": "MessageList"
+        }
+      },
+      "Core.SubWorkflow.ExposeInputPort-cgj9i": {
+        "id": "Core.SubWorkflow.ExposeInputPort-cgj9i",
+        "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+        "ui": {
+          "displayName": "Data Input",
+          "isMinimized": true
+        },
+        "polymorphicResolutions": {
+          "expose_input_port": "Data"
+        }
+      },
+      "Core.SubWorkflow.ExposeOutputPort-xo9ln": {
+        "id": "Core.SubWorkflow.ExposeOutputPort-xo9ln",
+        "blueprintId": "Core.SubWorkflow.ExposeOutputPort",
+        "ui": {
+          "displayName": "Output Messages"
+        },
+        "polymorphicResolutions": {
+          "expose_output_port": "MessageList"
+        }
+      },
+      "Integrations.PretzelGraph.ShelfSDK-g2mfq": {
+        "id": "Integrations.PretzelGraph.ShelfSDK-g2mfq",
+        "blueprintId": "Integrations.PretzelGraph.ShelfSDK",
+        "ui": {},
+        "reconciledBlueprintId": "Integrations.PretzelGraph.ShelfSDK:isConvertedToTool==true"
+      },
+      "Integrations.PretzelGraph.VaultSDK-rr2dp": {
+        "id": "Integrations.PretzelGraph.VaultSDK-rr2dp",
+        "blueprintId": "Integrations.PretzelGraph.VaultSDK",
+        "ui": {},
+        "reconciledBlueprintId": "Integrations.PretzelGraph.VaultSDK:isConvertedToTool==true"
+      },
+      "Integrations.PretzelGraph.LibrarySDK-tmxsb": {
+        "id": "Integrations.PretzelGraph.LibrarySDK-tmxsb",
+        "blueprintId": "Integrations.PretzelGraph.LibrarySDK",
+        "ui": {},
+        "reconciledBlueprintId": "Integrations.PretzelGraph.LibrarySDK:isConvertedToTool==true"
+      },
+      "Integrations.PretzelGraph.ExecutionSDK-wil27": {
+        "id": "Integrations.PretzelGraph.ExecutionSDK-wil27",
+        "blueprintId": "Integrations.PretzelGraph.ExecutionSDK",
+        "ui": {},
+        "reconciledBlueprintId": "Integrations.PretzelGraph.ExecutionSDK:isConvertedToTool==true"
+      },
+      "Integrations.PretzelGraph.WorkbenchSDK-2eh9b": {
+        "id": "Integrations.PretzelGraph.WorkbenchSDK-2eh9b",
+        "blueprintId": "Integrations.PretzelGraph.WorkbenchSDK",
+        "ui": {},
+        "reconciledBlueprintId": "Integrations.PretzelGraph.WorkbenchSDK:isConvertedToTool==true",
+        "addedInputs": [
+          {
+            "id": "data",
+            "displayName": "Data",
+            "isAddedByUser": true,
+            "variant": "Data",
+            "required": false
+          }
+        ]
+      }
+    },
+    "edges": [
+      "Core.SubWorkflow.ExposeInputPort-cgj9i|output|Integrations.PretzelGraph.WorkbenchSDK-2eh9b|data",
+      "Integrations.PretzelGraph.ShelfSDK-g2mfq|tools|Core.Utils.Tool.Catalog-oywv7|tool_2",
+      "Integrations.PretzelGraph.ExecutionSDK-wil27|tools|Core.Utils.Tool.Catalog-oywv7|tool_3",
+      "Integrations.PretzelGraph.VaultSDK-rr2dp|tools|Core.Utils.Tool.Catalog-oywv7|tool_4",
+      "Integrations.PretzelGraph.LibrarySDK-tmxsb|tools|Core.Utils.Tool.Catalog-oywv7|tool_5",
+      "Integrations.PretzelGraph.WorkbenchSDK-2eh9b|tools|Core.Utils.Tool.Catalog-oywv7|tool_1",
+      "Core.Utils.Tool.Catalog-oywv7|tool_list|Pretzel.ChatAgent-99t3p|tools",
+      "Core.Text.Input-we5ff|output|Pretzel.ChatAgent-99t3p|sysMsg",
+      "Core.SubWorkflow.ExposeInputPort-0mut4|output|Pretzel.ChatAgent-99t3p|input",
+      "Pretzel.ChatAgent-99t3p|output|Core.SubWorkflow.ExposeOutputPort-xo9ln|input"
+    ],
+    "staticValues": {
+      "Core.Text.Input-we5ff": {
+        "text": "You are the PretzelGraph assistant. You build and edit workflows on the user's canvas with the workbench, shelf, execution, vault and library tools, then run them to prove they work.\n\n# How editing works\n- Edits happen inside a transaction: workbench_begin_transaction, then workbench_apply, then workbench_commit_transaction. Roll back with workbench_rollback_transaction if you've made a mess.\n- workbench_apply takes a list of operations, each named by its op: node.create, node.delete, node.move, node.addInputPort, node.updateInputPort, node.removeInputPort, edge.create, edge.delete, field.set, credential.setInstance, globalField.add, globalField.update, globalField.remove.\n- Beginning holds the workflow: no one else can save it until you commit or roll back. Begin right before you edit, and commit as soon as the change is coherent. You can run several transactions before you answer.\n- Beginning reloads the saved graph. Re-read the nodes you're about to change after beginning, not before.\n- Commit before your final answer. A transaction left open is rolled back after you answer, and its changes are lost.\n- Runs use the SAVED graph. Commit before execution_run, or the run won't include your edits.\n- If an apply fails partway, read the failure and continue from there; the operations before it stay applied.\n- Create nodes in one apply and wire them in the next; a new node's id only comes back in the results.\n\n# Layout\nGive every node.create a position. workbench_get_layout returns each node's box: position is its top-left corner, size its width and height.\n- Lay the main flow out left to right, one column per step. Leave a 150px gap between the right edge of one node and the left edge of the next; nodes are 250px wide, so columns sit 400px apart.\n- Put supporting nodes, such as a model provider or a tool, below the node they feed, in the same column, with an 80px gap below that node's bottom edge.\n- Before adding to an existing graph, read workbench_get_layout and place the new nodes clear of everything already there.\n- Adjusting the layout is the last step of every build, before you commit: read workbench_get_layout and fix with node.move operations. No two boxes overlap or sit closer than the gaps above. No edge passes behind a node: an edge that skips a column must run above or below the nodes in between, so move one of its ends to another row. Each supporting node sits under the node it feeds.\n\n# Never guess ids\n- Before using a blueprint, read shelf_get_blueprint for its exact field ids and port ids. Never infer a port id from the node's name or its field ids.\n- Fields marked reconcile reshape the node. Set them with a field.set operation after creating the node, never in staticValues. The result lists the ports added and removed and any edges dropped. For the full list of variants, see shelf_get_blueprint_derivatives.\n- Variadic fields set a port count and name the ports input_1…input_n (Merge \"inputPorts\", starts at 2) or tool_1…tool_n (Tool Catalog \"tools_num\", starts at 1). Only raise the count when you need more.\n\n# Wiring rules\n- An input port accepts ONE edge. To feed several sources into one input, put a Core.Routing.Merge in front: it joins its inputs into a single list (single values become one item each). Its output is always a list, so the target must take a list. In loops, set its dataDependency to \"OR\" (Follow Trigger): it then forwards only the input that just fired.\n- An output port can feed any number of inputs.\n- A single-value output can connect to a list input of the same kind: Message → MessageList, Data → DataList, Tool → ToolList, Skill → SkillList. Any single-value or list output except the Unresolved types can go into an UnresolvedList. The value arrives as a one-item list. Use this to give one item to a list input, e.g. Compose Message → Language Model.messages, or a single tool → Language Model.tools with no Tool Catalog. A list output never connects to a single-value input; pick one item out with Select Item.\n- Most nodes have no inputs, or fewer than you need. Add ports with a node.addInputPort operation (variants include Data, DataList, Message, MessageList and Text). Code and expressions read each port as $in.<portId>.\n- If an edge.create operation fails, it says why (wrong kind, port taken). Fix the cause; don't retry the same edge.\n\n# Expressions and code\nFields are either static (a literal value) or expression (ONE JavaScript expression evaluated at run time). workbench_get_node lists each field's mode under fieldModes; switch it by passing mode in a field.set operation.\n- Fixed to expression: If Else \"condition\" and Filter \"condition\".\n- Start in expression: Compose Message \"content\", and chat_id on the Chat nodes (leave chat_id as \"$igniter.chat_id\").\n- Everything else starts static.\nFor fixed text, switch the field to static rather than writing an expression. In expression mode, plain words fail at run time (\"Invalid expression\") and validation won't catch it; write text as a template literal, including the backticks: `Summary of ${$in.rows.length} rows`.\nNames available in expressions and code (any other $name is a runtime error):\n- $in: the node's inputs, by port id.\n- $item, $itemIndex: the current element and its index, only in per-item fields such as Filter \"condition\".\n- $globalFields.<id>: the workflow's global field values.\n- $igniter: what started the run, e.g. $igniter.chat_id.\n- $node: this node's definition (id, blueprintId, fields, inputs, outputs).\n- $workflow: the whole graph (id, nodes, staticValues, edges, credentialInstanceIds).\n- $globals: a writable object shared by every node for the whole run; use it to pass state between nodes.\n- $nodeGlobals: the same, private to this node and kept across re-fires; use it for state a looping node must remember, e.g. $nodeGlobals.count = ($nodeGlobals.count ?? 0) + 1.\n- $metrics: a writable object; in a sub-workflow each key becomes a metric on the Execute Sub-Workflow node.\nRun Code \"code\" is the body of an async function. It must `return` its result, and it can read the same names. Returning an array produces a list that list nodes can take.\n\n# Execution semantics\n- Every node has two execution fields, set with a field.set operation like any other. The defaults are right for almost every node; leave them unless one of the cases below applies.\n- signalDependency (default OR): the node fires on any incoming signal and re-fires on each one, so cycles work. AND waits for every upstream signal; XOR fires on exactly one and fails the run if two arrive at once.\n- dataDependency (default AND, Wait & Join): the node waits until every wired input has a value, then reads them all. Set it to OR (Follow Trigger) only when the inputs are alternatives, not parts of one job: the node then reads just the input that fired.\n- Use dataDependency OR for a signal junction, e.g. the Merge where a chat loop re-enters, and for nodes whose inputs are separate operations, e.g. Chat History's overwrite and append, which must never apply together. Accumulator already defaults to OR.\n- onErrorStrategy defaults to \"propagate\". Catch Error turns a propagating error into data; Terminate ends the run on purpose.\n\n# Standard patterns\nChat agent with tools (the default when a user asks for \"an agent\"):\n  Chat Input.response → Merge.input_1\n  Merge.output → Chat History.append\n  Chat History.history → Language Model.messages\n  <model provider>.languageModel → Language Model.languageModel\n  <tool node>.tool → Language Model.tools AND → Tool Runner.tools (the same tools go to both)\n  Language Model.response → If Else.input, condition: ($in.input?.tool_calls?.length ?? 0) > 0\n  If Else.true → Tool Runner.input\n  Tool Runner.toolOutputs → Merge.input_2 (this closes the loop)\n  If Else.false → Chat Output.messages\nPut the agent's instructions in Language Model's systemMessage.\nLanguage Model's tools port takes one edge. For several tools, set tools_num on a Tool Catalog, wire each tool into tool_n, then send the catalog to both Language Model and Tool Runner.\nTo use a node as a tool, set isConvertedToTool = true. Its output becomes a Tool port. A Run Code node in Tool Mode lets the model write the code itself.\nModel providers (Anthropic Chat, OpenAI Chat, Google Gemini, xAI Grok Chat, OpenRouter Chat) output a LanguageModel. They go into Language Model; they don't reply on their own.\nData pipeline: JSON Injector / Webhook / an integration → Run Code (with added input ports) → Filter / Select Item / Slice → Compose Message or a destination node.\n\n# Igniters\nAn igniter is a node that starts a run from outside: Webhook (Core.Webhook) on an HTTP request, and the Discord, Telegram and Slack Events nodes on an event from a connection. shelf_get_blueprint marks them igniter: true.\n- Igniters never start on their own. A manual run skips them and everything only they feed; if every entry point is an igniter, a manual run fails with \"No start nodes found\".\n- To test one, run via it: execution_run with viaNodeId. The node then waits, until its test timeout, for a real request or event, which only the user can send.\n- Ask first. Tell the user what to send and where, ask them to say when they're ready, and end your answer. When they reply, start the run via the node with execution_run_and_await; they send it while you wait. Raise the node's test timeout (testTimeoutMs on Webhook, test_timeout_ms on Events, up to 600000) with a field.set operation first so they have time.\n- Webhook: it receives requests on its path with its method; payload is { method, path, headers, query, body }. A test request goes to <editor address>/webhook-test/<workflowId>/<path>; a live one to <editor address>/webhook/<workflowId>/<path>. The editor address is where the user has PretzelGraph open; the Webhook node's panel shows both URLs, so point the user there. Get workflowId from workbench_get_workflow_meta and path from the node's path field.\n- Events: set connection to the connection's ref from library_query and pick the event. Test by having the user message the bot in the right place.\n- Live traffic reaches only a published workflow. You can't publish; tell the user to.\n\n# Sub-workflows\nA workflow can be reused as a single node inside another workflow. Its interface is made of three things:\n- Expose Input Port (Core.SubWorkflow.ExposeInputPort): each one becomes an input port on the outer node, named by its exposed_port_id. Inside, its \"output\" port delivers what the outer node received. Set required: true when the outer node must have it wired.\n- Expose Output Port (Core.SubWorkflow.ExposeOutputPort): each one becomes an output port on the outer node, named by its exposed_port_id. Wire the value to send out into its \"input\" port.\n- Global fields: each one becomes a field on the outer node. Read them inside as $globalFields.<id>, e.g. a Language Model systemMessage of $globalFields.system_message in expression mode, or an If Else condition of $globalFields.output_all_messages.\nExpose ports take on the kind of whatever they're wired to. exposed_port_id and required are static-only, and exposed_port_id must be a readable id: it's the port id users see.\nGive every global field an initialValue. When the workflow runs on its own, rather than inside another, each global field takes its initialValue and every Expose Input Port outputs null, so a test run of a sub-workflow only exercises the paths that don't depend on its inputs.\nYou can build and edit a sub-workflow, but you can't place one inside another workflow: tell the user to add an Execute Sub-Workflow node and pick the workflow in its Workflow field.\n\n# Library\nlibrary_query finds what the workspace has saved: workflows, folders, skills and connections. Each result has a ref, { kind, id }.\n- A field that takes a library item, such as connection on the Discord, Telegram and Slack Events nodes, takes that ref as its value: set it with a field.set operation. If the field names a definitionId, pick a connection with the same definitionId.\n- Workflows and skills go into the Execute Sub-Workflow and Skill nodes, which embed a copy of them. You can't set those; tell the user which one to pick.\n\n# Credentials\nworkbench_get_node lists the credential templates a node takes. Find saved instances with vault_list_credential_instances (templateIds filter) and attach one with a credential.setInstance operation. If exactly one instance fits, attach it. If several fit, ask which. If none exist, or you don't have vault_list_credential_instances, build everything else and tell the user which credential to create or attach. A node that reports missing_credential blocks the WHOLE workflow from running. Don't try to work around it by swapping in other nodes. You never see secret values and cannot create credentials.\n\n# Verify before you claim success\n1. After editing, run workbench_query_nodes. Every node must show hasIssues: false. For each node with issues, use workbench_get_node and fix what it names (missing_connection, missing_value_or_connection, missing_credential).\n2. Commit, then run: execution_run_and_await (pass message for chat workflows; for a workflow started by an igniter, follow Igniters above). If it returns settled: false, call execution_wait.\n3. Read the result. status is the verdict. When something fails, the error is in session.node_status[<nodeId>].error; the top-level error may be empty. Each node's outputs are in session.node_output_projections. Check that the values are what the user asked for, not just that the run completed.\n4. Report plainly: what you built, what the run produced, and anything the user must do (credentials, choices you made for them). If you didn't run it, say so.\n\n# Working with the user\n- If the request is clear, build it. If a choice changes the design (which model provider, which integration, what triggers the workflow), ask one short question first.\n- Don't delete or rewire nodes you didn't create unless the user asked for it. Read the existing graph before changing it.\n- Describe the workflow in the user's terms (nodes, what flows between them), not in tool-call terms."
+      },
+      "Pretzel.ChatAgent-99t3p": {
+        "system_message": "$in.sysMsg.content",
+        "output_all_messages": true,
+        "__shape_dependency__": {
+          "kind": "listing",
+          "id": "115ed000-8f61-4fda-ad99-ba665c27676f"
+        }
+      },
+      "Core.Utils.Tool.Catalog-oywv7": {
+        "tools_num": 5
+      },
+      "Core.SubWorkflow.ExposeInputPort-0mut4": {
+        "required": true,
+        "exposed_port_id": "ExposedInputPort-cjwfv"
+      },
+      "Core.SubWorkflow.ExposeInputPort-cgj9i": {
+        "required": true,
+        "exposed_port_id": "data_input"
+      },
+      "Core.SubWorkflow.ExposeOutputPort-xo9ln": {
+        "exposed_port_id": "output"
+      },
+      "Integrations.PretzelGraph.ShelfSDK-g2mfq": {
+        "isConvertedToTool": true
+      },
+      "Integrations.PretzelGraph.VaultSDK-rr2dp": {
+        "isConvertedToTool": true
+      },
+      "Integrations.PretzelGraph.LibrarySDK-tmxsb": {
+        "isConvertedToTool": true
+      },
+      "Integrations.PretzelGraph.ExecutionSDK-wil27": {
+        "isConvertedToTool": true
+      },
+      "Integrations.PretzelGraph.WorkbenchSDK-2eh9b": {
+        "workflowId": "$in.output.workflow_id",
+        "isConvertedToTool": true
+      }
+    },
+    "fieldExpressions": {
+      "Pretzel.ChatAgent-99t3p": {
+        "system_message": true
+      },
+      "Integrations.PretzelGraph.WorkbenchSDK-2eh9b": {
+        "workflowId": true
+      }
+    },
+    "credentialInstanceIds": {},
+    "ui": {
+      "layout": {
+        "Core.Text.Input-we5ff": {
+          "x": 860,
+          "y": 1040
+        },
+        "Pretzel.ChatAgent-99t3p": {
+          "x": 1340,
+          "y": 700
+        },
+        "Core.Utils.Tool.Catalog-oywv7": {
+          "x": 1020,
+          "y": 760
+        },
+        "Core.SubWorkflow.ExposeInputPort-0mut4": {
+          "x": 860,
+          "y": 940
+        },
+        "Core.SubWorkflow.ExposeInputPort-cgj9i": {
+          "x": 400,
+          "y": 400
+        },
+        "Core.SubWorkflow.ExposeOutputPort-xo9ln": {
+          "x": 1760,
+          "y": 840
+        },
+        "Integrations.PretzelGraph.ShelfSDK-g2mfq": {
+          "x": 560,
+          "y": 500
+        },
+        "Integrations.PretzelGraph.VaultSDK-rr2dp": {
+          "x": 560,
+          "y": 700
+        },
+        "Integrations.PretzelGraph.LibrarySDK-tmxsb": {
+          "x": 560,
+          "y": 800
+        },
+        "Integrations.PretzelGraph.ExecutionSDK-wil27": {
+          "x": 560,
+          "y": 600
+        },
+        "Integrations.PretzelGraph.WorkbenchSDK-2eh9b": {
+          "x": 560,
+          "y": 380
+        }
+      },
+      "viewport": {
+        "x": -175.05977259568704,
+        "y": -119.13347323666846,
+        "zoom": 0.9192709220102597
+      },
+      "icon_color": null,
+      "annotations": {}
+    },
+    "dependencies": {
+      "listing:115ed000-8f61-4fda-ad99-ba665c27676f": {
+        "kind": "listing",
+        "id": "17221343-fb11-47b6-b824-1b59f5cec7cc",
+        "workflow_id": "115ed000-8f61-4fda-ad99-ba665c27676f",
+        "version": 2,
+        "name": "v1.1",
+        "published_at": "2026-09-26T13:03:16.514Z",
+        "display_name": "Chat Agent",
+        "icon": "Bot",
+        "accent": "port-LanguageModel",
+        "workflow_data": {
+          "version": 6,
+          "globalFields": [
+            {
+              "id": "system_message",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "System Message",
+              "description": "",
+              "variant": "String",
+              "initialValue": "",
+              "multiline": false
+            },
+            {
+              "id": "output_all_messages",
+              "advanced": false,
+              "required": false,
+              "reconcile": false,
+              "displayName": "Output All Messages",
+              "description": "",
+              "variant": "Boolean",
+              "initialValue": false
+            }
+          ],
+          "nodes": {
+            "Pretzel.Agent-rqyy0": {
+              "id": "Pretzel.Agent-rqyy0",
+              "blueprintId": "Pretzel.Agent",
+              "ui": {
+                "isMinimized": true
+              }
+            },
+            "Core.Chat.History-2v8dr": {
+              "id": "Core.Chat.History-2v8dr",
+              "blueprintId": "Core.Chat.History",
+              "ui": {}
+            },
+            "Core.Chat.History-7wfrq": {
+              "id": "Core.Chat.History-7wfrq",
+              "blueprintId": "Core.Chat.History",
+              "ui": {
+                "isMinimized": true
+              }
+            },
+            "Pretzel.Utils.Compactor-lz26l": {
+              "id": "Pretzel.Utils.Compactor-lz26l",
+              "blueprintId": "Pretzel.Utils.Compactor",
+              "ui": {}
+            },
+            "Core.Routing.Passthrough-jolh4": {
+              "id": "Core.Routing.Passthrough-jolh4",
+              "blueprintId": "Core.Routing.Passthrough",
+              "ui": {
+                "isMinimized": true
+              },
+              "reconciledBlueprintId": "Core.Routing.Passthrough:ports==2",
+              "polymorphicResolutions": {
+                "passthrough_0": "ToolList",
+                "passthrough_1": "LanguageModel"
+              }
+            },
+            "Core.SubWorkflow.ExposeInputPort-0sq6h": {
+              "id": "Core.SubWorkflow.ExposeInputPort-0sq6h",
+              "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+              "ui": {
+                "displayName": "Language Model",
+                "isMinimized": false
+              },
+              "polymorphicResolutions": {
+                "expose_input_port": "LanguageModel"
+              }
+            },
+            "Core.SubWorkflow.ExposeInputPort-9wtbd": {
+              "id": "Core.SubWorkflow.ExposeInputPort-9wtbd",
+              "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+              "ui": {
+                "displayName": "Input",
+                "isMinimized": false
+              },
+              "polymorphicResolutions": {
+                "expose_input_port": "MessageList"
+              }
+            },
+            "Core.SubWorkflow.ExposeInputPort-advcm": {
+              "id": "Core.SubWorkflow.ExposeInputPort-advcm",
+              "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+              "ui": {
+                "displayName": "Tools"
+              },
+              "polymorphicResolutions": {
+                "expose_input_port": "ToolList"
+              }
+            },
+            "Core.SubWorkflow.ExposeOutputPort-f27pr": {
+              "id": "Core.SubWorkflow.ExposeOutputPort-f27pr",
+              "blueprintId": "Core.SubWorkflow.ExposeOutputPort",
+              "ui": {
+                "displayName": "Output"
+              },
+              "polymorphicResolutions": {
+                "expose_output_port": "MessageList"
+              }
+            }
+          },
+          "edges": [
+            "Pretzel.Utils.Compactor-lz26l|out|Pretzel.Agent-rqyy0|input_message",
+            "Pretzel.Utils.Compactor-lz26l|onCompact|Core.Chat.History-2v8dr|overwrite",
+            "Core.SubWorkflow.ExposeInputPort-9wtbd|output|Core.Chat.History-7wfrq|append",
+            "Core.Chat.History-7wfrq|history|Pretzel.Utils.Compactor-lz26l|input",
+            "Pretzel.Agent-rqyy0|out|Core.SubWorkflow.ExposeOutputPort-f27pr|input",
+            "Pretzel.Agent-rqyy0|out|Core.Chat.History-2v8dr|append",
+            "Core.SubWorkflow.ExposeInputPort-0sq6h|output|Pretzel.Utils.Compactor-lz26l|model",
+            "Core.Routing.Passthrough-jolh4|output_0|Pretzel.Agent-rqyy0|tools",
+            "Core.Routing.Passthrough-jolh4|output_1|Pretzel.Agent-rqyy0|language_model",
+            "Core.SubWorkflow.ExposeInputPort-0sq6h|output|Core.Routing.Passthrough-jolh4|input_1",
+            "Core.SubWorkflow.ExposeInputPort-advcm|output|Core.Routing.Passthrough-jolh4|input_0"
+          ],
+          "staticValues": {
+            "Pretzel.Agent-rqyy0": {
+              "system_message": "$globalFields.system_message",
+              "output_all_messages": "$globalFields.output_all_messages",
+              "__shape_dependency__": {
+                "kind": "listing",
+                "id": "115ed000-fae8-4266-a17f-9241c1d4e1db"
+              }
+            },
+            "Core.Chat.History-2v8dr": {
+              "dataDependency": "OR"
+            },
+            "Pretzel.Utils.Compactor-lz26l": {
+              "__shape_dependency__": {
+                "kind": "listing",
+                "id": "115ed000-4118-4f7c-b04c-c061e44ab424"
+              }
+            },
+            "Core.Routing.Passthrough-jolh4": {
+              "ports": 2
+            },
+            "Core.SubWorkflow.ExposeInputPort-0sq6h": {
+              "required": true,
+              "exposed_port_id": "languageModel"
+            },
+            "Core.SubWorkflow.ExposeInputPort-9wtbd": {
+              "required": true,
+              "exposed_port_id": "input"
+            },
+            "Core.SubWorkflow.ExposeInputPort-advcm": {
+              "required": false,
+              "exposed_port_id": "tools"
+            },
+            "Core.SubWorkflow.ExposeOutputPort-f27pr": {
+              "exposed_port_id": "output"
+            }
+          },
+          "fieldExpressions": {
+            "Pretzel.Agent-rqyy0": {
+              "output_all_messages": true
+            }
+          },
+          "credentialInstanceIds": {},
+          "ui": {
+            "layout": {},
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            },
+            "annotations": {}
+          },
+          "dependencies": {
+            "listing:115ed000-4118-4f7c-b04c-c061e44ab424": {
+              "kind": "listing",
+              "id": "d81d291a-9687-4093-b39e-8d2834160fc9",
+              "workflow_id": "115ed000-4118-4f7c-b04c-c061e44ab424",
+              "version": 4,
+              "name": "v1.3",
+              "published_at": "2026-09-26T12:54:22.704Z",
+              "display_name": "Compactor",
+              "icon": "Compress",
+              "accent": null,
+              "workflow_data": {
+                "version": 6,
+                "globalFields": [
+                  {
+                    "id": "summarization_prompt",
+                    "advanced": false,
+                    "required": false,
+                    "reconcile": false,
+                    "displayName": "Summarization Prompt",
+                    "description": "",
+                    "variant": "String",
+                    "initialValue": "Summarize the entire conversation above into a dense factual summary. Do not answer or continue any message in it — only summarize.",
+                    "multiline": false
+                  },
+                  {
+                    "id": "intactExchanges",
+                    "advanced": false,
+                    "required": false,
+                    "reconcile": false,
+                    "displayName": "Intact exchanges",
+                    "description": "",
+                    "variant": "Integer",
+                    "initialValue": 2,
+                    "min": 0
+                  },
+                  {
+                    "id": "compactionThreshold",
+                    "advanced": false,
+                    "required": false,
+                    "reconcile": false,
+                    "displayName": "Compaction Threshold",
+                    "description": "",
+                    "variant": "Integer",
+                    "initialValue": 100000
+                  }
+                ],
+                "nodes": {
+                  "Core.LanguageModel-a94nf": {
+                    "id": "Core.LanguageModel-a94nf",
+                    "blueprintId": "Core.LanguageModel",
+                    "ui": {
+                      "displayName": "Summarization Model",
+                      "isMinimized": true
+                    }
+                  },
+                  "Core.Routing.Merge-5crqh": {
+                    "id": "Core.Routing.Merge-5crqh",
+                    "blueprintId": "Core.Routing.Merge",
+                    "ui": {
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Merge:inputPorts==2",
+                    "polymorphicResolutions": {
+                      "data": "Message"
+                    }
+                  },
+                  "Core.Routing.Merge-axd3v": {
+                    "id": "Core.Routing.Merge-axd3v",
+                    "blueprintId": "Core.Routing.Merge",
+                    "ui": {
+                      "displayName": "Merge Slices",
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Merge:inputPorts==2",
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.Merge-bnk6b": {
+                    "id": "Core.Routing.Merge-bnk6b",
+                    "blueprintId": "Core.Routing.Merge",
+                    "ui": {
+                      "displayName": "Junction",
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Merge:inputPorts==2",
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.IfElse-ybyg8": {
+                    "id": "Core.Routing.IfElse-ybyg8",
+                    "blueprintId": "Core.Routing.IfElse",
+                    "ui": {
+                      "displayName": "Needs Compaction ?",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Utils.List.Slice-a9e9r": {
+                    "id": "Core.Utils.List.Slice-a9e9r",
+                    "blueprintId": "Core.Utils.List.Slice",
+                    "ui": {
+                      "displayName": "Intact Context Slice",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Utils.List.Slice-fwkpy": {
+                    "id": "Core.Utils.List.Slice-fwkpy",
+                    "blueprintId": "Core.Utils.List.Slice",
+                    "ui": {
+                      "displayName": "Summarization Slice",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.Passthrough-ximmv": {
+                    "id": "Core.Routing.Passthrough-ximmv",
+                    "blueprintId": "Core.Routing.Passthrough",
+                    "ui": {
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Passthrough:ports==1",
+                    "polymorphicResolutions": {
+                      "passthrough_0": "MessageList"
+                    }
+                  },
+                  "Core.Utils.Message.Compose-h9oyx": {
+                    "id": "Core.Utils.Message.Compose-h9oyx",
+                    "blueprintId": "Core.Utils.Message.Compose",
+                    "ui": {
+                      "displayName": "Enforcement Prompt",
+                      "isMinimized": false
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-jcc3c": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-jcc3c",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Input",
+                      "isMinimized": false
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "MessageList"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-zt7up": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-zt7up",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Summarization LLM",
+                      "isMinimized": false
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "LanguageModel"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-gj6yt": {
+                    "id": "Core.SubWorkflow.ExposeOutputPort-gj6yt",
+                    "blueprintId": "Core.SubWorkflow.ExposeOutputPort",
+                    "ui": {
+                      "displayName": "On Compact",
+                      "isMinimized": false
+                    },
+                    "polymorphicResolutions": {
+                      "expose_output_port": "MessageList"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-l335p": {
+                    "id": "Core.SubWorkflow.ExposeOutputPort-l335p",
+                    "blueprintId": "Core.SubWorkflow.ExposeOutputPort",
+                    "ui": {
+                      "displayName": "Out",
+                      "isMinimized": false
+                    },
+                    "polymorphicResolutions": {
+                      "expose_output_port": "MessageList"
+                    }
+                  }
+                },
+                "edges": [
+                  "Core.Routing.IfElse-ybyg8|true|Core.Utils.List.Slice-a9e9r|list",
+                  "Core.Routing.IfElse-ybyg8|true|Core.Utils.List.Slice-fwkpy|list",
+                  "Core.Routing.Merge-axd3v|output|Core.Routing.Merge-bnk6b|input_1",
+                  "Core.Routing.Merge-5crqh|output|Core.LanguageModel-a94nf|messages",
+                  "Core.LanguageModel-a94nf|response|Core.Routing.Merge-axd3v|input_1",
+                  "Core.Utils.List.Slice-a9e9r|slice|Core.Routing.Merge-axd3v|input_2",
+                  "Core.Utils.List.Slice-fwkpy|slice|Core.Routing.Merge-5crqh|input_1",
+                  "Core.Routing.IfElse-ybyg8|false|Core.Routing.Passthrough-ximmv|input_0",
+                  "Core.Routing.Passthrough-ximmv|output_0|Core.Routing.Merge-bnk6b|input_2",
+                  "Core.Utils.Message.Compose-h9oyx|message|Core.Routing.Merge-5crqh|input_2",
+                  "Core.Routing.Merge-bnk6b|output|Core.SubWorkflow.ExposeOutputPort-l335p|input",
+                  "Core.Routing.Merge-axd3v|output|Core.SubWorkflow.ExposeOutputPort-gj6yt|input",
+                  "Core.SubWorkflow.ExposeInputPort-jcc3c|output|Core.Routing.IfElse-ybyg8|input",
+                  "Core.SubWorkflow.ExposeInputPort-zt7up|output|Core.LanguageModel-a94nf|languageModel"
+                ],
+                "staticValues": {
+                  "Core.LanguageModel-a94nf": {
+                    "systemMessage": "You are a context-compaction engine for an AI agent's conversation. You are given\n  the earlier portion of a transcript that is about to be replaced by your summary.\n  The agent will continue working using ONLY your summary plus the most recent\n  messages — so anything you omit is permanently lost.\n\n  Produce a dense, factual summary. Preserve, in this priority order:\n  1. The user's original goal/task and any constraints or preferences they stated.\n  2. Decisions made and the reasoning behind them (especially ones that are hard to reverse).\n  3. Concrete facts discovered: file paths, names, IDs, values, API results, error\n     messages — quote exact strings, do not paraphrase identifiers.\n  4. Actions already taken and their outcomes (what succeeded, what failed and why).\n  5. Current state and what remains to be done.\n\n  Rules:\n  - Be terse. No preamble, no \"here is a summary\", no restating these instructions.\n  - Do not invent or infer anything not present in the transcript.\n  - Drop pleasantries, redundant tool chatter, and superseded intermediate steps.\n  - Keep it under your output budget; density over completeness when forced to choose."
+                  },
+                  "Core.Routing.Merge-5crqh": {
+                    "inputPorts": 2
+                  },
+                  "Core.Routing.Merge-axd3v": {
+                    "inputPorts": 2,
+                    "signalDependency": "AND"
+                  },
+                  "Core.Routing.Merge-bnk6b": {
+                    "inputPorts": 2,
+                    "dataDependency": "OR"
+                  },
+                  "Core.Routing.IfElse-ybyg8": {
+                    "condition": "(() => {\n    const THRESHOLD = $globalFields.compactionThreshold\n    \n    const g = $nodeGlobals\n\n    for ( let i = $in.input.length - 1; i >= 0; i--){\n        const msg = $in.input[i];\n \n        if(msg && msg.type === \"ai\"){\n            const tokens = msg.usage_metadata?.total_tokens ?? 0\n                    \n            if(tokens > THRESHOLD && g.lastTokenSize !== tokens){\n                // Save the number of messages before compaction\n                g.lastTokenSize = tokens\n\n                return true\n            }\n            break;\n        }\n    }\n\n    return false;\n})()"
+                  },
+                  "Core.Utils.List.Slice-a9e9r": {
+                    "start": "$in.list.flatMap((m, i) => m.type === \"human\" ? [i] : []).at(\n    -$globalFields.intactExchanges\n) ?? 0"
+                  },
+                  "Core.Utils.List.Slice-fwkpy": {
+                    "end": "$in.list.flatMap((m, i) => m.type === \"human\" ? [i] : []).at(\n    -$globalFields.intactExchanges\n) ?? 0",
+                    "start": "0"
+                  },
+                  "Core.Routing.Passthrough-ximmv": {
+                    "ports": 1
+                  },
+                  "Core.Utils.Message.Compose-h9oyx": {
+                    "content": "$globalFields.summarization_prompt"
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-jcc3c": {
+                    "required": true,
+                    "exposed_port_id": "input"
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-zt7up": {
+                    "required": true,
+                    "exposed_port_id": "model"
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-gj6yt": {
+                    "exposed_port_id": "onCompact"
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-l335p": {
+                    "exposed_port_id": "out"
+                  }
+                },
+                "fieldExpressions": {
+                  "Core.LanguageModel-a94nf": {},
+                  "Core.Routing.Merge-5crqh": {},
+                  "Core.Routing.Merge-axd3v": {},
+                  "Core.Routing.Merge-bnk6b": {},
+                  "Core.Routing.IfElse-ybyg8": {},
+                  "Core.Utils.List.Slice-a9e9r": {
+                    "end": true,
+                    "start": true
+                  },
+                  "Core.Utils.List.Slice-fwkpy": {
+                    "end": true,
+                    "start": true
+                  },
+                  "Core.Routing.Passthrough-ximmv": {},
+                  "Core.Utils.Message.Compose-h9oyx": {},
+                  "Core.SubWorkflow.ExposeInputPort-jcc3c": {},
+                  "Core.SubWorkflow.ExposeInputPort-zt7up": {},
+                  "Core.SubWorkflow.ExposeOutputPort-gj6yt": {},
+                  "Core.SubWorkflow.ExposeOutputPort-l335p": {}
+                },
+                "credentialInstanceIds": {},
+                "ui": {
+                  "layout": {},
+                  "viewport": {
+                    "x": 0,
+                    "y": 0,
+                    "zoom": 1
+                  },
+                  "annotations": {}
+                },
+                "dependencies": {}
+              }
+            },
+            "listing:115ed000-fae8-4266-a17f-9241c1d4e1db": {
+              "kind": "listing",
+              "id": "b8ada364-d22a-41d6-9748-4966c58de84f",
+              "workflow_id": "115ed000-fae8-4266-a17f-9241c1d4e1db",
+              "version": 3,
+              "name": "v1.2",
+              "published_at": "2026-09-24T23:20:49.176Z",
+              "display_name": "Agent",
+              "icon": "Bot",
+              "accent": "port-LanguageModel",
+              "workflow_data": {
+                "version": 6,
+                "globalFields": [
+                  {
+                    "id": "system_message",
+                    "advanced": false,
+                    "required": false,
+                    "reconcile": false,
+                    "displayName": "System Message",
+                    "description": "",
+                    "variant": "String",
+                    "initialValue": "",
+                    "multiline": false
+                  },
+                  {
+                    "id": "output_all_messages",
+                    "advanced": false,
+                    "required": false,
+                    "reconcile": false,
+                    "displayName": "Output All Messages",
+                    "description": "",
+                    "variant": "Boolean",
+                    "initialValue": false
+                  }
+                ],
+                "nodes": {
+                  "Core.LanguageModel-8l1ec": {
+                    "id": "Core.LanguageModel-8l1ec",
+                    "blueprintId": "Core.LanguageModel",
+                    "ui": {
+                      "isMinimized": false,
+                      "isFlipped": false
+                    }
+                  },
+                  "Core.Routing.Merge-9hxei": {
+                    "id": "Core.Routing.Merge-9hxei",
+                    "blueprintId": "Core.Routing.Merge",
+                    "ui": {
+                      "displayName": "Signal Junction",
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Merge:inputPorts==2",
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.Merge-evxzs": {
+                    "id": "Core.Routing.Merge-evxzs",
+                    "blueprintId": "Core.Routing.Merge",
+                    "ui": {
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Merge:inputPorts==2",
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.IfElse-5asfp": {
+                    "id": "Core.Routing.IfElse-5asfp",
+                    "blueprintId": "Core.Routing.IfElse",
+                    "ui": {
+                      "displayName": "Output All Messages ?",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.IfElse-zz8jc": {
+                    "id": "Core.Routing.IfElse-zz8jc",
+                    "blueprintId": "Core.Routing.IfElse",
+                    "ui": {
+                      "displayName": "Has no tool calls ?",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "data": "Message"
+                    }
+                  },
+                  "Core.Routing.Portal-szbf2": {
+                    "id": "Core.Routing.Portal-szbf2",
+                    "blueprintId": "Core.Routing.Portal",
+                    "ui": {
+                      "displayName": "Tool Message Portal",
+                      "isMinimized": true,
+                      "isFlipped": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Portal:direction==in",
+                    "polymorphicResolutions": {
+                      "portal": "MessageList"
+                    }
+                  },
+                  "Core.Routing.Portal-vwbrl": {
+                    "id": "Core.Routing.Portal-vwbrl",
+                    "blueprintId": "Core.Routing.Portal",
+                    "ui": {
+                      "displayName": "Tool Message Portal",
+                      "isMinimized": true,
+                      "isFlipped": false
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Portal:direction==out",
+                    "polymorphicResolutions": {
+                      "portal": "MessageList"
+                    }
+                  },
+                  "Core.Utils.Tool.Runner-78dj1": {
+                    "id": "Core.Utils.Tool.Runner-78dj1",
+                    "blueprintId": "Core.Utils.Tool.Runner",
+                    "ui": {
+                      "isMinimized": false,
+                      "isFlipped": true
+                    }
+                  },
+                  "Core.Routing.Accumulator-p4f82": {
+                    "id": "Core.Routing.Accumulator-p4f82",
+                    "blueprintId": "Core.Routing.Accumulator",
+                    "ui": {},
+                    "polymorphicResolutions": {
+                      "data": "MessageList"
+                    }
+                  },
+                  "Core.Routing.Passthrough-sl145": {
+                    "id": "Core.Routing.Passthrough-sl145",
+                    "blueprintId": "Core.Routing.Passthrough",
+                    "ui": {
+                      "isMinimized": true
+                    },
+                    "reconciledBlueprintId": "Core.Routing.Passthrough:ports==2",
+                    "polymorphicResolutions": {
+                      "passthrough_0": "ToolList",
+                      "passthrough_1": "LanguageModel"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-5jhwt": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-5jhwt",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Language Model",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "LanguageModel"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-aqk6x": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-aqk6x",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Tools",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "ToolList"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-e2jij": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-e2jij",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Tools",
+                      "isMinimized": true,
+                      "isFlipped": true
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "ToolList"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-pphie": {
+                    "id": "Core.SubWorkflow.ExposeInputPort-pphie",
+                    "blueprintId": "Core.SubWorkflow.ExposeInputPort",
+                    "ui": {
+                      "displayName": "Messages",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "expose_input_port": "MessageList"
+                    }
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-d6557": {
+                    "id": "Core.SubWorkflow.ExposeOutputPort-d6557",
+                    "blueprintId": "Core.SubWorkflow.ExposeOutputPort",
+                    "ui": {
+                      "displayName": "Output",
+                      "isMinimized": true
+                    },
+                    "polymorphicResolutions": {
+                      "expose_output_port": "MessageList"
+                    }
+                  }
+                },
+                "edges": [
+                  "Core.Routing.IfElse-zz8jc|true|Core.Routing.Merge-evxzs|input_1",
+                  "Core.Routing.IfElse-5asfp|true|Core.Routing.Merge-evxzs|input_2",
+                  "Core.LanguageModel-8l1ec|response|Core.Routing.IfElse-zz8jc|input",
+                  "Core.Routing.IfElse-zz8jc|false|Core.Utils.Tool.Runner-78dj1|input",
+                  "Core.Routing.Merge-9hxei|output|Core.Routing.Accumulator-p4f82|append",
+                  "Core.Routing.Accumulator-p4f82|state|Core.LanguageModel-8l1ec|messages",
+                  "Core.Utils.Tool.Runner-78dj1|toolOutputs|Core.Routing.Merge-9hxei|input_2",
+                  "Core.Routing.Merge-evxzs|output|Core.SubWorkflow.ExposeOutputPort-d6557|input",
+                  "Core.SubWorkflow.ExposeInputPort-pphie|output|Core.Routing.Merge-9hxei|input_1",
+                  "Core.SubWorkflow.ExposeInputPort-e2jij|output|Core.Utils.Tool.Runner-78dj1|tools",
+                  "Core.Routing.Passthrough-sl145|output_0|Core.LanguageModel-8l1ec|tools",
+                  "Core.SubWorkflow.ExposeInputPort-aqk6x|output|Core.Routing.Passthrough-sl145|input_0",
+                  "Core.Routing.Passthrough-sl145|output_1|Core.LanguageModel-8l1ec|languageModel",
+                  "Core.SubWorkflow.ExposeInputPort-5jhwt|output|Core.Routing.Passthrough-sl145|input_1",
+                  "Core.Utils.Tool.Runner-78dj1|toolOutputs|Core.Routing.Portal-szbf2|input",
+                  "Core.Routing.Portal-vwbrl|output|Core.Routing.IfElse-5asfp|input"
+                ],
+                "staticValues": {
+                  "Core.LanguageModel-8l1ec": {
+                    "systemMessage": "$globalFields.system_message"
+                  },
+                  "Core.Routing.Merge-9hxei": {
+                    "inputPorts": 2,
+                    "dataDependency": "OR"
+                  },
+                  "Core.Routing.Merge-evxzs": {
+                    "inputPorts": 2,
+                    "dataDependency": "OR"
+                  },
+                  "Core.Routing.IfElse-5asfp": {
+                    "condition": "$globalFields.output_all_messages"
+                  },
+                  "Core.Routing.IfElse-zz8jc": {
+                    "condition": "$in.input.tool_calls.length === 0"
+                  },
+                  "Core.Routing.Portal-szbf2": {
+                    "portalId": "p56qe",
+                    "direction": "in"
+                  },
+                  "Core.Routing.Portal-vwbrl": {
+                    "portalId": "p56qe",
+                    "direction": "out"
+                  },
+                  "Core.Routing.Accumulator-p4f82": {
+                    "onErrorStrategy": "terminate",
+                    "signalDependency": "XOR"
+                  },
+                  "Core.Routing.Passthrough-sl145": {
+                    "ports": 2
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-5jhwt": {
+                    "required": true,
+                    "exposed_port_id": "language_model"
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-aqk6x": {
+                    "exposed_port_id": "tools"
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-e2jij": {
+                    "exposed_port_id": "tools"
+                  },
+                  "Core.SubWorkflow.ExposeInputPort-pphie": {
+                    "required": true,
+                    "exposed_port_id": "input_message"
+                  },
+                  "Core.SubWorkflow.ExposeOutputPort-d6557": {
+                    "exposed_port_id": "out"
+                  }
+                },
+                "fieldExpressions": {
+                  "Core.LanguageModel-8l1ec": {
+                    "systemMessage": true
+                  },
+                  "Core.Routing.Merge-9hxei": {},
+                  "Core.Routing.Merge-evxzs": {},
+                  "Core.Routing.IfElse-5asfp": {},
+                  "Core.Routing.IfElse-zz8jc": {},
+                  "Core.Routing.Portal-szbf2": {},
+                  "Core.Routing.Portal-vwbrl": {},
+                  "Core.Utils.Tool.Runner-78dj1": {},
+                  "Core.Routing.Accumulator-p4f82": {},
+                  "Core.Routing.Passthrough-sl145": {},
+                  "Core.SubWorkflow.ExposeInputPort-5jhwt": {},
+                  "Core.SubWorkflow.ExposeInputPort-aqk6x": {},
+                  "Core.SubWorkflow.ExposeInputPort-e2jij": {},
+                  "Core.SubWorkflow.ExposeInputPort-pphie": {},
+                  "Core.SubWorkflow.ExposeOutputPort-d6557": {}
+                },
+                "credentialInstanceIds": {},
+                "ui": {
+                  "layout": {},
+                  "viewport": {
+                    "x": 0,
+                    "y": 0,
+                    "zoom": 1
+                  },
+                  "annotations": {}
+                },
+                "dependencies": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
