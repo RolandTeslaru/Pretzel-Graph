@@ -68,7 +68,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
                 switch (f.fieldOperation) {
                     case "get": return { result: client.operations.field.get(nodeId, fieldId) };
-                    case "set": return { result: await client.runTransaction(() => client.operations.field.set(nodeId, fieldId, f.fieldValue)) };
+                    case "set": {
+                        const mode = f.fieldMode === "keep" ? undefined : f.fieldMode;
+
+                        return { result: await client.runTransaction(() => client.operations.field.set(nodeId, fieldId, f.fieldValue, mode)) };
+                    }
                 }
                 break;
             }

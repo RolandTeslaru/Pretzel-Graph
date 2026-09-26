@@ -1,0 +1,74 @@
+{
+  "kind": "pretzel/workbench-clipboard",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "discord-events",
+      "blueprintId": "Integrations.Discord.Events",
+      "reconciledBlueprintId": "Integrations.Discord.Events:event==messageCreate",
+      "ui": {
+        "displayName": "Receive Discord DM"
+      }
+    },
+    {
+      "id": "discord-reply",
+      "blueprintId": "Integrations.Discord.Operation",
+      "reconciledBlueprintId": "Integrations.Discord.Operation:resource==message/message_action==send/send_target==channel",
+      "ui": {
+        "displayName": "Reply to Discord DM"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "discord-events|event|discord-reply|event",
+      "source": {
+        "nodeId": "discord-events",
+        "portId": "event"
+      },
+      "target": {
+        "nodeId": "discord-reply",
+        "portId": "event"
+      }
+    }
+  ],
+  "layout": {
+    "discord-events": {
+      "x": 0,
+      "y": 0
+    },
+    "discord-reply": {
+      "x": 420,
+      "y": 0
+    }
+  },
+  "staticValues": {
+    "discord-events": {
+      "event": "messageCreate",
+      "origin": "dm",
+      "conversation_scope": "channel",
+      "server_ids": [],
+      "channel_ids": [],
+      "allowed_user_ids": [],
+      "test_timeout_ms": 30000,
+      "allow_bot_messages": false
+    },
+    "discord-reply": {
+      "resource": "message",
+      "message_action": "send",
+      "send_target": "channel",
+      "send_content": "`Howdy, ${$in.event.author.name}! You said: ${$in.event.content}`",
+      "send_suppress_mentions": true,
+      "send_channel_id": "$in.event.channelId",
+      "send_reply_to_id": "$in.event.messageId"
+    }
+  },
+  "fieldExpressions": {
+    "discord-reply": {
+      "send_content": true,
+      "send_channel_id": true,
+      "send_reply_to_id": true
+    }
+  },
+  "credentialInstanceIds": {}
+}

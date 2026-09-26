@@ -108,7 +108,18 @@ export const Blueprint = defineBlueprint({
         ],
         "fieldOperation==get": {},
         "fieldOperation==set": {
-            fields: [defineField.Json("fieldValue", "Value", { initialValue: null })],
+            fields: [
+                defineField.Json("fieldValue", "Value", { initialValue: null }),
+                defineField.MultiOption("fieldMode", "Mode", {
+                    options: [
+                        { value: "keep",       displayName: "Keep" },
+                        { value: "static",     displayName: "Static" },
+                        { value: "expression", displayName: "Expression" },
+                    ],
+                    initialValue: "keep",
+                    tooltip: "Switch the field to static or expression mode before setting the value.",
+                }),
+            ],
         },
     },
 

@@ -1,3 +1,4 @@
+import { Foundations } from "../../Foundations"
 import { Port } from "../../Foundations/Port"
 import type { Workflow } from "../../Workflow"
 import { Document } from "../Document"
@@ -40,6 +41,10 @@ export class NodeOperations {
             inputs:         shape?.inputs  ?? [],
             outputs:        shape?.outputs ?? [],
             staticValues:   d.selectors.node.getStaticValues(d, nodeId),
+            fieldModes:     Object.fromEntries((shape?.fields ?? []).map(field => [field.id, {
+                mode:       this.client.field.getMode(d, nodeId, field),
+                switchable: Foundations.Field.canSwitchMode(field),
+            }])),
             credentials:    d.selectors.credential.getTemplates(d, nodeId).map(template => ({
                 templateId:   template.id,
                 templateName: template.displayName,

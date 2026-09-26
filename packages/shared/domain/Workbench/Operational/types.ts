@@ -28,7 +28,7 @@ export type Operation =
     | { op: "node.updateInputPort"; nodeId: Workflow.Node.Id; portId: Foundations.Port.Input.Id; port: InputPortSpec }
     | ({ op: "edge.create" }          & Connection)
     | { op: "edge.delete";          edgeId: Workflow.Edge.Id }
-    | { op: "field.set";            nodeId: Workflow.Node.Id; fieldId: Foundations.Field.Id; value: unknown }
+    | { op: "field.set";            nodeId: Workflow.Node.Id; fieldId: Foundations.Field.Id; value: unknown; mode?: FieldMode }
     | { op: "credential.setInstance"; nodeId: Workflow.Node.Id; templateId: Vault.Credential.Template.Id; instanceId: Vault.Credential.Instance.Id | null }
     | ({ op: "globalField.add" }      & GlobalFieldSpec)
     | { op: "globalField.update";   fieldId: Foundations.Field.Id; patch: GlobalFieldPatch }
@@ -44,6 +44,8 @@ export interface InputPortSpec {
 
 /** Ids a caller writes for ports and global fields, so expressions can reference them. */
 export const ID_PATTERN = /^[A-Za-z0-9_]+$/
+
+export type FieldMode = "static" | "expression"
 
 export type GlobalFieldVariant = "String" | "Boolean" | "Integer" | "Float"
 

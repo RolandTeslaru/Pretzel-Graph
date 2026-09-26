@@ -52,12 +52,18 @@ export namespace Summary {
         instanceId:   Vault.Credential.Instance.Id | null
     }
 
+    export interface FieldMode {
+        mode:       "static" | "expression"
+        switchable: boolean
+    }
+
     export interface NodeDetail {
         node:           WorkflowD.Node.Raw
         fields:         readonly Foundations.Field[]
         inputs:         readonly Foundations.Port.Input[]
         outputs:        readonly Foundations.Port.Output[]
         staticValues:   Record<string, unknown> | null
+        fieldModes:     Record<Foundations.Field.Id, FieldMode>
         credentials:    CredentialSlot[]
         connectedEdges: ConnectedEdges
         issues:         NodeIssues

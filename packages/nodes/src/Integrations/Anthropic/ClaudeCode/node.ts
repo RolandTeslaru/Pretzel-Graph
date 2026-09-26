@@ -34,6 +34,11 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             if (this.fieldValues.effort !== "default")
                 args.push("--effort", this.fieldValues.effort);
 
+            const systemMessage = this.fieldValues.systemMessage.trim();
+
+            if (systemMessage)
+                args.push("--append-system-prompt", systemMessage);
+
             if (binding) {
                 const mcpConfig = {
                     mcpServers: {

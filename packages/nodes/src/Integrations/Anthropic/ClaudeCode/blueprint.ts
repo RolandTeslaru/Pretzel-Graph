@@ -33,6 +33,10 @@ export const Blueprint = defineBlueprint({
             initialValue: "default",
             tooltip: "Reasoning effort passed to Claude Code for this run.",
         }),
+        defineField.String("systemMessage", "System Message", {
+            initialValue: "",
+            tooltip: "Instructions added to Claude Code's system prompt for this run.",
+        }),
         defineField.Integer("timeoutSeconds", "Timeout", {
             initialValue: 1800,
             min: 1,

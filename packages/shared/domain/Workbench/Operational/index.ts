@@ -107,7 +107,7 @@ export class OperationalClient {
             case "node.updateInputPort": return this.node.input.updatePort(op.nodeId, op.portId, op.port)
             case "edge.create":          return this.edge.create(op)
             case "edge.delete":          return this.edge.delete(op.edgeId)
-            case "field.set":            return this.field.set(op.nodeId, op.fieldId, op.value)
+            case "field.set":            return this.field.set(op.nodeId, op.fieldId, op.value, op.mode)
             case "credential.setInstance": return this.credential.setInstance(op.nodeId, op.templateId, op.instanceId)
             case "globalField.add":      return this.globalField.add(op)
             case "globalField.update":   return this.globalField.update(op.fieldId, op.patch)
@@ -118,4 +118,5 @@ export class OperationalClient {
 
 export { Summary } from "./summary"
 export { ID_PATTERN } from "./types"
+export type { FieldMode } from "./types"
 export type { BlueprintResolver, CredentialResolver, OnOperation, Operation, CreateNodeRequest, InputPortSpec, GlobalFieldSpec, GlobalFieldPatch, GlobalFieldVariant, Position, Connection } from "./types"

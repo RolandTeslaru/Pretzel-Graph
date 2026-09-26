@@ -92,6 +92,14 @@ export namespace Event {
             value:   z.unknown(),
         })
         export type Set = z.infer<typeof Set>
+
+        export const ModeSet = Base.extend({
+            type:    z.literal("field:modeSet"),
+            nodeId:  Workflow.Node.Id,
+            fieldId: Foundations.Field.Id,
+            mode:    z.enum(["static", "expression"]),
+        })
+        export type ModeSet = z.infer<typeof ModeSet>
     }
 
     export namespace Credential {
@@ -117,7 +125,7 @@ export namespace Event {
         Lock.Acquired, Lock.Released,
         Node.Created,  Node.Deleted, Node.Moved, Node.InputPortAdded, Node.InputPortRemoved, Node.InputPortUpdated,
         Edge.Created,  Edge.Deleted,
-        Field.Set,
+        Field.Set,    Field.ModeSet,
         Credential.InstanceSet,
     ])
 

@@ -47,6 +47,11 @@ const inputPort = z.object({
     required:    z.boolean().optional().describe("Whether a connection must be present to run."),
 });
 
+const fieldMode = z.enum(["static", "expression"]).optional()
+    .describe("Switch the field to this mode before setting the value. Omit to keep its current mode, shown under fieldModes by workbench_get_node.");
+
+const EXPRESSION_NOTE = "In static mode the value is a literal. In expression mode it is one JavaScript expression evaluated when the node runs, as a string.";
+
 const credentialAssignment = {
     templateId: z.string().describe("A credential template the node takes, as listed under credentials by workbench_get_node."),
     instanceId: z.string().nullable().describe("A credential instance of that template, from vault_list_credential_instances. Null detaches the attached instance."),
@@ -61,7 +66,7 @@ const operation = z.discriminatedUnion("op", [
     z.object({ op: z.literal("node.updateInputPort"), nodeId, portId: z.string(), port: inputPort }),
     z.object({ op: z.literal("edge.create"), ...edgeEndpoints }),
     z.object({ op: z.literal("edge.delete"), edgeId: z.string() }),
-    z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown() }),
+    z.object({ op: z.literal("field.set"),   nodeId, fieldId: z.string(), value: z.unknown(), mode: fieldMode }),
     z.object({ op: z.literal("credential.setInstance"), nodeId, ...credentialAssignment }),
     z.object({ op: z.literal("globalField.add"),    id: globalFieldId, ...globalFieldSpec }),
     z.object({ op: z.literal("globalField.update"), fieldId: globalFieldId, patch: globalFieldPatch }),
@@ -154,7 +159,7 @@ export function buildTools(client: WorkbenchClient) {
         async ({ nodeId }) => ToolBudget.value(client.operations.node.get(nodeId as Workflow.Node.Id)),
         {
             name:        "workbench_get_node",
-            description: `Get one node: its blueprint, fields, ports, current field values, the credential templates it takes with the instance attached to each, and validation issues, and for each port the edges on it with the node and port at their other end. Read-only. ${READ_NOTE}`,
+            description: `Get one node: its blueprint, fields, ports, current field values with each field's mode (static or expression, and whether it can switch), the credential templates it takes with the instance attached to each, and validation issues, and for each port the edges on it with the node and port at their other end. Read-only. ${READ_NOTE}`,
             schema:      z.object({ nodeId }),
         },
     );
@@ -255,13 +260,13 @@ export function buildTools(client: WorkbenchClient) {
 
 
     const setField = tool(
-        async ({ nodeId, fieldId, value }) => ToolBudget.value(
-            await write(() => client.operations.field.set(nodeId as Workflow.Node.Id, fieldId as Foundations.Field.Id, value)),
+        async ({ nodeId, fieldId, value, mode }) => ToolBudget.value(
+            await write(() => client.operations.field.set(nodeId as Workflow.Node.Id, fieldId as Foundations.Field.Id, value, mode)),
         ),
         {
             name:        "workbench_set_field",
-            description: `Set a field value on a node. If the field reshapes the node, the result lists the ports added and removed and the edges dropped. ${LOCK_NOTE}`,
-            schema:      z.object({ nodeId, fieldId: z.string(), value: z.unknown() }),
+            description: `Set a field value on a node, optionally switching the field between static and expression mode first. ${EXPRESSION_NOTE} Some fields are fixed to one mode; fieldModes on workbench_get_node shows which. If the field reshapes the node, the result lists the ports added and removed and the edges dropped. ${LOCK_NOTE}`,
+            schema:      z.object({ nodeId, fieldId: z.string(), value: z.unknown(), mode: fieldMode }),
         },
     );
 
