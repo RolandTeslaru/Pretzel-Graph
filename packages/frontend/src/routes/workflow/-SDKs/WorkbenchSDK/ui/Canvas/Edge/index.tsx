@@ -1,14 +1,15 @@
 import { memo, useCallback, useRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
-import { type EdgeProps, getBezierPath, getSmoothStepPath } from '@xyflow/react';
+import { type EdgeProps, getBezierPath } from '@xyflow/react';
 import { SettingsSDK } from '@/SDKs/SettingsSDK/sdk';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import CanvasEdgeLabel from './label';
 import { type EdgeColorKey, edgeColor, edgeMarkerId } from './markers';
+import { getAngledPath } from './angledPath';
 
-const CORNER_RADIUS = 32
+const CORNER_RADIUS = 48
 
 const CanvasEdge = memo(({
     source,
@@ -37,7 +38,7 @@ const CanvasEdge = memo(({
     const pathParams = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition };
 
     const [edgePath, labelX, labelY] = isAngled
-        ? getSmoothStepPath({ ...pathParams, borderRadius: CORNER_RADIUS, offset: 20 })
+        ? getAngledPath({ ...pathParams, radius: CORNER_RADIUS })
         : getBezierPath(pathParams);
 
     const edgeId = id as Workflow.Edge.Id;

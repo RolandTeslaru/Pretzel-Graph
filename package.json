@@ -1,6 +1,6 @@
 {
     "name": "pretzel-graph",
-    "version": "0.0.72",
+    "version": "0.0.73",
     "private": true,
     "license": "Elastic-2.0",
     "scripts": {
