@@ -2,7 +2,7 @@ import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { Shelf, type Foundations } from "@pretzel-graph/shared/domain";
 
 import { Blueprint } from "./blueprint";
-import { listDerivations, projectToBaseBlueprint } from "./catalogue";
+import { listDerivatives, projectToBaseBlueprint } from "./catalogue";
 import { buildTools } from "./tools";
 
 
@@ -25,10 +25,10 @@ export class Node extends RuntimeNode<typeof Blueprint> {
                 return { result: projectToBaseBlueprint(blueprint) };
             }
 
-            case "derivations": {
-                const { blueprint } = await Shelf.API.Internal.get(api.raw, f.derivationsBlueprintId as Foundations.Blueprint.Id);
+            case "derivatives": {
+                const { blueprint } = await Shelf.API.Internal.get(api.raw, f.derivativesBlueprintId as Foundations.Blueprint.Id);
 
-                return { result: listDerivations(blueprint) };
+                return { result: listDerivatives(blueprint) };
             }
         }
 

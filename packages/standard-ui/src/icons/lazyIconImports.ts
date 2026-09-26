@@ -25,6 +25,7 @@ export const lazyIconsMapping = {
   Redis: () => import("./integrations/Redis"),
   Slack: () => import("./integrations/Slack"),
   Tavily: () => import("./integrations/Tavily"),
+  Telegram: () => import("./integrations/Telegram"),
   Uniswap: () => import("./integrations/Uniswap"),
   xAI: () => import("./integrations/xAI"),
   Grok: () => import("./integrations/Grok"),

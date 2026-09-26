@@ -118,18 +118,22 @@ export type Igniter = z.infer<typeof Igniter.Schema>
 export type BuildIgniterOptions =
     | { variant: "manual"; record?: boolean }
     | { variant: "chat";   message: string; chatId?: Chat.Id; record?: boolean }
+    | { variant: "via";    nodeId: Workflow.Node.Id; record?: boolean }
 
-// A run started programmatically looks like one from the editor, or like a message sent to a chat.
+// A run started programmatically looks like one from the editor, one started via an igniter node, or a message sent to a chat.
 export const buildIgniter = (options: BuildIgniterOptions): Igniter => {
     const flags = { record: options.record ?? false, debug: false }
 
     if (options.variant === "chat")
         return {
             variant: "chat_message",
-            chat_id: options.chatId,
+            chat_id: options.chatId ?? Chat.createId(),
             message: { id: Chat.Message.createId(), role: "human", content: options.message },
             ...flags,
         }
+
+    if (options.variant === "via")
+        return { variant: "workbench_igniter", nodeId: options.nodeId, ...flags }
 
     return { variant: "workbench_manual", ...flags }
 }

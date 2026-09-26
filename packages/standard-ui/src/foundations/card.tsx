@@ -12,7 +12,7 @@ function Root({
       data-slot="card"
       data-size={size}
       className={cn(`
-        ring-foreground/15 bg-card/80 text-card-foreground gap-4 overflow-hidden 
+        surface ring-border text-card-foreground gap-4 overflow-hidden 
         rounded-lg py-4 text-sm ring-1 
         shadow-md shadow-black/10
         has-data-[slot=card-footer]:pb-0 

@@ -13,7 +13,7 @@ const textareaSizeClasses: Record<TextareaSize, string> = {
   xs: "min-h-10 rounded-sm px-2 py-1 text-xs",
 }
 
-const textareaBaseClasses = `border-border placeholder:text-muted-foreground
+const textareaBaseClasses = `border-input-border placeholder:text-muted-foreground
   focus-visible:border-ring focus-visible:ring-ring/50
   aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40
   aria-invalid:border-destructive

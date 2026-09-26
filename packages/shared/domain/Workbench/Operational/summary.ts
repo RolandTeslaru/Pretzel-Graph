@@ -1,5 +1,6 @@
 import type { Foundations } from "../../Foundations"
 import type { Validation } from "../../Validation"
+import type { Vault } from "../../Vault"
 import type { Workflow as WorkflowD } from "../../Workflow"
 import type { Document } from "../Document"
 
@@ -31,9 +32,29 @@ export namespace Summary {
         issues: Validation.Issue.Workflow
     }
 
+    /** An edge on one of a node's ports, with the node and port at its other end. */
+    export interface PortEdge {
+        edgeId: WorkflowD.Edge.Id
+        nodeId: WorkflowD.Node.Id
+        portId: Foundations.Port.Input.Id | Foundations.Port.Output.Id
+    }
+
     export interface ConnectedEdges {
-        incoming: Record<Foundations.Port.Input.Id,  WorkflowD.Edge.Id[]>
-        outgoing: Record<Foundations.Port.Output.Id, WorkflowD.Edge.Id[]>
+        incoming: Record<Foundations.Port.Input.Id,  PortEdge[]>
+        outgoing: Record<Foundations.Port.Output.Id, PortEdge[]>
+    }
+
+    /** A credential template the node takes, and the instance attached to it. */
+    export interface CredentialSlot {
+        templateId:   Vault.Credential.Template.Id
+        templateName: string
+        optional:     boolean
+        instanceId:   Vault.Credential.Instance.Id | null
+    }
+
+    export interface FieldMode {
+        mode:       "static" | "expression"
+        switchable: boolean
     }
 
     export interface NodeDetail {
@@ -42,6 +63,8 @@ export namespace Summary {
         inputs:         readonly Foundations.Port.Input[]
         outputs:        readonly Foundations.Port.Output[]
         staticValues:   Record<string, unknown> | null
+        fieldModes:     Record<Foundations.Field.Id, FieldMode>
+        credentials:    CredentialSlot[]
         connectedEdges: ConnectedEdges
         issues:         NodeIssues
     }
@@ -122,10 +145,10 @@ export namespace Summary {
 
         for (const edge of Object.values(d.cache.edges)) {
             if (edge.target.nodeId === nodeId)
-                (incoming[edge.target.portId] ??= []).push(edge.id)
+                (incoming[edge.target.portId] ??= []).push({ edgeId: edge.id, nodeId: edge.source.nodeId, portId: edge.source.portId })
 
             if (edge.source.nodeId === nodeId)
-                (outgoing[edge.source.portId] ??= []).push(edge.id)
+                (outgoing[edge.source.portId] ??= []).push({ edgeId: edge.id, nodeId: edge.target.nodeId, portId: edge.target.portId })
         }
 
         return { incoming, outgoing }

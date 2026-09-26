@@ -838,6 +838,8 @@ export const Wrench: React.FC<BaseIconProps> = (props) => (
 )
 Wrench.displayName = "Wrench"
 
+export const Tool = Wrench
+
 export const Brackets: React.FC<BaseIconProps> = (props) => (
     <BaseIcon strokeWidth={2} {...props}>
         <path d="M16 3h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-3"/>

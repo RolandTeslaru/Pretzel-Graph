@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Button, Spinner } from "@pretzel-graph/standard-ui/foundations";
+import { Button } from "@pretzel-graph/standard-ui/foundations";
 import { SystemIcons } from "@pretzel-graph/standard-ui/icons";
 import Tipped from "@/components/Tipped";
 import { WorkbenchSDK } from "@/routes/workflow/-SDKs/WorkbenchSDK/sdk";
@@ -14,29 +13,15 @@ export function DeploymentToggle({ size = "icon-sm", iconClassName }: { size?: "
         [VersionControlSDK.query.publications(workflowId), VersionControlSDK.query.deployment(workflowId)],
     );
     const latestPublication = publicationsQuery.data?.publications[0] ?? null;
-    const [isPending, setIsPending] = useState(false);
 
     if (!latestPublication)
         return null;
 
-    const handleDeploy = () => {
-        VersionControlSDK.dialogs.openDeploy(latestPublication, deployedPublication, async () => {
-            setIsPending(true);
-
-            try {
-                await VersionControlSDK.actions.deployWorkflow(workflowId);
-            }
-            finally {
-                setIsPending(false);
-            }
-        });
-    };
-
-    const handleUndeploy = () => {
-        if (!deployedPublication)
-            return;
-
-        VersionControlSDK.dialogs.openUndeploy(deployedPublication, () => VersionControlSDK.actions.undeploy(workflowId));
+    const handleClick = () => {
+        if (deployedPublication)
+            void VersionControlSDK.dialogs.openUndeploy(workflowId);
+        else
+            void VersionControlSDK.dialogs.openDeploy(latestPublication);
     };
 
     const label = deployedPublication
@@ -47,17 +32,9 @@ export function DeploymentToggle({ size = "icon-sm", iconClassName }: { size?: "
         <Tipped label={label}>
             <Button
                 variant={deployedPublication ? "ghost-success" : "ghost-destructive"}
-                disabled={isPending}
-                onClick={deployedPublication ? handleUndeploy : handleDeploy}
+                onClick={handleClick}
             >
-                {isPending
-                    ? <Spinner className={iconClassName} />
-                    : <>
-                        
-                        {deployedPublication ? "Undeploy" : "Deploy"} <SystemIcons.Power className={iconClassName} />
-                    </> 
-                    
-                }
+                {deployedPublication ? "Undeploy" : "Deploy"} <SystemIcons.Power className={iconClassName} />
             </Button>
         </Tipped>
     );

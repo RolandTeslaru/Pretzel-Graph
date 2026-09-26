@@ -40,7 +40,7 @@ const COLUMN_SKELETONS = [0, 1, 2, 3, 4, 5, 6, 7]
 const ITEM_SKELETONS = [0, 1, 2, 3, 4]
 
 const ActivityKanbanSkeleton = () => (
-    <div className='flex [&>*]:w-[220px] [&>*]:shrink-0'>
+    <div className='flex [&>*]:w-[260px] [&>*]:shrink-0'>
         {COLUMN_SKELETONS.map((columnIndex) => (
             <Frame.Root key={columnIndex} spacing='sm' className='p-2 gap-2'>
                 <Frame.Header className='flex flex-row px-2 pt-0! items-center gap-2'>
@@ -93,7 +93,7 @@ const ActivityKanban = () => {
             getItemValue={(task) => task.id}
             onValueCommit={(next, meta) => console.log(meta.kind, next)}
         >
-            <Kanban.Board className='flex [&>*]:w-[220px] [&>*]:shrink-0'>
+            <Kanban.Board className='flex [&>*]:w-[260px] [&>*]:shrink-0'>
                 {columnIds.map((columnId) => {
                     const workflow = activity.workflows[columnId as Workflow.Id]
                     return <WorkflowColumn key={columnId} workflow={workflow} />

@@ -18,7 +18,7 @@ export const Blueprint = defineBlueprint({
     id: "Core.Utils.Tool.Custom",
     displayName: "Custom Tool",
     description: "An agent tool whose behaviour is defined by sandboxed JavaScript you write.",
-    icon: "Hammer",
+    icon: "Tool",
     accent: "port-Tool",
     fields: [
         defineField.String("toolName", "Tool Name", {

@@ -46,7 +46,7 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
               {/* <div className='p-2 h-auto my-auto -mr-2'>
                 <div className='content-[" "] bg-(--port-Tool) rounded-full h-1 w-1'/>
               </div> */}
-              <SystemIcons.Hammer className='text-(--port-Tool)/50 fill-current size-3 h-auto my-auto -mr-1'/>
+              <SystemIcons.Tool className='text-(--port-Tool)/50 fill-current size-3 h-auto my-auto -mr-1'/>
             </Tipped>
           )}
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />

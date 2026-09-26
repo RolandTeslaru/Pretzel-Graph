@@ -13,7 +13,7 @@ export const Blueprint = defineBlueprint({
             options: [
                 { value: "query",       displayName: "Query blueprints" },
                 { value: "get",         displayName: "Get blueprint" },
-                { value: "derivations", displayName: "Get derivations" },
+                { value: "derivatives", displayName: "Get derivatives" },
             ],
             initialValue: "query",
         }),
@@ -38,8 +38,8 @@ export const Blueprint = defineBlueprint({
         fields: [defineField.String("getBlueprintId", "Blueprint", { required: true, placeholder: "Core.Text.Input" })],
     },
 
-    "operation==derivations": {
-        fields: [defineField.String("derivationsBlueprintId", "Blueprint", { required: true, placeholder: "Core.Developer.DerivativeTest" })],
+    "operation==derivatives": {
+        fields: [defineField.String("derivativesBlueprintId", "Blueprint", { required: true, placeholder: "Core.Developer.DerivativeTest" })],
     },
 
     "isConvertedToTool==true": defineTool({

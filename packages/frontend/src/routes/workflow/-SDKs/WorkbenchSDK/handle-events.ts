@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
 import { RealtimeSDK } from "@/SDKs/Realtime/sdk";
 import { ShelfSDK } from "../ShelfSDK/sdk";
+import { animateNodeMove } from "./animations";
 import type { WorkbenchSDKImpl } from "./sdk";
 
 const { withCyclesRecompute } = Workbench.Document;
@@ -79,6 +80,16 @@ const reduceEvent = withCyclesRecompute((d: Workbench.Document, event: Workbench
             break;
         }
 
+        case "field:modeSet":
+            if (d.data.nodes[event.nodeId])
+                d.reducers.field.setIsExpression(d, event.nodeId, event.fieldId, event.mode === "expression");
+            break;
+
+        case "credential:instanceSet":
+            if (d.data.nodes[event.nodeId])
+                d.reducers.credential.setInstance(d, event.nodeId, event.templateId, event.instanceId);
+            break;
+
         case "workflow:globalFieldsChanged":
             d.reducers.workflow.setGlobalFields(d, event.globalFields);
             break;
@@ -88,6 +99,16 @@ const reduceEvent = withCyclesRecompute((d: Workbench.Document, event: Workbench
     d.isDirty = false;
 });
 
+// How a run's edit looks as it lands: a created node waits its turn off-canvas, a moved one
+// glides. Only edits arriving on the channel reach here, so a load, refetch or undo never animates.
+const animateEvent = (sdk: WorkbenchSDKImpl, event: Workbench.Event) => {
+    if (event.type === "node:created")
+        sdk.animations.schedule(event.node.id);
+
+    if (event.type === "node:moved" && !sdk.state.isDraggingNode)
+        animateNodeMove(event.nodeId);
+};
+
 const applyEvent = async (sdk: WorkbenchSDKImpl, event: Workbench.Event) => {
     const base = event.type === "node:created"
         ? await ShelfSDK.actions.getBlueprint(event.node.blueprintId)
@@ -95,6 +116,8 @@ const applyEvent = async (sdk: WorkbenchSDKImpl, event: Workbench.Event) => {
 
     if (event.workflowId !== sdk.document.workflowId)
         return;
+
+    animateEvent(sdk, event);
 
     const temporal = (sdk.useDocument as any).temporal.getState();
 
@@ -147,4 +170,5 @@ export const unsubscribeFromWorkbenchChannel = (sdk: WorkbenchSDKImpl) => {
     sdk.runtime.channel.unsubscribe?.();
     sdk.runtime.channel.unsubscribe = null;
     sdk.runtime.channel.events.clear();
+    sdk.animations.clear();
 };

@@ -1,11 +1,12 @@
 import { DialogSDK } from "@pretzel-graph/standard-ui/SDKs/DialogSDK";
-import type { VersionControl } from "@pretzel-graph/shared/domain";
+import type { VersionControl, Workflow } from "@pretzel-graph/shared/domain";
 import { toast } from "sonner";
 import { LibrarySDK } from "@/SDKs/LibrarySDK/sdk";
+import { VersionControlSDK } from "../sdk";
 import { getPublicationLabel } from "../utils";
 
-const isListing = (publication: VersionControl.Publication.Meta) =>
-    Boolean(LibrarySDK.state.workflowMetas[publication.workflow_id]?.listing_id);
+const isListing = (workflowId: Workflow.Id) =>
+    Boolean(LibrarySDK.state.workflowMetas[workflowId]?.listing_id);
 
 const ListingNote = () => (
     <div className="text-sm text-muted-foreground mt-2">
@@ -13,20 +14,20 @@ const ListingNote = () => (
     </div>
 );
 
-export function openDeployDialog(
-    publication: VersionControl.Publication.Meta,
-    replaced: VersionControl.Publication.Meta | null,
-    action: () => Promise<unknown>,
-) {
+export async function openDeployDialog(publication: VersionControl.Publication.Meta) {
     const dialogId = `deploy-publication-${publication.id}`;
+
+    const { publication: deployed } = await VersionControlSDK.fetch(VersionControlSDK.query.deployment(publication.workflow_id));
+    const replaced = deployed && deployed.id !== publication.id ? deployed : null;
 
     DialogSDK.actions.push(dialogId, (props) => (
         <DialogSDK.AlertTemplate
             {...props}
             type="warning"
+            approveLabel="Deploy"
             onApprove={async () => {
                 try {
-                    await action();
+                    await VersionControlSDK.actions.deployPublication(publication.workflow_id, publication.id);
                     toast.success(`${getPublicationLabel(publication)} deployed`);
                     DialogSDK.actions.pop(dialogId);
                 } catch {
@@ -47,7 +48,7 @@ export function openDeployDialog(
                     It replaces <span className="font-semibold text-foreground">{getPublicationLabel(replaced)}</span>, which stops receiving events.
                 </div>
             }
-            {isListing(publication) &&
+            {isListing(publication.workflow_id) &&
                 <div className="text-sm text-muted-foreground mt-2">
                     This workflow is public. Its listing will serve this version.
                 </div>
@@ -56,19 +57,22 @@ export function openDeployDialog(
     ));
 }
 
-export function openUndeployDialog(
-    publication: VersionControl.Publication.Meta,
-    action: () => Promise<unknown>,
-) {
+export async function openUndeployDialog(workflowId: Workflow.Id) {
+    const { publication } = await VersionControlSDK.fetch(VersionControlSDK.query.deployment(workflowId));
+
+    if (!publication)
+        return;
+
     const dialogId = `undeploy-publication-${publication.id}`;
 
     DialogSDK.actions.push(dialogId, (props) => (
         <DialogSDK.AlertTemplate
             {...props}
             type="warning"
+            approveLabel="Undeploy"
             onApprove={async () => {
                 try {
-                    await action();
+                    await VersionControlSDK.actions.undeploy(workflowId);
                     toast.success(`${getPublicationLabel(publication)} undeployed`);
                     DialogSDK.actions.pop(dialogId);
                 } catch {
@@ -87,24 +91,22 @@ export function openUndeployDialog(
             <div className="text-sm text-muted-foreground mt-2">
                 The version is not deleted — you can deploy it again at any time.
             </div>
-            {isListing(publication) && <ListingNote />}
+            {isListing(workflowId) && <ListingNote />}
         </DialogSDK.AlertTemplate>
     ));
 }
 
-export function openDeletePublicationDialog(
-    publication: VersionControl.Publication.Meta,
-    action: () => Promise<unknown>,
-) {
+export function openDeletePublicationDialog(publication: VersionControl.Publication.Meta) {
     const dialogId = `delete-publication-${publication.id}`;
 
     DialogSDK.actions.push(dialogId, (props) => (
         <DialogSDK.AlertTemplate
             {...props}
             type="danger"
+            approveLabel="Delete"
             onApprove={async () => {
                 try {
-                    await action();
+                    await VersionControlSDK.actions.remove(publication.workflow_id, publication.id);
                     toast.success(`${getPublicationLabel(publication)} deleted`);
                     DialogSDK.actions.pop(dialogId);
                 } catch {
@@ -119,7 +121,7 @@ export function openDeletePublicationDialog(
             <div className="text-sm text-muted-foreground">
                 This removes <span className="font-semibold text-destructive">{getPublicationLabel(publication)}</span> from publication history.
             </div>
-            {publication.is_deployed && isListing(publication) && <ListingNote />}
+            {publication.is_deployed && isListing(publication.workflow_id) && <ListingNote />}
         </DialogSDK.AlertTemplate>
     ));
 }

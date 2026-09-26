@@ -9,12 +9,32 @@ import type { Blueprint } from '@pretzel-graph/shared/domain/Foundations/Bluepri
 import { PROXY_TEMPLATE_ID } from '../../../NodePanel/proxy'
 import { CredentialRenderer } from '../../../CredentialsRenderer';
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
+import { NodeToolbar, Position } from '@xyflow/react'
 
 interface Props {
     hyNode: Workflow.Node.Hydrated
 }
 
 export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
+
+    const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
+
+    // Mount only when clicked. NodeToolbar subscribes to the viewport transform to keep
+    // its screen position, so an always-mounted one re-renders every node on every
+    // pan/zoom frame — 144 nodes → 144 re-renders/frame.
+    if (!isNodeClicked)
+        return null
+
+    return (
+        <NodeToolbar isVisible position={Position.Top}>
+            <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
+                <ToolbarContent hyNode={hyNode}/>
+            </div>
+        </NodeToolbar>
+    )
+})
+
+const ToolbarContent: React.FC<Props> = memo(({ hyNode }) => {
 
     const nodeId = hyNode.id
 
@@ -77,10 +97,10 @@ export const NodeCustomToolbar: React.FC<Props> = memo(({ hyNode }) => {
                     )}
                     {shapeDependencyRef && (
                         <Tipped label="Open workflow">
-                            <Button variant="ghost-primary" size="icon-xs" className='h-6!'
+                            <Button variant="ghost-primary" size="xs" className='h-6! rounded-full!'
                                 onClick={() => WorkbenchSDK.openWorkflowWindow(shapeDependencyRef.id)}
                             >
-                                <SystemIcons.Graph />
+                                Open <SystemIcons.Graph />
                             </Button>
                         </Tipped>
                     )}
@@ -173,7 +193,7 @@ const ToolButton = memo(({ nodeId }: { nodeId: Workflow.Node.Id }) => {
                         WorkbenchSDK.actions.tool.convert(nodeId);
                 }}
             >
-                <SystemIcons.Hammer />
+                <SystemIcons.Tool />
             </Button>
         </Tipped>
     );

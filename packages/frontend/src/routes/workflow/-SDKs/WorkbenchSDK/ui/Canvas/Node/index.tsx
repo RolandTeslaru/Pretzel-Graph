@@ -8,15 +8,12 @@ import NodeOutputs from './Outputs';
 
 import type { NodeProps } from '@xyflow/react';
 import { Workflow } from '@pretzel-graph/shared/domain';
-import { NodeToolbar, Position } from '@xyflow/react';
 import { NodeCustomToolbar } from './CustomToolbar';
 import { cn } from '@/utils/styleUtils';
 import { StatusBorder } from './StatusBorder';
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import { ShelfSDK } from '@/routes/workflow/-SDKs/ShelfSDK/sdk';
-import { SystemIcons } from '@pretzel-graph/standard-ui/icons';
-import Tipped from '@/components/Tipped';
-import { Button } from '@pretzel-graph/standard-ui/foundations';
+import { NodeOrnaments } from './Ornaments';
 
 const CanvasNode = memo((props: NodeProps<WorkbenchSDK.NodeDriver>) => {
   const nodeId = props.id as Workflow.Node.Id;
@@ -47,12 +44,10 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   const isNodeClicked = WorkbenchSDK.useStore(s => s.clickedNodeId === hyNode.id)
 
+  const animationClassName = WorkbenchSDK.useNodeAnimation(hyNode.id)
+
   const isMinimized = hyNode.ui.isMinimized;
   const isDisabled  = hyNode.isDisabled
-  const isIgniter   = hyNode.blueprint.igniter ?? false
-  const isPassive   = hyNode.blueprint.passive ?? false
-  const listensToGateway = Boolean(hyNode.blueprint.gatewayListener)
-  const hasWebhooks = Boolean(hyNode.blueprint.webhooks?.length)
 
   const canAddInputPort = WorkbenchSDK.useDocument(d => d.selectors.node.ports.canAddInput(d, hyNode.id))
   
@@ -72,83 +67,21 @@ const Content = memo(({ hyNode }: { hyNode: Workflow.Node.Hydrated }) => {
 
   return (
     <>
-      {/* Mount only when clicked. NodeToolbar subscribes to the viewport transform to keep
-          its screen position, so an always-mounted one re-renders every node on every
-          pan/zoom frame — 144 nodes → 144 re-renders/frame. */}
-      {isNodeClicked && (
-        <NodeToolbar isVisible position={Position.Top}>
-          <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out origin-bottom">
-            <NodeCustomToolbar hyNode={hyNode}/>
-          </div>
-        </NodeToolbar>
-      )}
-
-      {(isIgniter || listensToGateway || hasWebhooks) &&
-        <div className='absolute top-1 right-full mr-2 flex items-center gap-1'>
-          {isIgniter &&
-            <Tipped label={
-              <div className='max-w-[220px]'>
-                <p className='font-semibold'>Igniter Node</p>
-                <p className='text-xs opacity-70'>A run can start from this node. Pick it as the entry point when you launch.</p>
-              </div>
-            }>
-              <SystemIcons.Zap className='size-6 dark:text-yellow-300 text-yellow-400'/>
-            </Tipped>
-          }
-          {listensToGateway &&
-            <Tipped label={
-              <div className='max-w-[220px]'>
-                <p className='font-semibold'>Gateway Listener</p>
-                <p className='text-xs opacity-70'>Listens for events from a persistent connection.</p>
-              </div>
-            }>
-              <SystemIcons.ChevronsLeftRightEllipsis className='size-6 text-cyan-400 '/>
-            </Tipped>
-          }
-          {hasWebhooks &&
-            <Tipped label={
-              <div className='max-w-[220px]'>
-                <p className='font-semibold'>Webhook Listener</p>
-                <p className='text-xs opacity-70'>Receives events through an HTTP webhook.</p>
-              </div>
-            }>
-              <SystemIcons.Webhook className='size-6 text-cyan-400'/>
-            </Tipped>
-          }
-        </div>
-      }
-      {isPassive && 
-        <div className='absolute top-1 -left-8'>
-          <Tipped label={
-            <div className='max-w-[220px]'>
-              <p className='font-semibold'>Passive Node</p>
-              <p className='text-xs opacity-70'>Never starts a run and cannot be launched. It only fires when another node reaches it mid-run.</p>
-            </div>
-          }>
-            <SystemIcons.Ambient className='size-6 dark:text-cyan-300 text-cyan-400'/>
-          </Tipped>
-        </div>
-      }
-
-      {canAddInputPort &&
-        <Button  variant={"input"} size="icon-sm" className='absolute -left-10 top-1/2 -translate-y-1/2'
-          onClick={() => {
-            WorkbenchSDK.dialogs.openAddInputPort(hyNode.id)
-          }}
-        >
-          <SystemIcons.Plus />
-        </Button>
-      }
+      <NodeCustomToolbar hyNode={hyNode}/>
 
       <div className={cn(
-          "animate-in fade-in-0 duration-200 ease-out transition-colors",
+          "transition-colors",
           "flex flex-col relative rounded-3xl shadow-lg shadow-black/20 dark:shadow-black/30",
           isMinimized ? "" : "w-[250px]",
           isDisabled ? "opacity-50" : "opacity-100",
+          // Last, so twMerge lets a pending node's opacity-0 beat the line above.
+          animationClassName,
         )}
-        style={{ backgroundColor, borderColor, borderWidth: 2 }}
+        style={{ backgroundColor, borderColor, borderWidth: 1 }}
         id={hyNode.id}
       >
+        <NodeOrnaments hyNode={hyNode} canAddInputPort={canAddInputPort} />
+
         <NodeHeader executionStatus={executionStatus} hyNode={hyNode}/>
 
         {!isMinimized &&

@@ -1,14 +1,19 @@
-import { memo, useCallback, useRef, useEffect } from 'react';
+import { memo, useCallback, useRef, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { type EdgeProps, getBezierPath } from '@xyflow/react';
+import { SettingsSDK } from '@/SDKs/SettingsSDK/sdk';
 import { WorkbenchSDK } from '../../../sdk';
 import { Foundations, Workflow } from "@pretzel-graph/shared/domain";
 import { ExecutionSDK } from '@/routes/workflow/-SDKs/ExecutionSDK/sdk';
 import CanvasEdgeLabel from './label';
 import { type EdgeColorKey, edgeColor, edgeMarkerId } from './markers';
+import { getAngledPath } from './angledPath';
+
+const CORNER_RADIUS = 48
 
 const CanvasEdge = memo(({
     source,
+    target,
     sourceHandleId,
     sourceX,
     sourceY,
@@ -20,18 +25,40 @@ const CanvasEdge = memo(({
     id,
     selected,
 }: EdgeProps) => {
-    const [edgePath, labelX, labelY] = getBezierPath({
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
-    });
+    const routingStyle = SettingsSDK.useStore(s => s.edgeStyle);
+
+    // Hybrid keeps edges that run backwards, the ones closing a loop, curved.
+    const wantsAngled = routingStyle === 'angled' || (routingStyle === 'hybrid' && targetX >= sourceX);
+
+    // A drop too short for two full corners kinks, so it stays curved.
+    const fitsCorners = Math.abs(targetY - sourceY) >= CORNER_RADIUS * 2;
+
+    const isAngled = wantsAngled && fitsCorners;
+
+    const pathParams = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition };
+
+    const [edgePath, labelX, labelY] = isAngled
+        ? getAngledPath({ ...pathParams, radius: CORNER_RADIUS })
+        : getBezierPath(pathParams);
 
     const edgeId = id as Workflow.Edge.Id;
     const sourceNodeId = source as Workflow.Node.Id;
     const sourcePortId = sourceHandleId as Foundations.Port.Output.Id;
+
+    // An end still flying in has its handles measured where it started, so the edge would draw
+    // to the wrong point for the whole animation. Wait for both ends to land instead.
+    const [settleDelay] = useState(() =>
+        WorkbenchSDK.animations.settleDelay([sourceNodeId, target as Workflow.Node.Id]));
+    const [isHeld, setIsHeld] = useState(settleDelay > 0);
+
+    useEffect(() => {
+        if (!isHeld)
+            return;
+
+        const timer = window.setTimeout(() => setIsHeld(false), settleDelay);
+
+        return () => window.clearTimeout(timer);
+    }, [isHeld, settleDelay]);
 
     // Compositor-only dot: bake the bezier into transform keyframes so the GPU moves a
     // once-rasterized quad each frame (no repaint). Rebuilds only when the path changes.
@@ -75,7 +102,7 @@ const CanvasEdge = memo(({
         WorkbenchSDK.actions.edge.remove(edgeId);
     }, [edgeId]);
 
-    if (!output) {
+    if (!output || isHeld) {
         return null;
     }
 

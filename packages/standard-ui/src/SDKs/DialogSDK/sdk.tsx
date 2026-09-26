@@ -116,11 +116,11 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                                 animationTimingFunction: "ease-in-out",
                                 animationDelay: entry.isOpen ? "300ms" : "0ms",
                                 animationFillMode: "both",
-                                // Buried under another dialog: solid card, no blur worth paying for.
+                                // Buried under another dialog: opaque surfaces, no blur.
                                 ...(blockTransparency && {
-                                    backgroundColor: "var(--card)",
+                                    "--material-opacity": "100%",
                                     backdropFilter: "none",
-                                }),
+                                } as React.CSSProperties),
                             },
                         })}
                     </React.Fragment>
@@ -288,10 +288,10 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-lg border border-border/50 min-w-[200px] pb-4 px-6 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"surface-elevated-sidebar rounded-l-2xl border border-r-separator min-w-[200px] pb-4 px-6 pt-5 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {sidebarRenderer()}
                     </div>
-                    <div className={"relative bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-lg flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"relative surface-elevated rounded-r-2xl border-y border-r flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
                 </Dialog.Content>
@@ -328,13 +328,13 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                    <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + leftSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"surface-elevated-sidebar rounded-l-2xl border border-r-separator min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + leftSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {leftSidebarRenderer()}
                     </div>
-                    <div className={"bg-card/80 border-y border-border backdrop-blur-md flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"surface-elevated border-y flex flex-col h-full gap-4 p-3 flex-1  min-h-[150px] " + contentClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {children}
                     </div>
-                    <div className={"bg-card/50 rounded-r-2xl backdrop-blur-md border border-border/50 min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + rightSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                    <div className={"surface-elevated-sidebar rounded-r-2xl border border-l-separator min-w-[200px] p-4 pt-5 flex flex-col gap-2 " + rightSidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                         {rightSidebarRenderer()}
                     </div>
                 </Dialog.Content>
@@ -378,7 +378,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                     onInteractOutside={blockDismiss}
                     onEscapeKeyDown={blockDismiss}
                 >
-                        <div className={"bg-card/50 rounded-l-2xl backdrop-blur-md border border-border min-w-[200px] p-2 pt-3 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
+                        <div className={"surface-elevated-sidebar rounded-l-2xl border border-r-separator min-w-[200px] p-2 pt-3 flex flex-col gap-2 " + sidebarClassName} style={{ ...surfaceStyle, ...delayStyle }}>
                             {header && (
                                 <div className="inline-flex items-center px-1">
                                     <header.icon className="size-4 m-2" />
@@ -410,7 +410,7 @@ export class DialogSDKImpl extends BaseSDK<DialogSDK.State> {
                         </div>
                         <ScrollArea.Root
                             style={{ ...surfaceStyle, ...delayStyle }}
-                            className={"bg-card/80 rounded-r-2xl border-y border-r border-border backdrop-blur-md flex flex-col h-[600px] gap-4 px-3 w-full " + contentClassName}
+                            className={"surface-elevated rounded-r-2xl border-y border-r flex flex-col h-[600px] gap-4 px-3 w-full " + contentClassName}
                         >
                             <div className="inline-flex z-100 items-center absolute w-full top-0 left-4 gap-2 h-9 mt-2 shrink-0">
                                 <p className="text-md font-semibold">{active?.label}</p>

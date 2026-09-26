@@ -516,6 +516,19 @@ export namespace Field {
 
     export type Schema = z.infer<typeof Schema>;
 
+    // Variants with both a static and an expression mode.
+    const MODE_SWITCHING_VARIANTS = new Set<Variant>([
+        "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List", "WorkflowIdSelector",
+    ])
+
+    // Whether a field can be switched between static and expression mode.
+    export function canSwitchMode(field: Field.Schema): boolean {
+        if (!MODE_SWITCHING_VARIANTS.has(field.variant))
+            return false
+
+        return !("only" in field && field.only)
+    }
+
     /**
      * Whether a field's stored value is airlock source rather than a literal.
      *

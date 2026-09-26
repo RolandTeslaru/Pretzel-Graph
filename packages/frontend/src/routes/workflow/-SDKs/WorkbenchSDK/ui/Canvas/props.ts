@@ -24,8 +24,13 @@ const fitViewOptions = {
 };
 
 
+// Distance between background dots; nodes snap to every half step.
+export const GRID_GAP = 40
+
 export const canvasProps = Object.freeze({
     selectionMode: SelectionMode.Partial,
+    snapToGrid: true,
+    snapGrid: [GRID_GAP / 2, GRID_GAP / 2],
     connectionRadius: 30,
     elevateEdgesOnSelect: false,
     fitViewOptions,

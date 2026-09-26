@@ -45,7 +45,7 @@ export const SidebarTabs = ({
         >
             <div
                 style={surfaceStyle}
-                className={cn("p-0.5 py-2 w-50 shrink-0 border-y border-l rounded-l-2xl border-border/50", blockTransparency ? "bg-card" : "bg-card/60 backdrop-blur-md", sidebarClassName)}
+                className={cn("surface-elevated-sidebar p-0.5 py-2 w-50 shrink-0 border-y border-l rounded-l-2xl", blockTransparency && "[--material-opacity:100%] backdrop-blur-none!", sidebarClassName)}
             >
                 {sidebarRenderer ? sidebarRenderer(context) : <>
                     {header && (
@@ -74,7 +74,7 @@ export const SidebarTabs = ({
 
             <ScrollArea.Root
                 style={surfaceStyle}
-                className={cn("flex-1 max-h-[600px] border border-border rounded-r-2xl px-4", blockTransparency ? "bg-card" : "bg-card/80 backdrop-blur-md", contentClassName)}
+                className={cn("surface-elevated flex-1 max-h-[600px] border border-l-separator rounded-r-2xl px-4", blockTransparency && "[--material-opacity:100%] backdrop-blur-none!", contentClassName)}
             >
                 {contentRenderer ? contentRenderer(context) : <>
                     <div className="inline-flex z-100 items-center absolute w-full top-0 left-4 gap-2 h-9 mt-2 shrink-0">

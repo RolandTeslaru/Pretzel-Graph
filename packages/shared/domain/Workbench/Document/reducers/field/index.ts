@@ -9,13 +9,6 @@ import { fieldDependencyReducers, type FieldDependencyReducers } from "./depende
 type NodeId  = Workflow.Node.Id
 type FieldId = Foundations.Field.Id
 
-// Variants whose Zod schema declares `isExpressionInitially?: boolean` (Foundations/Field.ts) —
-// i.e. the ones that have both a static and an expression mode to toggle between. The Expression
-// variant is deliberately absent: it has no static mode, so there is nothing to toggle.
-const EXPRESSION_CAPABLE_VARIANTS = new Set<Foundations.Field.Variant>([
-    "Integer", "Float", "String", "UniqueString", "Secret", "Boolean", "MultiOption", "File", "Json", "List", "WorkflowIdSelector",
-])
-
 export const fieldReducers: FieldReducers = {
     setValue: (d, nodeId, fieldId, value) => {
         d.isDirty = true;
@@ -66,13 +59,8 @@ export const fieldReducers: FieldReducers = {
         const field = d.selectors.field.get(d, nodeId, fieldId)
         if (!field) return;
 
-        if (!EXPRESSION_CAPABLE_VARIANTS.has(field.variant)) {
-            console.warn(`Tried to set isExpression on field ${fieldId} on node ${nodeId}, which doesn't support expressions`)
-            return;
-        }
-
-        if ("only" in field && field.only) {
-            console.warn(`Tried to set isExpression on field ${fieldId} on node ${nodeId}, which is locked to "${field.only}"`)
+        if (!Foundations.Field.canSwitchMode(field)) {
+            console.warn(`Tried to set isExpression on field ${fieldId} on node ${nodeId}, which cannot switch mode`)
             return;
         }
 

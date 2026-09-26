@@ -19,12 +19,17 @@ export const projectToBaseBlueprint = (bp: Foundations.Blueprint) => ({
     })),
     inputs:  bp.inputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
     outputs: bp.outputs.map(p => ({ id: p.id, displayName: p.displayName, variant: p.variant })),
+    credentials: (bp.credentials ?? []).map(t => ({ templateId: t.id, templateName: t.displayName, optional: t.optional ?? false })),
+    ...(bp.igniter ? { igniter: true } : {}),
+    ...(bp.passive ? { passive: true } : {}),
+    ...(bp.webhooks?.length ? { webhookRoute: true } : {}),
+    ...(bp.gatewayListener ? { connectionField: bp.gatewayListener.refFieldId } : {}),
 });
 
-export interface Derivation {
+export interface DerivativeSummary {
     /** Conditions from the base down, e.g. "target==node/nodeOperation==create". */
     path:     string
-    adds:     { fields: Foundations.Field.Id[], inputs: Foundations.Port.Input.Id[], outputs: Foundations.Port.Output.Id[] }
+    adds:     { fields: Foundations.Field.Id[], inputs: Foundations.Port.Input.Id[], outputs: Foundations.Port.Output.Id[], credentialTemplates: string[] }
     /** Base members this branch drops rather than extends. */
     replaces: { fields?: Foundations.Field.Id[], inputs?: Foundations.Port.Input.Id[], outputs?: Foundations.Port.Output.Id[] }
 }
@@ -35,8 +40,8 @@ const describe = (c: Derivative["condition"]) => `${c.fieldId}${c.operator}${Str
 
 // Every reachable branch of the derivative tree, flattened, with what it contributes. Tool mode
 // is a branch too, but not one a caller placing a node would set, so it is left out.
-export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
-    const out: Derivation[] = [];
+export const listDerivatives = (bp: Foundations.Blueprint): DerivativeSummary[] => {
+    const out: DerivativeSummary[] = [];
 
     const walk = (branches: readonly Derivative[] | undefined, prefix: string) => {
         for (const branch of branches ?? []) {
@@ -52,6 +57,7 @@ export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
                     fields:  (branch.fields  ?? []).map(f => f.id),
                     inputs:  (branch.inputs  ?? []).map(p => p.id),
                     outputs: (branch.outputs ?? []).map(p => p.id),
+                    credentialTemplates: (branch.credentials ?? []).map(t => t.id),
                 },
                 replaces: {
                     ...(replaces.has("fields")  && { fields:  bp.fields.map(f => f.id) }),
@@ -77,6 +83,7 @@ export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
                 fields:  [],
                 inputs:  (field.template.inputs  ?? []).map(p => p.id),
                 outputs: (field.template.outputs ?? []).map(p => p.id),
+                credentialTemplates: [],
             },
             replaces: {},
         });

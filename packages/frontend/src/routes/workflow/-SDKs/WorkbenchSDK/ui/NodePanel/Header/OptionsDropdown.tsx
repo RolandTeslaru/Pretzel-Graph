@@ -61,7 +61,7 @@ export const OptionsDropdown = ({ hyNode, onEdit }: Props) => {
                 )}
                 {hyNode.blueprint.toolCompatible && (
                     <DropdownMenu.Item onClick={() => isTool ? WorkbenchSDK.actions.tool.revert(hyNode.id) : WorkbenchSDK.actions.tool.convert(hyNode.id)}>
-                        <SystemIcons.Hammer />
+                        <SystemIcons.Tool />
                         {isTool ? "Revert to node" : "Convert to tool"}
                     </DropdownMenu.Item>
                 )}

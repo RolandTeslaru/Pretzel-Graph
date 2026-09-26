@@ -1,13 +1,14 @@
+import { Foundations } from "../../Foundations"
 import { Port } from "../../Foundations/Port"
 import type { Workflow } from "../../Workflow"
 import { Document } from "../Document"
 import { Summary } from "./summary"
-import type { CreateNodeRequest, InputPortSpec, Position } from "./types"
+import { ID_PATTERN, type CreateNodeRequest, type InputPortSpec, type Position } from "./types"
 import type { OperationalClient } from "."
 
 const { withCyclesRecompute } = Document
 
-const NODE_GAP = 320
+const NODE_GAP = 400
 
 // A caller with no opinion on geometry gets the next slot in a row; the canvas can tidy later.
 const placeNext = (d: Document): Position => {
@@ -40,6 +41,16 @@ export class NodeOperations {
             inputs:         shape?.inputs  ?? [],
             outputs:        shape?.outputs ?? [],
             staticValues:   d.selectors.node.getStaticValues(d, nodeId),
+            fieldModes:     Object.fromEntries((shape?.fields ?? []).map(field => [field.id, {
+                mode:       this.client.field.getMode(d, nodeId, field),
+                switchable: Foundations.Field.canSwitchMode(field),
+            }])),
+            credentials:    d.selectors.credential.getTemplates(d, nodeId).map(template => ({
+                templateId:   template.id,
+                templateName: template.displayName,
+                optional:     template.optional ?? false,
+                instanceId:   d.selectors.credential.getInstance(d, nodeId, template.id),
+            })),
             connectedEdges: Summary.connectedEdges(d, nodeId),
             issues:         d.issues.nodes[nodeId] ?? null,
         }
@@ -115,6 +126,9 @@ export class NodeOperations {
             if (Port.isUnresolvedLike(spec.variant))
                 throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
 
+            if (!ID_PATTERN.test(spec.id))
+                throw new Error(`Port id ${spec.id} may only contain letters, digits and underscores`)
+
             if (d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
                 throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)
 
@@ -161,6 +175,9 @@ export class NodeOperations {
 
                 if (Port.isUnresolvedLike(spec.variant))
                     throw new Error(`Port type ${spec.variant} resolves from a group; a hand-added port needs a concrete type`)
+
+                if (!ID_PATTERN.test(spec.id))
+                    throw new Error(`Port id ${spec.id} may only contain letters, digits and underscores`)
 
                 if (spec.id !== portId && d.selectors.node.ports.getInputs(d, nodeId).some(i => i.id === spec.id))
                     throw new Error(`Input port ${spec.id} already exists on ${nodeId}`)

@@ -19,6 +19,31 @@ class CredentialInstanceMethods extends Repository {
         return rows.map(DB.CredentialInstance.toDomain);
     }
 
+    // Never selects the blob.
+    @Transactional('user', 'delegate')
+    public async query(
+        principal: Principal.User | Principal.Delegate,
+        filter: Vault.API.Internal.Query.Request,
+    ): Promise<Omit<Vault.Credential.Instance, 'blob'>[]> {
+        if (filter.ids?.length === 0 || filter.templateIds?.length === 0)
+            return [];
+
+        let query = this.trx
+            .selectFrom('credential_instance')
+            .select(['id', 'template_id', 'name', 'created_at', 'updated_at'])
+            .orderBy('created_at', 'desc');
+
+        if (filter.ids)
+            query = query.where('id', 'in', filter.ids);
+
+        if (filter.templateIds)
+            query = query.where('template_id', 'in', filter.templateIds);
+
+        const rows = await query.execute();
+
+        return rows.map(row => Vault.Credential.Instance.Schema.omit({ blob: true }).parse(row));
+    }
+
     @Transactional('user')
     @ZodReturn(Vault.Credential.Instance.Schema)
     public async create(
