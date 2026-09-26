@@ -8,7 +8,7 @@ import type { OperationalClient } from "."
 
 const { withCyclesRecompute } = Document
 
-const NODE_GAP = 320
+const NODE_GAP = 400
 
 // A caller with no opinion on geometry gets the next slot in a row; the canvas can tidy later.
 const placeNext = (d: Document): Position => {
