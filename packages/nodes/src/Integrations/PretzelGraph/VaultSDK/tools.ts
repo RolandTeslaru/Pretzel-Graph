@@ -20,7 +20,7 @@ export function buildTools(api: HTTP.Client) {
         },
         {
             name:        "vault_list_credential_instances",
-            description: "List the credential instances saved in this workspace: each one's instanceId, name, templateId, templateName and when it last changed. A credential template is a type of credential a node can take, e.g. tavilyApi; a credential instance is one saved in the vault, made from one template. Secret values are never returned. Attach an instance to a node with workbench_set_credential_instance; workbench_get_node shows which templates a node takes. Read-only.",
+            description: "List the credential instances saved in this workspace: each one's instanceId, name, templateId, templateName and when it last changed. A credential template is a type of credential a node can take, e.g. tavilyApi; a credential instance is one saved in the vault, made from one template. Secret values are never returned. Attach an instance with a credential.setInstance operation in workbench_apply; workbench_get_node shows which templates a node takes. Read-only.",
             schema: z.object({
                 templateIds: z.array(z.string()).optional().describe("Only instances of these credential templates, e.g. postgres. Omit to list every instance."),
             }),

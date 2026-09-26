@@ -11,7 +11,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     private readonly toolClients = new Map<Workflow.Id, WorkbenchClient>();
 
     // Reads run on a snapshot and never hold the workflow; writes run in one short hold. As a
-    // tool set, the first write opens one hold that lasts until the run ends or a tool commits.
+    // tool set, the hold is opened and closed explicitly by the transaction tools.
     protected override async onRun() {
         const f  = this.fieldValues;
         const workflowId = f.workflowId as Workflow.Id;
@@ -84,19 +84,14 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
 
 
-    // Saves what the tools left open when the run completed, and discards it otherwise.
-    protected override async onWorkflowEnding(outcome: RuntimeNode.ExecutionOutcome) {
+    // Rolls back whatever transaction the tools left open.
+    protected override async onWorkflowEnding() {
         const clients = [...this.toolClients.values()];
 
         this.toolClients.clear();
 
         const results = await Promise.allSettled(clients.map(async client => {
-            if (!client.inTransaction)
-                return;
-
-            if (outcome === "completed")
-                await client.commitTransaction();
-            else
+            if (client.inTransaction)
                 await client.abortTransaction();
         }));
 

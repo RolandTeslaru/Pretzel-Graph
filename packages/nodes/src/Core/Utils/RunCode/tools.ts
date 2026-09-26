@@ -20,6 +20,7 @@ const SCOPE = [
     "$igniter — the payload that started this execution.",
     "$globals — a mutable scratch object shared by every node for the length of the execution.",
     "$nodeGlobals — the same, but private to this node and preserved across re-fires.",
+    "$metrics — a writable object; in a sub-workflow each key becomes a metric on the node that ran it.",
 ].map(line => `- ${line}`).join("\n");
 
 const DESCRIPTION = [

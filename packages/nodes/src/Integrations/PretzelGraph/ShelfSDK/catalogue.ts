@@ -22,7 +22,7 @@ export const projectToBaseBlueprint = (bp: Foundations.Blueprint) => ({
     credentials: (bp.credentials ?? []).map(t => ({ templateId: t.id, templateName: t.displayName, optional: t.optional ?? false })),
 });
 
-export interface Derivation {
+export interface DerivativeSummary {
     /** Conditions from the base down, e.g. "target==node/nodeOperation==create". */
     path:     string
     adds:     { fields: Foundations.Field.Id[], inputs: Foundations.Port.Input.Id[], outputs: Foundations.Port.Output.Id[], credentialTemplates: string[] }
@@ -36,8 +36,8 @@ const describe = (c: Derivative["condition"]) => `${c.fieldId}${c.operator}${Str
 
 // Every reachable branch of the derivative tree, flattened, with what it contributes. Tool mode
 // is a branch too, but not one a caller placing a node would set, so it is left out.
-export const listDerivations = (bp: Foundations.Blueprint): Derivation[] => {
-    const out: Derivation[] = [];
+export const listDerivatives = (bp: Foundations.Blueprint): DerivativeSummary[] => {
+    const out: DerivativeSummary[] = [];
 
     const walk = (branches: readonly Derivative[] | undefined, prefix: string) => {
         for (const branch of branches ?? []) {
