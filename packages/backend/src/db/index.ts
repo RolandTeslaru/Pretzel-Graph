@@ -306,6 +306,7 @@ export namespace DB {
             id:         z.literal(true),
             claimed_by: Auth.User.Id.nullable(),
             claimed_at: supabaseTimestamp.nullable(),
+            assistant_version: z.string().nullable(),
         });
         export type Row = z.infer<typeof Row>;
     }

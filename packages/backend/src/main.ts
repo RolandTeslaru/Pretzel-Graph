@@ -5,6 +5,7 @@ import './load-env';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { runMigrations } from './db/migrator';
+import { installAssistant } from './db/assistant';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { trustedProxyMiddleware } from './auth/trusted-proxy';
@@ -16,6 +17,7 @@ System.log.setAppName('Backend');
 async function bootstrap() {
     // Before the modules load: some of them read the database on init.
     await runMigrations();
+    await installAssistant();
 
     // rawBody: kept for signature verification, which needs the original bytes.
     const app = await NestFactory.create(AppModule, { rawBody: true });
