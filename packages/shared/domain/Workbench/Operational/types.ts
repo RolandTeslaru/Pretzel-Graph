@@ -17,6 +17,8 @@ export type DependencyResolver = (ref: Dependency.Ref) => Promise<Dependency.Val
 
 export interface CreateNodeRequest {
     blueprintId:   Foundations.Blueprint.Id
+    /** Omitted: the blueprint's name. */
+    displayName?:  string
     /** Omitted: placed to the right of the rightmost node. */
     position?:     Position
     staticValues?: Record<string, unknown>

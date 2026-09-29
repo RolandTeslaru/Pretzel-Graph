@@ -1,20 +1,24 @@
 import { useState } from 'react'
-import { Button, Frame, Spinner, Tooltip } from '@pretzel-graph/standard-ui/foundations'
+import { Badge, Button, Dialog, Frame, Spinner, Tooltip } from '@pretzel-graph/standard-ui/foundations'
 import { Card } from '@pretzel-graph/standard-ui/foundations/card'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { IconRenderer } from '@pretzel-graph/standard-ui/icons/IconRenderer'
 import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
-import type { Library, Listing, Template } from '@pretzel-graph/shared/domain'
+import type { Library, Template } from '@pretzel-graph/shared/domain'
 import { TEMPLATE_CATEGORIES, type TemplateCategory, type TemplateCategoryId } from '@pretzel-graph/shared/constants/templateCategories'
 import { cn } from '@pretzel-graph/standard-ui/utils/cn'
-import { toast } from 'sonner'
 import { router } from '@/main'
 import { LibrarySDK } from '../sdk'
 import { openCreateWorkflowDialog } from './workflow-dialogs'
 
 // Every integration blueprint id starts with this.
 const INTEGRATION_BLUEPRINT_ID_PREFIX = 'Integrations.'
+
+// Icons shown on a template card before the rest collapse into a +n.
+const MAX_CARD_ICONS = 5
+
+const ICON_CHIP = 'relative flex shrink-0 items-center justify-center size-7 rounded-full border bg-muted text-foreground'
 
 // The sidebar entry that shows every template.
 const ALL_TEMPLATES = 'all'
@@ -56,6 +60,29 @@ function getSidebarSections(templates: Template[]): SidebarSection[] {
     return [...sectionsByTitle.values()]
 }
 
+// One entry per distinct node icon, integrations first, naming every node that shares it.
+function getTemplateIcons(template: Template) {
+    const iconsByName = new Map<string, { icon: string; color: string | null; names: string[] }>()
+
+    const blueprintMetas = Object.values(template.blueprintMetas)
+
+    const orderedBlueprintMetas = [
+        ...blueprintMetas.filter((blueprintMeta) => blueprintMeta.id.startsWith(INTEGRATION_BLUEPRINT_ID_PREFIX)),
+        ...blueprintMetas.filter((blueprintMeta) => !blueprintMeta.id.startsWith(INTEGRATION_BLUEPRINT_ID_PREFIX)),
+    ]
+
+    for (const blueprintMeta of orderedBlueprintMetas) {
+        const { icon, iconColor, accent, displayName } = blueprintMeta.ui
+        const entry = iconsByName.get(icon) ?? { icon, color: iconColor ?? accent ?? null, names: [] }
+
+        entry.names.push(displayName)
+
+        iconsByName.set(icon, entry)
+    }
+
+    return [...iconsByName.values()]
+}
+
 interface TemplateGalleryProps {
     dialogProps: DialogSDK.TemplateProps
     dialogId: string
@@ -70,8 +97,6 @@ function TemplateGallery({ dialogProps, dialogId, folder_id }: TemplateGalleryPr
 
     const [pickedSelection, setPickedSelection] = useState<Selection | null>(null)
 
-    const [remixingListingId, setRemixingListingId] = useState<Listing.Id | null>(null)
-
     const sortedTemplates = Object.values(templates).sort((a, b) => a.sortOrder - b.sortOrder)
 
     const [topSection, ...sections] = getSidebarSections(sortedTemplates)
@@ -84,20 +109,15 @@ function TemplateGallery({ dialogProps, dialogId, folder_id }: TemplateGalleryPr
         ? sortedTemplates.filter((template) => template.categoryIds.includes(selectedCategory.id))
         : sortedTemplates
 
-    const onRemix = async (template: Template) => {
-        setRemixingListingId(template.listingId)
-
-        try {
-            const workflow = await LibrarySDK.actions.template.remix(template.listingId, folder_id)
-            toast.success(`${template.name} added to your library`)
-            DialogSDK.actions.pop(dialogId)
-            void router.navigate({ to: '/workflow/$workflowid', params: { workflowid: workflow.id } })
-        } catch (err) {
-            console.error('Failed to create workflow from template', err)
-            toast.error('Failed to create workflow from template')
-        } finally {
-            setRemixingListingId(null)
-        }
+    const onRemix = (template: Template) => {
+        openCreateWorkflowDialog({
+            folder_id,
+            template,
+            onCreated: (workflow) => {
+                DialogSDK.actions.pop(dialogId)
+                void router.navigate({ to: '/workflow/$workflowid', params: { workflowid: workflow.id } })
+            },
+        })
     }
 
     const onBlank = () => {
@@ -108,7 +128,7 @@ function TemplateGallery({ dialogProps, dialogId, folder_id }: TemplateGalleryPr
         <DialogSDK.SplitTemplate {...dialogProps}
             className='w-[960px] max-w-[95vw] h-[600px] max-h-[85vh]'
             sidebarClassName='w-[220px] px-4! shrink-0 overflow-y-auto'
-            contentClassName='min-w-0'
+            contentClassName='min-w-0 p-0!'
             sidebarRenderer={() => (
                 <nav className='flex flex-col gap-1'>
                     <h2 className='pb-2 text-base font-medium'>Templates</h2>
@@ -144,43 +164,38 @@ function TemplateGallery({ dialogProps, dialogId, folder_id }: TemplateGalleryPr
                 </nav>
             )}
         >
-            <DialogSDK.SplitTemplate.Header>
-                <DialogSDK.SplitTemplate.Title>{selectedCategory?.label ?? 'All templates'}</DialogSDK.SplitTemplate.Title>
-                <DialogSDK.SplitTemplate.Description>Start from a copy of a published workflow.</DialogSDK.SplitTemplate.Description>
-            </DialogSDK.SplitTemplate.Header>
+            <div className='relative h-full w-full min-w-0'>
+                <Dialog.FloatingHeader title={selectedCategory?.label ?? 'All templates'}>
+                    <span className='text-xs text-muted-foreground'>Start from a copy of a published workflow.</span>
+                </Dialog.FloatingHeader>
 
-            <div className='min-h-0 flex-1 overflow-y-auto'>
-                {request.isPending && sortedTemplates.length === 0 ? (
-                    <div className='flex items-center justify-center gap-2 py-16 text-xs text-muted-foreground'>
-                        <Spinner className='size-3.5' />
-                        Loading templates…
-                    </div>
-                ) : sortedTemplates.length === 0 ? (
-                    <p className='py-16 text-center text-sm text-muted-foreground'>No templates are available.</p>
-                ) : (
-                    <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-                        {visibleTemplates.map((template) => (
-                            <TemplateCard
-                                key={template.listingId}
-                                template={template}
-                                disabled={remixingListingId !== null}
-                                loading={remixingListingId === template.listingId}
-                                onClick={() => void onRemix(template)}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                <Dialog.MaskedScrollArea className='h-full'>
+                    {request.isPending && sortedTemplates.length === 0 ? (
+                        <div className='flex items-center justify-center gap-2 py-16 text-xs text-muted-foreground'>
+                            <Spinner className='size-3.5' />
+                            Loading templates…
+                        </div>
+                    ) : sortedTemplates.length === 0 ? (
+                        <p className='py-16 text-center text-sm text-muted-foreground'>No templates are available.</p>
+                    ) : (
+                        <div className='grid grid-cols-2 gap-3'>
+                            {visibleTemplates.map((template) => (
+                                <TemplateCard
+                                    key={template.listingId}
+                                    template={template}
+                                    onClick={() => onRemix(template)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </Dialog.MaskedScrollArea>
 
-            <div className='flex items-center gap-4 pt-2'>
-                <div className='min-w-0 flex-1'>
-                    <p className='text-sm font-medium'>Start from scratch</p>
-                    <p className='text-xs text-muted-foreground'>Begin with an empty workflow.</p>
-                </div>
-                <Button variant="default" onClick={onBlank} disabled={remixingListingId !== null}>
-                    <SystemIcons.Plus />
-                    Blank workflow
-                </Button>
+                <Dialog.FloatingFooter>
+                    <Button variant="default" onClick={onBlank}>
+                        <SystemIcons.Plus />
+                        Blank workflow
+                    </Button>
+                </Dialog.FloatingFooter>
             </div>
         </DialogSDK.SplitTemplate>
     )
@@ -202,21 +217,16 @@ function SidebarEntry({ icon, label, active, onClick }: { icon: string; label: s
     )
 }
 
-function TemplateCard({ template, disabled, loading, onClick }: {
-    template: Template
-    disabled: boolean
-    loading: boolean
-    onClick: () => void
-}) {
-    const integrationBlueprintMetas = Object.values(template.blueprintMetas)
-        .filter((blueprintMeta) => blueprintMeta.id.startsWith(INTEGRATION_BLUEPRINT_ID_PREFIX))
+function TemplateCard({ template, onClick }: { template: Template; onClick: () => void }) {
+    const templateIcons = getTemplateIcons(template)
+    const visibleIcons = templateIcons.slice(0, MAX_CARD_ICONS)
+    const hiddenIcons = templateIcons.slice(MAX_CARD_ICONS)
 
     return (
         <Frame.Root className='w-full overflow-hidden'>
             <Frame.Panel
-                className={cn('h-[120px] flex flex-col transition-shadow p-0 pt-3 pb-2', disabled ? 'cursor-default opacity-60' : 'cursor-pointer')}
-                aria-disabled={disabled}
-                onClick={disabled ? undefined : onClick}
+                className='h-[120px] flex flex-col transition-shadow p-0 pt-3 pb-2 cursor-pointer'
+                onClick={onClick}
             >
                 <Card.Header>
                     <div className='flex flex-row items-center gap-2 min-w-0'>
@@ -226,7 +236,6 @@ function TemplateCard({ template, disabled, loading, onClick }: {
                             <WorkflowIllustration className='size-6 shrink-0' style={{ color: 'var(--primary)' }} />
                         )}
                         <Card.Title className='text-sm truncate'>{template.name}</Card.Title>
-                        {loading && <Spinner className='size-3.5 shrink-0' />}
                     </div>
                 </Card.Header>
                 {template.description && (
@@ -235,17 +244,30 @@ function TemplateCard({ template, disabled, loading, onClick }: {
                     </Card.Content>
                 )}
             </Frame.Panel>
-            <Frame.Footer className='flex flex-row items-center gap-1 px-2! py-1! overflow-x-auto w-full h-[35px] [scrollbar-width:none]'>
-                {integrationBlueprintMetas.map((blueprintMeta) => (
-                    <Tooltip.Root key={blueprintMeta.id}>
-                        <Tooltip.Trigger className='flex shrink-0 p-1'>
-                            <IconRenderer name={blueprintMeta.ui.icon} className='size-4' style={{ color: colorOf(blueprintMeta.ui.iconColor ?? blueprintMeta.ui.accent ?? null) }} />
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                            {blueprintMeta.ui.displayName}
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                ))}
+            <Frame.Footer className='flex flex-row items-center gap-2 px-2! py-1! w-full h-[38px]'>
+                <div className='flex flex-row items-center -space-x-1 min-w-0'>
+                    {visibleIcons.map((templateIcon) => (
+                        <Tooltip.Root key={templateIcon.icon}>
+                            <Tooltip.Trigger className={ICON_CHIP}>
+                                <IconRenderer name={templateIcon.icon} className='size-4' />
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>
+                                {templateIcon.names.join(', ')}
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    ))}
+                    {hiddenIcons.length > 0 && (
+                        <Tooltip.Root>
+                            <Tooltip.Trigger className={cn(ICON_CHIP, 'text-[10px] font-medium')}>
+                                +{hiddenIcons.length}
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>
+                                {hiddenIcons.flatMap((templateIcon) => templateIcon.names).join(', ')}
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    )}
+                </div>
+                <Badge variant='success' size='sm' className='ml-auto'>{template.versionName}</Badge>
             </Frame.Footer>
         </Frame.Root>
     )

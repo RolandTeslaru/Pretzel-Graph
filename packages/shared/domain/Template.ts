@@ -22,6 +22,8 @@ export namespace Template {
         icon:           z.string().nullable(),
         accent:         z.string().nullable(),
         iconColor:      z.string().nullable(),
+        // The name of the publication the template serves, e.g. "v1.2".
+        versionName:    z.string(),
         // Each blueprint the graph uses, once.
         blueprintMetas: z.record(Blueprint.Id, Blueprint.Meta.Schema),
     })
@@ -53,7 +55,7 @@ export namespace Template {
         }
 
         export namespace Remix {
-            export const Request = z.object({ folder_id: Folder.Id })
+            export const Request = z.object({ folder_id: Folder.Id, display_name: z.string().trim().min(1), description: z.string().nullable() })
             export type  Request = z.infer<typeof Request>
             export type  Response = Workflow
         }

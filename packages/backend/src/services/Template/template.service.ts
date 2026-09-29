@@ -48,8 +48,8 @@ export class TemplateService {
 
         return this.libraryRepository.workflow.createWithData(principal, {
             folder_id:    request.folder_id,
-            display_name: template.name,
-            description:  template.description,
+            display_name: request.display_name,
+            description:  request.description,
             icon:         template.icon,
             accent:       template.accent,
             icon_color:   template.iconColor,
@@ -102,6 +102,7 @@ export class TemplateService {
             icon:        workflowMeta.icon ?? null,
             accent:      workflowMeta.accent ?? null,
             iconColor:   workflowMeta.icon_color ?? null,
+            versionName: registryTemplate.publicationMeta.name,
             blueprintMetas,
         };
     }

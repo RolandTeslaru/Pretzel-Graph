@@ -5,7 +5,7 @@ import { rebuildTree } from './tree';
 
 export type TemplateActions = {
     list: () => Promise<Template.API.List.Response>;
-    remix: (listingId: Listing.Id, folderId: Library.Folder.Id) => Promise<Template.API.Remix.Response>;
+    remix: (listingId: Listing.Id, request: Template.API.Remix.Request) => Promise<Template.API.Remix.Response>;
 };
 
 export function createTemplateActions(sdk: LibrarySDKImpl) {
@@ -20,8 +20,8 @@ export function createTemplateActions(sdk: LibrarySDKImpl) {
             return data;
         },
 
-        remix: async (listingId, folderId) => {
-            const data = await Template.API.remix(api, listingId, { folder_id: folderId });
+        remix: async (listingId, request) => {
+            const data = await Template.API.remix(api, listingId, request);
             const { data: _data, ...meta } = data;
             setState((s) => { s.workflowMetas[data.id] = meta as Library.WorkflowMeta; });
             rebuildTree(sdk);
