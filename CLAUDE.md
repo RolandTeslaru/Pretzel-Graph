@@ -11,13 +11,13 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 Stateful services run in Docker; the packages run on the host.
 
 ```bash
-docker compose up -d        # postgres, redis, gotrue (auth)
+docker compose up -d postgres redis gotrue
 cp .env.example .env        # values match the compose defaults
 npm install
 npm run dev                 # backend :3001, worker, frontend :5173, nodes index watcher
 ```
 
-The backend migrates its own database on boot (`packages/backend/migrations/`). The first account to sign up owns the deployment. `docker compose --profile full up -d` runs everything in containers on port 8080. See `README.md` for details.
+The backend migrates its own database on boot (`packages/backend/migrations/`). The first account to sign up owns the deployment. `docker compose up -d` runs everything from the published images on port 8080. See `README.md` for details.
 
 ## Development Commands
 
