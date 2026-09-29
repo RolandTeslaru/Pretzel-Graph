@@ -47,6 +47,7 @@ const operation = z.discriminatedUnion("op", [
     z.object({
         op:           z.literal("node.create"),
         blueprintId:  z.string(),
+        displayName:  z.string().optional().describe("Label shown on the canvas. Omit to use the blueprint's name."),
         position:     position().optional().describe("Omit to place right of the rightmost node."),
         staticValues: z.record(z.unknown()).optional()
             .describe("Keyed by field id or input port id. Reconcile fields are rejected; set them with a field.set operation. A field that starts in expression mode takes one JavaScript expression, e.g. $igniter.chat_id or `Event: ${JSON.stringify($in.event)}`; never {{ }}."),

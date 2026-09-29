@@ -6,7 +6,7 @@ import { Switch } from '@pretzel-graph/standard-ui/foundations/switch'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
 import { DialogSDK } from '@pretzel-graph/standard-ui/SDKs/DialogSDK'
 import { LibrarySDK } from '../sdk'
-import { Workflow, type Library } from '@pretzel-graph/shared/domain'
+import { Workflow, type Library, type Template } from '@pretzel-graph/shared/domain'
 import { toast } from 'sonner'
 import { WorkflowIllustration } from '@pretzel-graph/standard-ui/icons/illustrations'
 
@@ -20,7 +20,13 @@ const Schema = z.object({
 })
 type Values = z.infer<typeof Schema>
 
-export function openCreateWorkflowDialog(args: { folder_id: Library.Folder.Id; onCreated?: (workflow: Workflow) => void }) {
+type CreateWorkflowArgs = {
+    folder_id: Library.Folder.Id
+    template?: Template
+    onCreated?: (workflow: Workflow) => void
+}
+
+export function openCreateWorkflowDialog(args: CreateWorkflowArgs) {
     const id = `create-workflow-${args.folder_id}`
     DialogSDK.actions.push(id, (props) => (
         <DialogSDK.Template {...props} className={DIALOG_CLASSNAME}>
@@ -38,19 +44,27 @@ export function openEditWorkflowDialog(args: { workflow: Library.WorkflowMeta })
     ))
 }
 
-function CreateWorkflowContent({ dialogId, folder_id, onCreated }: { dialogId: string; folder_id: Library.Folder.Id; onCreated?: (workflow: Workflow) => void }) {
+function CreateWorkflowContent({ dialogId, folder_id, template, onCreated }: CreateWorkflowArgs & { dialogId: string }) {
     const form = useForm<Values>({
         resolver: zodResolver(Schema),
-        defaultValues: { display_name: '', description: '' },
+        defaultValues: {
+            display_name: template?.name ?? '',
+            description: template?.description ?? '',
+        },
     })
 
     const onSubmit = async (values: Values) => {
+        const request = {
+            folder_id,
+            display_name: values.display_name,
+            description: values.description || null,
+        }
+
         try {
-            const workflow = await LibrarySDK.actions.workflow.create({
-                folder_id,
-                display_name: values.display_name,
-                description: values.description || null,
-            })
+            const workflow = template
+                ? await LibrarySDK.actions.template.remix(template.listingId, request)
+                : await LibrarySDK.actions.workflow.create(request)
+
             toast.success('Workflow created')
             DialogSDK.actions.pop(dialogId)
             onCreated?.(workflow)
@@ -70,7 +84,7 @@ function CreateWorkflowContent({ dialogId, folder_id, onCreated }: { dialogId: s
                     New workflow
                 </Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
-                    Start a new workflow here.
+                    {template ? `Start from the ${template.name} template.` : 'Start a new workflow here.'}
                 </Dialog.Description>
             </Dialog.Header>
             <Form.Root {...form}>

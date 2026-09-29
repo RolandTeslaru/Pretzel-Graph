@@ -58,8 +58,16 @@ export class NodeOperations {
                 assertNoTemplating(field.id, request.staticValues?.[id])
         }
 
+        const displayName = request.displayName?.trim()
+
+        if (request.displayName !== undefined && !displayName)
+            throw new Error("Display name can't be empty; omit it to use the blueprint's name")
+
         const position = request.position ?? placeNext(d)
         const nodeId   = withCyclesRecompute((d: Document) => d.reducers.node.create(d, blueprint, position, request.staticValues as never))(d)
+
+        if (displayName)
+            d.reducers.node.setDisplayName(d, nodeId, displayName)
 
         this.client.report({
             type:         "node:created",
