@@ -3,7 +3,7 @@ import { Auth } from '@pretzel-graph/shared/domain'
 import { api } from '@/SDKs/ApiInterceptorSDK'
 import AuthenticationPanel from '@/SDKs/AuthSDK/ui/AuthenticationPanel'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
-import { Pretzel } from '@pretzel-graph/standard-ui/icons/system'
+import pretzelLogo from '@/assets/pretzel-logo.png'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
 
 
@@ -43,7 +43,10 @@ function AuthPage() {
             </div>
             <div className="absolute p-10 left-0 h-full z-10 flex xl:w-[900px] w-full  bg-background/70 backdrop-blur-lg rounded-r-2xl">
                 <div className='max-w-md min-w-md h-auto m-auto'>
-                    <Pretzel className="mx-auto mb-4 text-primary" size={80} />
+                    <div className='flex flex-row w-fit mr-auto gap-4 mb-8'>
+                        <img src={pretzelLogo} alt="PretzelGraph" width={50} height={50} className="block" />
+                        <p className="text-xl h-auto my-auto font-semibold">PretzelGraph</p>
+                    </div>
                     <AuthenticationPanel claimed={claimed} />
                 </div>
             </div>

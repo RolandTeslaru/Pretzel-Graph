@@ -49,6 +49,11 @@ const DrawerItem: React.FC<Props> = memo(({ blueprintId, ...props }) => {
               <SystemIcons.Tool className='text-(--port-Tool)/50 fill-current size-3 h-auto my-auto -mr-1'/>
             </Tipped>
           )}
+          {blueprint.igniter && (
+            <Tipped label="This node is an igniter">
+              <SystemIcons.Zap className='text-yellow-400/50 dark:text-yellow-300/50 size-3 h-auto my-auto -mr-1'/>
+            </Tipped>
+          )}
           <SystemIcons.GripVertical className='w-[18px] h-[18px] text-muted-foreground ml-auto my-auto ' />
         </div>
       </Tooltip.Trigger>
