@@ -32,7 +32,7 @@ npm run dev                     # http://localhost:5173
 
 ### Notes
 
-- Ports `5432`, `6379` and `9999` must be free.
+- Ports `8080` and `9999` must be free; developing also uses `5432` and `6379`.
 - The official node library is fetched from Pretzel Cloud. Set `PRETZEL_CLOUD_URL=`
   to turn it off.
 - To use your own Postgres, point `DATABASE_URL` at an existing database.

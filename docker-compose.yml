@@ -4,9 +4,26 @@
 #   docker compose up -d postgres redis gotrue    stateful services only; run the
 #                                                 packages on the host with npm run dev
 #
-# The defaults below are for a local machine. `down -v` deletes the volumes.
+# The defaults below are for a local machine. `down -v` deletes the volumes,
+# generated keys included.
 
 services:
+
+  # Generates the keys the backend and worker share, once, into volumes.
+  keys:
+    image: alpine:3
+    restart: "no"
+    volumes:
+      - shared-keys:/keys/shared
+      - backend-keys:/keys/backend
+    command:
+      - sh
+      - -c
+      - |
+        generate() { [ -s "$$1" ] || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$$1"; }
+        generate /keys/shared/encryption-key
+        generate /keys/shared/worker-token
+        generate /keys/backend/signing-key
 
   postgres:
     image: postgres:17-alpine
@@ -16,8 +33,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pretzel}
       POSTGRES_DB: ${POSTGRES_DB:-pretzel}
       GOTRUE_DB_NAME: ${GOTRUE_DB_NAME:-gotrue}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -31,8 +46,6 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -77,19 +90,33 @@ services:
       dockerfile: Dockerfile.backend
     restart: unless-stopped
     depends_on:
+      keys:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - shared-keys:/keys/shared:ro
+      - backend-keys:/keys/backend:ro
+    # Keys set in .env win; otherwise the generated ones are used.
+    command:
+      - sh
+      - -c
+      - |
+        export PRETZEL_ENCRYPTION_KEY="$${PRETZEL_ENCRYPTION_KEY:-$$(cat /keys/shared/encryption-key)}"
+        export WORKER_SERVICE_INTERNAL_TOKEN="$${WORKER_SERVICE_INTERNAL_TOKEN:-$$(cat /keys/shared/worker-token)}"
+        export EXECUTION_TOKEN_SIGNING_KEY="$${EXECUTION_TOKEN_SIGNING_KEY:-$$(cat /keys/backend/signing-key)}"
+        exec ./entrypoint.sh
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-pretzel}@postgres:5432/${POSTGRES_DB:-pretzel}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AUTH_URL: http://gotrue:9999
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-dev-jwt-secret-change-me-0123456789abcdef}
-      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
-      EXECUTION_TOKEN_SIGNING_KEY: ${EXECUTION_TOKEN_SIGNING_KEY:-dev-execution-token-signing-key}
-      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-dev-worker-service-internal-token}
+      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:-}
+      EXECUTION_TOKEN_SIGNING_KEY: ${EXECUTION_TOKEN_SIGNING_KEY:-}
+      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-}
       CORS_ORIGIN: ${APP_URL:-http://localhost:8080}
       # Builds the OAuth redirect URI a provider console must list.
       PUBLIC_BASE_URL: ${APP_URL:-http://localhost:8080}
@@ -111,15 +138,28 @@ services:
       dockerfile: Dockerfile.worker
     restart: unless-stopped
     depends_on:
+      keys:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
+    volumes:
+      - shared-keys:/keys/shared:ro
+    command:
+      - sh
+      - -c
+      - |
+        export PRETZEL_ENCRYPTION_KEY="$${PRETZEL_ENCRYPTION_KEY:-$$(cat /keys/shared/encryption-key)}"
+        export WORKER_SERVICE_INTERNAL_TOKEN="$${WORKER_SERVICE_INTERNAL_TOKEN:-$$(cat /keys/shared/worker-token)}"
+        exec ./entrypoint.sh
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       API_URL: http://backend:3001
-      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
-      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-dev-worker-service-internal-token}
+      PRETZEL_ENCRYPTION_KEY: ${PRETZEL_ENCRYPTION_KEY:-}
+      WORKER_SERVICE_INTERNAL_TOKEN: ${WORKER_SERVICE_INTERNAL_TOKEN:-}
 
 volumes:
   postgres-data:
   redis-data:
+  shared-keys:
+  backend-keys:
