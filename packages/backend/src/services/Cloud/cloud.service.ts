@@ -5,9 +5,9 @@ import { SystemError } from '@pretzel-graph/shared/domain';
 @Injectable()
 export class CloudService {
 
-    private readonly baseUrl     = process.env.PRETZEL_CLOUD_URL?.replace(/\/+$/, '') ?? null;
-    public  readonly workspaceId = process.env.WORKSPACE_ID ?? null;
-    private readonly token       = process.env.PRETZEL_CLOUD_TOKEN ?? null;
+    private readonly baseUrl     = process.env.PRETZEL_CLOUD_URL?.replace(/\/+$/, '') || null;
+    public  readonly workspaceId = process.env.WORKSPACE_ID || null;
+    private readonly token       = process.env.PRETZEL_CLOUD_TOKEN || null;
 
     public get isConfigured(): boolean {
         return this.baseUrl !== null;

@@ -11,21 +11,19 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 Stateful services run in Docker; the packages run on the host.
 
 ```bash
-docker compose up -d        # postgres, redis, gotrue (auth)
+docker compose up -d postgres redis gotrue
 cp .env.example .env        # values match the compose defaults
 npm install
-npm run dev --workspace=packages/backend    # http://localhost:3001
-npm run dev --workspace=packages/worker
-npm run dev --workspace=packages/frontend   # http://localhost:5173
+npm run dev                 # backend :3001, worker, frontend :5173, nodes index watcher
 ```
 
-The backend migrates its own database on boot (`packages/backend/migrations/`). The first account to sign up owns the deployment. `docker compose --profile full up -d` runs everything in containers on port 8080. See `README.md` for details.
+The backend migrates its own database on boot (`packages/backend/migrations/`). The first account to sign up owns the deployment. `docker compose up -d` runs everything from the published images on port 8080. See `README.md` for details.
 
 ## Development Commands
 
 | Package | Command | What it does |
 |---|---|---|
-| root | `npm run dev` | Worker in watch mode + nodes index watcher |
+| root | `npm run dev` | Backend, worker, frontend, and nodes index watcher together |
 | root | `npm run build` | Build every workspace |
 | `frontend` | `npm run dev` / `build` / `lint` / `preview` | Vite dev server / `tsc -b` + bundle / ESLint / preview |
 | `backend` | `npm run dev` / `build` / `start` | nodemon + ts-node / compile + copy migrations and assets / run `dist` |
