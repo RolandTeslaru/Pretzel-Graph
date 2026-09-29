@@ -1,4 +1,4 @@
-import { defineBlueprint, defineField, defineInput, defineOutput, defineTool } from '@pretzel-graph/node-sdk';
+import { defineBlueprint, defineField, defineOutput, defineTool } from '@pretzel-graph/node-sdk';
 import { DiscordBot } from '@pretzel-graph/nodes/Credentials';
 
 
@@ -29,11 +29,7 @@ export const Blueprint = defineBlueprint({
             initialValue: 'message',
         }),
     ],
-    inputs:  [
-        defineInput.Data('event', 'Event', {
-            tooltip: 'Optional Discord event or other data that triggers this operation and is available as $in.event.',
-        }),
-    ],
+    inputs:  [],
     outputs: [],
 
 

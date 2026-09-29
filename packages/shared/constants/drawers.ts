@@ -5,17 +5,22 @@ declare const process: { env: { NODE_ENV?: string } }
 const IS_DEVELOPMENT = process.env.NODE_ENV !== "production"
 
 export const CORE_DRAWERS = {
-  input_output: {
-    displayName: "Input & Output",
-    id: "input_output",
-    icon: "Cable",
+  igniters: {
+    displayName: "Igniters",
+    id: "igniters",
+    icon: "Zap",
     blueprintIds: [
       "Core.Webhook",
-      "Core.Chat.Input", 
-      "Core.Chat.Output", 
-      "Core.Text.Input", 
+    ],
+  },
+  conversation: {
+    displayName: "Conversation",
+    id: "conversation",
+    icon: "MessagesSquare",
+    blueprintIds: [
+      "Core.Chat.Input",
+      "Core.Chat.Output",
       "Core.Chat.History",
-      "Core.Utils.JsonInjector",
     ],
   },
     routing: {
@@ -106,6 +111,8 @@ export const CORE_DRAWERS = {
     id: "utilities",
     icon: "DraftingCompass",
     blueprintIds: [
+      "Core.Text.Input",
+      "Core.Utils.JsonInjector",
       "Core.Utils.RunCode",
       "Core.Developer.HttpRequest"
     ],
