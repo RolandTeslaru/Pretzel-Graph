@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@pretzel-graph/standard-ui/foundations/input-group'
 import { SystemIcons } from '@pretzel-graph/standard-ui/icons'
@@ -20,9 +20,11 @@ interface PromptInputProps {
     suggestions?: readonly string[]
     // The bottom row: attach buttons, the send button.
     children?:    ReactNode
+    // Focuses the textarea whenever it changes to a non-zero value.
+    focusKey?:    number
 }
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, placeholder, disabled = false, notice, className, suggestions, children }) => {
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, placeholder, disabled = false, notice, className, suggestions, children, focusKey }) => {
     const { handleSubmit, control, reset, formState: { isValid } } = useForm<PromptFormValues>({
         defaultValues: { prompt: "" },
         mode: 'onChange',
@@ -42,6 +44,13 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, placeholder, d
 
         riseFromBehind(suggestionRef.current, inputTop)
     }, [suggestions])
+
+    useEffect(() => {
+        if (!focusKey)
+            return
+
+        inputRef.current?.querySelector('textarea')?.focus({ preventScroll: true })
+    }, [focusKey])
 
     const canSendNow = !disabled && !isRunning && !isSendBtnDisabled
 

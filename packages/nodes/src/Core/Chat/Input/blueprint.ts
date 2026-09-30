@@ -6,6 +6,7 @@ export const Blueprint = defineBlueprint({
     description: "This node is a chat input",
     icon: "MessagesSquare",
     accent: "port-Message",
+    igniter: true,
     fields: [
         defineField.String("chat_id", "Chat ID", {
             initialValue: "$igniter.chat_id",

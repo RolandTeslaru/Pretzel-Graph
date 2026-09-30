@@ -2,7 +2,7 @@
  * PretzelGraph — https://github.com/RolandTeslaru/Pretzel-Graph
  * Elastic License 2.0. See LICENSE.
  */
-import { Airlock, Execution, Workbench } from "@pretzel-graph/shared/domain";
+import { Airlock, Chat, Execution, Workbench } from "@pretzel-graph/shared/domain";
 import { SystemError } from "@pretzel-graph/shared/domain/SystemError";
 import { Workflow } from "@pretzel-graph/shared/domain/Workflow";
 import { NetworkProxy, RuntimeNode } from "@pretzel-graph/node-sdk";
@@ -80,7 +80,7 @@ export class TurboGraph {
         }
 
 
-        const electedNodeId = "nodeId" in executionCtx.igniter ? executionCtx.igniter.nodeId : undefined;
+        const electedNodeId = this.findElectedNodeId(executionCtx);
 
         if (electedNodeId !== undefined)
             this.assertIgniteable(electedNodeId, executionCtx);
@@ -268,6 +268,24 @@ export class TurboGraph {
                 wfNode.id as unknown as Vertex.Id,
                 fieldValues["signalDependency" as Field.Id] as Vertex.STRATEGY,
             );
+    }
+
+
+
+    // A chat message names no node, so it elects the first enabled chat input.
+    private findElectedNodeId(ctx: ExecutionContext): Workflow.Node.Id | undefined {
+
+        const igniter = ctx.igniter;
+
+        if ("nodeId" in igniter)
+            return igniter.nodeId;
+
+        if (igniter.variant !== "chat_message")
+            return undefined;
+
+        return Object.values(ctx.workflowData.nodes)
+            .find(node => !node.isDisabled && node.blueprintId === Chat.INPUT_BLUEPRINT_ID)
+            ?.id;
     }
 
 

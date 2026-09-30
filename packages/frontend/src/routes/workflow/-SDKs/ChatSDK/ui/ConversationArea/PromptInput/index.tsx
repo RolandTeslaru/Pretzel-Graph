@@ -8,17 +8,20 @@ import AddFileDialogContent from './dialogs/AddFileDialog'
 import { WorkbenchSDK } from '../../../../WorkbenchSDK/sdk'
 import { NodeBadge } from '@/components/NodeBadge'
 import { Conversation } from '@/components/Conversation'
+import { Chat } from '@pretzel-graph/shared/domain'
 
 const PromptInput: React.FC = () => {
     const hasChatInputNode = WorkbenchSDK.useDocument(d => {
-        return Object.values(d.data.nodes).some(node => node.blueprintId === "Core.Chat.Input");
+        return Object.values(d.data.nodes).some(node => node.blueprintId === Chat.INPUT_BLUEPRINT_ID);
     })
+    const promptFocusRequest = ChatSDK.useStore(s => s.promptFocusRequest)
 
     return (
         <Conversation.PromptInput
             onSend={(content) => ChatSDK.actions.message.send({ content })}
             placeholder="Ask, Search or Chat..."
             disabled={!hasChatInputNode}
+            focusKey={promptFocusRequest}
             notice={!hasChatInputNode && (
                 <>Add a <NodeBadge icon="MessagesSquare" label="Chat Input" accent="port-Message" /> node to send messages.</>
             )}

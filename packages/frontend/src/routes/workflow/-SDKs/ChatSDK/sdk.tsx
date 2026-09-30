@@ -35,6 +35,7 @@ export class ChatSDKImpl extends BaseSDK<ChatSDK.State> {
             toolCallStatus: {},
             isLoading: false,
             isSidebarVisible: false,
+            promptFocusRequest: 0,
             currentChat: null,
             reducers: createChatSDKReducers(),
         })),
@@ -84,6 +85,7 @@ export namespace ChatSDK {
         toolCallStatus: Record<Chat.ToolCall.Id, Chat.ToolCall.Status>,
         isLoading: boolean,
         isSidebarVisible: boolean,
+        promptFocusRequest: number,
         currentChat: Chat | null,
         reducers: ChatSDK.Reducers,
     }

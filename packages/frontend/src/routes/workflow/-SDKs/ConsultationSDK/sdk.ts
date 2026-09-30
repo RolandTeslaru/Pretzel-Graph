@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer"
 import { enableMapSet } from 'immer';
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import { Consultation, Gateway, HumanReview } from "@pretzel-graph/shared/domain";
+import { Chat, Consultation, Gateway, HumanReview } from "@pretzel-graph/shared/domain";
 import { BaseSDK } from "@pretzel-graph/standard-ui/SDKs/Base";
 import { SDK } from "@pretzel-graph/standard-ui/SDKs/SDKManager";
 import "../ExecutionSDK/sdk";
@@ -16,6 +16,7 @@ import { ConsultationTemplate } from "./ui/Template";
 import { reviewCardRenderer } from "./ui/cards/ReviewCard/renderer";
 import { webhookCardRenderer } from "./ui/cards/WebhookCard/renderer";
 import { GatewayListenerCard } from "./ui/cards/GatewayListenerCard";
+import { ChatMessageCard } from "./ui/cards/ChatMessageCard";
 import { Webhook } from "@pretzel-graph/shared/domain/Webhook";
 
 enableMapSet()
@@ -36,6 +37,12 @@ export class ConsultationSDKImpl extends BaseSDK<ConsultationSDK.State> {
             React.createElement(GatewayListenerCard, {
                 ...props,
                 request: props.consultation as Gateway.Test.Consultation.Request,
+            }),
+        )
+        this.register(Chat.Consultation.Variant, props =>
+            React.createElement(ChatMessageCard, {
+                ...props,
+                request: props.consultation as Chat.Consultation.Request,
             }),
         )
 
@@ -102,6 +109,8 @@ export namespace ConsultationSDK {
         createdAt: number
         timeoutMs: number
         onExpire: () => void
+        // Ring colour, for cards whose background hides the default.
+        className?: string
     }
 
     export interface TemplateProps {

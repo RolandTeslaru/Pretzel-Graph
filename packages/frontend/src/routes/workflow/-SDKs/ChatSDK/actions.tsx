@@ -30,6 +30,14 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
 
                 const workflow_id = WorkbenchSDK.document.workflowId
 
+                const executionState = sdk.executionSDK.state
+                const consultation   = executionState.selectors.currentExecution.getChatConsultation(executionState)
+
+                if (consultation) {
+                    await sdk.actions.message.answer(consultation, { content, attachments })
+                    return
+                }
+
                 let currentChat = sdk.state.currentChat;
 
                 let createdNewChat = false
@@ -83,6 +91,49 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     }
                     return;
                 }
+            },
+            answer: async (consultation, { content, attachments }) => {
+
+                const execution = sdk.executionSDK.state.currentExecution
+
+                if (!execution)
+                    return
+
+                const chatId = execution.igniter.chat_id ?? sdk.state.currentChatId
+
+                // The run already created this chat, so it only needs loading into the sidebar.
+                if (sdk.state.currentChat?.id !== chatId) {
+                    try {
+                        const { chat } = await Chat.API.ensure(api, execution.workflow_id, { chatId })
+
+                        sdk.setState(s => {
+                            s.currentChatId = chat.id;
+                            s.currentChat = chat;
+                        })
+
+                        void sdk.invalidate(sdk.query.list(execution.workflow_id))
+                    }
+                    catch (err) {
+                        toast.error(SystemError.messageFrom(err));
+                        console.error("Failed to load chat", err);
+                        return;
+                    }
+                }
+
+                const message: Chat.Message.Human = {
+                    content: content,
+                    id: Chat.Message.createId(),
+                    role: "human",
+                    attachments,
+                }
+
+                sdk.actions.message.upsert(message)
+
+                await sdk.executionSDK.actions.pendingConsultations.answer(consultation.id, {
+                    requestId: consultation.id,
+                    variant:   Chat.Consultation.Variant,
+                    message,
+                } satisfies Chat.Consultation.Answer)
             },
         },
 
@@ -176,6 +227,14 @@ export function createChatSDKActions(sdk: ChatSDKImpl) {
                     s.isSidebarVisible = show;
                 })
             },
+            focusPrompt: () => {
+                sdk.setState(s => {
+                    if (DialogSDK.state.dialogs.has("fullscreen-chat") === false)
+                        s.isSidebarVisible = true;
+
+                    s.promptFocusRequest += 1;
+                })
+            },
             openFullscreen: () => {
                 DialogSDK.actions.push("fullscreen-chat", (props) => (
                     <FullscreenChat {...props} />
@@ -203,6 +262,10 @@ export interface ChatSDKActions {
             content: string,
             attachments?: Chat.Attachment,
         }) => Promise<void>
+        answer: (consultation: Chat.Consultation.Request, props: {
+            content: string,
+            attachments?: Chat.Attachment,
+        }) => Promise<void>
     }
     chat: {
         listByWorkflow: (workflowId: Workflow.Id) => Promise<Chat[]>
@@ -213,6 +276,7 @@ export interface ChatSDKActions {
     }
     ui: {
         setSidebarVisibility: (show: boolean) => void
+        focusPrompt: () => void
         openFullscreen: () => void
         closeFullscreen: () => void
     }
