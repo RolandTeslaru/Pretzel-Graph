@@ -147,7 +147,7 @@ code {
   --port-MessageList-glow: theme(--color-indigo-600);
 
   --port-DataList: theme(--color-slate-400);
-  --port-DataList-foreground: theme(--color-slate-300);
+  --port-DataList-foreground: theme(--color-slate-500);
   --port-DataList-accent: theme(--color-slate-200);
   --port-DataList-glow: theme(--color-slate-600);
 
@@ -263,6 +263,7 @@ code {
   --card-float: rgb(30, 30, 30);
 
   --port-Data-foreground: theme(--color-slate-500);
+  --port-DataList-foreground: theme(--color-slate-300);
   --port-Text: theme(--color-slate-400);
 
   --card-foreground: theme(--color-white);

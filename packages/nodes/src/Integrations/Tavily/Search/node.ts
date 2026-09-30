@@ -1,58 +1,120 @@
-import { InferOutputs, RuntimeNode } from "@pretzel-graph/node-sdk";
-import { Blueprint } from "./blueprint";
-import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
-import { tool } from "@langchain/core/tools";
+import { Document } from "@langchain/core/documents";
+import { RuntimeNode, type InferOutputs } from "@pretzel-graph/node-sdk";
 import { Workflow } from "@pretzel-graph/shared/domain";
-import { z } from "zod/v3";
+import { tavily, type TavilyClient, type TavilySearchOptions } from "@tavily/core";
+
+import { Blueprint } from "./blueprint";
+import { buildTool } from "./tools";
+
+
+type TavilySearchResult = Awaited<ReturnType<TavilyClient["search"]>>["results"][number];
+
+
+const getDocumentForSearchResult = (result: TavilySearchResult, index: number, query: string) =>
+    new Document({
+        pageContent: result.rawContent ?? result.content,
+        metadata: {
+            title:         result.title,
+            source:        result.url,
+            snippet:       result.content,
+            score:         result.score,
+            publishedDate: result.publishedDate ?? null,
+            favicon:       result.favicon ?? null,
+            images:        result.images ?? [],
+            rank:          index + 1,
+            query,
+            provider:      "tavily",
+        },
+    });
+
 
 export class Node extends RuntimeNode<typeof Blueprint> {
 
-    private retriever: TavilySearchAPIRetriever;
+    readonly #tavily: TavilyClient;
 
     constructor(nodeId: Workflow.Node.Id, context: RuntimeNode.Context) {
         super(nodeId, context);
-        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.tavilyApi.blob);
-        const { maxResults, searchDepth, includeAnswer } = this.fieldValues;
 
-        this.retriever = new TavilySearchAPIRetriever({
-            apiKey,
-            k: maxResults,
-            searchDepth: searchDepth as "basic" | "advanced",
-            includeGeneratedAnswer: includeAnswer,
-        });
+        const { apiKey } = this.context.credentialsAPI.getDecryptedValue(this.credentials.tavilyApi.blob);
+
+        this.#tavily = tavily({ apiKey });
     }
+
+
+    private getSearchOptions(): TavilySearchOptions {
+        const fields = this.fieldValues;
+
+        return {
+            searchDepth:              fields.searchDepth,
+            maxResults:               fields.maxResults,
+            includeAnswer:            fields.answerMode === "off" ? false : fields.answerMode,
+            includeRawContent:        fields.rawContent === "off" ? false : fields.rawContent,
+            includeImages:            fields.includeImages,
+            includeImageDescriptions: fields.includeImages,
+            includeDomains:           fields.includeDomains,
+            excludeDomains:           fields.excludeDomains,
+            exactMatch:               fields.exactMatch,
+            safe_search:              fields.safeSearch,
+            includeFavicon:           true,
+            include_published_date:   true,
+        };
+    }
+
 
     protected override async onRun() {
         const fields = this.fieldValues;
 
         if (fields.isConvertedToTool === true)
             return {
-                tool: tool(
-                    async ({ query }) => {
-                        const documents = await this.retriever._getRelevantDocuments(query);
-                        const content = documents
-                            .map((document, index) => {
-                                const title  = document.metadata?.title ?? "";
-                                const source = document.metadata?.source ?? "";
-                                return `[${index + 1}] ${title}\n${source}\n${document.pageContent}`;
-                            })
-                            .join("\n\n");
-
-                        return [content, documents];
-                    },
-                    {
-                        name:        "tavily_search",
-                        description: "Searches the web using Tavily Search API.",
-                        schema: z.object({
-                            query: z.string().describe("The search query to run against the Tavily Search API."),
-                        }),
-                        responseFormat: "content_and_artifact",
-                    },
-                ),
+                tool: buildTool(this.#tavily, this.getSearchOptions()),
             } satisfies InferOutputs<typeof Blueprint, typeof fields>;
 
-        const documents = await this.retriever._getRelevantDocuments(fields.query);
+        const hasDateRange = Boolean(fields.dateRange?.from || fields.dateRange?.to);
 
-        return { documents } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+        const response = await this.#tavily.search(fields.query, {
+            ...this.getSearchOptions(),
+            topic:     fields.topic,
+            timeRange: hasDateRange || fields.timeRange === "any"
+                ? undefined
+                : fields.timeRange,
+            startDate: fields.dateRange?.from,
+            endDate:   fields.dateRange?.to,
+            country:   fields.topic === "general" && fields.country
+                ? fields.country
+                : undefined,
+            chunksPerSource: fields.searchDepth === "advanced"
+                ? fields.chunksPerSource
+                : undefined,
+        });
+
+        const documents = response.results.map((result, index) => getDocumentForSearchResult(result, index, fields.query));
+        const images    = response.images;
+
+        if (fields.answerMode === "off") {
+
+            if (fields.includeImages === true)
+                return {
+                    documents,
+                    images,
+                } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+            return {
+                documents,
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+        }
+
+        const answer = response.answer ?? "";
+
+        if (fields.includeImages === true)
+            return {
+                documents,
+                answer,
+                images,
+            } satisfies InferOutputs<typeof Blueprint, typeof fields>;
+
+        return {
+            documents,
+            answer,
+        } satisfies InferOutputs<typeof Blueprint, typeof fields>;
     }
 }

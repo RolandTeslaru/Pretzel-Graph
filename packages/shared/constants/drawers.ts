@@ -289,7 +289,7 @@ export const BUNDLE_DRAWERS = {
     displayName: "Tavily",
     id: "tavily",
     icon: "Tavily",
-    blueprintIds: ["Integrations.Tavily.Retriever", "Integrations.Tavily.Search"]
+    blueprintIds: ["Integrations.Tavily.Search", "Integrations.Tavily.Extract", "Integrations.Tavily.Research"]
   },
   uniswap: {
     displayName: "Uniswap",
