@@ -41,10 +41,10 @@ const Search = () => {
                 className='w-full rounded-xl'
                 placeholder='Search for nodes'
             />
-            {/* {!localValue &&
-                <SystemIcons.Search  className='absolute left-4 top-[15px] h-[18px] w-[18px] text-muted-foreground'/>
-            } */}
-            <Popover.Root>
+            {!localValue &&
+                <SystemIcons.Search  className='absolute right-4 top-[15px] h-[18px] w-[18px] text-muted-foreground'/>
+            }
+            {/* <Popover.Root>
                 <Popover.Trigger asChild>
                     <Button variant='ghost' size='icon-xs' className='absolute right-3 top-3  rounded-xl text-muted-foreground'>
                         <SystemIcons.Filter/>
@@ -53,7 +53,7 @@ const Search = () => {
                 <Popover.Content side='right' align="start" sideOffset={18} className='w-[200px] mt-[-12px] p-2 bg-popover text-popover-foreground border border-popover-border rounded-xl shadow-lg'>
                     <div className='text-sm'>Filter options coming soon!</div>
                 </Popover.Content>
-            </Popover.Root>
+            </Popover.Root> */}
         </div>
     )
 }
