@@ -26,6 +26,7 @@
         "@pretzel-graph/node-sdk": "*",
         "@pretzel-graph/shared": "*",
         "@pretzel-graph/worker": "*",
+        "@tavily/core": "0.7.13",
         "axios": "*",
         "discord.js": "^14.27.0",
         "kalshi-typescript": "3.26.0",
