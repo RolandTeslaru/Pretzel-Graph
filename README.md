@@ -19,6 +19,19 @@ docker compose up -d            # http://localhost:8080
 
 Open http://localhost:8080 and sign up.
 
+### Updating
+
+`docker compose up` keeps running the images you already have, so pull the new ones first:
+
+```bash
+git pull
+docker compose pull
+docker compose up -d
+```
+
+Database migrations run on startup. Your workflows, credentials and history are kept; only
+`docker compose down -v` deletes them.
+
 ### Developing
 
 Requires Node as well.

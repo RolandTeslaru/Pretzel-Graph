@@ -5,9 +5,12 @@ import type { BaseIconProps } from '@pretzel-graph/standard-ui/icons/baseIcon'
 import { AdminPanelItem, PretzelGraphDropdown, WORKSPACES_URL } from '@/components/PretzelGraphDropdown'
 import { Dither, ditherCtx } from '@pretzel-graph/standard-ui/components/Dither'
 import { SystemSDK } from '@pretzel-graph/standard-ui/SDKs/SystemSDK'
+import { showUpdateNotice } from '@/components/showUpdateNotice'
 // import { Preview } from 'shaders/react'
 
 export const Route = createFileRoute('/home')({
+    // Not awaited, so the page never waits on the check.
+    onEnter: () => { void showUpdateNotice() },
     component: HomeLayout,
 })
 

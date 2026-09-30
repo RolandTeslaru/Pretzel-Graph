@@ -24,6 +24,7 @@ import { ConsultationModule } from './services/Consultation/consultation.module'
 import { HealthModule } from './services/Health/health.module';
 import { ListingModule } from './services/Listing/listing.module';
 import { TemplateModule } from './services/Template/template.module';
+import { ReleaseModule } from './services/Release/release.module';
 import { ActivityModule } from './services/Activity/activity.module';
 import { WorkerModule } from './services/Worker/worker.module';
 import { GatewayModule } from './services/Gateway/gateway.module';
@@ -67,6 +68,7 @@ import { GatewayIgnitionModule } from './services/GatewayIgnition/gateway-igniti
         HealthModule,
         ListingModule,
         TemplateModule,
+        ReleaseModule,
         ActivityModule,
         WorkerModule,
         GatewayModule,
