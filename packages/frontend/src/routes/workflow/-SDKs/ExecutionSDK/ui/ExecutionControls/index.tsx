@@ -14,13 +14,21 @@ import {
   Spinner,
   Switch,
 } from "@pretzel-graph/standard-ui/foundations";
+import { useState } from "react";
 import ExecutionHistoryPanel from "../ExecutionHistoryPanel";
 import { ButtonGroup } from "@pretzel-graph/standard-ui/foundations/button-group";
 
 const spring = { type: "spring", stiffness: 500, damping: 28 } as const;
 
-const handleRun = () => {
-  ExecutionSDK.actions.run({ variant: "workbench_manual" });
+const MANUAL_RUN = "manual";
+
+const handleRun = (runMode: string) => {
+  if (runMode === MANUAL_RUN) {
+    ExecutionSDK.actions.run({ variant: "workbench_manual" });
+    return;
+  }
+
+  ExecutionSDK.actions.runFromIgniteableNode(runMode as Workflow.Node.Id);
 };
 
 interface Props {
@@ -38,6 +46,15 @@ const ExecutionControls = ({ canRun }: Props) => {
   const igniteableNodeIds = WorkbenchSDK.useDocument((d) =>
     d.selectors.node.getIgniteableNodes(d),
   );
+  const [chosenRunMode, setChosenRunMode] = useState<string>();
+
+  // Falls back to the first igniter, then a plain run, when the choice is gone.
+  const isChosenAvailable =
+    chosenRunMode === MANUAL_RUN ||
+    igniteableNodeIds.includes(chosenRunMode as Workflow.Node.Id);
+  const runMode = isChosenAvailable
+    ? chosenRunMode!
+    : (igniteableNodeIds[0] ?? MANUAL_RUN);
 
   let status = "idle";
   if (currentExecution) {
@@ -76,10 +93,12 @@ const ExecutionControls = ({ canRun }: Props) => {
                   disabled={!canRun || awaitedConfirmation.has("started")}
                   variant="success"
                   className="my-auto"
-                  onClick={handleRun}
+                  onClick={() => handleRun(runMode)}
                 >
                   {awaitedConfirmation.has("started") ? (
                     <Spinner />
+                  ) : runMode !== MANUAL_RUN ? (
+                    <IgniterRunLabel nodeId={runMode as Workflow.Node.Id} iconClassName="mr-auto" />
                   ) : (
                     <>
                       <SystemIcons.Play className="mr-auto" />
@@ -105,12 +124,14 @@ const ExecutionControls = ({ canRun }: Props) => {
                     className="min-w-[150px]!"
                   >
                     <DropdownMenu.Group>
-                      <DropdownMenu.Item onSelect={handleRun}>
+                      <DropdownMenu.Item onSelect={() => setChosenRunMode(MANUAL_RUN)}>
                         <SystemIcons.Play className="mr-2" />
                         Run
                       </DropdownMenu.Item>
                       {igniteableNodeIds.map((nodeId) => (
-                        <IgniterRunItem key={nodeId} nodeId={nodeId} />
+                        <DropdownMenu.Item key={nodeId} onSelect={() => setChosenRunMode(nodeId)}>
+                          <IgniterRunLabel nodeId={nodeId} iconClassName="mr-2" />
+                        </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.Group>
                     <DropdownMenu.Separator />
@@ -232,9 +253,8 @@ const ExecutionControls = ({ canRun }: Props) => {
 
 export default ExecutionControls;
 
-// One entry per igniteable node. Elects that node as the run's entry point —
-// a plain Run starts none of them.
-const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
+// Icon and "Run via" label for an igniteable node.
+const IgniterRunLabel = ({ nodeId, iconClassName }: { nodeId: Workflow.Node.Id; iconClassName?: string }) => {
   const ui = WorkbenchSDK.useDocument((d) => d.selectors.node.getUI(d, nodeId));
   const blueprintId = WorkbenchSDK.useDocument((d) => d.data.nodes[nodeId]?.blueprintId);
 
@@ -244,12 +264,12 @@ const IgniterRunItem = ({ nodeId }: { nodeId: Workflow.Node.Id }) => {
   );
 
   return (
-    <DropdownMenu.Item onSelect={() => ExecutionSDK.actions.runFromIgniteableNode(nodeId)}>
+    <>
       {listensToGateway
-        ? <SystemIcons.GatewayConnection className="mr-2" />
-        : <IconRenderer name={ui.icon ?? ""} className="mr-2" />}
+        ? <SystemIcons.GatewayConnection className={iconClassName} />
+        : <IconRenderer name={ui.icon ?? ""} className={iconClassName} />}
       Run via {ui.displayName}
-    </DropdownMenu.Item>
+    </>
   );
 };
 

@@ -2,14 +2,12 @@ import { Blueprint } from "./blueprint"
 import { RuntimeNode } from "@pretzel-graph/node-sdk";
 import { InferOutputs } from "@pretzel-graph/node-sdk";
 import { HumanMessage } from "@langchain/core/messages";
-import { Chat, Execution, Webhook } from "@pretzel-graph/shared/domain";
+import { Chat, Execution } from "@pretzel-graph/shared/domain";
 import { InternalChatAPI } from "../internal-api";
 
+const MESSAGE_WAIT_MS = 300_000; // 5 minutes
+
 export class Node extends RuntimeNode<typeof Blueprint> {
-
-    public static WEBHOOK_PATH = "chat" as Webhook.Path;
-    public static WEBHOOK_TIMEOUT = 120_000; // 2 minutes
-
 
     private message: Chat.Message | null = null;
 
@@ -22,7 +20,7 @@ export class Node extends RuntimeNode<typeof Blueprint> {
 
     protected override async onRun(): Promise<Partial<InferOutputs<typeof Blueprint>>> {
         if (!this.message)
-            return {};
+            this.message = await this.waitForMessage();
 
         const chatId = Chat.Id.parse(this.fieldValues.chat_id);
 
@@ -35,25 +33,18 @@ export class Node extends RuntimeNode<typeof Blueprint> {
     }
 
 
-    // Registering the route is what invites the reply, so it runs inside awaitSignalAfter —
-    // the waiter is already in place when the first message can arrive.
-    private async waitForMessage(){
-        const { workflowId } = this.context;
+    // Started without a message, so park until one is sent from the chat.
+    private async waitForMessage(): Promise<Chat.Message> {
+        const answer = await this.context.consultationAPI.consult({
+            requestSchema: Chat.Consultation.Request,
+            answerSchema:  Chat.Consultation.Answer,
+            request: {
+                nodeId:    this.nodeId,
+                variant:   Chat.Consultation.Variant,
+                timeoutMs: MESSAGE_WAIT_MS,
+            },
+        });
 
-        const signal = await this.context.realtimeAPI.awaitSignalAfter(
-            // @ts-expect-error TODO: Chat.Signal not defined yet
-            Chat.Signal.MessageSent.Schema,
-            () => true,
-            Node.WEBHOOK_TIMEOUT,
-            () => Webhook.Test.API.register(
-                this.context.internalAPI.raw,
-                { workflowId, path: Node.WEBHOOK_PATH, method: "POST", timeoutMs: Node.WEBHOOK_TIMEOUT },
-            ).then(() => {}),
-        )
-
-        return new HumanMessage({
-            // @ts-expect-error TODO: Chat.Signal not defined yet
-            content: signal.message.content,
-        })
+        return answer.message;
     }
 }

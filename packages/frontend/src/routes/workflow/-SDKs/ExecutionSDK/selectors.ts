@@ -1,5 +1,5 @@
 import type { Foundations, Workflow } from "@pretzel-graph/shared/domain"
-import { Execution } from "@pretzel-graph/shared/domain"
+import { Chat, Execution } from "@pretzel-graph/shared/domain"
 import type { ExecutionSDK } from "./sdk"
 import { WorkbenchSDK } from "../WorkbenchSDK/sdk"
 
@@ -44,6 +44,18 @@ export const executionSDKSelectors = {
     },
     currentExecution: {
         isRunning: (s) => s.currentExecution?.status === "running",
+        // Active and not parked waiting on a chat message.
+        isProcessing: (s) => {
+            if (!s.currentExecution || !Execution.isActive(s.currentExecution))
+                return false
+
+            return !s.selectors.currentExecution.getChatConsultation(s)
+        },
+        getChatConsultation: (s) => {
+            const pending = Object.values(s.currentExecution?.session.pending_consultations ?? {})
+
+            return pending.find(request => request.variant === Chat.Consultation.Variant) as Chat.Consultation.Request | undefined
+        },
         running: {
             isRecording: (s) => {
                 const value = s.currentExecution?.status === "running" && s.currentExecution.igniter.record
@@ -72,7 +84,9 @@ export interface ExecutionSDKSelectors {
         getDatabank:       (state: ExecutionSDK.State) => Execution.Recording.DataBank | undefined
     }
     currentExecution: {
-        isRunning: (state: ExecutionSDK.State) => boolean
+        isRunning:           (state: ExecutionSDK.State) => boolean
+        isProcessing:        (state: ExecutionSDK.State) => boolean
+        getChatConsultation: (state: ExecutionSDK.State) => Chat.Consultation.Request | undefined
         running: {
             isRecording: (state: ExecutionSDK.State) => boolean
             isDebugging: (state: ExecutionSDK.State) => boolean

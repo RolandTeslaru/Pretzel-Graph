@@ -3,6 +3,7 @@ import { ChatSchema } from "./chat"
 import * as MessageMod from "./message"
 import * as EventMod from "./event"
 import * as ApiMod from "./api"
+import * as ConsultationMod from "./consultation"
 import { ChatExternalKey, ChatId, createId as createChatId } from "./ids"
 
 export namespace Chat {
@@ -10,6 +11,8 @@ export namespace Chat {
     export const Id = ChatId
     export type Id = ChatId
     export const createId = createChatId
+
+    export const INPUT_BLUEPRINT_ID = "Core.Chat.Input"
 
     export import Attachment    = MessageMod.Attachment
     export import ToolCall      = MessageMod.ToolCall
@@ -24,5 +27,7 @@ export namespace Chat {
 
     export import Event = EventMod.Event
     export import API   = ApiMod.API
+
+    export import Consultation = ConsultationMod.Consultation
 }
 export type Chat = z.infer<typeof Chat.Schema>

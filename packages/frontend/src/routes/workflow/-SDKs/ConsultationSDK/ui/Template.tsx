@@ -41,7 +41,7 @@ export const ConsultationTemplate: ConsultationSDK.Template = ({ children, consu
         >
             {timeout && (
                 <TimeoutRing
-                    className="absolute top-3 right-3 text-dark dark:text-white"
+                    className={`absolute top-3 right-3 text-dark dark:text-white ${timeout.className ?? ""}`}
                     createdAt={timeout.createdAt}
                     timeoutMs={timeout.timeoutMs}
                     onExpire={timeout.onExpire}
