@@ -27,11 +27,13 @@ export class Node extends RuntimeNode<typeof Blueprint> {
             ? incoming.languageModel.bindTools(incoming.tools)
             : incoming.languageModel;
 
-        const systemMessage = new LC.SystemMessage({
-            content: this.fieldValues.systemMessage ?? "",
-        });
+        const systemText = this.fieldValues.systemMessage;
 
-        const messages = [systemMessage, ...incoming.messages].filter((m): m is LC.BaseMessage => m != null);
+        const systemMessages = systemText?.trim()
+            ? [new LC.SystemMessage({ content: systemText })]
+            : [];
+
+        const messages = [...systemMessages, ...incoming.messages].filter((m): m is LC.BaseMessage => m != null);
 
         // Anthropic prefix caching: cache_control on the last content block, cloned so we never
         if (isAnthropic && messages.length) {

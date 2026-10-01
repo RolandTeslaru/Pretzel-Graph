@@ -297,6 +297,12 @@ export const BUNDLE_DRAWERS = {
     icon: "Uniswap",
     blueprintIds: ["Integrations.Uniswap.Swap"]
   },
+  vercel: {
+    displayName: "Vercel",
+    id: "vercel",
+    icon: "Vercel",
+    blueprintIds: ["Integrations.Vercel.AIGateway"]
+  },
   xai: {
     displayName: "xAI",
     id: "xai",

@@ -27,6 +27,7 @@ export const lazyIconsMapping = {
   Tavily: () => import("./integrations/Tavily"),
   Telegram: () => import("./integrations/Telegram"),
   Uniswap: () => import("./integrations/Uniswap"),
+  Vercel: () => import("./integrations/Vercel"),
   xAI: () => import("./integrations/xAI"),
   Grok: () => import("./integrations/Grok"),
 };

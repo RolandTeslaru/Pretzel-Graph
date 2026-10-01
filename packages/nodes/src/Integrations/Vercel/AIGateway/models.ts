@@ -1,0 +1,135 @@
+const model = <const T extends string>(value: T, displayName: string) => ({
+    value,
+    displayName,
+});
+
+export const MODELS = {
+    Anthropic: [
+        model("anthropic/claude-opus-5.5", "Claude Opus 5.5"),
+        model("anthropic/claude-sonnet-5.5", "Claude Sonnet 5.5"),
+        model("anthropic/claude-opus-5", "Claude Opus 5"),
+        model("anthropic/claude-sonnet-5", "Claude Sonnet 5"),
+        model("anthropic/claude-fable-5.1", "Claude Fable 5.1"),
+        model("anthropic/claude-fable-5", "Claude Fable 5"),
+        model("anthropic/claude-haiku-4.5", "Claude Haiku 4.5"),
+    ],
+    Google: [
+        model("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview"),
+        model("google/gemini-3.8-flash", "Gemini 3.8 Flash"),
+        model("google/gemini-3.7-flash", "Gemini 3.7 Flash"),
+        model("google/gemini-3.6-flash", "Gemini 3.6 Flash"),
+        model("google/gemini-3.5-flash", "Gemini 3.5 Flash"),
+        model("google/gemini-3.5-flash-lite", "Gemini 3.5 Flash Lite"),
+        model("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite"),
+        model("google/gemma-4-31b-it", "Gemma 4 31B IT"),
+    ],
+    OpenAI: [
+        model("openai/gpt-6.1-sol", "GPT-6.1 Sol"),
+        model("openai/gpt-6-sol", "GPT-6 Sol"),
+        model("openai/gpt-6-luna", "GPT-6 Luna"),
+        model("openai/gpt-6-astra", "GPT-6 Astra"),
+        model("openai/gpt-5.6-sol", "GPT-5.6 Sol"),
+        model("openai/gpt-5.6-terra", "GPT-5.6 Terra"),
+        model("openai/gpt-5.6-luna", "GPT-5.6 Luna"),
+    ],
+    Meta: [
+        model("meta/muse-spark-1.3", "Muse Spark 1.3"),
+        model("meta/muse-glimmer-30b", "Muse Glimmer 30B"),
+        model("meta/llama-4-maverick", "Llama 4 Maverick"),
+        model("meta/llama-4-scout", "Llama 4 Scout"),
+    ],
+    DeepSeek: [
+        model("deepseek/deepseek-v4-pro", "DeepSeek V4 Pro"),
+        model("deepseek/deepseek-v4.1-flash", "DeepSeek V4.1 Flash"),
+        model("deepseek/deepseek-v4-flash", "DeepSeek V4 Flash"),
+        model("deepseek/deepseek-v3.2", "DeepSeek V3.2"),
+    ],
+    Alibaba: [
+        model("alibaba/qwen3.8-max", "Qwen 3.8 Max"),
+        model("alibaba/qwen3.8-flash", "Qwen 3.8 Flash"),
+        model("alibaba/qwen3.8-27b", "Qwen 3.8 27B"),
+        model("alibaba/qwen3.7-plus", "Qwen 3.7 Plus"),
+        model("alibaba/qwen3.7-flash", "Qwen 3.7 Flash"),
+    ],
+    Moonshot: [
+        model("moonshotai/kimi-k3", "Kimi K3"),
+        model("moonshotai/kimi-k2.7-code", "Kimi K2.7 Code"),
+        model("moonshotai/kimi-k2.6", "Kimi K2.6"),
+    ],
+    ZAI: [
+        model("zai/glm-5.3", "GLM 5.3"),
+        model("zai/glm-5.3-flash", "GLM 5.3 Flash"),
+        model("zai/glm-5.2", "GLM 5.2"),
+    ],
+    Mistral: [
+        model("mistral/mistral-large-3", "Mistral Large 3"),
+        model("mistral/mistral-medium-3.5", "Mistral Medium 3.5"),
+        model("mistral/ministral-14b", "Ministral 14B"),
+    ],
+    Cohere: [
+        model("cohere/command-a", "Command A"),
+    ],
+    xAI: [
+        model("spacexai/grok-4.7", "Grok 4.7"),
+        model("spacexai/grok-4.6", "Grok 4.6"),
+        model("spacexai/grok-4.5", "Grok 4.5"),
+        model("spacexai/grok-4.3", "Grok 4.3"),
+        model("spacexai/grok-4.20-reasoning", "Grok 4.20"),
+        model("spacexai/grok-4.20-multi-agent", "Grok 4.20 Multi-Agent"),
+    ],
+} as const;
+
+export type ModelId = typeof MODELS[keyof typeof MODELS][number]["value"];
+
+// Effort levels from least to most reasoning.
+export const EFFORT_LEVELS = ["none", "minimal", "low", "medium", "high", "xhigh"] as const;
+export type ReasoningEffort = typeof EFFORT_LEVELS[number];
+
+// Reasoning efforts each model accepts; models without an entry take no effort setting.
+export const REASONING_EFFORTS: Partial<Record<ModelId, readonly ReasoningEffort[]>> = {
+    "anthropic/claude-opus-5.5":      ["low", "medium", "high", "xhigh"],
+    "anthropic/claude-sonnet-5.5":    ["low", "medium", "high", "xhigh"],
+    "anthropic/claude-opus-5":        ["none", "low", "medium", "high", "xhigh"],
+    "anthropic/claude-sonnet-5":      ["none", "low", "medium", "high", "xhigh"],
+    "anthropic/claude-fable-5.1":     ["none", "low", "medium", "high", "xhigh"],
+    "anthropic/claude-fable-5":       ["none", "low", "medium", "high", "xhigh"],
+    "google/gemini-3.1-pro-preview":  ["low", "high"],
+    "google/gemini-3.8-flash":        ["low", "high"],
+    "google/gemini-3.7-flash":        ["low", "high"],
+    "google/gemini-3.6-flash":        ["low", "high"],
+    "google/gemini-3.5-flash":        ["low", "high"],
+    "google/gemini-3.5-flash-lite":   ["low", "high"],
+    "google/gemini-3.1-flash-lite":   ["low", "high"],
+    "openai/gpt-6.1-sol":             ["low", "medium", "high", "xhigh"],
+    "openai/gpt-6-sol":               ["none", "low", "medium", "high", "xhigh"],
+    "openai/gpt-6-luna":              ["none", "low", "medium", "high", "xhigh"],
+    "openai/gpt-6-astra":             ["low", "medium", "high", "xhigh"],
+    "openai/gpt-5.6-sol":             ["none", "minimal", "low", "medium", "high", "xhigh"],
+    "openai/gpt-5.6-terra":           ["none", "minimal", "low", "medium", "high", "xhigh"],
+    "openai/gpt-5.6-luna":            ["none", "low", "medium", "high", "xhigh"],
+    "meta/muse-spark-1.3":            ["minimal", "low", "medium", "high", "xhigh"],
+    "meta/muse-glimmer-30b":          ["none", "low", "medium", "high"],
+    "meta/llama-4-maverick":          ["none", "low", "medium", "high"],
+    "meta/llama-4-scout":             ["none", "low", "medium", "high"],
+    "deepseek/deepseek-v4-pro":       ["none", "high"],
+    "deepseek/deepseek-v4.1-flash":   ["none", "high"],
+    "deepseek/deepseek-v4-flash":     ["none", "low", "medium", "high"],
+    "deepseek/deepseek-v3.2":         ["none", "low", "medium", "high"],
+    "alibaba/qwen3.8-max":            ["low", "medium", "xhigh"],
+    "alibaba/qwen3.8-flash":          ["low", "medium", "xhigh"],
+    "alibaba/qwen3.8-27b":            ["none", "low", "medium", "xhigh"],
+    "alibaba/qwen3.7-plus":           ["none", "minimal", "low", "medium", "high", "xhigh"],
+    "alibaba/qwen3.7-flash":          ["none", "minimal", "low", "medium", "high", "xhigh"],
+    "moonshotai/kimi-k3":             ["none", "low", "high"],
+    "moonshotai/kimi-k2.7-code":      ["none", "low", "medium", "high"],
+    "zai/glm-5.3":                    ["low", "high"],
+    "zai/glm-5.3-flash":              ["low", "high"],
+    "zai/glm-5.2":                    ["none", "high"],
+    "mistral/mistral-medium-3.5":     ["none", "high"],
+    "spacexai/grok-4.7":              ["low", "medium", "high", "xhigh"],
+    "spacexai/grok-4.6":              ["low", "medium", "high", "xhigh"],
+    "spacexai/grok-4.5":              ["low", "medium", "high"],
+    "spacexai/grok-4.3":              ["low", "medium", "high"],
+    "spacexai/grok-4.20-reasoning":   ["none", "low", "medium", "high"],
+    "spacexai/grok-4.20-multi-agent": ["none", "low", "medium", "high"],
+}

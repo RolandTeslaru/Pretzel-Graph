@@ -6,12 +6,14 @@
 //   Integrations/Google/Gemini/pricing.ts
 //   Integrations/xAI/pricing.ts
 //   Integrations/OpenRouter/pricing.ts
+//   Integrations/Vercel/AIGateway/pricing.ts
 
 import * as OpenAI     from "../../Integrations/OpenAI/pricing";
 import * as Anthropic  from "../../Integrations/Anthropic/pricing";
 import * as Gemini     from "../../Integrations/Google/Gemini/pricing";
 import * as XAI        from "../../Integrations/xAI/pricing";
 import * as OpenRouter from "../../Integrations/OpenRouter/pricing";
+import * as VercelAIGateway from "../../Integrations/Vercel/AIGateway/pricing";
 
 export interface ModelPrice {
     input:  number  // USD per 1M input tokens
@@ -24,6 +26,7 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
     ...Gemini.PRICES,
     ...XAI.PRICES,
     ...OpenRouter.PRICES,
+    ...VercelAIGateway.PRICES,
 }
 
 const ALIASES: Record<string, string> = {
@@ -32,6 +35,7 @@ const ALIASES: Record<string, string> = {
     ...Gemini.ALIASES,
     ...XAI.ALIASES,
     ...OpenRouter.ALIASES,
+    ...VercelAIGateway.ALIASES,
 }
 
 function normalise(modelId: string): string {
